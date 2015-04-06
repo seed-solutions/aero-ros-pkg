@@ -9,7 +9,7 @@
 )
 
 (defun testaero ()
-  (load "/home/wesleyc/docs/catkin_ws/src/robot_model_compiler/euslisp/aero-interface.l")
+  (load "aero-interface.l")
   ;(load "/home/wesleyc/docs/catkin_ws/src/robot_model_compiler/euslisp/aero-stick-figure-interface.l")
   (aero-init)
 ;  (pprint (send *aero* :slots))
