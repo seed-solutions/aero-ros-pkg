@@ -9,9 +9,10 @@
 )
 
 (defun testaero ()
-  (load "aero-interface.l")
+  (load "/home/wesleyc/docs/catkin_ws/src/robot_model_compiler/euslisp/aero-interface.l")
   ;(load "/home/wesleyc/docs/catkin_ws/src/robot_model_compiler/euslisp/aero-stick-figure-interface.l")
   (aero-init)
+  (objects *aero*)
 ;  (pprint (send *aero* :slots))
 ;  (print "")
 ;  (print "")
@@ -19,5 +20,91 @@
 ;  (send *aero* :torso)
 )
 
-(testaero)
-(objects *aero*)
+(defun moveRobot (&optional (time 3000))
+      (send *ri* :angle-vector (send *aero* :angle-vector) time))
+
+(defun test-aero-motion ()
+  (send *aero* :rarm :shoulder-p :joint-angle 80)
+  (send *aero* :larm :shoulder-p :joint-angle -80)
+  (send *aero* :rarm :elbow-p :joint-angle -80)
+  (send *aero* :larm :elbow-p :joint-angle -80)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")
+
+  (send *aero* :rarm :shoulder-p :joint-angle 0)
+  (send *aero* :larm :shoulder-p :joint-angle 0)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+
+  (send *aero* :rarm :shoulder-r :joint-angle -80)
+  (send *aero* :larm :shoulder-r :joint-angle 80)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :shoulder-r :joint-angle 0)
+  (send *aero* :larm :shoulder-r :joint-angle 0)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :shoulder-y :joint-angle -80)
+  (send *aero* :larm :shoulder-y :joint-angle 80)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :shoulder-y :joint-angle 0)
+  (send *aero* :larm :shoulder-y :joint-angle 0)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :wrist-y :joint-angle -80)
+  (send *aero* :larm :wrist-y :joint-angle 80)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :wrist-y :joint-angle 0)
+  (send *aero* :larm :wrist-y :joint-angle 0)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :wrist-r :joint-angle -80)
+  (send *aero* :larm :wrist-r :joint-angle 80)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :wrist-r :joint-angle 0)
+  (send *aero* :larm :wrist-r :joint-angle 0)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :wrist-p :joint-angle 80)
+  (send *aero* :larm :wrist-p :joint-angle 80)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+  
+  (send *aero* :rarm :wrist-p :joint-angle 0)
+  (send *aero* :larm :wrist-p :joint-angle 0)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+  (send *ri* :wait-interpolation "or")  
+
+  
+  
+  (send *aero* :reset-pose)
+  (send *irtviewer* :draw-objects)
+  (moveRobot)
+
+)
+
+
+
