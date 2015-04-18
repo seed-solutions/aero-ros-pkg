@@ -1,0 +1,11 @@
+#if(NOT USE_ROSBUILD)
+#  include(catkin.cmake)
+#  return()
+#endif()
+
+cmake_minimum_required(VERSION 2.8.3)
+project(hrpsys_aero_bridge)
+
+find_package(catkin REQUIRED COMPONENTS
+  hrpsys_ros_bridge hrpsys
+)

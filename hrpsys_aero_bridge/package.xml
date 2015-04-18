@@ -1,0 +1,26 @@
+<package>
+  <name>hrpsys_aero_bridge</name>
+  <version>0.0.0</version>
+  <description>
+    hrpsys components for aero
+  </description>
+
+  <license>EPL</license>
+  <maintainer email="h-yaguchi@jsk.t.u-tokyo.ac.jp">
+    Hiroaki Yaguchi
+  </maintainer>
+
+  <url type="website">http://ros.org/wiki/hrpsys</url>
+  <url type="repository">https://code.google.com/p/rtm-ros-robotics</url>
+  <url type="bugtracker">https://code.google.com/p/rtm-ros-robotics/issues/list</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>hrpsys_ros_bridge</build_depend>
+  <build_depend>hrpsys</build_depend>
+
+  <run_depend>hrpsys_ros_bridge</run_depend>
+  <run_depend>hrpsys</run_depend>
+  <export>
+  </export>
+</package>
