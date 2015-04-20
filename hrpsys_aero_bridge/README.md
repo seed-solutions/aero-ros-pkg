@@ -2,7 +2,7 @@ To use Futaba RSC-U485 with Ubuntu 14.04, Please apply follows:
 
 ```
 % sudo modprobe ftdi-sio
-% sudo sh -c "echo '0115 0008' > /sys/bus/usb-serial/drivers/ftdi_sio/new_id"
+% sudo sh -c "echo '1115 0008' > /sys/bus/usb-serial/drivers/ftdi_sio/new_id"
 ```
 
 If it is ok, you can show /dev/ttyUSBn
