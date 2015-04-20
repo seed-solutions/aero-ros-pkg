@@ -23,7 +23,7 @@ def RS485_Open():
 
 	#SER=serial.Serial('/dev/ttyUSB0', 115200)
 	SER=serial.Serial('/dev/ttyUSB0', 1382400)
-	SER.open()
+	#SER.open()
 
 #Com Port Close
 def COM_Close():
@@ -121,10 +121,10 @@ def SEED_TMove_Servo(id_num,time,pos):
 		pos = -0xFFFFFF/2-1
 
 	data[0] = time >> 8
-	data[1] = time  
+	data[1] = time
 	data[2] = pos >> 16
 	data[3] = pos >> 8
-	data[4] = pos 
+	data[4] = pos
 
 	print data
 	SEED_SCM(id_num,0x64,data[0],data[1],data[2],data[3],data[4])
@@ -144,7 +144,7 @@ def Set_Command(id_num,cmd,d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15
 
 	data[3] = cmd
 
-	#time 
+	#time
 	data[4] = d0 >> 8
 	data[5] = d0
 	#CAN1 Actuator
@@ -226,7 +226,7 @@ def Set_Command(id_num,cmd,d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15
 	#num to hex
 	for i in range(0,bLength-1):
 		data[i] = int(num2hex(data[i]),16)
-	
+
 	#check sum
 	for bCount in range(2,bLength-1,1):
 		bCheckSum += int(num2hex(data[bCount]),16)
@@ -324,17 +324,17 @@ if __name__ == "__main__":
 
 # Servo ON
 	Servo_Command(1,1)
-	
+
 # Buffer Clear
 	SER.flushInput()		#flush input buffer
 	SER.flushOutput()	#flush output buffer
 
-	time.sleep(5)	
-	
+	time.sleep(5)
+
 # Move to Oringinal Position
 	Set_Command(1,0x68,2000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
 
-	time.sleep(5)	
+	time.sleep(5)
 
 	#Get_Command(1,0x42)
 	#SEED_485_Read()
@@ -347,7 +347,7 @@ if __name__ == "__main__":
 
 			#y=100
 			#Set_Command(1,0x68,20,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y)
-			#time.sleep(1)		
+			#time.sleep(1)
 			#y=-100
 			#Set_Command(1,0x68,20,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y)
 			#time.sleep(1)
@@ -359,4 +359,3 @@ if __name__ == "__main__":
 
 
 	RS485_Close()
-
