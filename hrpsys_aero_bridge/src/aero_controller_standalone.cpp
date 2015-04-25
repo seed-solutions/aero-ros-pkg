@@ -13,17 +13,21 @@ int main(int argc, char** argv) {
   int32_t a = 100;
   int32_t move_time = 20;
 
-  aero.servo_command(1, 1);
+  //aero.servo_command(1, 1);
+  aero.servo_on();
 
   // flush i/o
   usleep(5000 * 1000);
   aero.flush();
 
   std::vector<int16_t> values;
-  std::vector<uint8_t> read_data;
+  std::vector<int16_t> rvalues;
+  // std::vector<uint8_t> read_data;
   values.resize(35);
+  rvalues.resize(35);
 
-  aero.set_command(1, CMD_MOVE_ABS, 2000, values);
+  //aero.set_command(1, CMD_MOVE_ABS, 2000, values);
+  aero.set_position(values, 2000);
   //aero.seed_485_read(read_data);
 
   usleep(5000 * 1000);
@@ -57,8 +61,22 @@ int main(int argc, char** argv) {
       }
     }
 
-    aero.set_command(1, CMD_MOVE_ABS, move_time, values);
-    aero.seed_485_read(read_data);
+    // aero.set_command(1, CMD_MOVE_ABS, move_time, values);
+    aero.set_position(values, move_time);
+    // aero.seed_485_read(read_data);
+    aero.get_position(rvalues);
+
+    std::cout << "send:";
+    for (size_t vi = 0; vi < values.size(); vi++) {
+      std::cout << std::dec << " " << values[vi];
+    }
+    std::cout << std::endl;
+
+    std::cout << "recv:";
+    for (size_t vi = 0; vi < rvalues.size(); vi++) {
+      std::cout << std::dec << " " << rvalues[vi];
+    }
+    std::cout << std::endl;
 
     usleep(move_time * 1000);
     i += move_time * 0.001;

@@ -33,6 +33,7 @@ class AeroController {
 
   void seed_485_send(std::vector<uint8_t>& send_data);
   void seed_485_read(std::vector<uint8_t>& read_data);
+  void flush();
 
   void set_command(uint8_t id, uint8_t cmd, uint16_t time,
                    std::vector<int16_t>& values);
@@ -40,11 +41,18 @@ class AeroController {
 
   void servo_command(uint8_t id, int16_t d0);
 
-  void flush();
+  void servo_on();
+  void servo_off();
+  void set_position(std::vector<int16_t>& stroke_vector, uint16_t time);
+  void get_position(std::vector<int16_t>& stroke_vector);
+
+  bool verbose() {return verbose_;}
+  void verbose(bool v) {verbose_ = v;}
 
  private:
   io_service& io_;
   serial_port ser_;
+  bool verbose_;
 
 };
 

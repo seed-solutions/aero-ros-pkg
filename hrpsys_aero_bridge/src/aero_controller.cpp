@@ -3,7 +3,7 @@
 using namespace boost::asio;
 
 AeroController::AeroController(io_service& ios, std::string& port):
-    io_(ios), ser_(io_) {
+    io_(ios), ser_(io_), verbose_(true) {
   if (port != "") {
     boost::system::error_code err;
 
@@ -50,29 +50,38 @@ void AeroController::seed_485_send(std::vector<uint8_t>& send_data) {
   if (ser_.is_open()) {
     ser_.write_some(buffer(send_data));
   }
-  std::cout << "send: ";
-  for (size_t i = 0; i < send_data.size(); i++) {
-    std::cout << std::uppercase << std::hex
-              << std::setw(2) << std::setfill('0')
-              << static_cast<int32_t>(send_data[i]);
+  if (verbose_) {
+    std::cout << "send: ";
+    for (size_t i = 0; i < send_data.size(); i++) {
+      std::cout << std::uppercase << std::hex
+                << std::setw(2) << std::setfill('0')
+                << static_cast<int32_t>(send_data[i]);
+    }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
 }
 
 void AeroController::seed_485_read(std::vector<uint8_t>& read_data) {
   if (ser_.is_open()) {
     read_data.resize(77);
     ser_.read_some(buffer(read_data, 77));
-    std::cout << "recv: ";
-    for (size_t i = 0; i < read_data.size(); i++) {
-      std::cout << std::setw(2)
-                << std::uppercase << std::hex
-                << std::setw(2) << std::setfill('0')
-                << static_cast<int32_t>(read_data[i]);
+    if (verbose_) {
+      std::cout << "recv: ";
+      for (size_t i = 0; i < read_data.size(); i++) {
+        std::cout << std::setw(2)
+                  << std::uppercase << std::hex
+                  << std::setw(2) << std::setfill('0')
+                  << static_cast<int32_t>(read_data[i]);
+      }
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
   }
 }
+
+void AeroController::flush() {
+  ::tcflush(ser_.lowest_layer().native_handle(), TCIOFLUSH);
+}
+
 
 void AeroController::set_command(uint8_t id, uint8_t cmd, uint16_t time,
                                  std::vector<int16_t>& values) {
@@ -108,9 +117,6 @@ void AeroController::set_command(uint8_t id, uint8_t cmd, uint16_t time,
 void AeroController::get_command(uint8_t id, uint8_t cmd) {
 
 }
-
-
-
 void AeroController::servo_command(uint8_t id, int16_t d0) {
   std::vector<int16_t> values;
   values.resize(35);
@@ -120,6 +126,26 @@ void AeroController::servo_command(uint8_t id, int16_t d0) {
   set_command(id, CMD_MOTOR_SRV, 0, values);
 }
 
-void AeroController::flush() {
-  ::tcflush(ser_.lowest_layer().native_handle(), TCIOFLUSH);
+void AeroController::servo_on() {
+  servo_command(1, 1);
+}
+void AeroController::servo_off() {
+  servo_command(1, 0);
+}
+void AeroController::set_position(std::vector<int16_t>& stroke_vector,
+                                  uint16_t time) {
+  set_command(1, CMD_MOVE_ABS, time, stroke_vector);
+}
+void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
+  std::vector<uint8_t> dat;
+  dat.resize(77);
+  seed_485_read(dat);
+
+  // convert uint8_t to int16_t
+  stroke_vector.resize(35);
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&stroke_vector[0]);
+  for (size_t i = 0; i < stroke_vector.size(); i++) {
+    bvalue[i * 2 + 1] = dat [6 + i * 2];
+    bvalue[i * 2] = dat [7 + i * 2];
+  }
 }
