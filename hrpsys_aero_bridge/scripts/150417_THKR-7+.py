@@ -63,7 +63,7 @@ def SEED_485_Snd(SndData):
 
 	SER.write(''.join(map(chr,SndData)))
 
-	print "Send Data \t:%s" % ''.join("{:02X}".format(ord(c)) for c in ''.join(map(chr,SndData)))
+	print "send: %s" % ''.join("{:02X}".format(ord(c)) for c in ''.join(map(chr,SndData)))
 
 #SEED 485 data read
 def SEED_485_Read():
@@ -74,7 +74,7 @@ def SEED_485_Read():
 
 	RcvData = ''.join("{:02X}".format(ord(c)) for c in SER.read(77))
 
-	print "Receive Data \t:%s" % RcvData
+	print "recv: %s" % RcvData
 
 #SEED Command Function
 '''
@@ -339,7 +339,8 @@ if __name__ == "__main__":
 	#Get_Command(1,0x42)
 	#SEED_485_Read()
 
-	while 1:
+	#while 1:
+        for j in range(100):
 
 # Move Command
 		y=int(A*math.sin(omega*i))
