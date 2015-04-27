@@ -83,6 +83,20 @@ void AeroController::flush() {
 }
 
 
+int16_t AeroController::decode_short_(uint8_t* raw) {
+  int16_t value;
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&value);
+  bvalue[0] = raw[1];
+  bvalue[1] = raw[0];
+  return value;
+}
+void AeroController::encode_short_(int16_t value, uint8_t* raw) {
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&value);
+  raw[0] = bvalue[1];
+  raw[1] = bvalue[0];
+}
+
+
 void AeroController::set_command(uint8_t id, uint8_t cmd, uint16_t time,
                                  std::vector<int16_t>& values) {
 	int32_t b_check_sum = 0;
@@ -99,10 +113,8 @@ void AeroController::set_command(uint8_t id, uint8_t cmd, uint16_t time,
   dat[4] = static_cast<uint8_t>(0xff & (time >> 8));
   dat[5] = static_cast<uint8_t>(0xff & time);
 
-  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&values[0]);
   for (size_t i = 0; i < values.size(); i++) {
-    dat[6 + i * 2] = bvalue[i * 2 + 1];
-    dat[7 + i * 2] = bvalue[i * 2];
+    encode_short_(values[i], &dat[6 + i * 2]);
   }
 
   // checksum
@@ -143,9 +155,7 @@ void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
 
   // convert uint8_t to int16_t
   stroke_vector.resize(35);
-  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&stroke_vector[0]);
   for (size_t i = 0; i < stroke_vector.size(); i++) {
-    bvalue[i * 2 + 1] = dat [6 + i * 2];
-    bvalue[i * 2] = dat [7 + i * 2];
+    stroke_vector[i] = decode_short_(&dat[6 + i * 2]);
   }
 }
