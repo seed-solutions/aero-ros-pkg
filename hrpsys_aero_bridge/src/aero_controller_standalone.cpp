@@ -1,8 +1,8 @@
 #include "hrpsys_aero_bridge/aero_controller.hpp"
 
 int main(int argc, char** argv) {
-  std::string port("/dev/ttyUSB0");
-  // std::string port("");
+  // std::string port("/dev/ttyUSB0");
+  std::string port("");
   io_service ios;
 
   AeroController aero(ios, port);
@@ -13,72 +13,59 @@ int main(int argc, char** argv) {
   int32_t a = 100;
   int32_t move_time = 20;
 
-  //aero.servo_command(1, 1);
   aero.servo_on();
 
-  // flush i/o
-  usleep(5000 * 1000);
-  aero.flush();
+  // // flush i/o
+  // usleep(5000 * 1000);
+  // aero.flush();
 
-  std::vector<int16_t> values;
-  std::vector<int16_t> rvalues;
-  // std::vector<uint8_t> read_data;
-  values.resize(35);
-  rvalues.resize(35);
+  std::vector<int16_t> stroke_vector;
+  std::vector<int16_t> stroke_vector_current;
+  stroke_vector.resize(AERO_DOF);
+  stroke_vector_current.resize(AERO_DOF);
 
-  //aero.set_command(1, CMD_MOVE_ABS, 2000, values);
-  aero.set_position(values, 2000);
-  //aero.seed_485_read(read_data);
-
-  usleep(5000 * 1000);
-
-
+  aero.set_position(stroke_vector, 2000);
+  // usleep(5000 * 1000);
 
   for (size_t j = 0; j < 100; j++) {
     int16_t y = static_cast<int16_t>(a * sin(omega * i));
-    values.clear();
-    values.resize(35);
-    for (size_t k = 0; k < 35; k++) {
-      switch (k) {
-        case 0:
-        case 5:
-        case 16:
-        case 21:
-        case 23:
-          values[k] = y * 5;
-          break;
-        case 1:
-        case 2:
-        case 8:
-        case 9:
-          values[k] = y / 2;
-          break;
-        case 7:
-          values[k] = y * 10;
-          break;
-        default:
-          values[k] = y;
+    stroke_vector.clear();
+    stroke_vector.resize(AERO_DOF);
+    for (size_t k = 0; k < AERO_DOF; k++) {
+      if (k == STROKE_NECK_Y ||
+          k == STROKE_RIGHT_ELBOW_Y ||
+          k == STROKE_WAIST_P ||
+          k == STROKE_LEFT_ELBOW_Y ||
+          k == STROKE_LEFT_WRIST_R) {
+        stroke_vector[k] = y * 5;
+      } else if (k == STROKE_NECK_RIGHT ||
+                 k == STROKE_NECK_LEFT ||
+                 k == STROKE_RIGHT_WRIST_TOP ||
+                 k == STROKE_RIGHT_WRIST_BOTTOM) {
+        stroke_vector[k] = y / 2;
+      } else if (k == STROKE_RIGHT_WRIST_R) {
+        stroke_vector[k] = y * 10;
+      } else {
+        stroke_vector[k] = y;
       }
     }
 
-    // aero.set_command(1, CMD_MOVE_ABS, move_time, values);
-    aero.set_position(values, move_time);
-    // aero.seed_485_read(read_data);
-    aero.get_position(rvalues);
+    aero.set_position(stroke_vector, move_time);
+    aero.get_position(stroke_vector_current);
 
-    std::cout << "send:";
-    for (size_t vi = 0; vi < values.size(); vi++) {
-      std::cout << std::dec << " " << values[vi];
-    }
-    std::cout << std::endl;
+    // std::cout << "send:";
+    // for (size_t vi = 0; vi < stroke_vector.size(); vi++) {
+    //   std::cout << std::dec << " " << stroke_vector[vi];
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "recv:";
-    for (size_t vi = 0; vi < rvalues.size(); vi++) {
-      std::cout << std::dec << " " << rvalues[vi];
-    }
-    std::cout << std::endl;
+  //   std::cout << "recv:";
+  //   for (size_t vi = 0; vi < rvalues.size(); vi++) {
+  //     std::cout << std::dec << " " << rvalues[vi];
+  //   }
+  //   std::cout << std::endl;
 
-    usleep(move_time * 1000);
+  //   usleep(move_time * 1000);
     i += move_time * 0.001;
   }
 
