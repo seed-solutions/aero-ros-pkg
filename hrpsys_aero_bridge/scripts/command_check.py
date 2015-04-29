@@ -12,17 +12,17 @@ def COM_Open():
 
 	global SER
 
-	SER=serial.Serial('/dev/ttyUSB0', 115200)
-	SER.open()
-	SER.write("S8\r")
-	SER.write("O\r")
+	# SER=serial.Serial('/dev/ttyUSB0', 115200)
+	# SER.open()
+	# SER.write("S8\r")
+	# SER.write("O\r")
 
 def RS485_Open():
 
 	global SER
 
 	#SER=serial.Serial('/dev/ttyUSB0', 115200)
-	SER=serial.Serial('/dev/ttyUSB0', 1382400)
+	# SER=serial.Serial('/dev/ttyUSB0', 1382400)
 	#SER.open()
 
 #Com Port Close
@@ -30,15 +30,15 @@ def COM_Close():
 
 	global SER
 
-	SER.write("C\r")
-	SER.close()
+	# SER.write("C\r")
+	# SER.close()
 
 def RS485_Close():
 
 	global SER
 
 	#SER.write("C\r")
-	SER.close()
+	# SER.close()
 
 #Binary data to Hex data and decide number of byte
 def num2hex(value,byte=1):
@@ -52,7 +52,7 @@ def SEED_CAN_Snd(SndData):
 	global SER
 
 	CAN_Transmit = ''.join(map(str,SndData)) + '\r'
-	SER.write(CAN_Transmit)
+	# SER.write(CAN_Transmit)
 
 	print CAN_Transmit
 
@@ -61,7 +61,7 @@ def SEED_485_Snd(SndData):
 
 	global SER
 
-	SER.write(''.join(map(chr,SndData)))
+	# SER.write(''.join(map(chr,SndData)))
 
 	print "send: %s" % ''.join("{:02X}".format(ord(c)) for c in ''.join(map(chr,SndData)))
 
@@ -72,9 +72,9 @@ def SEED_485_Read():
 
 	#RcvData = SER.read(34)
 
-	RcvData = ''.join("{:02X}".format(ord(c)) for c in SER.read(77))
+	# RcvData = ''.join("{:02X}".format(ord(c)) for c in SER.read(77))
 
-	print "recv: %s" % RcvData
+	# print "Receive Data \t:%s" % RcvData
 
 #SEED Command Function
 '''
@@ -326,8 +326,8 @@ if __name__ == "__main__":
 	Servo_Command(1,1)
 
 # Buffer Clear
-	SER.flushInput()		#flush input buffer
-	SER.flushOutput()	#flush output buffer
+        #SER.flushInput()		#flush input buffer
+	#SER.flushOutput()	#flush output buffer
 
 	time.sleep(5)
 
@@ -339,7 +339,7 @@ if __name__ == "__main__":
 	#Get_Command(1,0x42)
 	#SEED_485_Read()
 
-	#while 1:
+	# while 1:
         for j in range(100):
 
 # Move Command
