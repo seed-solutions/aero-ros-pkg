@@ -1,8 +1,8 @@
 #include "hrpsys_aero_bridge/aero_controller.hpp"
 
 int main(int argc, char** argv) {
-  // std::string port("/dev/ttyUSB0");
-  std::string port("");
+  std::string port("/dev/ttyUSB0");
+  // std::string port("");
   io_service ios;
 
   AeroController aero(ios, port);
@@ -15,9 +15,9 @@ int main(int argc, char** argv) {
 
   aero.servo_on();
 
-  // // flush i/o
-  // usleep(5000 * 1000);
-  // aero.flush();
+  // flush i/o
+  usleep(5000 * 1000);
+  aero.flush();
 
   std::vector<int16_t> stroke_vector;
   std::vector<int16_t> stroke_vector_current;
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
   stroke_vector_current.resize(AERO_DOF);
 
   aero.set_position(stroke_vector, 2000);
-  // usleep(5000 * 1000);
+  usleep(5000 * 1000);
 
   for (size_t j = 0; j < 100; j++) {
     int16_t y = static_cast<int16_t>(a * sin(omega * i));
@@ -53,19 +53,19 @@ int main(int argc, char** argv) {
     aero.set_position(stroke_vector, move_time);
     aero.get_position(stroke_vector_current);
 
-    // std::cout << "send:";
-    // for (size_t vi = 0; vi < stroke_vector.size(); vi++) {
-    //   std::cout << std::dec << " " << stroke_vector[vi];
-    // }
-    // std::cout << std::endl;
+    std::cout << "send:";
+    for (size_t vi = 0; vi < stroke_vector.size(); vi++) {
+      std::cout << std::dec << " " << stroke_vector[vi];
+    }
+    std::cout << std::endl;
 
-  //   std::cout << "recv:";
-  //   for (size_t vi = 0; vi < rvalues.size(); vi++) {
-  //     std::cout << std::dec << " " << rvalues[vi];
-  //   }
-  //   std::cout << std::endl;
+    std::cout << "recv:";
+    for (size_t vi = 0; vi < stroke_vector_current.size(); vi++) {
+      std::cout << std::dec << " " << stroke_vector_current[vi];
+    }
+    std::cout << std::endl;
 
-  //   usleep(move_time * 1000);
+    usleep(move_time * 1000);
     i += move_time * 0.001;
   }
 
