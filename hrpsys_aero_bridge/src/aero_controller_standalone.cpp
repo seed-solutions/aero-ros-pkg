@@ -3,11 +3,13 @@
 using namespace aero_controller;
 
 int main(int argc, char** argv) {
-  std::string port("/dev/ttyUSB0");
-  // std::string port("");
-  io_service ios;
+  // std::string port_upper("/dev/ttyUSB0");
+  // std::string port_lower("/dev/ttyUSB1");
 
-  AeroController aero(ios, port);
+  std::string port_upper("");
+  std::string port_lower("");
+
+  AeroController aero(port_upper, port_lower);
 
   double i = 0;
   double f = 0.5;

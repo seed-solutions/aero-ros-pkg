@@ -40,19 +40,38 @@ class AJointIndex {
   }
 };
 
-class AeroController {
+class SEED485Controller {
  public:
-  AeroController(io_service& ios, std::string& port);
-  ~AeroController();
+  SEED485Controller(std::string& port, uint8_t id);
+  ~SEED485Controller();
 
   // basic commands
-  void seed_485_send(std::vector<uint8_t>& send_data);
-  void seed_485_read(std::vector<uint8_t>& read_data);
+  void send(std::vector<uint8_t>& send_data);
+  void read(std::vector<uint8_t>& read_data);
   void flush();
 
-  void set_command_header(uint8_t id, uint8_t cmd, uint16_t time,
+  void set_command_header(uint8_t cmd, uint16_t time,
                           std::vector<uint8_t>& dat);
   void set_check_sum(std::vector<uint8_t>& dat);
+
+  bool verbose() {return verbose_;}
+  void verbose(bool v) {verbose_ = v;}
+
+ private:
+  io_service io_;
+  serial_port ser_;
+  uint8_t id_;
+  bool verbose_;
+};
+
+
+class AeroController {
+ public:
+  AeroController(std::string& port_upper, std::string& port_lower);
+  ~AeroController();
+
+  // flush all controllers
+  void flush();
 
   // servo
   void servo_command(int16_t d0);
@@ -66,9 +85,10 @@ class AeroController {
   void verbose(bool v) {verbose_ = v;}
 
  private:
-  io_service& io_;
-  serial_port ser_;
   bool verbose_;
+
+  SEED485Controller ser_upper_;
+  SEED485Controller ser_lower_;
 
   std::vector<int16_t> stroke_vector_;
   std::vector<int16_t> stroke_ref_vector_;
@@ -80,10 +100,14 @@ class AeroController {
   void encode_short_(int16_t value, uint8_t* raw);
 
   /// @brief stroke_vector (int16_t) to raw_vector(uint8_t)
-  void stroke_to_raw_(std::vector<int16_t>& stroke, std::vector<uint8_t>& raw);
+  void stroke_to_raw_(std::vector<int16_t>& stroke,
+                      std::vector<uint8_t>& raw_upper,
+                      std::vector<uint8_t>& raw_lower);
 
   /// @brief raw_vector(uint8_t) to stroke_vector (int16_t)
-  void raw_to_stroke_(std::vector<uint8_t>& raw, std::vector<int16_t>& stroke);
+  void raw_to_stroke_(std::vector<uint8_t>& raw_upper,
+                      std::vector<uint8_t>& raw_lower,
+                      std::vector<int16_t>& stroke);
 };
 
 }  // namespace
