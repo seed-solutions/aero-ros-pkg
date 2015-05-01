@@ -44,17 +44,17 @@ torso:
 ## end-coords
 ##
 larm-end-coords:
-  translate : [0, 0, -0.3079275]
+  translate : [0.172721, 0, -0.3479275]
   rotate    : [0, 1,  0, 0]
   parent    : LARM_LINK3
 rarm-end-coords:
-  translate : [0, 0, -0.3079275]
+  translate : [0.172721, 0, -0.3479275]
   rotate    : [0, 1,  0, 0]
   parent    : RARM_LINK3
 lleg-end-coords:
-  translate : [0.00, 0, -0.3079275]
+  translate : [0.172721, 0, -0.3479275]
 rleg-end-coords:
-  translate : [0.00, 0, -0.3079275]
+  translate : [0.172721, 0, -0.3479275]
 head-end-coords:
   translate : [0.08, 0, 0.13]
   rotate    : [0, 1, 0, 90]
