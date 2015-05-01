@@ -62,6 +62,6 @@
 (defun aero-init (&rest args)
   (if (not (boundp '*ri*))
       (setq *ri* (instance* aero-interface :init args)))
-  (if (not (boundp '*sr*))
+  (if (not (boundp '*aero*))
       (setq *aero* (instance AeroRobot-robot :init)))
   )
