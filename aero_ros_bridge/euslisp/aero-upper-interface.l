@@ -1,6 +1,55 @@
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
 (require :aero "package://aero_ros_bridge/models/aero_upper.l")
 
+(defun hand-poses (hand args)
+  (let ((pose (car args))
+	(angle 0)
+	(hand-vector (float-vector
+		      (send *robot* hand :t-1p :joint-angle)
+		      (send *robot* hand :f-1p :joint-angle)
+		      0 0))
+	)
+    (case pose
+      (:reset-pose (setq hand-vector #f(0 0 0 0)))
+      (:open-pose (if (eq hand :larm) (setq hand-vector #f(-50 50 0 0))
+		    (setq hand-vector #f(50 -50 0 0))))
+      (:close-pose (if (eq hand :larm) (setq hand-vector #f(50 -50 0 0))
+		     (setq hand-vector #f(-50 50 0 0))))
+      (:joint-angle (progn
+		      (setq angle (elt (cdr args) 0))
+		      (if (eq hand :larm)
+			  (setq hand-vector
+				(float-vector angle (- angle) 0 0))
+			(setq hand-vector
+			      (float-vector (- angle) angle 0 0))
+			)
+		      ))
+      (t (return-from :hand-poses nil))
+      )
+    (send *robot* hand :t-1p :joint-angle (elt hand-vector 0))
+    (send *robot* hand :f-1p :joint-angle (elt hand-vector 1))
+    (send *robot* hand :f-2p :joint-angle (elt hand-vector 2))
+    (send *robot* hand :f-3p :joint-angle (elt hand-vector 3))
+    )
+  )
+
+(defmethod AeroUpperRobot-robot
+  (:hand (&rest args)
+    (if (null args) (return-from :hand nil))
+     (let ((key (car args))
+           (nargs (cdr args)))
+       (unless (keywordp key)
+         (return-from :hand nil))
+       (case key
+	 (:arms (progn (hand-poses :larm nargs) (hand-poses :rarm nargs)))
+	 (:larm (hand-poses :larm nargs))
+	 (:rarm (hand-poses :rarm nargs))
+	 (t nil)
+	 )
+       )
+     )
+  )
+
 (defclass aero-upper-interface
   :super rtm-ros-robot-interface
   :slots ())
@@ -62,6 +111,7 @@
 (defun aero-upper-init (&rest args)
   (if (not (boundp '*ri*))
       (setq *ri* (instance* aero-upper-interface :init args)))
-  (if (not (boundp '*sr*))
+  (if (not (boundp '*aero-upper*))
       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
+  (setq *robot* *aero-upper*)
   )
