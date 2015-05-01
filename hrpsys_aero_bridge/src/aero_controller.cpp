@@ -2,6 +2,8 @@
 
 using namespace boost::asio;
 
+namespace aero_controller {
+
 AeroController::AeroController(io_service& ios, std::string& port):
     io_(ios), ser_(io_), verbose_(true) {
   // stroke_vector
@@ -63,52 +65,36 @@ AeroController::AeroController(io_service& ios, std::string& port):
   joint_indices_.push_back(
       AJointIndex(2, STROKE_FRONT_RIGHT_CROTCH_Y, RAW_FRONT_RIGHT_CROTCH_Y));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_RIGHT_CROTCH_P0, RAW_FRONT_RIGHT_CROTCH_P0));
+      AJointIndex(2, STROKE_FRONT_RIGHT_CROTCH_P, RAW_FRONT_RIGHT_CROTCH_P0));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_RIGHT_CROTCH_P1, RAW_FRONT_RIGHT_CROTCH_P1));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_RIGHT_KNEE_P0, RAW_FRONT_RIGHT_KNEE_P0));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_RIGHT_KNEE_P1, RAW_FRONT_RIGHT_KNEE_P1));
+      AJointIndex(2, STROKE_FRONT_RIGHT_KNEE_P, RAW_FRONT_RIGHT_KNEE_P0));
   joint_indices_.push_back(
       AJointIndex(2, STROKE_FRONT_RIGHT_WHEEL, RAW_FRONT_RIGHT_WHEEL));
   // rrleg
   joint_indices_.push_back(
       AJointIndex(2, STROKE_REAR_RIGHT_CROTCH_Y, RAW_REAR_RIGHT_CROTCH_Y));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_RIGHT_CROTCH_P0, RAW_REAR_RIGHT_CROTCH_P0));
+      AJointIndex(2, STROKE_REAR_RIGHT_CROTCH_P, RAW_REAR_RIGHT_CROTCH_P0));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_RIGHT_CROTCH_P1, RAW_REAR_RIGHT_CROTCH_P1));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_RIGHT_KNEE_P0, RAW_REAR_RIGHT_KNEE_P0));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_RIGHT_KNEE_P1, RAW_REAR_RIGHT_KNEE_P1));
+      AJointIndex(2, STROKE_REAR_RIGHT_KNEE_P, RAW_REAR_RIGHT_KNEE_P0));
   joint_indices_.push_back(
       AJointIndex(2, STROKE_REAR_RIGHT_WHEEL, RAW_REAR_RIGHT_WHEEL));
   // flleg
   joint_indices_.push_back(
       AJointIndex(2, STROKE_FRONT_LEFT_CROTCH_Y, RAW_FRONT_LEFT_CROTCH_Y));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_LEFT_CROTCH_P0, RAW_FRONT_LEFT_CROTCH_P0));
+      AJointIndex(2, STROKE_FRONT_LEFT_CROTCH_P, RAW_FRONT_LEFT_CROTCH_P0));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_LEFT_CROTCH_P1, RAW_FRONT_LEFT_CROTCH_P1));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_LEFT_KNEE_P0, RAW_FRONT_LEFT_KNEE_P0));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_FRONT_LEFT_KNEE_P1, RAW_FRONT_LEFT_KNEE_P1));
+      AJointIndex(2, STROKE_FRONT_LEFT_KNEE_P, RAW_FRONT_LEFT_KNEE_P0));
   joint_indices_.push_back(
       AJointIndex(2, STROKE_FRONT_LEFT_WHEEL, RAW_FRONT_LEFT_WHEEL));
   // rlleg
   joint_indices_.push_back(
       AJointIndex(2, STROKE_REAR_LEFT_CROTCH_Y, RAW_REAR_LEFT_CROTCH_Y));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_LEFT_CROTCH_P0, RAW_REAR_LEFT_CROTCH_P0));
+      AJointIndex(2, STROKE_REAR_LEFT_CROTCH_P, RAW_REAR_LEFT_CROTCH_P0));
   joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_LEFT_CROTCH_P1, RAW_REAR_LEFT_CROTCH_P1));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_LEFT_KNEE_P0, RAW_REAR_LEFT_KNEE_P0));
-  joint_indices_.push_back(
-      AJointIndex(2, STROKE_REAR_LEFT_KNEE_P1, RAW_REAR_LEFT_KNEE_P1));
+      AJointIndex(2, STROKE_REAR_LEFT_KNEE_P, RAW_REAR_LEFT_KNEE_P0));
   joint_indices_.push_back(
       AJointIndex(2, STROKE_REAR_LEFT_WHEEL, RAW_REAR_LEFT_WHEEL));
 
@@ -317,4 +303,6 @@ void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
   seed_485_read(dat);
   stroke_vector.resize(AERO_DOF);
   raw_to_stroke_(dat, stroke_vector);
+}
+
 }

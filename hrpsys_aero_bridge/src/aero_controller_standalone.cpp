@@ -1,5 +1,7 @@
 #include "hrpsys_aero_bridge/aero_controller.hpp"
 
+using namespace aero_controller;
+
 int main(int argc, char** argv) {
   std::string port("/dev/ttyUSB0");
   // std::string port("");
