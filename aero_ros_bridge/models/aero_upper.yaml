@@ -10,6 +10,10 @@ rarm:
   - RARM_WRIST_Y    : rarm-wrist-y
   - RARM_WRIST_P    : rarm-wrist-p
   - RARM_WRIST_R    : rarm-wrist-r
+  - RARM_THUMB_P    : rarm-t-1p
+  - RARM_INDEX_P1   : rarm-f-1p
+  - RARM_INDEX_P2   : rarm-f-2p
+  - RARM_INDEX_P3   : rarm-f-3p
 larm:
   - LARM_SHOULDER_P : larm-shoulder-p
   - LARM_SHOULDER_R : larm-shoulder-r
@@ -22,10 +26,6 @@ larm:
   - LARM_INDEX_P1   : larm-f-1p
   - LARM_INDEX_P2   : larm-f-2p
   - LARM_INDEX_P3   : larm-f-3p
-  - RARM_THUMB_P    : rarm-t-1p
-  - RARM_INDEX_P1   : rarm-f-1p
-  - RARM_INDEX_P2   : rarm-f-2p
-  - RARM_INDEX_P3   : rarm-f-3p
 torso:
   - WAIST_Y      : torso-waist-y
   - WAIST_P      : torso-waist-p
@@ -41,11 +41,11 @@ head:
 larm-end-coords:
   translate : [0, -0.025, -0.13] #[0, 0, -0.12]
   rotate    : [0, 1,  0, 90]
-  parent    : LARM_LINK6
+  parent    : LARM_LINK7
 rarm-end-coords:
   translate : [0, 0.025, -0.13] #[0, 0, -0.12]
   rotate    : [0, 1,  0, 90]
-  parent    : RARM_LINK6
+  parent    : RARM_LINK7
 head-end-coords:
   translate : [0.08, 0, 0.13]
   rotate    : [0, 1, 0, 90]
