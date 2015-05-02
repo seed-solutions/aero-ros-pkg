@@ -133,9 +133,9 @@ AeroController::AeroController(std::string& port_upper,
     ser_upper_(port_upper, ID_UPPER), ser_lower_(port_lower, ID_LOWER),
     verbose_(true) {
   // stroke_vector
-  stroke_vector_.resize(46);
-  stroke_ref_vector_.resize(46);
-  stroke_cur_vector_.resize(46);
+  stroke_vector_.resize(AERO_DOF);
+  stroke_ref_vector_.resize(AERO_DOF);
+  stroke_cur_vector_.resize(AERO_DOF);
 
   // indices
   joint_indices_.clear();
