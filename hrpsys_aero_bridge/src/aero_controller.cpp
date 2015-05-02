@@ -119,6 +119,12 @@ void SEED485Controller::set_check_sum(std::vector<uint8_t>& dat) {
       ~(reinterpret_cast<uint8_t*>(&b_check_sum)[0]);
 }
 
+void SEED485Controller::send_command(
+    uint8_t cmd, uint16_t time, std::vector<uint8_t>& send_data) {
+  set_command_header(cmd, time, send_data);
+  set_check_sum(send_data);
+  send(send_data);
+}
 
 
 
@@ -287,16 +293,19 @@ void AeroController::servo_command(int16_t d0) {
   dat_upper.resize(RAW_DATA_LENGTH);
   dat_lower.resize(RAW_DATA_LENGTH);
 
-  ser_upper_.set_command_header(CMD_MOTOR_SRV, 0, dat_upper);
-  ser_lower_.set_command_header(CMD_MOTOR_SRV, 0, dat_lower);
+  // ser_upper_.set_command_header(CMD_MOTOR_SRV, 0, dat_upper);
+  // ser_lower_.set_command_header(CMD_MOTOR_SRV, 0, dat_lower);
 
   stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
 
-  ser_upper_.set_check_sum(dat_upper);
-  ser_lower_.set_check_sum(dat_lower);
+  // ser_upper_.set_check_sum(dat_upper);
+  // ser_lower_.set_check_sum(dat_lower);
 
-  ser_upper_.send(dat_upper);
-  ser_lower_.send(dat_lower);
+  // ser_upper_.send(dat_upper);
+  // ser_lower_.send(dat_lower);
+
+  ser_upper_.send_command(CMD_MOTOR_SRV, 0, dat_upper);
+  ser_lower_.send_command(CMD_MOTOR_SRV, 0, dat_lower);
 }
 
 /// @brief servo on command
@@ -318,16 +327,19 @@ void AeroController::set_position(std::vector<int16_t>& stroke_vector,
   dat_upper.resize(RAW_DATA_LENGTH);
   dat_lower.resize(RAW_DATA_LENGTH);
 
-  ser_upper_.set_command_header(CMD_MOVE_ABS, time, dat_upper);
-  ser_lower_.set_command_header(CMD_MOVE_ABS, time, dat_lower);
+  // ser_upper_.set_command_header(CMD_MOVE_ABS, time, dat_upper);
+  // ser_lower_.set_command_header(CMD_MOVE_ABS, time, dat_lower);
 
   stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
 
-  ser_upper_.set_check_sum(dat_upper);
-  ser_lower_.set_check_sum(dat_lower);
+  // ser_upper_.set_check_sum(dat_upper);
+  // ser_lower_.set_check_sum(dat_lower);
 
-  ser_upper_.send(dat_upper);
-  ser_lower_.send(dat_lower);
+  // ser_upper_.send(dat_upper);
+  // ser_lower_.send(dat_lower);
+
+  ser_upper_.send_command(CMD_MOVE_ABS, time, dat_upper);
+  ser_lower_.send_command(CMD_MOVE_ABS, time, dat_lower);
 }
 
 /// @brief get position, this does not call command, but only read from buffer

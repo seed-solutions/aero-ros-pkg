@@ -50,9 +50,12 @@ class SEED485Controller {
   void read(std::vector<uint8_t>& read_data);
   void flush();
 
+  // command operation
   void set_command_header(uint8_t cmd, uint16_t time,
                           std::vector<uint8_t>& dat);
   void set_check_sum(std::vector<uint8_t>& dat);
+  void send_command(uint8_t cmd, uint16_t time,
+                    std::vector<uint8_t>& send_data);
 
   bool verbose() {return verbose_;}
   void verbose(bool v) {verbose_ = v;}
