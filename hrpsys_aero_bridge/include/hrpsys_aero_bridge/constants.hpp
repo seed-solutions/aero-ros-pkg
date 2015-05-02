@@ -109,29 +109,29 @@ const static size_t RAW_LEFT_HAND = 27;
 
 // LOWER (4 LEGS):
 const static size_t RAW_FRONT_RIGHT_CROTCH_Y = 0;
-const static size_t RAW_FRONT_RIGHT_CROTCH_P0 = 1;
-const static size_t RAW_FRONT_RIGHT_CROTCH_P1 = 2;  // slave, N/A
-const static size_t RAW_FRONT_RIGHT_KNEE_P0 = 3;
-const static size_t RAW_FRONT_RIGHT_KNEE_P1 = 4;  // slave, N/A
+const static size_t RAW_FRONT_RIGHT_CROTCH_P0 = 1;  // slave, N/A
+const static size_t RAW_FRONT_RIGHT_CROTCH_P1 = 2;
+const static size_t RAW_FRONT_RIGHT_KNEE_P0 = 3;  // slave, N/A
+const static size_t RAW_FRONT_RIGHT_KNEE_P1 = 4;
 const static size_t RAW_FRONT_RIGHT_WHEEL = 5;
 const static size_t RAW_REAR_RIGHT_CROTCH_Y = 6;
-const static size_t RAW_REAR_RIGHT_CROTCH_P0 = 7;
-const static size_t RAW_REAR_RIGHT_CROTCH_P1 = 8;  // slave, N/A
-const static size_t RAW_REAR_RIGHT_KNEE_P0 = 9;
-const static size_t RAW_REAR_RIGHT_KNEE_P1 = 10;  // slave, N/A
+const static size_t RAW_REAR_RIGHT_CROTCH_P0 = 7;  // slave, N/A
+const static size_t RAW_REAR_RIGHT_CROTCH_P1 = 8;
+const static size_t RAW_REAR_RIGHT_KNEE_P0 = 9;  // slave, N/A
+const static size_t RAW_REAR_RIGHT_KNEE_P1 = 10;
 const static size_t RAW_REAR_RIGHT_WHEEL = 11;
 // 12 - 15: N/A
 const static size_t RAW_FRONT_LEFT_CROTCH_Y = 16;
-const static size_t RAW_FRONT_LEFT_CROTCH_P0 = 17;
-const static size_t RAW_FRONT_LEFT_CROTCH_P1 = 18;  // slave, N/A
-const static size_t RAW_FRONT_LEFT_KNEE_P0 = 19;
-const static size_t RAW_FRONT_LEFT_KNEE_P1 = 20;  // slave, N/A
+const static size_t RAW_FRONT_LEFT_CROTCH_P0 = 17;  // slave, N/A
+const static size_t RAW_FRONT_LEFT_CROTCH_P1 = 18;
+const static size_t RAW_FRONT_LEFT_KNEE_P0 = 19;  // slave, N/A
+const static size_t RAW_FRONT_LEFT_KNEE_P1 = 20;
 const static size_t RAW_FRONT_LEFT_WHEEL = 21;
 const static size_t RAW_REAR_LEFT_CROTCH_Y = 22;
-const static size_t RAW_REAR_LEFT_CROTCH_P0 = 23;
-const static size_t RAW_REAR_LEFT_CROTCH_P1 = 24;  // slave, N/A
-const static size_t RAW_REAR_LEFT_KNEE_P0 = 25;
-const static size_t RAW_REAR_LEFT_KNEE_P1 = 26;  // slave, N/A
+const static size_t RAW_REAR_LEFT_CROTCH_P0 = 23;  // slave, N/A
+const static size_t RAW_REAR_LEFT_CROTCH_P1 = 24;
+const static size_t RAW_REAR_LEFT_KNEE_P0 = 25;  // slave, N/A
+const static size_t RAW_REAR_LEFT_KNEE_P1 = 26;
 const static size_t RAW_REAR_LEFT_WHEEL = 27;
 // 28 - 31: N/A
 // 32 - 34: IMU (uint8_t * 6)

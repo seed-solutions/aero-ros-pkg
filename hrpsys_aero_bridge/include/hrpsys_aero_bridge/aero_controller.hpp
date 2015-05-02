@@ -77,8 +77,9 @@ class AeroController {
   void flush();
 
   // servo
-  void servo_command(int16_t d0);
+  void servo_command(int16_t d0, int16_t d1);
   void servo_on();
+  void wheel_on();
   void servo_off();
 
   void set_position(std::vector<int16_t>& stroke_vector, uint16_t time);
