@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     }
 
     aero.set_position(stroke_vector, move_time);
-    aero.get_position(stroke_vector_current);
+    aero.get_data(stroke_vector_current);
 
     std::cout << "send:";
     for (size_t vi = 0; vi < stroke_vector.size(); vi++) {

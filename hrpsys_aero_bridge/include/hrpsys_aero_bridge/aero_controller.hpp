@@ -82,8 +82,23 @@ class AeroController {
   void wheel_on();
   void servo_off();
 
+  // postion
   void set_position(std::vector<int16_t>& stroke_vector, uint16_t time);
+
+  // get data
+  void get_data(std::vector<int16_t>& stroke_vector);
+
+  // set commands
+  void set_command(uint8_t cmd, std::vector<int16_t>& stroke_vector);
+  void set_max_current(std::vector<int16_t>& stroke_vector);
+  void set_accel_rate(std::vector<int16_t>& stroke_vector);
+  void set_motor_gain(std::vector<int16_t>& stroke_vector);
+
+  // get commands
+  void get_command(uint8_t cmd, std::vector<int16_t>& stroke_vector);
   void get_position(std::vector<int16_t>& stroke_vector);
+  void get_current(std::vector<int16_t>& stroke_vector);
+  void get_temperature(std::vector<int16_t>& stroke_vector);
 
   bool verbose() {return verbose_;}
   void verbose(bool v) {verbose_ = v;}

@@ -366,9 +366,10 @@ void AeroController::set_position(std::vector<int16_t>& stroke_vector,
   ser_lower_.send_command(CMD_MOVE_ABS, time, dat_lower);
 }
 
-/// @brief get position, this does not call command, but only read from buffer
+/// @brief get data from buffer,
+///   this does not call command, but only read from buffer
 /// @param stroke_vector stroke vector
-void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
+void AeroController::get_data(std::vector<int16_t>& stroke_vector) {
   std::vector<uint8_t> dat_upper, dat_lower;
   dat_upper.resize(RAW_DATA_LENGTH);
   dat_lower.resize(RAW_DATA_LENGTH);
@@ -379,5 +380,66 @@ void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
   stroke_vector.resize(AERO_DOF);
   raw_to_stroke_(dat_upper, dat_lower, stroke_vector);
 }
+
+
+/// @brief abstract of set commands
+/// @param cmd command id
+/// @param stroke_vector stroke vector
+void AeroController::set_command(uint8_t cmd,
+                                 std::vector<int16_t>& stroke_vector) {
+  std::vector<uint8_t> dat_upper, dat_lower;
+  dat_upper.resize(RAW_DATA_LENGTH);
+  dat_lower.resize(RAW_DATA_LENGTH);
+  stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
+  ser_upper_.send_command(cmd, 0, dat_upper);
+  ser_lower_.send_command(cmd, 0, dat_lower);
+}
+/// @brief send Motor_Cur command
+/// @param stroke_vector stroke vector
+void AeroController::set_max_current(std::vector<int16_t>& stroke_vector) {
+  set_command(CMD_MOTOR_CUR, stroke_vector);
+}
+/// @brief send Motor_Acc command
+/// @param stroke_vector stroke vector
+void AeroController::set_accel_rate(std::vector<int16_t>& stroke_vector) {
+  set_command(CMD_MOTOR_ACC, stroke_vector);
+}
+/// @brief send Motor_Gain command
+/// @param stroke_vector stroke vector
+void AeroController::set_motor_gain(std::vector<int16_t>& stroke_vector) {
+  set_command(CMD_MOTOR_GAIN, stroke_vector);
+}
+
+
+/// @brief abstract of get commands
+/// @param cmd command id
+/// @param stroke_vector stroke vector
+void AeroController::get_command(uint8_t cmd,
+                                 std::vector<int16_t>& stroke_vector) {
+  std::vector<uint8_t> dat_upper, dat_lower;
+  dat_upper.resize(RAW_DATA_LENGTH);
+  dat_lower.resize(RAW_DATA_LENGTH);
+  ser_upper_.send_command(cmd, 0, dat_upper);
+  ser_lower_.send_command(cmd, 0, dat_lower);
+  get_data(stroke_vector);
+}
+
+/// @brief send Get_Pos command
+/// @param stroke_vector stroke vector
+void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
+  get_command(CMD_GET_POS, stroke_vector);
+}
+/// @brief send Get_Cur command
+/// @param stroke_vector stroke vector
+void AeroController::get_current(std::vector<int16_t>& stroke_vector) {
+  get_command(CMD_GET_CUR, stroke_vector);
+}
+/// @brief send Get_Tmp command
+/// @param stroke_vector stroke vector
+void AeroController::get_temperature(std::vector<int16_t>& stroke_vector) {
+  get_command(CMD_GET_TMP, stroke_vector);
+}
+
+
 
 }  // namespace
