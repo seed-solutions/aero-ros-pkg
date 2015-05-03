@@ -58,7 +58,31 @@
        (send *aero-upper* :newcoords (car coords))
        )
      )
+  
   )
+
+;; (defclass AeroUpperRobot-robot-collision
+;;   :super AeroUpperRobot-robot
+;;   :slots ())
+;; (defmethod AeroUpperRobot-robot-collision
+;;   (:init (&rest args)
+;; 	 (send-super* :init args)
+;; 	 (setq collision-avoidance-links (list (send self :torso :waist-p :parent-link)
+;; 					       (send self :torso :waist-r :child-link)
+;; 					       (send self :head :neck-r :child-link)
+;; 					       (send self :rarm :shoulder-y :child-link)
+;; 					       (send self :rarm :elbow-p :child-link)
+;; 					       (send self :rarm :wrist-y :child-link)
+;; 					       (send self :rarm :wrist-r :child-link)
+;; 					       (send self :larm :shoulder-y :child-link)
+;; 					       (send self :larm :elbow-p :child-link)
+;; 					       (send self :larm :wrist-y :child-link)
+;; 					       (send self :larm :wrist-r :child-link)
+;; 					       ))
+;; 	 (setq larm-collision-avoidance-links collision-avoidance-links)
+;; 	 (setq rarm-collision-avoidance-links collision-avoidance-links)
+;; 	 )
+;;   )
 
 (defclass aero-upper-interface
   :super rtm-ros-robot-interface

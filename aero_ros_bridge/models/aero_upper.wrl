@@ -355,10 +355,10 @@ DEF AeroUpperRobot Humanoid {
               # rotorInertia 3.0E-4
               # gearRatio 200
               children [
-                #DEF WAIST_LINK2 Segment {
-                #  children [
-                #  ]
-                #} # segment WAIST_LINK2
+                DEF WAIST_LINK2 Segment {
+                  children [
+                  ]
+                } # segment WAIST_LINK2
 
                 DEF CHEST Joint {
                   jointType "rotate"
@@ -657,15 +657,15 @@ DEF AeroUpperRobot Humanoid {
                                           # rotorInertia 3.0E-4
                                           # gearRatio 200
                                           children [
-                                            #DEF LARM_LINK6 Segment {
-                                            #   children [
-                                            #      # DEF lhsensor ForceSensor {
-                                            #      #       Translation 0 0 0
-                                            #      #       rotation 1 0 0 0
-                                            #      #       sensorId 2
-                                            #      # }
-                                            #   ]
-                                            # }
+                                            DEF LARM_LINK6 Segment {
+                                               children [
+                                                  # DEF lhsensor ForceSensor {
+                                                  #       Translation 0 0 0
+                                                  #       rotation 1 0 0 0
+                                                  #       sensorId 2
+                                                  # }
+                                               ]
+                                             }
 
                                             DEF LARM_WRIST_R Joint {
                                               jointType "rotate"
@@ -687,7 +687,7 @@ DEF AeroUpperRobot Humanoid {
                                 		      scale 0.001 0.001 0.001 
                                 		      scaleOrientation 0 0 1 0
                                 		      children Inline {
-                                  			url "SH_HAND.wrl"
+                                  			url "SH_HAND_LP.wrl"
                                 		      }
                               			    }
                                                   }
@@ -969,15 +969,15 @@ DEF AeroUpperRobot Humanoid {
                                           # rotorInertia 3.0E-4
                                           # gearRatio 200
                                           children [
-                                            #DEF RARM_LINK6 Segment {
-                                            #  children [
-                                            #    # DEF rhsensor ForceSensor {
-                                            #            # translation 0 0 0
-                                            #            # rotation 1 0 0 0
-                                            #            # sensorId 3
-                                            #    # }
-                                            #  ]  
-                                            #}
+                                            DEF RARM_LINK6 Segment {
+                                              children [
+                                                # DEF rhsensor ForceSensor {
+                                                        # translation 0 0 0
+                                                        # rotation 1 0 0 0
+                                                        # sensorId 3
+                                                # }
+                                              ]  
+                                            }
                                             
                                             DEF RARM_WRIST_R Joint {
                                               jointType "rotate"
@@ -998,7 +998,7 @@ DEF AeroUpperRobot Humanoid {
                                 		    scale 0.001 0.001 0.001 
                                 		    scaleOrientation 0 0 1 0
                                 		    children Inline {
-                                  		      url "SH_HAND.wrl"
+                                  		      url "SH_HAND_LP.wrl"
                                 		    }
                                                   }
                                                 } # Segment LARM_LINK7
@@ -1183,7 +1183,7 @@ DEF AeroUpperRobot Humanoid {
   segments [
     USE WAIST_LINK0,
     USE WAIST_LINK1,
-#    USE WAIST_LINK2,
+    USE WAIST_LINK2,
     USE WAIST_LINK3,
     
     USE NECK_LINK1,
@@ -1195,7 +1195,7 @@ DEF AeroUpperRobot Humanoid {
     USE LARM_LINK3,
     USE LARM_LINK4,
     USE LARM_LINK5,
-#    USE LARM_LINK6,
+    USE LARM_LINK6,
     USE LARM_LINK7,
     
     USE RARM_LINK1,
@@ -1203,7 +1203,7 @@ DEF AeroUpperRobot Humanoid {
     USE RARM_LINK3,
     USE RARM_LINK4,
     USE RARM_LINK5,
-#    USE RARM_LINK6,
+    USE RARM_LINK6,
     USE RARM_LINK7,
 
     USE LARM_THUMB_LINK,
