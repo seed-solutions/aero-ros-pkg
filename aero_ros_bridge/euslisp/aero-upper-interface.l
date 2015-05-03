@@ -51,14 +51,26 @@
   (:fix-upper-to-coords (&rest coords)
      (if (null coords)
 	 (if (boundp '*aero-lower*)
-	     (send *aero-upper* :newcoords
+	     (send self :newcoords
 		   (send (send *aero-lower* :torso :end-coords)
 			 :worldcoords))
 	   )
-       (send *aero-upper* :newcoords (car coords))
+       (send self :newcoords (car coords))
        )
      )
-  
+  (:move-safe (arm to &key (bits 10)
+			   (coords :local))
+     (let* ((delta-to 0)
+	    )
+       (setq delta-to (scale (/ 1.0 bits) to))
+       (dotimes (i bits)
+	 (send self arm :move-end-pos delta-to coords) ; move a step
+	 (cond ((not (eq (send self :self-collision-check) nil)) ; if collides
+		(send self arm :move-end-pos (scale (- 1) delta-to) coords) ; go back a step 
+		(return-from :move-safe nil)
+		))
+	 ))
+     t)
   )
 
 ;; (defclass AeroUpperRobot-robot-collision
@@ -147,4 +159,6 @@
       (setq *ri* (instance* aero-upper-interface :init args)))
   (if (not (boundp '*aero-upper*))
       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
+  (send *aero-upper* :reset-manip-pose)
+  (objects *aero-upper*)
   )
