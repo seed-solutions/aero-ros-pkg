@@ -23,19 +23,22 @@ class AJointIndex {
   size_t id;
   size_t stroke_index;
   size_t raw_index;
+  std::string joint_name;
 
-  AJointIndex(size_t i, size_t sidx, size_t ridx) :
-      id(i), stroke_index(sidx), raw_index(ridx) {
+  AJointIndex(size_t i, size_t sidx, size_t ridx, std::string name) :
+      id(i), stroke_index(sidx), raw_index(ridx), joint_name(name) {
   }
   AJointIndex(const AJointIndex& aji) {
     id = aji.id;
     stroke_index = aji.stroke_index;
     raw_index = aji.raw_index;
+    joint_name = aji.joint_name;
   }
   AJointIndex& operator=(const AJointIndex& aji) {
     id = aji.id;
     stroke_index = aji.stroke_index;
     raw_index = aji.raw_index;
+    joint_name = aji.joint_name;
     return *this;
   }
 };

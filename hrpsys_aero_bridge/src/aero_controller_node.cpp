@@ -29,7 +29,7 @@ void AeroControllerNode::jointTrajectoryCallback(
     std::string joint_name = msg->joint_names[i];
   }
 
-  for (size_t i = 0; i < msg->points; i++) {
+  for (size_t i = 0; i < msg->points.size(); i++) {
 
   }
 }
