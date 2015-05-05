@@ -11,6 +11,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/thread.hpp>
 
 #include "hrpsys_aero_bridge/constants.hpp"
 
@@ -68,6 +69,7 @@ class SEED485Controller {
   serial_port ser_;
   uint8_t id_;
   bool verbose_;
+  boost::mutex mtx_;
 };
 
 
@@ -105,6 +107,12 @@ class AeroController {
 
   bool verbose() {return verbose_;}
   void verbose(bool v) {verbose_ = v;}
+
+  int32_t get_stroke_index_from_joint_name(std::string& name);
+
+  std::vector<int16_t>& get_reference_stroke_vector() {
+    return stroke_ref_vector_;
+  }
 
  private:
   bool verbose_;

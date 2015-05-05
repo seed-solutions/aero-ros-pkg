@@ -25,12 +25,28 @@ void AeroControllerNode::goVelocityCallback(
 }
 void AeroControllerNode::jointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& msg) {
+  std::vector<size_t> joint_to_stroke_indices;
   for (size_t i = 0; i < msg->joint_names.size(); i++) {
     std::string joint_name = msg->joint_names[i];
+    int32_t stroke_idx =
+        controller_.get_stroke_index_from_joint_name(joint_name);
+    if (stroke_idx >= 0) {
+      joint_to_stroke_indices.push_back(static_cast<size_t>(stroke_idx));
+    }
   }
 
+  // if joint stroke is undefined, use previous stroke
+  std::vector<int16_t> stroke_vector;
+  std::vector<int16_t>& ref_vector = controller_.get_reference_stroke_vector();
+  stroke_vector.assign(ref_vector.begin(), ref_vector.end());
   for (size_t i = 0; i < msg->points.size(); i++) {
-
+    for (size_t j = 0; j < msg->points[i].positions.size(); j++) {
+      stroke_vector[joint_to_stroke_indices[j]] =
+          static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
+    }
+    uint16_t time_msec =
+        static_cast<uint16_t>(msg->points[i].time_from_start.toSec() * 1000.0);
+    controller_.set_position(stroke_vector, time_msec);
   }
 }
 

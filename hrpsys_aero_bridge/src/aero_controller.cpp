@@ -52,6 +52,7 @@ SEED485Controller::~SEED485Controller() {
 /// @param send_data data (uint8_t)
 void SEED485Controller::send(std::vector<uint8_t>& send_data) {
   if (ser_.is_open()) {
+    boost::mutex::scoped_lock lock(mtx_);
     ser_.write_some(buffer(send_data));
   }
   if (verbose_) {
@@ -68,19 +69,20 @@ void SEED485Controller::send(std::vector<uint8_t>& send_data) {
 /// @brief recv command
 /// @param read_data data (uint8_t)
 void SEED485Controller::read(std::vector<uint8_t>& read_data) {
+  read_data.resize(77);
   if (ser_.is_open()) {
-    read_data.resize(77);
+    boost::mutex::scoped_lock lock(mtx_);
     ser_.read_some(buffer(read_data, 77));
-    if (verbose_) {
-      std::cout << "recv: ";
-      for (size_t i = 0; i < read_data.size(); i++) {
-        std::cout << std::setw(2)
-                  << std::uppercase << std::hex
-                  << std::setw(2) << std::setfill('0')
-                  << static_cast<int32_t>(read_data[i]);
-      }
-      std::cout << std::endl;
+  }
+  if (verbose_) {
+    std::cout << "recv: ";
+    for (size_t i = 0; i < read_data.size(); i++) {
+      std::cout << std::setw(2)
+                << std::uppercase << std::hex
+                << std::setw(2) << std::setfill('0')
+                << static_cast<int32_t>(read_data[i]);
     }
+    std::cout << std::endl;
   }
 }
 
@@ -411,6 +413,7 @@ void AeroController::set_position(std::vector<int16_t>& stroke_vector,
   dat_lower.resize(RAW_DATA_LENGTH);
 
   stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
+  stroke_ref_vector_.assign(stroke_vector.begin(), stroke_vector.end());
 
   ser_upper_.send_command(CMD_MOVE_ABS, time, dat_upper);
   ser_lower_.send_command(CMD_MOVE_ABS, time, dat_lower);
@@ -490,6 +493,18 @@ void AeroController::get_temperature(std::vector<int16_t>& stroke_vector) {
   get_command(CMD_GET_TMP, stroke_vector);
 }
 
+
+/// @brief return stroke index from joint name
+/// @param name joint name
+/// @return index in stroke vector, if not found, return -1
+int32_t AeroController::get_stroke_index_from_joint_name(std::string& name) {
+  for (size_t i = 0; i < joint_indices_.size(); i++) {
+    if (joint_indices_[i].joint_name == name) {
+      return static_cast<int32_t>(joint_indices_[i].stroke_index);
+    }
+  }
+  return -1;
+}
 
 
 }  // namespace
