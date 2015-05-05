@@ -46,7 +46,7 @@ class AJointIndex {
 
 class SEED485Controller {
  public:
-  SEED485Controller(std::string& port, uint8_t id);
+  SEED485Controller(const std::string& port, uint8_t id);
   ~SEED485Controller();
 
   // basic commands
@@ -75,7 +75,7 @@ class SEED485Controller {
 
 class AeroController {
  public:
-  AeroController(std::string& port_upper, std::string& port_lower);
+  AeroController(const std::string& port_upper, const std::string& port_lower);
   ~AeroController();
 
   // flush all controllers
@@ -114,6 +114,10 @@ class AeroController {
     return stroke_ref_vector_;
   }
 
+  std::string get_joint_name(size_t idx) {
+    return joint_indices_[idx].joint_name;
+  }
+
  private:
   bool verbose_;
 
@@ -125,6 +129,7 @@ class AeroController {
   std::vector<int16_t> stroke_cur_vector_;
 
   std::vector<AJointIndex> joint_indices_;
+  std::vector<AJointIndex> wheel_indices_;
 
   int16_t decode_short_(uint8_t* raw);
   void encode_short_(int16_t value, uint8_t* raw);

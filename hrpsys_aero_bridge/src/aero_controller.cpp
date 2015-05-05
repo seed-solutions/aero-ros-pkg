@@ -4,7 +4,7 @@ using namespace boost::asio;
 
 namespace aero_controller {
 
-SEED485Controller::SEED485Controller(std::string& port, uint8_t id):
+SEED485Controller::SEED485Controller(const std::string& port, uint8_t id):
     ser_(io_), verbose_(true), id_(id) {
   if (port != "") {
     boost::system::error_code err;
@@ -38,6 +38,8 @@ SEED485Controller::SEED485Controller(std::string& port, uint8_t id):
         std::cerr << e.what() << std::endl;
       }
     }
+  } else {
+    std::cout << "empty serial port name: entering debug mode..." << std::endl;
   }
 }
 
@@ -89,6 +91,7 @@ void SEED485Controller::read(std::vector<uint8_t>& read_data) {
 /// @brief flush io buffer
 void SEED485Controller::flush() {
   if (ser_.is_open()) {
+    boost::mutex::scoped_lock lock(mtx_);
     ::tcflush(ser_.lowest_layer().native_handle(), TCIOFLUSH);
   }
 }
@@ -130,8 +133,8 @@ void SEED485Controller::send_command(
 
 
 
-AeroController::AeroController(std::string& port_upper,
-                               std::string& port_lower):
+AeroController::AeroController(const std::string& port_upper,
+                               const std::string& port_lower):
     ser_upper_(port_upper, ID_UPPER), ser_lower_(port_lower, ID_LOWER),
     verbose_(true) {
   // stroke_vector
@@ -141,6 +144,7 @@ AeroController::AeroController(std::string& port_upper,
 
   // indices
   joint_indices_.clear();
+  wheel_indices_.clear();
   // neck
   joint_indices_.push_back(
       AJointIndex(ID_UPPER, STROKE_NECK_Y, RAW_NECK_Y,
@@ -224,7 +228,7 @@ AeroController::AeroController(std::string& port_upper,
       AJointIndex(ID_LOWER,
                   STROKE_FRONT_RIGHT_KNEE_P, RAW_FRONT_RIGHT_KNEE_P1,
                   std::string("f_r_knee_pitch_joint")));
-  joint_indices_.push_back(
+  wheel_indices_.push_back(
       AJointIndex(ID_LOWER, STROKE_FRONT_RIGHT_WHEEL, RAW_FRONT_RIGHT_WHEEL,
                   std::string("f_r_wheel_joint")));
   // rrleg
@@ -240,7 +244,7 @@ AeroController::AeroController(std::string& port_upper,
       AJointIndex(ID_LOWER,
                   STROKE_REAR_RIGHT_KNEE_P, RAW_REAR_RIGHT_KNEE_P1,
                   std::string("r_r_knee_pitch_joint")));
-  joint_indices_.push_back(
+  wheel_indices_.push_back(
       AJointIndex(ID_LOWER, STROKE_REAR_RIGHT_WHEEL, RAW_REAR_RIGHT_WHEEL,
                   std::string("r_r_wheel_joint")));
   // flleg
@@ -256,7 +260,7 @@ AeroController::AeroController(std::string& port_upper,
       AJointIndex(ID_LOWER,
                   STROKE_FRONT_LEFT_KNEE_P, RAW_FRONT_LEFT_KNEE_P1,
                   std::string("f_l_knee_pitch_joint")));
-  joint_indices_.push_back(
+  wheel_indices_.push_back(
       AJointIndex(ID_LOWER, STROKE_FRONT_LEFT_WHEEL, RAW_FRONT_LEFT_WHEEL,
                   std::string("f_l_wheel_joint")));
   // rlleg
@@ -272,7 +276,7 @@ AeroController::AeroController(std::string& port_upper,
       AJointIndex(ID_LOWER,
                   STROKE_REAR_LEFT_KNEE_P, RAW_REAR_LEFT_KNEE_P1,
                   std::string("r_l_knee_pitch_joint")));
-  joint_indices_.push_back(
+  wheel_indices_.push_back(
       AJointIndex(ID_LOWER, STROKE_REAR_LEFT_WHEEL, RAW_REAR_LEFT_WHEEL,
                   std::string("r_l_wheel_joint")));
 
@@ -285,6 +289,8 @@ AeroController::AeroController(std::string& port_upper,
   //             << "raw: " << aji.raw_index << ")" << std::endl;
   // }
   // //
+
+  std::cout << "starting aero_controller" << std::endl;
 }
 
 AeroController::~AeroController() {

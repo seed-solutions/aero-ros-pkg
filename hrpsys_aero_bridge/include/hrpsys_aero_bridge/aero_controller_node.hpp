@@ -24,22 +24,26 @@ namespace aero_controller {
 
 class AeroControllerNode {
  public:
-  AeroControllerNode(const ros::NodeHandle& nh,
-                     const ros::NodeHandle& pnh,
-                     std::string port_upper, std::string port_lower);
+  explicit AeroControllerNode(const ros::NodeHandle& nh,
+                              const std::string& port_upper,
+                              const std::string& port_lower);
   ~AeroControllerNode();
 
-  void goVelocityCallback(const geometry_msgs::Twist::ConstPtr& msg);
-  void jointTrajectoryCallback(
+  void GoVelocityCallback(const geometry_msgs::Twist::ConstPtr& msg);
+  void JointTrajectoryCallback(
       const trajectory_msgs::JointTrajectory::ConstPtr& msg);
+  void JointStateCallback(const ros::TimerEvent& event);
 
  private:
-  ros::NodeHandle nh_;
-  ros::NodeHandle pnh_;
+  ros::NodeHandle handle_;
   AeroController controller_;
 
   ros::Subscriber cmdvel_sub_;
   ros::Subscriber jointtraj_sub_;
+  ros::Publisher state_pub_;
+  ros::Timer timer_;
+
+  boost::mutex mtx_;
 };
 
 }  // namespace

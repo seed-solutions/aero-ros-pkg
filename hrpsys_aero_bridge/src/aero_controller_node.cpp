@@ -2,29 +2,52 @@
 
 namespace aero_controller {
 
-AeroControllerNode::AeroControllerNode(
-    const ros::NodeHandle& nh, const ros::NodeHandle& pnh,
-    std::string port_upper, std::string port_lower) :
-    controller_(port_upper, port_lower),
-    nh_(nh), pnh_(pnh)
+AeroControllerNode::AeroControllerNode(const ros::NodeHandle& nh,
+                                       const std::string& port_upper,
+                                       const std::string& port_lower) :
+    handle_(nh), controller_(port_upper, port_lower)
 {
   ROS_INFO("starting aero_controller");
+  ROS_INFO(" create publisher");
+  state_pub_ =
+      handle_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
+          "state", 10);
+
+  ROS_INFO(" create cmdvel sub");
   cmdvel_sub_ =
-      pnh_.subscribe(
-          "cmd_vel", 100, &AeroControllerNode::goVelocityCallback, this);
+      handle_.subscribe(
+          "cmd_vel",
+          10,
+          &AeroControllerNode::GoVelocityCallback,
+          this);
+  ROS_INFO(" create command sub");
   jointtraj_sub_ =
-      pnh_.subscribe(
-          "command", 100, &AeroControllerNode::jointTrajectoryCallback, this);
+      handle_.subscribe(
+          "command",
+          10,
+          &AeroControllerNode::JointTrajectoryCallback,
+          this);
+
+  ROS_INFO(" create timer sub");
+  timer_ =
+      handle_.createTimer(ros::Duration(0.1),
+                     &AeroControllerNode::JointStateCallback, this);
+  ROS_INFO(" done");
 }
 
 AeroControllerNode::~AeroControllerNode() {
 }
 
-void AeroControllerNode::goVelocityCallback(
+void AeroControllerNode::GoVelocityCallback(
     const geometry_msgs::Twist::ConstPtr& msg) {
-
+  {
+    boost::mutex::scoped_lock lock(mtx_);
+    controller_.flush();
+  }
+  usleep(1000 * 10);
 }
-void AeroControllerNode::jointTrajectoryCallback(
+
+void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& msg) {
   std::vector<size_t> joint_to_stroke_indices;
   for (size_t i = 0; i < msg->joint_names.size(); i++) {
@@ -47,9 +70,36 @@ void AeroControllerNode::jointTrajectoryCallback(
     }
     double time_sec = msg->points[i].time_from_start.toSec();
     uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
-    controller_.set_position(stroke_vector, time_msec);
+    {
+      boost::mutex::scoped_lock lock(mtx_);
+      controller_.flush();
+      controller_.set_position(stroke_vector, time_msec);
+    }
     usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
+}
+
+void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
+  pr2_controllers_msgs::JointTrajectoryControllerState state;
+  state.header.stamp = ros::Time::now();
+  state.joint_names.resize(AERO_DOF);
+  state.desired.positions.resize(AERO_DOF);
+  state.actual.positions.resize(AERO_DOF);
+
+  std::vector<int16_t> stroke_vector;
+  std::vector<int16_t>& ref_vector =
+      controller_.get_reference_stroke_vector();
+  {
+    boost::mutex::scoped_lock lock(mtx_);
+    controller_.flush();
+    controller_.get_position(stroke_vector);
+  }
+  for (size_t i = 0; i < AERO_DOF; i++) {
+    state.joint_names[i] = controller_.get_joint_name(i);
+    state.desired.positions[i] = static_cast<double>(ref_vector[i]) * 0.01;
+    state.actual.positions[i] = static_cast<double>(stroke_vector[i]) * 0.01;
+  }
+  state_pub_.publish(state);
 }
 
 }  // namespace
@@ -57,13 +107,12 @@ void AeroControllerNode::jointTrajectoryCallback(
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "aero_controller");
-
-  ros::NodeHandle n;
   ros::NodeHandle np("~");
 
-  aero_controller::AeroControllerNode(
-      //n, np, std::string("/dev/ttyUSB0"), std::string("/dev/ttyUSB1"));
-      n, np, std::string(""), std::string(""));
+  std::string port_upper("");
+  std::string port_lower("");
+  aero_controller::AeroControllerNode aero(np, port_upper, port_lower);
+  ROS_INFO("configuring done");
 
   ros::spin();
 

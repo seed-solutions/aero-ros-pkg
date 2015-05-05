@@ -9,7 +9,7 @@ project(hrpsys_aero_bridge)
 find_package(catkin REQUIRED COMPONENTS
   roscpp tf trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
 )
-find_package(Boost REQUIRED COMPONENTS filesystem system signals)
+find_package(Boost REQUIRED COMPONENTS filesystem system signals thread)
 
 catkin_package(
   CATKIN_DEPENDS
