@@ -109,8 +109,8 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "aero_controller");
   ros::NodeHandle np("~");
 
-  std::string port_upper("");
-  std::string port_lower("");
+  std::string port_upper("/dev/ttyUSB0");
+  std::string port_lower("/dev/ttyUSB1");
   aero_controller::AeroControllerNode aero(np, port_upper, port_lower);
   ROS_INFO("configuring done");
 
