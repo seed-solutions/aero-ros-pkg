@@ -1,11 +1,15 @@
 #include "hrpsys_aero_bridge/aero_controller.hpp"
 
-int main(int argc, char** argv) {
-  std::string port("/dev/ttyUSB0");
-  // std::string port("");
-  io_service ios;
+using namespace aero_controller;
 
-  AeroController aero(ios, port);
+int main(int argc, char** argv) {
+  // std::string port_upper("/dev/ttyUSB0");
+  // std::string port_lower("/dev/ttyUSB1");
+
+  std::string port_upper("");
+  std::string port_lower("");
+
+  AeroController aero(port_upper, port_lower);
 
   double i = 0;
   double f = 0.5;
@@ -51,7 +55,7 @@ int main(int argc, char** argv) {
     }
 
     aero.set_position(stroke_vector, move_time);
-    aero.get_position(stroke_vector_current);
+    aero.get_data(stroke_vector_current);
 
     std::cout << "send:";
     for (size_t vi = 0; vi < stroke_vector.size(); vi++) {
