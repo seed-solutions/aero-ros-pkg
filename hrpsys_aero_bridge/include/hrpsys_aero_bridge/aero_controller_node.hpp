@@ -24,7 +24,8 @@ namespace aero_controller {
 
 class AeroControllerNode {
  public:
-  AeroControllerNode(ros::NodeHandle& nh, ros::NodeHandle& pnh,
+  AeroControllerNode(const ros::NodeHandle& nh,
+                     const ros::NodeHandle& pnh,
                      std::string port_upper, std::string port_lower);
   ~AeroControllerNode();
 

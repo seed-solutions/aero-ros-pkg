@@ -3,16 +3,17 @@
 namespace aero_controller {
 
 AeroControllerNode::AeroControllerNode(
-    ros::NodeHandle& nh, ros::NodeHandle& pnh,
+    const ros::NodeHandle& nh, const ros::NodeHandle& pnh,
     std::string port_upper, std::string port_lower) :
     controller_(port_upper, port_lower),
     nh_(nh), pnh_(pnh)
 {
+  ROS_INFO("starting aero_controller");
   cmdvel_sub_ =
-      pnh.subscribe<geometry_msgs::Twist>(
+      pnh_.subscribe(
           "cmd_vel", 100, &AeroControllerNode::goVelocityCallback, this);
   jointtraj_sub_ =
-      pnh.subscribe<trajectory_msgs::JointTrajectory>(
+      pnh_.subscribe(
           "command", 100, &AeroControllerNode::jointTrajectoryCallback, this);
 }
 
@@ -44,13 +45,15 @@ void AeroControllerNode::jointTrajectoryCallback(
       stroke_vector[joint_to_stroke_indices[j]] =
           static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
     }
-    uint16_t time_msec =
-        static_cast<uint16_t>(msg->points[i].time_from_start.toSec() * 1000.0);
+    double time_sec = msg->points[i].time_from_start.toSec();
+    uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
     controller_.set_position(stroke_vector, time_msec);
+    usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
 }
 
 }  // namespace
+
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "aero_controller");
@@ -59,7 +62,8 @@ int main(int argc, char** argv) {
   ros::NodeHandle np("~");
 
   aero_controller::AeroControllerNode(
-      n, np, std::string("/dev/ttyUSB0"), std::string("/dev/ttyUSB1"));
+      //n, np, std::string("/dev/ttyUSB0"), std::string("/dev/ttyUSB1"));
+      n, np, std::string(""), std::string(""));
 
   ros::spin();
 
