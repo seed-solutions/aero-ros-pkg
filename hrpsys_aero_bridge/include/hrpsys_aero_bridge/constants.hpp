@@ -10,7 +10,7 @@ const static size_t RAW_DATA_LENGTH = 77;
 const static uint8_t ID_UPPER = 1;
 const static uint8_t ID_LOWER = 2;
 
-// whole: 38DOF
+// whole: 34DOF
 //  upper: 22DOF
 //   neck: 3DOF
 //   arm: 8DOF (including hand) * 2
@@ -19,15 +19,15 @@ const static uint8_t ID_LOWER = 2;
 //    wrist: 3DOF * 2
 //    hand: 1DOF * 2
 //   waist: 3DOF
-//  lower (4LEGS) : 16DOF
-//   leg: 4DOF * 4
+//  lower (4LEGS) : 12DOF
+//   leg: 3DOF * 4
 //    crotch: 2DOF * 4
 //    knee: 1DOF * 4
-//    wheel: 1DOF * 4
+//    (wheel: 1DOF * 4)
 
-const static size_t AERO_DOF = 38;
+const static size_t AERO_DOF = 34;
 const static size_t AERO_DOF_UPPER = 22;
-const static size_t AERO_DOF_LOWER = 16;
+const static size_t AERO_DOF_LOWER = 12;
 
 // joint index in stroke vector
 // UPPER
@@ -60,22 +60,24 @@ const static size_t STROKE_WAIST_P = 21;
 const static size_t STROKE_FRONT_RIGHT_CROTCH_Y = 22;
 const static size_t STROKE_FRONT_RIGHT_CROTCH_P = 23;
 const static size_t STROKE_FRONT_RIGHT_KNEE_P = 24;
-const static size_t STROKE_FRONT_RIGHT_WHEEL = 25;
 
-const static size_t STROKE_REAR_RIGHT_CROTCH_Y = 26;
-const static size_t STROKE_REAR_RIGHT_CROTCH_P = 27;
-const static size_t STROKE_REAR_RIGHT_KNEE_P = 28;
-const static size_t STROKE_REAR_RIGHT_WHEEL = 29;
+const static size_t STROKE_REAR_RIGHT_CROTCH_Y = 25;
+const static size_t STROKE_REAR_RIGHT_CROTCH_P = 26;
+const static size_t STROKE_REAR_RIGHT_KNEE_P = 27;
 
-const static size_t STROKE_FRONT_LEFT_CROTCH_Y = 30;
-const static size_t STROKE_FRONT_LEFT_CROTCH_P = 31;
-const static size_t STROKE_FRONT_LEFT_KNEE_P = 32;
-const static size_t STROKE_FRONT_LEFT_WHEEL = 33;
+const static size_t STROKE_FRONT_LEFT_CROTCH_Y = 28;
+const static size_t STROKE_FRONT_LEFT_CROTCH_P = 29;
+const static size_t STROKE_FRONT_LEFT_KNEE_P = 30;
 
-const static size_t STROKE_REAR_LEFT_CROTCH_Y = 34;
-const static size_t STROKE_REAR_LEFT_CROTCH_P = 35;
-const static size_t STROKE_REAR_LEFT_KNEE_P = 36;
-const static size_t STROKE_REAR_LEFT_WHEEL = 37;
+const static size_t STROKE_REAR_LEFT_CROTCH_Y = 31;
+const static size_t STROKE_REAR_LEFT_CROTCH_P = 32;
+const static size_t STROKE_REAR_LEFT_KNEE_P = 33;
+
+// WHEEL
+const static size_t STROKE_FRONT_RIGHT_WHEEL = 0;
+const static size_t STROKE_REAR_RIGHT_WHEEL = 1;
+const static size_t STROKE_FRONT_LEFT_WHEEL = 2;
+const static size_t STROKE_REAR_LEFT_WHEEL = 3;
 
 
 // joint index in raw vector (as int16_t)

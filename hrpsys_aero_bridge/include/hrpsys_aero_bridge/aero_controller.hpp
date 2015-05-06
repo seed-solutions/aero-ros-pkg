@@ -11,6 +11,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/thread.hpp>
 
 #include "hrpsys_aero_bridge/constants.hpp"
 
@@ -23,26 +24,29 @@ class AJointIndex {
   size_t id;
   size_t stroke_index;
   size_t raw_index;
+  std::string joint_name;
 
-  AJointIndex(size_t i, size_t sidx, size_t ridx) :
-      id(i), stroke_index(sidx), raw_index(ridx) {
+  AJointIndex(size_t i, size_t sidx, size_t ridx, std::string name) :
+      id(i), stroke_index(sidx), raw_index(ridx), joint_name(name) {
   }
   AJointIndex(const AJointIndex& aji) {
     id = aji.id;
     stroke_index = aji.stroke_index;
     raw_index = aji.raw_index;
+    joint_name = aji.joint_name;
   }
   AJointIndex& operator=(const AJointIndex& aji) {
     id = aji.id;
     stroke_index = aji.stroke_index;
     raw_index = aji.raw_index;
+    joint_name = aji.joint_name;
     return *this;
   }
 };
 
 class SEED485Controller {
  public:
-  SEED485Controller(std::string& port, uint8_t id);
+  SEED485Controller(const std::string& port, uint8_t id);
   ~SEED485Controller();
 
   // basic commands
@@ -65,12 +69,13 @@ class SEED485Controller {
   serial_port ser_;
   uint8_t id_;
   bool verbose_;
+  boost::mutex mtx_;
 };
 
 
 class AeroController {
  public:
-  AeroController(std::string& port_upper, std::string& port_lower);
+  AeroController(const std::string& port_upper, const std::string& port_lower);
   ~AeroController();
 
   // flush all controllers
@@ -103,6 +108,16 @@ class AeroController {
   bool verbose() {return verbose_;}
   void verbose(bool v) {verbose_ = v;}
 
+  int32_t get_stroke_index_from_joint_name(std::string& name);
+
+  std::vector<int16_t>& get_reference_stroke_vector() {
+    return stroke_ref_vector_;
+  }
+
+  std::string get_joint_name(size_t idx) {
+    return joint_indices_[idx].joint_name;
+  }
+
  private:
   bool verbose_;
 
@@ -114,6 +129,7 @@ class AeroController {
   std::vector<int16_t> stroke_cur_vector_;
 
   std::vector<AJointIndex> joint_indices_;
+  std::vector<AJointIndex> wheel_indices_;
 
   int16_t decode_short_(uint8_t* raw);
   void encode_short_(int16_t value, uint8_t* raw);
