@@ -1,6 +1,10 @@
+#!/usr/bin/env roseus
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
 (require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
 (load "package://aero_ros_bridge/euslisp/aero-upper-strokes.l")
+
+(ros::load-ros-manifest "trajectory_msgs")
+
 
 (defun hand-poses (hand args)
   (let ((pose (car args))
@@ -160,13 +164,15 @@
     (mapcar #'(lambda (ctype)
                 (send self :add-controller ctype))
             (send self :default-controller-list))
+    (ros::roseus "aero_upper_interface")
+    (ros::advertise "command" trajectory_msgs::JointTrajectory)
     )
   (:default-controller-list ()
    (list :larm-controller
          :rarm-controller
          :torso-controller
-         :lhand-controller
-         :rhand-controller
+         ;; :lhand-controller
+         ;; :rhand-controller
          :fullbody-controller))
   (:default-controller ()
     (mapcar #'(lambda (ctype) (car (send self ctype))) (send self :default-controller-list)))
@@ -192,21 +198,60 @@
      (cons :controller-action "/torso_controller/follow_joint_trajectory_action")
      (cons :controller-state  "/torso_controller/state")
      (cons :action-type control_msgs::FollowJointTrajectoryAction)
-     (cons :joint-names (list "WAIST_P" "WAIST_R" "CHEST")))))
-  (:lhand-controller ()
-   (list
-    (list
-     (cons :controller-action "/lhand_controller/follow_joint_trajectory_action")
-     (cons :controller-state  "/lhand_controller/state")
-     (cons :action-type control_msgs::FollowJointTrajectoryAction)
-     (cons :joint-names (list "LARM_WRIST_R")))))
-  (:rhand-controller ()
-   (list
-    (list
-     (cons :controller-action "/rhand_controller/follow_joint_trajectory_action")
-     (cons :controller-state  "/rhand_controller/state")
-     (cons :action-type control_msgs::FollowJointTrajectoryAction)
-     (cons :joint-names (list "RARM_WRIST_R")))))
+     (cons :joint-names (list "WAIST_Y" "WAIST_P" "WAIST_R")))))
+  (:angle-vector (av &optional (tm 5000))
+     (ros::publish "command"
+		   (instance trajectory_msgs::JointTrajectory
+			     :init
+			     :joint_names (list "r_shoulder_pitch_joint"
+						"r_shoulder_roll_joint"
+						"r_elbow_yaw_joint"
+						"r_elbow_pitch_joint"
+						"r_wrist_yaw_joint" ; missing
+						;"r_wrist_roll_joint"
+						"r_wrist_top_joint"
+						"r_wrist_bottom_joint"
+						"r_hand_joint"
+						"l_shoulder_pitch_joint"
+						"l_shoulder_roll_joint"
+						"l_elbow_yaw_joint"
+						"l_elbow_pitch_joint"
+						"l_wrist_yaw_joint" ; missing
+						;"l_wrist_roll_joint"
+						"l_wrist_top_joint"
+						"l_wrist_bottom_joint"
+						"l_hand_joint"
+						"waist_yaw_joint" ; missing
+						;"waist_pitch_joint"
+						"waist_right_joint"
+						"waist_left_joint"
+						"neck_yaw_joint"
+						"neck_right_joint"
+						"neck_left_joint")
+			     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+						     :init
+						     :positions (concatenate float-vector
+									     (subseq av 0 8)
+									     (subseq av 11 19)
+									     (subseq av 22 25)
+									     (subseq av 25 28))
+						     :time_from_start (ros::time 0)))))
+     av)     
+     
+  ;; (:lhand-controller ()
+  ;;  (list
+  ;;   (list
+  ;;    (cons :controller-action "/lhand_controller/follow_joint_trajectory_action")
+  ;;    (cons :controller-state  "/lhand_controller/state")
+  ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
+  ;;    (cons :joint-names (list "LARM_WRIST_R")))))
+  ;; (:rhand-controller ()
+  ;;  (list
+  ;;   (list
+  ;;    (cons :controller-action "/rhand_controller/follow_joint_trajectory_action")
+  ;;    (cons :controller-state  "/rhand_controller/state")
+  ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
+  ;;    (cons :joint-names (list "RARM_WRIST_R")))))
   )
 
 (defun aero-upper-init (&rest args)
