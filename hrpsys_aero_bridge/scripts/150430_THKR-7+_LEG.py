@@ -12,7 +12,7 @@ def COM_Open():
 
 	global SER
 
-	SER=serial.Serial('/dev/ttyUSB0', 115200)
+	SER=serial.Serial('/dev/ttyUSB1', 115200)
 	SER.open()
 	SER.write("S8\r")
 	SER.write("O\r")
@@ -21,9 +21,9 @@ def RS485_Open():
 
 	global SER
 
-	#SER=serial.Serial('/dev/ttyUSB0', 115200)
-	SER=serial.Serial('/dev/ttyUSB0', 1382400)
-	SER.open()
+	#SER=serial.Serial('/dev/ttyUSB1', 115200)
+	SER=serial.Serial('/dev/ttyUSB1', 1382400)
+	#SER.open()
 
 #Com Port Close
 def COM_Close():
@@ -121,10 +121,10 @@ def SEED_TMove_Servo(id_num,time,pos):
 		pos = -0xFFFFFF/2-1
 
 	data[0] = time >> 8
-	data[1] = time  
+	data[1] = time
 	data[2] = pos >> 16
 	data[3] = pos >> 8
-	data[4] = pos 
+	data[4] = pos
 
 	print data
 	SEED_SCM(id_num,0x64,data[0],data[1],data[2],data[3],data[4])
@@ -144,7 +144,7 @@ def Set_Command(id_num,cmd,d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15
 
 	data[3] = cmd
 
-	#time 
+	#time
 	data[4] = d0 >> 8
 	data[5] = d0
 	#CAN1 Actuator
@@ -226,7 +226,7 @@ def Set_Command(id_num,cmd,d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15
 	#num to hex
 	for i in range(0,bLength-1):
 		data[i] = int(num2hex(data[i]),16)
-	
+
 	#check sum
 	for bCount in range(2,bLength-1,1):
 		bCheckSum += int(num2hex(data[bCount]),16)
@@ -341,7 +341,7 @@ if __name__ == "__main__":
 # Servo ON
 	Servo_Command(2,1)
 	time.sleep(1)
-	
+
 # Buffer Clear
 	SER.flushInput()		#flush input buffer
 	SER.flushOutput()	#flush output buffer
@@ -350,16 +350,16 @@ if __name__ == "__main__":
 	Set_Command(2,0x68,5000,1500,0,0,0,650,0,  -1500,0,0,0,650,0,  0,0,0,0,  -1500,0,0,0,650,0,  1500,0,0,0,650,0,  0,0,0,0,0,0,0)
 	#SEED_485_Read()
 
-	time.sleep(7)	
+	time.sleep(7)
 
 # Move Command
 	Go_front(2000)
 	#SEED_485_Read()
-	time.sleep(2)		
+	time.sleep(2)
 
 	Stop()
 	#SEED_485_Read()
-	time.sleep(2)		
+	time.sleep(2)
 
 	Go_back(2000)
 	#SEED_485_Read()
@@ -367,15 +367,15 @@ if __name__ == "__main__":
 
 	Stop()
 	#SEED_485_Read()
-	time.sleep(2)		
+	time.sleep(2)
 
 	Right_turn(2000)
 	#SEED_485_Read()
-	time.sleep(2)		
+	time.sleep(2)
 
 	Stop()
 	#SEED_485_Read()
-	time.sleep(2)		
+	time.sleep(2)
 
 	Left_turn(2000)
 	#SEED_485_Read()
@@ -383,11 +383,10 @@ if __name__ == "__main__":
 
 	Stop()
 	#SEED_485_Read()
-	time.sleep(2)		
+	time.sleep(2)
 
 # Dynamixel Servo off
 	Set_Command(2,0x50,0,1,1,1,1,1,0,  1,1,1,1,1,0,  0,0,0,0,  1,1,1,1,1,0,  1,1,1,1,1,0,  0,0,0,0,0,0,0)
-	time.sleep(2)	
+	time.sleep(2)
 
 	RS485_Close()
-

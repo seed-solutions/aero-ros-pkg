@@ -4,7 +4,7 @@ using namespace boost::asio;
 
 namespace aero_controller {
 
-SEED485Controller::SEED485Controller(std::string& port, uint8_t id):
+SEED485Controller::SEED485Controller(const std::string& port, uint8_t id):
     ser_(io_), verbose_(true), id_(id) {
   if (port != "") {
     boost::system::error_code err;
@@ -38,6 +38,8 @@ SEED485Controller::SEED485Controller(std::string& port, uint8_t id):
         std::cerr << e.what() << std::endl;
       }
     }
+  } else {
+    std::cout << "empty serial port name: entering debug mode..." << std::endl;
   }
 }
 
@@ -52,6 +54,7 @@ SEED485Controller::~SEED485Controller() {
 /// @param send_data data (uint8_t)
 void SEED485Controller::send(std::vector<uint8_t>& send_data) {
   if (ser_.is_open()) {
+    boost::mutex::scoped_lock lock(mtx_);
     ser_.write_some(buffer(send_data));
   }
   if (verbose_) {
@@ -68,25 +71,27 @@ void SEED485Controller::send(std::vector<uint8_t>& send_data) {
 /// @brief recv command
 /// @param read_data data (uint8_t)
 void SEED485Controller::read(std::vector<uint8_t>& read_data) {
+  read_data.resize(77);
   if (ser_.is_open()) {
-    read_data.resize(77);
+    boost::mutex::scoped_lock lock(mtx_);
     ser_.read_some(buffer(read_data, 77));
-    if (verbose_) {
-      std::cout << "recv: ";
-      for (size_t i = 0; i < read_data.size(); i++) {
-        std::cout << std::setw(2)
-                  << std::uppercase << std::hex
-                  << std::setw(2) << std::setfill('0')
-                  << static_cast<int32_t>(read_data[i]);
-      }
-      std::cout << std::endl;
+  }
+  if (verbose_) {
+    std::cout << "recv: ";
+    for (size_t i = 0; i < read_data.size(); i++) {
+      std::cout << std::setw(2)
+                << std::uppercase << std::hex
+                << std::setw(2) << std::setfill('0')
+                << static_cast<int32_t>(read_data[i]);
     }
+    std::cout << std::endl;
   }
 }
 
 /// @brief flush io buffer
 void SEED485Controller::flush() {
   if (ser_.is_open()) {
+    boost::mutex::scoped_lock lock(mtx_);
     ::tcflush(ser_.lowest_layer().native_handle(), TCIOFLUSH);
   }
 }
@@ -128,8 +133,8 @@ void SEED485Controller::send_command(
 
 
 
-AeroController::AeroController(std::string& port_upper,
-                               std::string& port_lower):
+AeroController::AeroController(const std::string& port_upper,
+                               const std::string& port_lower):
     ser_upper_(port_upper, ID_UPPER), ser_lower_(port_lower, ID_LOWER),
     verbose_(true) {
   // stroke_vector
@@ -139,90 +144,141 @@ AeroController::AeroController(std::string& port_upper,
 
   // indices
   joint_indices_.clear();
+  wheel_indices_.clear();
   // neck
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_NECK_Y, RAW_NECK_Y));
+      AJointIndex(ID_UPPER, STROKE_NECK_Y, RAW_NECK_Y,
+                  std::string("neck_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_NECK_RIGHT, RAW_NECK_RIGHT));
+      AJointIndex(ID_UPPER, STROKE_NECK_RIGHT, RAW_NECK_RIGHT,
+                  std::string("neck_right_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_NECK_LEFT, RAW_NECK_LEFT));
+      AJointIndex(ID_UPPER, STROKE_NECK_LEFT, RAW_NECK_LEFT,
+                  std::string("neck_left_joint")));
   // rarm
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_SHOULDER_P, RAW_RIGHT_SHOULDER_P));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_SHOULDER_P, RAW_RIGHT_SHOULDER_P,
+                  std::string("r_shoulder_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_SHOULDER_R, RAW_RIGHT_SHOULDER_R));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_SHOULDER_R, RAW_RIGHT_SHOULDER_R,
+                  std::string("r_shoulder_roll_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_ELBOW_Y, RAW_RIGHT_ELBOW_Y));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_ELBOW_Y, RAW_RIGHT_ELBOW_Y,
+                  std::string("r_elbow_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_ELBOW_P, RAW_RIGHT_ELBOW_P));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_ELBOW_P, RAW_RIGHT_ELBOW_P,
+                  std::string("r_elbow_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_WRIST_R, RAW_RIGHT_WRIST_R));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_WRIST_R, RAW_RIGHT_WRIST_R,
+                  std::string("r_wrist_roll_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_WRIST_TOP, RAW_RIGHT_WRIST_TOP));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_WRIST_TOP, RAW_RIGHT_WRIST_TOP,
+                  std::string("r_wrist_top_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_WRIST_BOTTOM, RAW_RIGHT_WRIST_BOTTOM));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_WRIST_BOTTOM, RAW_RIGHT_WRIST_BOTTOM,
+                  std::string("r_wrist_bottom_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_RIGHT_HAND, RAW_RIGHT_HAND));
+      AJointIndex(ID_UPPER, STROKE_RIGHT_HAND, RAW_RIGHT_HAND,
+                  std::string("r_hand_joint")));
   // larm
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_SHOULDER_P, RAW_LEFT_SHOULDER_P));
+      AJointIndex(ID_UPPER, STROKE_LEFT_SHOULDER_P, RAW_LEFT_SHOULDER_P,
+                  std::string("l_shoulder_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_SHOULDER_R, RAW_LEFT_SHOULDER_R));
+      AJointIndex(ID_UPPER, STROKE_LEFT_SHOULDER_R, RAW_LEFT_SHOULDER_R,
+                  std::string("l_shoulder_roll_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_ELBOW_Y, RAW_LEFT_ELBOW_Y));
+      AJointIndex(ID_UPPER, STROKE_LEFT_ELBOW_Y, RAW_LEFT_ELBOW_Y,
+                  std::string("l_elbow_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_ELBOW_P, RAW_LEFT_ELBOW_P));
+      AJointIndex(ID_UPPER, STROKE_LEFT_ELBOW_P, RAW_LEFT_ELBOW_P,
+                  std::string("l_elbow_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_WRIST_R, RAW_LEFT_WRIST_R));
+      AJointIndex(ID_UPPER, STROKE_LEFT_WRIST_R, RAW_LEFT_WRIST_R,
+                  std::string("l_wrist_roll_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_WRIST_TOP, RAW_LEFT_WRIST_TOP));
+      AJointIndex(ID_UPPER, STROKE_LEFT_WRIST_TOP, RAW_LEFT_WRIST_TOP,
+                  std::string("l_wrist_top_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_WRIST_BOTTOM, RAW_LEFT_WRIST_BOTTOM));
+      AJointIndex(ID_UPPER, STROKE_LEFT_WRIST_BOTTOM, RAW_LEFT_WRIST_BOTTOM,
+                  std::string("l_wrist_bottom_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_LEFT_HAND, RAW_LEFT_HAND));
+      AJointIndex(ID_UPPER, STROKE_LEFT_HAND, RAW_LEFT_HAND,
+                  std::string("l_hand_joint")));
   // waist
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_WAIST_RIGHT, RAW_WAIST_RIGHT));
+      AJointIndex(ID_UPPER, STROKE_WAIST_RIGHT, RAW_WAIST_RIGHT,
+                  std::string("waist_right_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_WAIST_LEFT, RAW_WAIST_LEFT));
+      AJointIndex(ID_UPPER, STROKE_WAIST_LEFT, RAW_WAIST_LEFT,
+                  std::string("waist_left_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_UPPER, STROKE_WAIST_P, RAW_WAIST_P));
+      AJointIndex(ID_UPPER, STROKE_WAIST_P, RAW_WAIST_P,
+                  std::string("waist_pitch_joint")));
   // frleg
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_RIGHT_CROTCH_Y, RAW_FRONT_RIGHT_CROTCH_Y));
+      AJointIndex(ID_LOWER,
+                  STROKE_FRONT_RIGHT_CROTCH_Y, RAW_FRONT_RIGHT_CROTCH_Y,
+                  std::string("f_r_crotch_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_RIGHT_CROTCH_P, RAW_FRONT_RIGHT_CROTCH_P1));
+      AJointIndex(ID_LOWER,
+                  STROKE_FRONT_RIGHT_CROTCH_P, RAW_FRONT_RIGHT_CROTCH_P1,
+                  std::string("f_r_crotch_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_RIGHT_KNEE_P, RAW_FRONT_RIGHT_KNEE_P1));
-  joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_RIGHT_WHEEL, RAW_FRONT_RIGHT_WHEEL));
+      AJointIndex(ID_LOWER,
+                  STROKE_FRONT_RIGHT_KNEE_P, RAW_FRONT_RIGHT_KNEE_P1,
+                  std::string("f_r_knee_pitch_joint")));
+  wheel_indices_.push_back(
+      AJointIndex(ID_LOWER, STROKE_FRONT_RIGHT_WHEEL, RAW_FRONT_RIGHT_WHEEL,
+                  std::string("f_r_wheel_joint")));
   // rrleg
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_RIGHT_CROTCH_Y, RAW_REAR_RIGHT_CROTCH_Y));
+      AJointIndex(ID_LOWER,
+                  STROKE_REAR_RIGHT_CROTCH_Y, RAW_REAR_RIGHT_CROTCH_Y,
+                  std::string("r_r_crotch_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_RIGHT_CROTCH_P, RAW_REAR_RIGHT_CROTCH_P1));
+      AJointIndex(ID_LOWER,
+                  STROKE_REAR_RIGHT_CROTCH_P, RAW_REAR_RIGHT_CROTCH_P1,
+                  std::string("r_r_crotch_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_RIGHT_KNEE_P, RAW_REAR_RIGHT_KNEE_P1));
-  joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_RIGHT_WHEEL, RAW_REAR_RIGHT_WHEEL));
+      AJointIndex(ID_LOWER,
+                  STROKE_REAR_RIGHT_KNEE_P, RAW_REAR_RIGHT_KNEE_P1,
+                  std::string("r_r_knee_pitch_joint")));
+  wheel_indices_.push_back(
+      AJointIndex(ID_LOWER, STROKE_REAR_RIGHT_WHEEL, RAW_REAR_RIGHT_WHEEL,
+                  std::string("r_r_wheel_joint")));
   // flleg
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_LEFT_CROTCH_Y, RAW_FRONT_LEFT_CROTCH_Y));
+      AJointIndex(ID_LOWER,
+                  STROKE_FRONT_LEFT_CROTCH_Y, RAW_FRONT_LEFT_CROTCH_Y,
+                  std::string("f_l_crotch_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_LEFT_CROTCH_P, RAW_FRONT_LEFT_CROTCH_P1));
+      AJointIndex(ID_LOWER,
+                  STROKE_FRONT_LEFT_CROTCH_P, RAW_FRONT_LEFT_CROTCH_P1,
+                  std::string("f_l_crotch_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_LEFT_KNEE_P, RAW_FRONT_LEFT_KNEE_P1));
-  joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_FRONT_LEFT_WHEEL, RAW_FRONT_LEFT_WHEEL));
+      AJointIndex(ID_LOWER,
+                  STROKE_FRONT_LEFT_KNEE_P, RAW_FRONT_LEFT_KNEE_P1,
+                  std::string("f_l_knee_pitch_joint")));
+  wheel_indices_.push_back(
+      AJointIndex(ID_LOWER, STROKE_FRONT_LEFT_WHEEL, RAW_FRONT_LEFT_WHEEL,
+                  std::string("f_l_wheel_joint")));
   // rlleg
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_LEFT_CROTCH_Y, RAW_REAR_LEFT_CROTCH_Y));
+      AJointIndex(ID_LOWER,
+                  STROKE_REAR_LEFT_CROTCH_Y, RAW_REAR_LEFT_CROTCH_Y,
+                  std::string("r_l_crotch_yaw_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_LEFT_CROTCH_P, RAW_REAR_LEFT_CROTCH_P1));
+      AJointIndex(ID_LOWER,
+                  STROKE_REAR_LEFT_CROTCH_P, RAW_REAR_LEFT_CROTCH_P1,
+                  std::string("r_l_crotch_pitch_joint")));
   joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_LEFT_KNEE_P, RAW_REAR_LEFT_KNEE_P1));
-  joint_indices_.push_back(
-      AJointIndex(ID_LOWER, STROKE_REAR_LEFT_WHEEL, RAW_REAR_LEFT_WHEEL));
+      AJointIndex(ID_LOWER,
+                  STROKE_REAR_LEFT_KNEE_P, RAW_REAR_LEFT_KNEE_P1,
+                  std::string("r_l_knee_pitch_joint")));
+  wheel_indices_.push_back(
+      AJointIndex(ID_LOWER, STROKE_REAR_LEFT_WHEEL, RAW_REAR_LEFT_WHEEL,
+                  std::string("r_l_wheel_joint")));
 
   // // debug
   // for (size_t i = 0; i < joint_indices_.size(); i++) {
@@ -233,6 +289,8 @@ AeroController::AeroController(std::string& port_upper,
   //             << "raw: " << aji.raw_index << ")" << std::endl;
   // }
   // //
+
+  std::cout << "starting aero_controller" << std::endl;
 }
 
 AeroController::~AeroController() {
@@ -361,6 +419,7 @@ void AeroController::set_position(std::vector<int16_t>& stroke_vector,
   dat_lower.resize(RAW_DATA_LENGTH);
 
   stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
+  stroke_ref_vector_.assign(stroke_vector.begin(), stroke_vector.end());
 
   ser_upper_.send_command(CMD_MOVE_ABS, time, dat_upper);
   ser_lower_.send_command(CMD_MOVE_ABS, time, dat_lower);
@@ -440,6 +499,18 @@ void AeroController::get_temperature(std::vector<int16_t>& stroke_vector) {
   get_command(CMD_GET_TMP, stroke_vector);
 }
 
+
+/// @brief return stroke index from joint name
+/// @param name joint name
+/// @return index in stroke vector, if not found, return -1
+int32_t AeroController::get_stroke_index_from_joint_name(std::string& name) {
+  for (size_t i = 0; i < joint_indices_.size(); i++) {
+    if (joint_indices_[i].joint_name == name) {
+      return static_cast<int32_t>(joint_indices_[i].stroke_index);
+    }
+  }
+  return -1;
+}
 
 
 }  // namespace
