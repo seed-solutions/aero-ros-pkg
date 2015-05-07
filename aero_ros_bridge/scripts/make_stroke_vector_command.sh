@@ -4,7 +4,7 @@
 #                   ,rwT,rwB,   ,nil,nil,nil,                  ,lwT,lwB,   ,nil,nil,nil,  ,wR,wL,  ,nR,nL
 
 create_table_func_from_csv() { # joint_name table/real_origin_diff
-    # load srv
+    # load csv
     table=()
     file="$(rospack find aero_ros_bridge)/models/${1}.csv"
     j=0
@@ -23,8 +23,8 @@ create_table_func_from_csv() { # joint_name table/real_origin_diff
     idx=0
     for e in "${table[@]}"
     do
-	angle=$(($2 + $idx))
-	lisp="${lisp}${tab2}${tab2}${tab2}(${angle} ${e})\n"
+	val=$(echo "$2 + $e" | bc)
+	lisp="${lisp}${tab2}${tab2}${tab2}(${idx} ${val})\n"
 	strokes="${strokes} ${e}"
 	idx=$(($idx + 1))
     done
@@ -36,8 +36,8 @@ create_table_func_from_csv() { # joint_name table/real_origin_diff
     echo -e "${lisp}"
 }
 
-create_rp_converter_func_from_csv() { # joint_name roll-file pitch-file +/- +/-
-    # load roll srv
+create_rp_converter_func_from_csv() { # joint_name roll-file pitch-file +/- +/- 0/1
+    # load roll csv
     table_r=()
     file="$(rospack find aero_ros_bridge)/models/${2}.csv"
     j=0
@@ -83,6 +83,13 @@ create_rp_converter_func_from_csv() { # joint_name roll-file pitch-file +/- +/-
     lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(case angle-p\n"    
     for e in "${table_p[@]}" # assumes model and real origin is 0
     do
+	if [[ ${idx} -ne 0 ]]
+	then
+	    if [[ ${6} -eq 1 ]]
+	    then
+		lisp="${lisp}${tab2}${tab2}${tab2}${tab2}${tab2}(-${idx} -${e})\n"
+	    fi
+	fi
 	lisp="${lisp}${tab2}${tab2}${tab2}${tab2}${tab2}(${idx} ${e})\n"
 	strokes="${strokes} ${e}"
 	idx=$(($idx + 1))
@@ -150,18 +157,18 @@ body="${body}${tab2}${tab2}${tab2}${tab2}(elt neck-rl 0)\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(elt neck-rl 1)\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}))\n"
 body="${body}${tab2}${tab2}${tab2}result))\n"
-body="${body}$(create_table_func_from_csv shoulder-p 0 1)\n"
-body="${body}$(create_table_func_from_csv shoulder-r 0 1)\n"
-body="${body}$(create_table_func_from_csv elbow-p 0 1)\n"
-#body="${body}$(create_table_func_from_csv wrist-r 0 1)\n"
-#body="${body}$(create_table_func_from_csv wrist-p 0 1)\n"
-#body="${body}$(create_table_func_from_csv waist-p 0 1)\n"
-#body="${body}$(create_table_func_from_csv waist-r 0 1)\n"
-#body="${body}$(create_table_func_from_csv neck-p 0 1)\n"
-#body="${body}$(create_table_func_from_csv neck-r 0 1)\n"
-body="${body}$(create_rp_converter_func_from_csv wrist wrist-p wrist-r + -)\n"
-body="${body}$(create_rp_converter_func_from_csv waist waist-r waist-p - +)\n"
-body="${body}$(create_rp_converter_func_from_csv neck neck-r neck-p + -)\n"
+body="${body}$(create_table_func_from_csv shoulder-p 0)\n"
+body="${body}$(create_table_func_from_csv shoulder-r 0)\n"
+body="${body}$(create_table_func_from_csv elbow-p 20.183)\n"
+#body="${body}$(create_table_func_from_csv wrist-r 0)\n"
+#body="${body}$(create_table_func_from_csv wrist-p 0)\n"
+#body="${body}$(create_table_func_from_csv waist-p 0)\n"
+#body="${body}$(create_table_func_from_csv waist-r 0)\n"
+#body="${body}$(create_table_func_from_csv neck-p 0)\n"
+#body="${body}$(create_table_func_from_csv neck-r 0)\n"
+body="${body}$(create_rp_converter_func_from_csv wrist wrist-p wrist-r + - 1)\n"
+body="${body}$(create_rp_converter_func_from_csv waist waist-r waist-p - + 0)\n"
+body="${body}$(create_rp_converter_func_from_csv neck neck-r neck-p + - 0)\n"
 body="${body})\n"
 
 echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-upper-strokes.l"
@@ -173,23 +180,23 @@ body="${body}${tab2}(:stroke-vector ()\n"
 body="${body}${tab2}${tab2}(let (av result)\n"
 body="${body}${tab2}${tab2}${tab2}(setq av (send self :angle-vector))\n"
 body="${body}${tab2}${tab2}${tab2}(setq result (float-vector\n"
-body="${body}${tab2}${tab2}${tab2}${tab2}0\n"
+body="${body}${tab2}${tab2}${tab2}${tab2}(elt av 0)\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :crotch-p-table (round (elt av 1)))\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :knee-p-table (round (elt av 2)))\n"
-body="${body}${tab2}${tab2}${tab2}${tab2}0\n"
+body="${body}${tab2}${tab2}${tab2}${tab2}(elt av 3)\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :crotch-p-table (round (elt av 4)))\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :knee-p-table (round (elt av 5)))\n"
-body="${body}${tab2}${tab2}${tab2}${tab2}0\n"
+body="${body}${tab2}${tab2}${tab2}${tab2}(elt av 6)\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :crotch-p-table (round (elt av 7)))\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :knee-p-table (round (elt av 8)))\n"
-body="${body}${tab2}${tab2}${tab2}${tab2}0\n"
+body="${body}${tab2}${tab2}${tab2}${tab2}(elt av 9)\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :crotch-p-table (round (elt av 10)))\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}(send self :knee-p-table (round (elt av 11)))\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}0\n"
 body="${body}${tab2}${tab2}${tab2}${tab2}))\n"
 body="${body}${tab2}${tab2}${tab2}result))\n"
-body="${body}$(create_table_func_from_csv crotch-p 0 1)\n"
-body="${body}$(create_table_func_from_csv knee-p 0 1)\n"
+body="${body}$(create_table_func_from_csv crotch-p 0)\n"
+body="${body}$(create_table_func_from_csv knee-p 0)\n"
 body="${body})\n"
 
 echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-lower-strokes.l"
