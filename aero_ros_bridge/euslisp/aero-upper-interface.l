@@ -228,8 +228,7 @@
 						"r_shoulder_roll_joint"
 						"r_elbow_yaw_joint"
 						"r_elbow_pitch_joint"
-						"r_wrist_yaw_joint" ; missing
-						;"r_wrist_roll_joint"
+						"r_wrist_roll_joint" ; yaw
 						"r_wrist_top_joint"
 						"r_wrist_bottom_joint"
 						"r_hand_joint"
@@ -237,13 +236,11 @@
 						"l_shoulder_roll_joint"
 						"l_elbow_yaw_joint"
 						"l_elbow_pitch_joint"
-						"l_wrist_yaw_joint" ; missing
-						;"l_wrist_roll_joint"
+						"l_wrist_roll_joint" ; yaw
 						"l_wrist_top_joint"
 						"l_wrist_bottom_joint"
 						"l_hand_joint"
-						"waist_yaw_joint" ; missing
-						;"waist_pitch_joint"
+						"waist_pitch_joint" ; yaw
 						"waist_right_joint"
 						"waist_left_joint"
 						"neck_yaw_joint"
@@ -256,7 +253,7 @@
 									     (subseq av 11 19)
 									     (subseq av 22 25)
 									     (subseq av 25 28))
-						     :time_from_start (ros::time 0)))))
+						     :time_from_start (ros::time tm)))))
      av)     
      
   ;; (:lhand-controller ()
