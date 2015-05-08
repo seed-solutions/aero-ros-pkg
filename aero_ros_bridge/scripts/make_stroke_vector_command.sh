@@ -213,4 +213,4 @@ body="${body}$(create_table_func_from_csv crotch-p 0)\n"
 body="${body}$(create_table_func_from_csv knee-p 0)\n"
 body="${body})\n"
 
-#echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-lower-strokes.l"
+echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-lower-strokes.l"

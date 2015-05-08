@@ -103,11 +103,19 @@ create_table_func_from_csv() { # joint_name table/real_origin_diff
     idx=0
     for e in "${table[@]}"
     do
-	if [[ $idx -lt $((${#table[@]} - 1)) ]]
+	if [[ $e != "" ]]
 	then
-	    lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(${idx} (setq candidates (list${e})) (setq appendix (list${table[$(($idx + 1))]})))\n"
-	else
-	    lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(${idx} (setq candidates (list${e})))\n"
+	    if [[ $idx -lt $((${#table[@]} - 1)) ]]
+	    then
+		j=1
+		if [[ ${ntable[$(($idx + $j))]} == "" ]]
+		then
+		    j=2
+		fi
+		lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(${idx} (setq candidates (list${e})) (setq appendix (list${table[$(($idx + 1))]})))\n"
+	    else
+		lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(${idx} (setq candidates (list${e})))\n"
+	    fi
 	fi
 	idx=$(($idx + 1))
     done
@@ -136,7 +144,7 @@ create_table_func_from_csv() { # joint_name table/real_origin_diff
     lisp="${lisp}${tab6}${tab8}${tab2}${tab8}(if (> (cadr (car appendix)) (cadr (cadr appendix))) (setq appendix (reverse appendix))))\n"
     lisp="${lisp}${tab6}${tab8}${tab2}${tab8}(setq result (- (car (car appendix)) (* (- (cadr (car appendix)) stroke) (caddr (car appendix)))))))\n"
     lisp="${lisp}${tab6}))\n"
-    lisp="${lisp}${tab2}${tab2}result)\n"
+    lisp="${lisp}${tab2}${tab2}result))\n"
 
     echo -e "${lisp}"
 }
@@ -147,6 +155,14 @@ tab2=$'  '
 body="${body}(defmethod aero-upper-interface\n"
 #body="${body}${tab2}(:stroke-to-angle ()\n"
 body="${body}$(create_table_func_from_csv shoulder-p 0)\n"
+body="${body}$(create_table_func_from_csv shoulder-r 0)\n"
+body="${body}$(create_table_func_from_csv elbow-p 20.183)\n"
+body="${body}$(create_table_func_from_csv wrist-p 0)\n"
+body="${body}$(create_table_func_from_csv wrist-r 0)\n"
+body="${body}$(create_table_func_from_csv waist-p 0)\n"
+body="${body}$(create_table_func_from_csv waist-r 0)\n"
+body="${body}$(create_table_func_from_csv neck-p 0)\n"
+body="${body}$(create_table_func_from_csv neck-r 0)\n"
 body="${body})\n"
 
 echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-upper-angles.l"
