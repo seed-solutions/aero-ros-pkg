@@ -4,7 +4,7 @@
 (load "package://aero_ros_bridge/euslisp/aero-upper-strokes.l")
 
 (ros::load-ros-manifest "trajectory_msgs")
-
+(ros::load-ros-manifest "pr2_controllers_msgs")
 
 (defun hand-poses (hand args)
   (let ((pose (car args))
@@ -150,35 +150,19 @@
 	   t
 	 nil)
        )
-     )			
+     )
+  (:stroke-vector-all ()
+     (if (boundp '*aero-lower*)
+	 (concatenate float-vector
+		      (send self :stroke-vector) (send *aero-lower* :stroke-vector))
+       (send self :stroke-vector)))
   )
 
-;; (defclass AeroUpperRobot-robot-collision
-;;   :super AeroUpperRobot-robot
-;;   :slots ())
-;; (defmethod AeroUpperRobot-robot-collision
-;;   (:init (&rest args)
-;; 	 (send-super* :init args)
-;; 	 (setq collision-avoidance-links (list (send self :torso :waist-p :parent-link)
-;; 					       (send self :torso :waist-r :child-link)
-;; 					       (send self :head :neck-r :child-link)
-;; 					       (send self :rarm :shoulder-y :child-link)
-;; 					       (send self :rarm :elbow-p :child-link)
-;; 					       (send self :rarm :wrist-y :child-link)
-;; 					       (send self :rarm :wrist-r :child-link)
-;; 					       (send self :larm :shoulder-y :child-link)
-;; 					       (send self :larm :elbow-p :child-link)
-;; 					       (send self :larm :wrist-y :child-link)
-;; 					       (send self :larm :wrist-r :child-link)
-;; 					       ))
-;; 	 (setq larm-collision-avoidance-links collision-avoidance-links)
-;; 	 (setq rarm-collision-avoidance-links collision-avoidance-links)
-;; 	 )
-;;   )
 
 (defclass aero-upper-interface
   :super rtm-ros-robot-interface
-  :slots ())
+  :slots (actual-state
+	  desired-state))
 (defmethod aero-upper-interface
   (:init (&rest args)
     (send-super* :init :robot AeroUpperRobot-robot args)
@@ -186,7 +170,9 @@
                 (send self :add-controller ctype))
             (send self :default-controller-list))
     (ros::roseus "aero_upper_interface")
-    (ros::advertise "command" trajectory_msgs::JointTrajectory)
+    (ros::advertise "/aero_controller/command" trajectory_msgs::JointTrajectory)
+    (ros::subscribe "/aero_controller/state" pr2_controllers_msgs::JointTrajectoryControllerState
+		    #'send self :controller-callback 1)
     )
   (:default-controller-list ()
    (list :larm-controller
@@ -221,41 +207,94 @@
      (cons :action-type control_msgs::FollowJointTrajectoryAction)
      (cons :joint-names (list "WAIST_Y" "WAIST_P" "WAIST_R")))))
   (:angle-vector (av &optional (tm 5000))
-     (ros::publish "command"
-		   (instance trajectory_msgs::JointTrajectory
-			     :init
-			     :joint_names (list "r_shoulder_pitch_joint"
-						"r_shoulder_roll_joint"
-						"r_elbow_yaw_joint"
-						"r_elbow_pitch_joint"
-						"r_wrist_roll_joint" ; yaw
-						"r_wrist_top_joint"
-						"r_wrist_bottom_joint"
-						"r_hand_joint"
-						"l_shoulder_pitch_joint"
-						"l_shoulder_roll_joint"
-						"l_elbow_yaw_joint"
-						"l_elbow_pitch_joint"
-						"l_wrist_roll_joint" ; yaw
-						"l_wrist_top_joint"
-						"l_wrist_bottom_joint"
-						"l_hand_joint"
-						"waist_pitch_joint" ; yaw
-						"waist_right_joint"
-						"waist_left_joint"
-						"neck_yaw_joint"
-						"neck_right_joint"
-						"neck_left_joint")
-			     :points (list (instance trajectory_msgs::JointTrajectoryPoint
-						     :init
-						     :positions (concatenate float-vector
-									     (subseq av 0 8)
-									     (subseq av 11 19)
-									     (subseq av 22 25)
-									     (subseq av 25 28))
-						     :time_from_start (ros::time tm)))))
-     av)     
-     
+     (let ((upper-joint-names (list "r_shoulder_pitch_joint"
+				    "r_shoulder_roll_joint"
+				    "r_elbow_yaw_joint"
+				    "r_elbow_pitch_joint"
+				    "r_wrist_roll_joint" ; yaw
+				    "r_wrist_top_joint"
+				    "r_wrist_bottom_joint"
+				    "r_hand_joint"
+				    "l_shoulder_pitch_joint"
+				    "l_shoulder_roll_joint"
+				    "l_elbow_yaw_joint"
+				    "l_elbow_pitch_joint"
+				    "l_wrist_roll_joint" ; yaw
+				    "l_wrist_top_joint"
+				    "l_wrist_bottom_joint"
+				    "l_hand_joint"
+				    "waist_pitch_joint" ; yaw
+				    "waist_right_joint"
+				    "waist_left_joint"
+				    "neck_yaw_joint"
+				    "neck_right_joint"
+				    "neck_left_joint"))
+	   (lower-joint-names (list "r_r_crotch_yaw_joint"
+				    "r_r_crotch_pitch_joint"
+				    "r_r_knee_pitch_joint"
+				    "f_r_crotch_yaw_joint"
+				    "f_r_crotch_pitch_joint"
+				    "f_r_knee_pitch_joint"
+				    "r_l_crotch_yaw_joint"
+				    "r_l_crotch_pitch_joint"
+				    "r_l_knee_pitch_joint"
+				    "f_l_crotch_yaw_joint"
+				    "f_l_crotch_pitch_joint"
+				    "f_l_knee_pitch_joint"))
+	   (type-check (length av)))
+       (ros::publish "/aero_controller/command"
+		     (case type-check
+		       (28 (instance trajectory_msgs::JointTrajectory
+				     :init
+				     :joint_names upper-joint-names
+				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+							     :init
+							     :positions (concatenate float-vector
+										     (subseq av 0 8)
+										     (subseq av 11 19)
+										     (subseq av 22 25)
+										     (subseq av 25 28))
+							     :time_from_start (ros::time tm)))))
+		       (13 (instance trajectory_msgs::JointTrajectory
+				     :init
+				     :joint_names lower-joint-names
+				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+							     :init
+							     :positions (subseq av 0 12)
+							     :time_from_start (ros::time tm)))))
+		       (41 (instance trajectory_msgs::JointTrajectory
+				     :init
+				     :joint_names (append upper-joint-names lower-joint-names)
+				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+							     :init
+							     :positions (concatenate float-vector
+										     (subseq av 0 8)
+										     (subseq av 11 19)
+										     (subseq av 22 25)
+										     (subseq av 25 40))
+							     :time_from_start (ros::time tm)))))
+		       (t nil))))
+     av)
+  (:controller-callback (msg)
+     (let ((i 0))
+       (setq actual-state '())
+       (setq desired-state '())
+       (dolist (x (send msg :joint_names))
+	 (setq actual-state (cons (cons x (elt (send msg :actual :positions) i)) actual-state))
+	 (setq desired-state (cons (cons x (elt (send msg :desired :positions) i)) desired-state))
+	 (setq i (+ i 1)))
+       ))
+  (:reference-vector (&optional (element nil))
+     (ros::spin-once)
+     (if (eq element nil)
+	 (send self :stroke-to-angle desired-state)
+       (elt (send self :stroke-to-angle desired-state) element)))
+  (:actual-vector (&optional (element nil))
+     (ros::spin-once)
+     (if (eq element nil)
+	 (send self :stroke-to-angle actual-state)
+       (elt (send self :stroke-to-angle actual-state) element)))
+
   ;; (:lhand-controller ()
   ;;  (list
   ;;   (list
@@ -271,6 +310,8 @@
   ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
   ;;    (cons :joint-names (list "RARM_WRIST_R")))))
   )
+
+(load "package://aero_ros_bridge/euslisp/aero-upper-angles.l")
 
 (defun aero-upper-init (&rest args)
   (if (not (boundp '*ri*))
