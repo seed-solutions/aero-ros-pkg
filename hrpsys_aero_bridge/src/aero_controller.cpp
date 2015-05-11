@@ -17,10 +17,17 @@ SEED485Controller::SEED485Controller(const std::string& port, uint8_t id):
         // ser_.set_option(serial_port_base::baud_rate(1382400));
         // ser_.set_option(serial_port_base::baud_rate(115200));
         struct termios tio;
+#if ((BOOST_VERSION / 100 % 1000) > 50)
         ::tcgetattr(ser_.lowest_layer().native_handle(), &tio);
         ::cfsetospeed(&tio, 1382400);
         ::cfsetispeed(&tio, 1382400);
         ::tcsetattr(ser_.lowest_layer().native_handle(), TCSANOW, &tio);
+#else  // 12.04
+        ::tcgetattr(ser_.lowest_layer().native(), &tio);
+        ::cfsetospeed(&tio, 1382400);
+        ::cfsetispeed(&tio, 1382400);
+        ::tcsetattr(ser_.lowest_layer().native(), TCSANOW, &tio);
+#endif
       } catch (std::exception& e) {
         std::cerr << "baudrate: " << e.what() << std::endl;
       }
@@ -92,7 +99,11 @@ void SEED485Controller::read(std::vector<uint8_t>& read_data) {
 void SEED485Controller::flush() {
   if (ser_.is_open()) {
     boost::mutex::scoped_lock lock(mtx_);
+#if ((BOOST_VERSION / 100 % 1000) > 50)
     ::tcflush(ser_.lowest_layer().native_handle(), TCIOFLUSH);
+#else  // 12.04
+    ::tcflush(ser_.lowest_layer().native(), TCIOFLUSH);
+#endif
   }
 }
 
