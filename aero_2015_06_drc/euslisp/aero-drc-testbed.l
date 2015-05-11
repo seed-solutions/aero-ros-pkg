@@ -1,10 +1,14 @@
 (load "package://drc_task_common/euslisp/drc-testbed-models.l")
-(load "package://aero_ros_bridge/euslisp/aero-interface.l")
+(load "package://aero_ros_bridge/euslisp/aero-upper-interface.l")
+(load "package://aero_ros_bridge/euslisp/aero-lower-interface.l")
 
 (defun make-drc-testbed-models-with-aero ()
-  (aero-init)
-  (send *aero* :fix-leg-to-coords (make-coords))
-  (send *aero* :translate (float-vector -1000 500 0))
+  (aero-upper-init)
+  (aero-lower-init)
+  (send *aero-lower* :fix-leg-to-coords (make-coords))
+  (send *aero-lower* :translate (float-vector -1000 500 0))
+  (send *aero-upper* :fix-upper-to-coords)
+  (send *aero-upper* :reset-manip-pose)
   ;; Generate models                 
   (make-drc-door)
   (make-drc-hose-plug)
@@ -28,6 +32,6 @@
   (send *drc-valve* :translate (float-vector 2000 -3500 1130) :world)
   (send *drc-valve* :translate (float-vector 0 (/ 1210 -2.0) (+ -110 -400)))
   ;; Display
-  (objects (list *aero* *hose-plug* *hose-wall* *stair* *door* *drill-wall* *terrain* *drc-valve*
+  (objects (list *aero-upper* *aero-lower* *hose-plug* *hose-wall* *stair* *door* *drill-wall* *terrain* *drc-valve*
                  *surprise-task-shower* *surprise-task-button* *surprise-task-lever* *surprise-task-rope*))
   )
