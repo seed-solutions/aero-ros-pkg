@@ -13,3 +13,5 @@ find_package(catkin REQUIRED COMPONENTS
 compile_openhrp_model(${PROJECT_SOURCE_DIR}/models/aero.wrl aero)
 compile_openhrp_model(${PROJECT_SOURCE_DIR}/models/aero-lower.wrl)
 compile_openhrp_model(${PROJECT_SOURCE_DIR}/models/aero_upper.wrl)
+execute_process(COMMAND bash ${PROJECT_SOURCE_DIR}/scripts/make_angle_vector_command.sh)
+execute_process(COMMAND bash ${PROJECT_SOURCE_DIR}/scripts/make_stroke_vector_command.sh)
