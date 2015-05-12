@@ -1,12 +1,12 @@
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
-(require :aero "package://aero_ros_bridge/models/aero-lower.l")
+(require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
 
 (defclass aero-lower-interface
   :super rtm-ros-robot-interface
   :slots ())
 (defmethod aero-lower-interface
   (:init (&rest args)
-    (send-super* :init :robot AeroRobotLower-robot args)
+    (send-super* :init :robot AeroLowerRobot-robot args)
     (mapcar #'(lambda (ctype)
                 (send self :add-controller ctype))
             (send self :default-controller-list))
@@ -60,8 +60,9 @@
   )
 
 (defun aero-lower-init (&rest args)
-  (if (not (boundp '*ri*))
-      (setq *ri* (instance* aero-lower-interface :init args)))
+  (if (not (boundp '*ri-lower*))
+      (setq *ri-lower* (instance* aero-lower-interface :init args)))
   (if (not (boundp '*aero-lower*))
-      (setq *aero-lower* (instance AeroRobotLower-robot :init)))
+      (setq *aero-lower* (instance AeroLowerRobot-robot :init)))
   )
+
