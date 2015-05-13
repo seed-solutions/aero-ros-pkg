@@ -5,7 +5,7 @@ namespace aero_controller {
 AeroControllerNode::AeroControllerNode(const ros::NodeHandle& nh,
                                        const std::string& port_upper,
                                        const std::string& port_lower) :
-    handle_(nh), controller_(port_upper, port_lower)
+    handle_(nh), upper_(port_upper), lower_(port_lower)
 {
   ROS_INFO("starting aero_controller");
   ROS_INFO(" create publisher");
@@ -42,38 +42,72 @@ void AeroControllerNode::GoVelocityCallback(
     const geometry_msgs::Twist::ConstPtr& msg) {
   {
     boost::mutex::scoped_lock lock(mtx_);
-    controller_.flush();
+    lower_.flush();
   }
   usleep(1000 * 10);
 }
 
 void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& msg) {
-  std::vector<size_t> joint_to_stroke_indices;
+  // joint name to indeices, if not exist, then return -1
+  std::vector<int32_t> upper_joint_to_stroke_indices;
+  std::vector<int32_t> lower_joint_to_stroke_indices;
   for (size_t i = 0; i < msg->joint_names.size(); i++) {
     std::string joint_name = msg->joint_names[i];
-    int32_t stroke_idx =
-        controller_.get_stroke_index_from_joint_name(joint_name);
-    if (stroke_idx >= 0) {
-      joint_to_stroke_indices.push_back(static_cast<size_t>(stroke_idx));
-    }
+    upper_joint_to_stroke_indices.push_back(
+        upper_.get_stroke_index_from_joint_name(joint_name));
+    lower_joint_to_stroke_indices.push_back(
+        lower_.get_stroke_index_from_joint_name(joint_name));
   }
 
   // if joint stroke is undefined, use previous stroke
-  std::vector<int16_t> stroke_vector;
-  std::vector<int16_t>& ref_vector = controller_.get_reference_stroke_vector();
-  stroke_vector.assign(ref_vector.begin(), ref_vector.end());
+  std::vector<int16_t> upper_stroke_vector;
+  std::vector<int16_t>& upper_ref_vector =
+      upper_.get_reference_stroke_vector();
+  upper_stroke_vector.assign(upper_ref_vector.begin(),
+                             upper_ref_vector.end());
+
+  std::vector<int16_t> lower_stroke_vector;
+  std::vector<int16_t>& lower_ref_vector =
+      lower_.get_reference_stroke_vector();
+  lower_stroke_vector.assign(lower_ref_vector.begin(),
+                             lower_ref_vector.end());
+
+  // count axis in command, if 0, then command not send
+  size_t upper_count = 0;
+  size_t lower_count = 0;
+
+  // for each trajectory points,
   for (size_t i = 0; i < msg->points.size(); i++) {
+    // convert positions to stroke vector
     for (size_t j = 0; j < msg->points[i].positions.size(); j++) {
-      stroke_vector[joint_to_stroke_indices[j]] =
-          static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
+      // upper
+      if (upper_joint_to_stroke_indices[j] >= 0) {
+        upper_stroke_vector[
+            static_cast<size_t>(upper_joint_to_stroke_indices[j])] =
+            static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
+        upper_count++;
+      }
+      // lower
+      if (lower_joint_to_stroke_indices[j] >= 0) {
+        lower_stroke_vector[
+            static_cast<size_t>(lower_joint_to_stroke_indices[j])] =
+            static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
+        lower_count++;
+      }
     }
     double time_sec = msg->points[i].time_from_start.toSec();
     uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
     {
       boost::mutex::scoped_lock lock(mtx_);
-      controller_.flush();
-      controller_.set_position(stroke_vector, time_msec);
+      if (upper_count > 0) {
+        upper_.flush();
+        upper_.set_position(upper_stroke_vector, time_msec);
+      }
+      if (lower_count > 0) {
+        lower_.flush();
+        lower_.set_position(lower_stroke_vector, time_msec);
+      }
     }
     usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
@@ -86,18 +120,32 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
   state.desired.positions.resize(AERO_DOF);
   state.actual.positions.resize(AERO_DOF);
 
-  std::vector<int16_t> stroke_vector;
-  std::vector<int16_t>& ref_vector =
-      controller_.get_reference_stroke_vector();
+  std::vector<int16_t> upper_stroke_vector;
+  std::vector<int16_t>& upper_ref_vector =
+      upper_.get_reference_stroke_vector();
+  std::vector<int16_t> lower_stroke_vector;
+  std::vector<int16_t>& lower_ref_vector =
+      lower_.get_reference_stroke_vector();
   {
     boost::mutex::scoped_lock lock(mtx_);
-    controller_.flush();
-    controller_.get_position(stroke_vector);
+    upper_.flush();
+    upper_.get_position(upper_stroke_vector);
+    lower_.flush();
+    lower_.get_position(lower_stroke_vector);
   }
-  for (size_t i = 0; i < AERO_DOF; i++) {
-    state.joint_names[i] = controller_.get_joint_name(i);
-    state.desired.positions[i] = static_cast<double>(ref_vector[i]) * 0.01;
-    state.actual.positions[i] = static_cast<double>(stroke_vector[i]) * 0.01;
+  for (size_t i = 0; i < AERO_DOF_UPPER; i++) {
+    state.joint_names[i] = upper_.get_joint_name(i);
+    state.desired.positions[i] =
+        static_cast<double>(upper_ref_vector[i]) * 0.01;
+    state.actual.positions[i] =
+        static_cast<double>(upper_stroke_vector[i]) * 0.01;
+  }
+  for (size_t i = 0; i < AERO_DOF_LOWER; i++) {
+    state.joint_names[i + AERO_DOF_UPPER] = lower_.get_joint_name(i);
+    state.desired.positions[i + AERO_DOF_UPPER] =
+        static_cast<double>(lower_ref_vector[i]) * 0.01;
+    state.actual.positions[i + AERO_DOF_UPPER] =
+        static_cast<double>(lower_stroke_vector[i]) * 0.01;
   }
   state_pub_.publish(state);
 }

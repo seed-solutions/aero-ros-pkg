@@ -36,7 +36,8 @@ class AeroControllerNode {
 
  private:
   ros::NodeHandle handle_;
-  AeroController controller_;
+  AeroUpperController upper_;
+  AeroLowerController lower_;
 
   ros::Subscriber cmdvel_sub_;
   ros::Subscriber jointtraj_sub_;

@@ -56,22 +56,39 @@ const static size_t STROKE_LEFT_HAND = 18;
 const static size_t STROKE_WAIST_RIGHT = 19;
 const static size_t STROKE_WAIST_LEFT = 20;
 const static size_t STROKE_WAIST_P = 21;
+
 // LOWER (4 LEGS):
-const static size_t STROKE_FRONT_RIGHT_CROTCH_Y = 22;
-const static size_t STROKE_FRONT_RIGHT_CROTCH_P = 23;
-const static size_t STROKE_FRONT_RIGHT_KNEE_P = 24;
+// const static size_t STROKE_FRONT_RIGHT_CROTCH_Y = 22;
+// const static size_t STROKE_FRONT_RIGHT_CROTCH_P = 23;
+// const static size_t STROKE_FRONT_RIGHT_KNEE_P = 24;
 
-const static size_t STROKE_REAR_RIGHT_CROTCH_Y = 25;
-const static size_t STROKE_REAR_RIGHT_CROTCH_P = 26;
-const static size_t STROKE_REAR_RIGHT_KNEE_P = 27;
+// const static size_t STROKE_REAR_RIGHT_CROTCH_Y = 25;
+// const static size_t STROKE_REAR_RIGHT_CROTCH_P = 26;
+// const static size_t STROKE_REAR_RIGHT_KNEE_P = 27;
 
-const static size_t STROKE_FRONT_LEFT_CROTCH_Y = 28;
-const static size_t STROKE_FRONT_LEFT_CROTCH_P = 29;
-const static size_t STROKE_FRONT_LEFT_KNEE_P = 30;
+// const static size_t STROKE_FRONT_LEFT_CROTCH_Y = 28;
+// const static size_t STROKE_FRONT_LEFT_CROTCH_P = 29;
+// const static size_t STROKE_FRONT_LEFT_KNEE_P = 30;
 
-const static size_t STROKE_REAR_LEFT_CROTCH_Y = 31;
-const static size_t STROKE_REAR_LEFT_CROTCH_P = 32;
-const static size_t STROKE_REAR_LEFT_KNEE_P = 33;
+// const static size_t STROKE_REAR_LEFT_CROTCH_Y = 31;
+// const static size_t STROKE_REAR_LEFT_CROTCH_P = 32;
+// const static size_t STROKE_REAR_LEFT_KNEE_P = 33;
+
+const static size_t STROKE_FRONT_RIGHT_CROTCH_Y = 0;
+const static size_t STROKE_FRONT_RIGHT_CROTCH_P = 1;
+const static size_t STROKE_FRONT_RIGHT_KNEE_P = 2;
+
+const static size_t STROKE_REAR_RIGHT_CROTCH_Y = 3;
+const static size_t STROKE_REAR_RIGHT_CROTCH_P = 4;
+const static size_t STROKE_REAR_RIGHT_KNEE_P = 5;
+
+const static size_t STROKE_FRONT_LEFT_CROTCH_Y = 6;
+const static size_t STROKE_FRONT_LEFT_CROTCH_P = 7;
+const static size_t STROKE_FRONT_LEFT_KNEE_P = 8;
+
+const static size_t STROKE_REAR_LEFT_CROTCH_Y = 9;
+const static size_t STROKE_REAR_LEFT_CROTCH_P = 10;
+const static size_t STROKE_REAR_LEFT_KNEE_P = 11;
 
 // WHEEL
 const static size_t STROKE_FRONT_RIGHT_WHEEL = 0;

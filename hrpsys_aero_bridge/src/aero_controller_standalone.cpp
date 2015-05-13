@@ -4,12 +4,13 @@ using namespace aero_controller;
 
 int main(int argc, char** argv) {
   // std::string port_upper("/dev/ttyUSB0");
-  std::string port_lower("/dev/ttyUSB1");
+  // std::string port_lower("/dev/ttyUSB1");
 
   std::string port_upper("");
-  // std::string port_lower("");
+  std::string port_lower("");
 
-  AeroController aero(port_upper, port_lower);
+  AeroUpperController aero_upper(port_upper);
+  AeroLowerController aero_lower(port_lower);
 
   double i = 0;
   double f = 0.5;
@@ -17,18 +18,20 @@ int main(int argc, char** argv) {
   int32_t a = 100;
   int32_t move_time = 20;
 
-  aero.servo_on();
+  aero_upper.servo_on();
+  aero_lower.servo_on();
 
   // flush i/o
   usleep(5000 * 1000);
-  aero.flush();
+  aero_upper.flush();
+  aero_lower.flush();
 
   std::vector<int16_t> stroke_vector;
   std::vector<int16_t> stroke_vector_current;
-  stroke_vector.resize(AERO_DOF);
-  stroke_vector_current.resize(AERO_DOF);
+  stroke_vector.resize(AERO_DOF_UPPER);
+  stroke_vector_current.resize(AERO_DOF_UPPER);
 
-  // aero.set_position(stroke_vector, 2000);
+  // aero_upper.set_position(stroke_vector, 2000);
   // usleep(5000 * 1000);
 
   // for (size_t j = 0; j < 100; j++) {
@@ -54,8 +57,8 @@ int main(int argc, char** argv) {
   //     }
   //   }
 
-  //   aero.set_position(stroke_vector, move_time);
-  //   aero.get_data(stroke_vector_current);
+  //   aero_upper.set_position(stroke_vector, move_time);
+  //   aero_upper.get_data(stroke_vector_current);
 
   //   std::cout << "send:";
   //   for (size_t vi = 0; vi < stroke_vector.size(); vi++) {
@@ -73,7 +76,7 @@ int main(int argc, char** argv) {
   //   i += move_time * 0.001;
   // }
 
-  aero.get_position(stroke_vector);
+  aero_upper.get_position(stroke_vector);
 
   return 0;
 }
