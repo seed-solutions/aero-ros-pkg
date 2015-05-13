@@ -1,5 +1,6 @@
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
 (require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
+(load "package://aero_ros_bridge/euslisp/aero-lower-strokes.l")
 
 (defclass aero-lower-interface
   :super rtm-ros-robot-interface
@@ -28,7 +29,7 @@
      (cons :controller-action "/larm_controller/follow_joint_trajectory_action")
      (cons :controller-state  "/larm_controller/state")
      (cons :action-type control_msgs::FollowJointTrajectoryAction)
-     (cons :joint-names (list "LARM_SHOULDER_P" "LARM_SHOULDER_R" "LARM_SHOULDER_Y" "LARM_ELBOW" "LARM_WRIST_Y" "LARM_WRIST_P")))))
+     (cons :joint-names (list "LARM_SHOULDER_P" "LARM_SHOULDER_R" "LARM_SHOULDER_Y" "LARM_ELBOW" "LARM_WRIST_Y" "LARM_WvRIST_P")))))
   (:rarm-controller ()
    (list
     (list

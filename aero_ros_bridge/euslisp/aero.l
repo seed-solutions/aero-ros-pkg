@@ -1,0 +1,71 @@
+(require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
+(require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
+;; some methods of AeroUpperRobot-robot is in aero-upper-interface.l
+(load "package://aero_ros_bridge/euslisp/aero-upper-interface.l")
+
+
+(defclass AeroRobot-robot
+  :super object
+  :slots ())
+(defmethod AeroRobot-robot
+  (:init ()
+    (progn
+      (if (not (boundp `*aero-upper*))
+          (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
+      (if (not (boundp '*aero-lower*)) 
+          (setq *aero-lower* (instance AeroLowerRobot-robot :init)))
+      ;; move aero-upper to top location of aero-lower
+      (if (boundp '*aero-lower*)
+          (send *aero-upper* :newcoords
+                (send (send *aero-lower* :torso :end-coords)
+                      :worldcoords))
+        )
+      (send (send *aero-lower* :links :WAIST_LINK0) :assoc (send *aero-upper* :links :WAIST_LINK0)))
+    )
+  (:stroke-vector ()
+    (if (and (boundp `*aero-upper*) (boundp `*aero-lower*))
+        (concatenate float-vector
+                     (send *aero-upper* :stroke-vector) (send *aero-lower* :stroke-vector))
+      )
+    )
+  (:draw-on ()
+    ;; executing (objects *aero*) is not going to work. Use this function instead to visualize aero in irtviewer
+    (objects *aero-upper*)
+    (objects *aero-lower*)
+    (send *irtviewer* :draw-objects)
+    )
+  ;; calculate center of mass of the whole robot using center of mass of aero upper and aero lower
+  (:get-com ()
+    (scale (/ 1 (+ (send *aero-upper* :weight) (send *aero-lower* :weight)))
+           (v+ (scale (send *aero-upper* :weight) (send *aero-upper* :centroid))
+               (scale (send *aero-lower* :weight) (send *aero-lower* :centroid))))
+    )
+  ;; helper function for projecting a vector onto ground plane
+  (:project-on-ground (in_coords)
+    (float-vector (aref in_coords 0) (aref in_coords 1) 0)
+    )
+  
+  ;; draw center of mass projected onto ground plane
+  (:draw-centroid-on-ground ()
+    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send self :get-com))))
+          )
+      (send com-on-ground :draw-on :flush t)
+      com-on-ground)  
+    )
+
+  (:draw-upper-centroid-on-ground ()
+    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-upper* :centroid))))
+          )
+      (send com-on-ground :draw-on :flush t)
+      com-on-ground)  
+    )
+  
+  (:draw-lower-centroid-on-ground ()
+    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-lower* :centroid))))
+          )
+      (send com-on-ground :draw-on :flush t)
+      com-on-ground)  
+    )  
+  )
+
+(provide :aero "package://aero_ros_bridge/euslisp/aero.l")
