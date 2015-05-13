@@ -72,19 +72,16 @@ class SEED485Controller {
   boost::mutex mtx_;
 };
 
-
-class AeroController {
+//////////////////////////////
+/// Proto type of controller
+class AeroControllerProto {
  public:
-  AeroController(const std::string& port_upper, const std::string& port_lower);
-  ~AeroController();
-
-  // flush all controllers
-  void flush();
+  AeroControllerProto(const std::string& port, uint8_t id);
+  ~AeroControllerProto();
 
   // servo
-  void servo_command(int16_t d0, int16_t d1);
+  void servo_command(int16_t d0);
   void servo_on();
-  void wheel_on();
   void servo_off();
 
   // postion
@@ -105,6 +102,8 @@ class AeroController {
   void get_current(std::vector<int16_t>& stroke_vector);
   void get_temperature(std::vector<int16_t>& stroke_vector);
 
+  void flush() {ser_.flush();}
+
   bool verbose() {return verbose_;}
   void verbose(bool v) {verbose_ = v;}
 
@@ -118,31 +117,52 @@ class AeroController {
     return joint_indices_[idx].joint_name;
   }
 
- private:
+ protected:
   bool verbose_;
 
-  SEED485Controller ser_upper_;
-  SEED485Controller ser_lower_;
+  SEED485Controller ser_;
 
   std::vector<int16_t> stroke_vector_;
   std::vector<int16_t> stroke_ref_vector_;
   std::vector<int16_t> stroke_cur_vector_;
 
   std::vector<AJointIndex> joint_indices_;
-  std::vector<AJointIndex> wheel_indices_;
 
-  int16_t decode_short_(uint8_t* raw);
+    int16_t decode_short_(uint8_t* raw);
   void encode_short_(int16_t value, uint8_t* raw);
 
   /// @brief stroke_vector (int16_t) to raw_vector(uint8_t)
   void stroke_to_raw_(std::vector<int16_t>& stroke,
-                      std::vector<uint8_t>& raw_upper,
-                      std::vector<uint8_t>& raw_lower);
+                      std::vector<uint8_t>& raw);
 
   /// @brief raw_vector(uint8_t) to stroke_vector (int16_t)
-  void raw_to_stroke_(std::vector<uint8_t>& raw_upper,
-                      std::vector<uint8_t>& raw_lower,
+  void raw_to_stroke_(std::vector<uint8_t>& raw,
                       std::vector<int16_t>& stroke);
+};
+
+
+////////////////////////////////
+/// Upper body
+class AeroUpperController : public AeroControllerProto {
+ public:
+  AeroUpperController(const std::string& port);
+  ~AeroUpperController();
+};
+
+/// Lower body, including wheels
+class AeroLowerController : public AeroControllerProto {
+ public:
+  AeroLowerController(const std::string& port);
+  ~AeroLowerController();
+
+  // servo: spliting wheels and joints
+  void servo_command(int16_t d0, int16_t d1);
+  void servo_on();
+  void wheel_on();
+  void servo_off();
+
+ protected:
+  std::vector<AJointIndex> wheel_indices_;
 };
 
 }  // namespace

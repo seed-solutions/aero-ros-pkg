@@ -143,19 +143,186 @@ void SEED485Controller::send_command(
 }
 
 
+/////////
+AeroControllerProto::AeroControllerProto(const std::string& port, uint8_t id) :
+    ser_(port, id), verbose_(true) {
+}
+AeroControllerProto::~AeroControllerProto() {
+}
 
-AeroController::AeroController(const std::string& port_upper,
-                               const std::string& port_lower):
-    ser_upper_(port_upper, ID_UPPER), ser_lower_(port_lower, ID_LOWER),
-    verbose_(true) {
+/// @brief decode short(int16_t) from byte(uint8_t)
+int16_t AeroControllerProto::decode_short_(uint8_t* raw) {
+  int16_t value;
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&value);
+  bvalue[0] = raw[1];
+  bvalue[1] = raw[0];
+  return value;
+}
+/// @brief ecnode short(int16_t) to byte(uint8_t)
+void AeroControllerProto::encode_short_(int16_t value, uint8_t* raw) {
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&value);
+  raw[0] = bvalue[1];
+  raw[1] = bvalue[0];
+}
+
+/// @brief stoke_vector to raw command bytes
+void AeroControllerProto::stroke_to_raw_(std::vector<int16_t>& stroke,
+                                         std::vector<uint8_t>& raw) {
+  for (size_t i = 0; i < joint_indices_.size(); i++) {
+    AJointIndex& aji = joint_indices_[i];
+    encode_short_(stroke[aji.stroke_index],
+                  &raw[RAW_HEADER_OFFSET + aji.raw_index * 2]);
+  }
+}
+/// @brief raw command bytes to stoke_vector
+void AeroControllerProto::raw_to_stroke_(std::vector<uint8_t>& raw,
+                                         std::vector<int16_t>& stroke) {
+  for (size_t i = 0; i < joint_indices_.size(); i++) {
+    AJointIndex& aji = joint_indices_[i];
+    stroke[aji.stroke_index] =
+        decode_short_(&raw[RAW_HEADER_OFFSET + aji.raw_index * 2]);
+  }
+}
+
+/// @brief servo toggle command
+/// @param d0 1: on, 0: off
+void AeroControllerProto::servo_command(int16_t d0) {
+  std::vector<int16_t> stroke_vector;
+  stroke_vector.resize(joint_indices_.size());
+  for (size_t i = 0; i < stroke_vector.size(); i++) {
+    stroke_vector[i] = d0;
+  }
+
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
+
+  stroke_to_raw_(stroke_vector, dat);
+
+  ser_.send_command(CMD_MOTOR_SRV, 0, dat);
+}
+
+/// @brief servo on command
+void AeroControllerProto::servo_on() {
+  servo_command(1);
+}
+
+/// @brief servo off command
+void AeroControllerProto::servo_off() {
+  servo_command(0);
+}
+
+/// @brief set position command
+/// @param stroke_vector stroke vector, MUST be DOF bytes
+/// @param time time[ms]
+void AeroControllerProto::set_position(std::vector<int16_t>& stroke_vector,
+                                       uint16_t time) {
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
+
+  stroke_to_raw_(stroke_vector, dat);
+  stroke_ref_vector_.assign(stroke_vector.begin(), stroke_vector.end());
+
+  ser_.send_command(CMD_MOVE_ABS, time, dat);
+}
+
+/// @brief get data from buffer,
+///   this does not call command, but only read from buffer
+/// @param stroke_vector stroke vector
+void AeroControllerProto::get_data(std::vector<int16_t>& stroke_vector) {
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
+
+  ser_.read(dat);
+
+  stroke_vector.resize(joint_indices_.size());
+  raw_to_stroke_(dat, stroke_vector);
+}
+
+
+/// @brief abstract of set commands
+/// @param cmd command id
+/// @param stroke_vector stroke vector
+void AeroControllerProto::set_command(uint8_t cmd,
+                                      std::vector<int16_t>& stroke_vector) {
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
+  stroke_to_raw_(stroke_vector, dat);
+  ser_.send_command(cmd, 0, dat);
+}
+/// @brief send Motor_Cur command
+/// @param stroke_vector stroke vector
+void AeroControllerProto::set_max_current(
+    std::vector<int16_t>& stroke_vector) {
+  set_command(CMD_MOTOR_CUR, stroke_vector);
+}
+/// @brief send Motor_Acc command
+/// @param stroke_vector stroke vector
+void AeroControllerProto::set_accel_rate(
+    std::vector<int16_t>& stroke_vector) {
+  set_command(CMD_MOTOR_ACC, stroke_vector);
+}
+/// @brief send Motor_Gain command
+/// @param stroke_vector stroke vector
+void AeroControllerProto::set_motor_gain(
+    std::vector<int16_t>& stroke_vector) {
+  set_command(CMD_MOTOR_GAIN, stroke_vector);
+}
+
+
+/// @brief abstract of get commands
+/// @param cmd command id
+/// @param stroke_vector stroke vector
+void AeroControllerProto::get_command(uint8_t cmd,
+                                      std::vector<int16_t>& stroke_vector) {
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
+  ser_.send_command(cmd, 0, dat);
+  get_data(stroke_vector);
+}
+
+/// @brief send Get_Pos command
+/// @param stroke_vector stroke vector
+void AeroControllerProto::get_position(
+    std::vector<int16_t>& stroke_vector) {
+  get_command(CMD_GET_POS, stroke_vector);
+}
+/// @brief send Get_Cur command
+/// @param stroke_vector stroke vector
+void AeroControllerProto::get_current(
+    std::vector<int16_t>& stroke_vector) {
+  get_command(CMD_GET_CUR, stroke_vector);
+}
+/// @brief send Get_Tmp command
+/// @param stroke_vector stroke vector
+void AeroControllerProto::get_temperature(
+    std::vector<int16_t>& stroke_vector) {
+  get_command(CMD_GET_TMP, stroke_vector);
+}
+
+
+/// @brief return stroke index from joint name
+/// @param name joint name
+/// @return index in stroke vector, if not found, return -1
+int32_t AeroControllerProto::get_stroke_index_from_joint_name(
+    std::string& name) {
+  for (size_t i = 0; i < joint_indices_.size(); i++) {
+    if (joint_indices_[i].joint_name == name) {
+      return static_cast<int32_t>(joint_indices_[i].stroke_index);
+    }
+  }
+  return -1;
+}
+
+/////////////////
+AeroUpperController::AeroUpperController(const std::string& port) :
+    AeroControllerProto(port, ID_UPPER) {
   // stroke_vector
-  stroke_vector_.resize(AERO_DOF);
-  stroke_ref_vector_.resize(AERO_DOF);
-  stroke_cur_vector_.resize(AERO_DOF);
+  stroke_vector_.resize(AERO_DOF_UPPER);
+  stroke_ref_vector_.resize(AERO_DOF_UPPER);
+  stroke_cur_vector_.resize(AERO_DOF_UPPER);
 
   // indices
   joint_indices_.clear();
-  wheel_indices_.clear();
   // neck
   joint_indices_.push_back(
       AJointIndex(ID_UPPER, STROKE_NECK_Y, RAW_NECK_Y,
@@ -226,6 +393,23 @@ AeroController::AeroController(const std::string& port_upper,
   joint_indices_.push_back(
       AJointIndex(ID_UPPER, STROKE_WAIST_P, RAW_WAIST_P,
                   std::string("waist_pitch_joint")));
+}
+
+AeroUpperController::~AeroUpperController() {
+}
+
+//////////////
+AeroLowerController::AeroLowerController(const std::string& port) :
+    AeroControllerProto(port, ID_LOWER) {
+  // stroke_vector
+  stroke_vector_.resize(AERO_DOF_LOWER);
+  stroke_ref_vector_.resize(AERO_DOF_LOWER);
+  stroke_cur_vector_.resize(AERO_DOF_LOWER);
+
+  // indices
+  joint_indices_.clear();
+  wheel_indices_.clear();
+
   // frleg
   joint_indices_.push_back(
       AJointIndex(ID_LOWER,
@@ -291,237 +475,70 @@ AeroController::AeroController(const std::string& port_upper,
       AJointIndex(ID_LOWER, STROKE_REAR_LEFT_WHEEL, RAW_REAR_LEFT_WHEEL,
                   std::string("r_l_wheel_joint")));
 
-  // // debug
-  // for (size_t i = 0; i < joint_indices_.size(); i++) {
-  //   AJointIndex& aji = joint_indices_[i];
-  //   std::cout << "joint[" << i << "]("
-  //             << "id: " << aji.id << ", "
-  //             << "stroke: " << aji.stroke_index << ", "
-  //             << "raw: " << aji.raw_index << ")" << std::endl;
-  // }
-  // //
-
-  std::cout << "starting aero_controller" << std::endl;
 }
-
-AeroController::~AeroController() {
+AeroLowerController::~AeroLowerController() {
 }
-
-/// @brief flush buffer
-void AeroController::flush() {
-  ser_upper_.flush();
-  ser_lower_.flush();
-}
-
-/// @brief decode short(int16_t) from byte(uint8_t)
-int16_t AeroController::decode_short_(uint8_t* raw) {
-  int16_t value;
-  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&value);
-  bvalue[0] = raw[1];
-  bvalue[1] = raw[0];
-  return value;
-}
-/// @brief ecnode short(int16_t) to byte(uint8_t)
-void AeroController::encode_short_(int16_t value, uint8_t* raw) {
-  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&value);
-  raw[0] = bvalue[1];
-  raw[1] = bvalue[0];
-}
-
-/// @brief stoke_vector to raw command bytes
-void AeroController::stroke_to_raw_(std::vector<int16_t>& stroke,
-                                    std::vector<uint8_t>& raw_upper,
-                                    std::vector<uint8_t>& raw_lower) {
-  for (size_t i = 0; i < joint_indices_.size(); i++) {
-    AJointIndex& aji = joint_indices_[i];
-    if (aji.id == ID_UPPER) {
-      encode_short_(stroke[aji.stroke_index],
-                    &raw_upper[RAW_HEADER_OFFSET + aji.raw_index * 2]);
-    } else if (aji.id == ID_LOWER) {
-      encode_short_(stroke[aji.stroke_index],
-                    &raw_lower[RAW_HEADER_OFFSET + aji.raw_index * 2]);
-    }
-  }
-}
-/// @brief raw command bytes to stoke_vector
-void AeroController::raw_to_stroke_(std::vector<uint8_t>& raw_upper,
-                                    std::vector<uint8_t>& raw_lower,
-                                    std::vector<int16_t>& stroke) {
-  for (size_t i = 0; i < joint_indices_.size(); i++) {
-    AJointIndex& aji = joint_indices_[i];
-    if (aji.id == ID_UPPER) {
-      stroke[aji.stroke_index] =
-          decode_short_(&raw_upper[RAW_HEADER_OFFSET + aji.raw_index * 2]);
-    } else if (aji.id == ID_LOWER) {
-      stroke[aji.stroke_index] =
-          decode_short_(&raw_lower[RAW_HEADER_OFFSET + aji.raw_index * 2]);
-    }
-  }
-}
-
 
 /// @brief servo toggle command
 /// @param d0 1: on, 0: off
 /// @param d1 wheel servo, 1: on, 0: off
-void AeroController::servo_command(int16_t d0, int16_t d1) {
+void AeroLowerController::servo_command(int16_t d0, int16_t d1) {
   std::vector<int16_t> stroke_vector;
-  stroke_vector.resize(AERO_DOF);
+  stroke_vector.resize(AERO_DOF_LOWER);
   for (size_t i = 0; i < stroke_vector.size(); i++) {
     stroke_vector[i] = d0;
-    if (i == STROKE_FRONT_RIGHT_WHEEL ||
-        i == STROKE_FRONT_LEFT_WHEEL ||
-        i == STROKE_REAR_RIGHT_WHEEL ||
-        i == STROKE_REAR_LEFT_WHEEL) {
-      stroke_vector[i] = d1;
-    }
   }
 
-  std::vector<uint8_t> dat_upper, dat_lower;
-  dat_upper.resize(RAW_DATA_LENGTH);
-  dat_lower.resize(RAW_DATA_LENGTH);
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
 
-  stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
+  stroke_to_raw_(stroke_vector, dat);
   // lower body: slave motors must be toggled by servo command?
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_FRONT_RIGHT_CROTCH_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_FRONT_RIGHT_CROTCH_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_FRONT_RIGHT_KNEE_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_FRONT_RIGHT_KNEE_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_REAR_RIGHT_CROTCH_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_REAR_RIGHT_CROTCH_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_REAR_RIGHT_KNEE_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_REAR_RIGHT_KNEE_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_FRONT_LEFT_CROTCH_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_FRONT_LEFT_CROTCH_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_FRONT_LEFT_KNEE_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_FRONT_LEFT_KNEE_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_REAR_LEFT_CROTCH_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_REAR_LEFT_CROTCH_P0 * 2]);
   encode_short_(d0,
-                &dat_lower[RAW_HEADER_OFFSET + RAW_REAR_LEFT_KNEE_P0 * 2]);
+                &dat[RAW_HEADER_OFFSET + RAW_REAR_LEFT_KNEE_P0 * 2]);
+
+  // wheel
+  encode_short_(d1,
+                &dat[RAW_HEADER_OFFSET + RAW_FRONT_RIGHT_WHEEL * 2]);
+  encode_short_(d1,
+                &dat[RAW_HEADER_OFFSET + RAW_REAR_RIGHT_WHEEL * 2]);
+  encode_short_(d1,
+                &dat[RAW_HEADER_OFFSET + RAW_FRONT_LEFT_WHEEL * 2]);
+  encode_short_(d1,
+                &dat[RAW_HEADER_OFFSET + RAW_REAR_LEFT_WHEEL * 2]);
   //
 
-  ser_upper_.send_command(CMD_MOTOR_SRV, 0, dat_upper);
-  ser_lower_.send_command(CMD_MOTOR_SRV, 0, dat_lower);
+  ser_.send_command(CMD_MOTOR_SRV, 0, dat);
 }
 
 /// @brief servo on command, wheels will servo off
-void AeroController::servo_on() {
+void AeroLowerController::servo_on() {
   servo_command(1, 0);
 }
 
 /// @brief servo on command including wheel
 ///   if you want to servo off only wheel, call servo_on()
-void AeroController::wheel_on() {
+void AeroLowerController::wheel_on() {
   servo_command(1, 1);
 }
 
 /// @brief servo off command
-void AeroController::servo_off() {
+void AeroLowerController::servo_off() {
   servo_command(0, 0);
 }
-
-/// @brief set position command
-/// @param stroke_vector stroke vector, MUST be AERO_DOF(46) bytes
-/// @param time time[ms]
-void AeroController::set_position(std::vector<int16_t>& stroke_vector,
-                                  uint16_t time) {
-  std::vector<uint8_t> dat_upper, dat_lower;
-  dat_upper.resize(RAW_DATA_LENGTH);
-  dat_lower.resize(RAW_DATA_LENGTH);
-
-  stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
-  stroke_ref_vector_.assign(stroke_vector.begin(), stroke_vector.end());
-
-  ser_upper_.send_command(CMD_MOVE_ABS, time, dat_upper);
-  ser_lower_.send_command(CMD_MOVE_ABS, time, dat_lower);
-}
-
-/// @brief get data from buffer,
-///   this does not call command, but only read from buffer
-/// @param stroke_vector stroke vector
-void AeroController::get_data(std::vector<int16_t>& stroke_vector) {
-  std::vector<uint8_t> dat_upper, dat_lower;
-  dat_upper.resize(RAW_DATA_LENGTH);
-  dat_lower.resize(RAW_DATA_LENGTH);
-
-  ser_upper_.read(dat_upper);
-  ser_lower_.read(dat_lower);
-
-  stroke_vector.resize(AERO_DOF);
-  raw_to_stroke_(dat_upper, dat_lower, stroke_vector);
-}
-
-
-/// @brief abstract of set commands
-/// @param cmd command id
-/// @param stroke_vector stroke vector
-void AeroController::set_command(uint8_t cmd,
-                                 std::vector<int16_t>& stroke_vector) {
-  std::vector<uint8_t> dat_upper, dat_lower;
-  dat_upper.resize(RAW_DATA_LENGTH);
-  dat_lower.resize(RAW_DATA_LENGTH);
-  stroke_to_raw_(stroke_vector, dat_upper, dat_lower);
-  ser_upper_.send_command(cmd, 0, dat_upper);
-  ser_lower_.send_command(cmd, 0, dat_lower);
-}
-/// @brief send Motor_Cur command
-/// @param stroke_vector stroke vector
-void AeroController::set_max_current(std::vector<int16_t>& stroke_vector) {
-  set_command(CMD_MOTOR_CUR, stroke_vector);
-}
-/// @brief send Motor_Acc command
-/// @param stroke_vector stroke vector
-void AeroController::set_accel_rate(std::vector<int16_t>& stroke_vector) {
-  set_command(CMD_MOTOR_ACC, stroke_vector);
-}
-/// @brief send Motor_Gain command
-/// @param stroke_vector stroke vector
-void AeroController::set_motor_gain(std::vector<int16_t>& stroke_vector) {
-  set_command(CMD_MOTOR_GAIN, stroke_vector);
-}
-
-
-/// @brief abstract of get commands
-/// @param cmd command id
-/// @param stroke_vector stroke vector
-void AeroController::get_command(uint8_t cmd,
-                                 std::vector<int16_t>& stroke_vector) {
-  std::vector<uint8_t> dat_upper, dat_lower;
-  dat_upper.resize(RAW_DATA_LENGTH);
-  dat_lower.resize(RAW_DATA_LENGTH);
-  ser_upper_.send_command(cmd, 0, dat_upper);
-  ser_lower_.send_command(cmd, 0, dat_lower);
-  get_data(stroke_vector);
-}
-
-/// @brief send Get_Pos command
-/// @param stroke_vector stroke vector
-void AeroController::get_position(std::vector<int16_t>& stroke_vector) {
-  get_command(CMD_GET_POS, stroke_vector);
-}
-/// @brief send Get_Cur command
-/// @param stroke_vector stroke vector
-void AeroController::get_current(std::vector<int16_t>& stroke_vector) {
-  get_command(CMD_GET_CUR, stroke_vector);
-}
-/// @brief send Get_Tmp command
-/// @param stroke_vector stroke vector
-void AeroController::get_temperature(std::vector<int16_t>& stroke_vector) {
-  get_command(CMD_GET_TMP, stroke_vector);
-}
-
-
-/// @brief return stroke index from joint name
-/// @param name joint name
-/// @return index in stroke vector, if not found, return -1
-int32_t AeroController::get_stroke_index_from_joint_name(std::string& name) {
-  for (size_t i = 0; i < joint_indices_.size(); i++) {
-    if (joint_indices_[i].joint_name == name) {
-      return static_cast<int32_t>(joint_indices_[i].stroke_index);
-    }
-  }
-  return -1;
-}
-
 
 }  // namespace
