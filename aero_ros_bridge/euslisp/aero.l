@@ -2,6 +2,7 @@
 (require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
 ;; some methods of AeroUpperRobot-robot is in aero-upper-interface.l
 (load "package://aero_ros_bridge/euslisp/aero-upper-interface.l")
+(load "package://aero_ros_bridge/euslisp/aero-lower-strokes.l")
 
 
 (defclass AeroRobot-robot

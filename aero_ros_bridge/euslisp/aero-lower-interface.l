@@ -1,6 +1,6 @@
+#!/usr/bin/env roseus
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
 (require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
-(load "package://aero_ros_bridge/euslisp/aero-lower-strokes.l")
 
 (defclass aero-lower-interface
   :super rtm-ros-robot-interface
