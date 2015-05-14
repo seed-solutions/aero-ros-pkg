@@ -311,7 +311,7 @@
   ;;    (cons :joint-names (list "RARM_WRIST_R")))))
   )
 
-(load "package://aero_ros_bridge/euslisp/aero-upper-angles.l")
+(load "package://aero_ros_bridge/euslisp/aero-angles-convert.l")
 
 (defun aero-upper-init (&rest args)
   (if (not (boundp '*ri-upper*))
