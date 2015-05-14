@@ -254,14 +254,14 @@
 										     (subseq av 11 19)
 										     (subseq av 22 25)
 										     (subseq av 25 28))
-							     :time_from_start (ros::time tm)))))
+							     :time_from_start (ros::time (/ tm 1000.0))))))
 		       (13 (instance trajectory_msgs::JointTrajectory
 				     :init
 				     :joint_names lower-joint-names
 				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
 							     :init
 							     :positions (subseq av 0 12)
-							     :time_from_start (ros::time tm)))))
+							     :time_from_start (ros::time (/ tm 1000.0))))))
 		       (41 (instance trajectory_msgs::JointTrajectory
 				     :init
 				     :joint_names (append upper-joint-names lower-joint-names)
@@ -272,7 +272,7 @@
 										     (subseq av 11 19)
 										     (subseq av 22 25)
 										     (subseq av 25 40))
-							     :time_from_start (ros::time tm)))))
+							     :time_from_start (ros::time (/ tm 1000.0))))))
 		       (t nil))))
      av)
   (:controller-callback (msg)
