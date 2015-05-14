@@ -314,8 +314,8 @@
 (load "package://aero_ros_bridge/euslisp/aero-upper-angles.l")
 
 (defun aero-upper-init (&rest args)
-  (if (not (boundp '*ri*))
-      (setq *ri* (instance* aero-upper-interface :init args)))
+  (if (not (boundp '*ri-upper*))
+      (setq *ri-upper* (instance* aero-upper-interface :init args)))
   (if (not (boundp '*aero-upper*))
       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
   )
