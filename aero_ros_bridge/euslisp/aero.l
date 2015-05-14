@@ -66,7 +66,11 @@
           )
       (send com-on-ground :draw-on :flush t)
       com-on-ground)  
-    )  
+    )
+  (:self-collision-check ()
+    (and (send *aero-upper* :collision-check-all)
+         (send *aero-lower* :self-collision-check))
+    )
   )
 
 (provide :aero "package://aero_ros_bridge/euslisp/aero.l")
