@@ -223,6 +223,11 @@ void AeroControllerProto::set_position(std::vector<int16_t>& stroke_vector,
   stroke_ref_vector_.assign(stroke_vector.begin(), stroke_vector.end());
 
   ser_.send_command(CMD_MOVE_ABS, time, dat);
+
+  // MoveAbs returns current stroke
+  std::vector<uint8_t> dummy;
+  dummy.resize(RAW_DATA_LENGTH);
+  ser_.read(dummy);
 }
 
 /// @brief get data from buffer,
