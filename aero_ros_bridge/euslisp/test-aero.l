@@ -1,18 +1,9 @@
-(defun testsr ()
-  (load "samplerobot-interface.l")
-  (samplerobot-init)
-  (pprint (send *sr* :slots))
-  (print "")
-  (print "")
-  (print "")
-  (send *sr* :torso)
-)
 
 (defun testaero ()
   (load "aero-interface.l")
   ;(load "/home/wesleyc/docs/catkin_ws/src/robot_model_compiler/euslisp/aero-stick-figure-interface.l")
   (aero-init)
-  (objects *aero*)
+  (send *aero* :draw-on)
 ;  (pprint (send *aero* :slots))
 ;  (print "")
 ;  (print "")
@@ -108,3 +99,4 @@
 
 
 
+(testaero)

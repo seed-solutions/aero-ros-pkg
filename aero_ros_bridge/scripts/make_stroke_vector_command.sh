@@ -189,7 +189,7 @@ echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-upper-strokes.
 
 body=''
 
-body="${body}(defmethod AeroRobotLower-robot\n"
+body="${body}(defmethod AeroLowerRobot-robot\n"
 body="${body}${tab2}(:stroke-vector ()\n"
 body="${body}${tab2}${tab2}(let (av result)\n"
 body="${body}${tab2}${tab2}${tab2}(setq av (send self :angle-vector))\n"
