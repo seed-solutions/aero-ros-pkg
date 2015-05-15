@@ -245,6 +245,7 @@ body="${body}${tab2}${tab6}${tab14}(send self :rev-knee-p-table (cdr (assoc \"r_
 body="${body}${tab2}${tab6}${tab14}(- (cdr (assoc \"f_l_crotch_yaw_joint\" stroke :test #'equal)))\n"
 body="${body}${tab2}${tab6}${tab14}(send self :rev-crotch-p-table (cdr (assoc \"f_l_crotch_pitch_joint\" stroke :test #'equal)))\n"
 body="${body}${tab2}${tab6}${tab14}(send self :rev-knee-p-table (cdr (assoc \"f_l_knee_pitch_joint\" stroke :test #'equal)))\n"
+body="${body}${tab2}${tab6}${tab14}0\n"
 body="${body}${tab2}${tab6}${tab14})\n"
 
 body="${body}${tab2}${tab6}${tab14})))\n"
@@ -262,4 +263,4 @@ body="${body}$(create_table_func_from_csv crotch-p 0)\n"
 body="${body}$(create_table_func_from_csv knee-p 0)\n"
 body="${body})\n"
 
-echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-angles-convert.l"
+echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-upper-lower-angles.l"

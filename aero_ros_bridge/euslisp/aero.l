@@ -1,9 +1,10 @@
 (require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
 (require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
 ;; some methods of AeroUpperRobot-robot is in aero-upper-interface.l
+(load "package://aero_ros_bridge/euslisp/aero-upper-strokes.l")
 (load "package://aero_ros_bridge/euslisp/aero-upper-interface.l")
 (load "package://aero_ros_bridge/euslisp/aero-lower-strokes.l")
-
+(load "package://aero_ros_bridge/euslisp/aero-upper-lower-angles.l")
 
 (defclass AeroRobot-robot
   :super object
@@ -71,6 +72,33 @@
     (and (send *aero-upper* :collision-check-all)
          (send *aero-lower* :self-collision-check))
     )
+
+  (:angle-vector (&optional (angles nil))
+    (if (eq angles nil)
+	(list (send *aero-upper* :angle-vector) (send *aero-lower* :angle-vector))
+      (progn
+	(send *aero-upper* :angle-vector (elt angles 0))
+	(send *aero-lower* :angle-vector (elt angles 1))
+	angles))
+    )
+  (:upper (&optional link joint method angle)
+     (if (eq method nil)
+	 (send *aero-upper* link joint)
+       (send *aero-upper* link joint method angle))
+     )
+  (:lower (&optional link joint method angle)
+     (if (eq method nil)
+	 (send *aero-lower* link joint)
+       (send *aero-lower* link joint method angle))
+     )
+  (:reset-pose ()
+     (send *aero-upper* :reset-pose)
+     (send *aero-lower* :reset-pose)
+     )
+  (:reset-manip-pose ()
+     (send *aero-upper* :reset-manip-pose)
+     (send *aero-lower* :reset-pose)
+     )
   )
 
 (provide :aero "package://aero_ros_bridge/euslisp/aero.l")

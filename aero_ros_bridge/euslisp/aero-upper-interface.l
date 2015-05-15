@@ -1,7 +1,6 @@
 #!/usr/bin/env roseus
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
-(require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
-(load "package://aero_ros_bridge/euslisp/aero-upper-strokes.l")
+;; (require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
 
 (ros::load-ros-manifest "trajectory_msgs")
 (ros::load-ros-manifest "pr2_controllers_msgs")
@@ -53,16 +52,16 @@
 	 )
        )
      )
-  (:fix-upper-to-coords (&rest coords)
-     (if (null coords)
-	 (if (boundp '*aero-lower*)
-	     (send self :newcoords
-		   (send (send *aero-lower* :torso :end-coords)
-			 :worldcoords))
-	   )
-       (send self :newcoords (car coords))
-       )
-     )
+  ;; (:fix-upper-to-coords (&rest coords)
+  ;;    (if (null coords)
+  ;; 	 (if (boundp '*aero-lower*)
+  ;; 	     (send self :newcoords
+  ;; 		   (send (send *aero-lower* :torso :end-coords)
+  ;; 			 :worldcoords))
+  ;; 	   )
+  ;;      (send self :newcoords (car coords))
+  ;;      )
+  ;;    )
   (:move-safe (arm to &key (bits 10)
 			   (world nil))
      (let* ((delta-to 0)
@@ -84,9 +83,9 @@
 			(stop 10))
      (let* ((flag nil))
        (dotimes (j stop)
-	 ; if arm can nolonger be stretched finish                                                                                                                         
+	 ; if arm can nolonger be stretched finish                         
 	 (if (eq flag t) (return))
-	 ; if arm-x is at limit, try adjusting arm-z                                                                                                                       
+	 ; if arm-x is at limit, try adjusting arm-z
 	 (if (eq (send self :move-safe arm toward :world t :bits bits) nil)
 	     (dotimes (k stop)
 	       (setq flag t)
@@ -94,7 +93,7 @@
 				  (v+ toward (scale k adjust))
 				  :world t :bits bits) nil))
 		   (progn (setq flag nil)
-			  (return))) ; if stretching succeeds, continue                                                                                                    
+			  (return))) ; if stretching succeeds, continue
 	       )
 	   )
 	 ))
@@ -151,11 +150,11 @@
 	 nil)
        )
      )
-  (:stroke-vector-all ()
-     (if (boundp '*aero-lower*)
-	 (concatenate float-vector
-		      (send self :stroke-vector) (send *aero-lower* :stroke-vector))
-       (send self :stroke-vector)))
+  ;; (:stroke-vector-all ()
+  ;;    (if (boundp '*aero-lower*)
+  ;; 	 (concatenate float-vector
+  ;; 		      (send self :stroke-vector) (send *aero-lower* :stroke-vector))
+  ;;      (send self :stroke-vector)))
   )
 
 
@@ -178,8 +177,6 @@
    (list :larm-controller
          :rarm-controller
          :torso-controller
-         ;; :lhand-controller
-         ;; :rhand-controller
          :fullbody-controller))
   (:default-controller ()
     (mapcar #'(lambda (ctype) (car (send self ctype))) (send self :default-controller-list)))
@@ -294,28 +291,12 @@
      (if (eq element nil)
 	 (send self :stroke-to-angle actual-state)
        (elt (send self :stroke-to-angle actual-state) element)))
-
-  ;; (:lhand-controller ()
-  ;;  (list
-  ;;   (list
-  ;;    (cons :controller-action "/lhand_controller/follow_joint_trajectory_action")
-  ;;    (cons :controller-state  "/lhand_controller/state")
-  ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
-  ;;    (cons :joint-names (list "LARM_WRIST_R")))))
-  ;; (:rhand-controller ()
-  ;;  (list
-  ;;   (list
-  ;;    (cons :controller-action "/rhand_controller/follow_joint_trajectory_action")
-  ;;    (cons :controller-state  "/rhand_controller/state")
-  ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
-  ;;    (cons :joint-names (list "RARM_WRIST_R")))))
   )
 
-(load "package://aero_ros_bridge/euslisp/aero-angles-convert.l")
 
-(defun aero-upper-init (&rest args)
-  (if (not (boundp '*ri-upper*))
-      (setq *ri-upper* (instance* aero-upper-interface :init args)))
-  (if (not (boundp '*aero-upper*))
-      (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
-  )
+;; (defun aero-upper-init (&rest args)
+;;   (if (not (boundp '*ri-upper*))
+;;       (setq *ri-upper* (instance* aero-upper-interface :init args)))
+;;   (if (not (boundp '*aero-upper*))
+;;       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
+;;   )
