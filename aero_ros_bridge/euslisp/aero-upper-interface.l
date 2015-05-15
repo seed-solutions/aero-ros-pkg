@@ -1,68 +1,67 @@
 #!/usr/bin/env roseus
 (load "package://hrpsys_ros_bridge/euslisp/rtm-ros-robot-interface.l")
-(require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
-(load "package://aero_ros_bridge/euslisp/aero-upper-strokes.l")
+;; (require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
 
 (ros::load-ros-manifest "trajectory_msgs")
 (ros::load-ros-manifest "pr2_controllers_msgs")
 
-(defun hand-poses (hand args)
-  (let ((pose (car args))
-	(angle 0)
-	(hand-vector (float-vector
-		      (send *aero-upper* hand :t-1p :joint-angle)
-		      (send *aero-upper* hand :f-1p :joint-angle)
-		      0 0))
-	)
-    (case pose
-      (:reset-pose (setq hand-vector #f(0 0 0 0)))
-      (:open-pose (if (eq hand :larm) (setq hand-vector #f(-50 50 0 0))
-		    (setq hand-vector #f(50 -50 0 0))))
-      (:close-pose (if (eq hand :larm) (setq hand-vector #f(50 -50 0 0))
-		     (setq hand-vector #f(-50 50 0 0))))
-      (:joint-angle (progn
-		      (setq angle (elt (cdr args) 0))
-		      (if (eq hand :larm)
-			  (setq hand-vector
-				(float-vector angle (- angle) 0 0))
-			(setq hand-vector
-			      (float-vector (- angle) angle 0 0))
-			)
-		      ))
-      (t (return-from :hand-poses nil))
-      )
-    (send *aero-upper* hand :t-1p :joint-angle (elt hand-vector 0))
-    (send *aero-upper* hand :f-1p :joint-angle (elt hand-vector 1))
-    (send *aero-upper* hand :f-2p :joint-angle (elt hand-vector 2))
-    (send *aero-upper* hand :f-3p :joint-angle (elt hand-vector 3))
-    )
-  )
-
 (defmethod AeroUpperRobot-robot
   (:hand (&rest args)
-    (if (null args) (return-from :hand nil))
+     (if (null args) (return-from :hand nil))
      (let ((key (car args))
            (nargs (cdr args)))
        (unless (keywordp key)
          (return-from :hand nil))
        (case key
-	 (:arms (progn (hand-poses :larm nargs) (hand-poses :rarm nargs)))
-	 (:larm (hand-poses :larm nargs))
-	 (:rarm (hand-poses :rarm nargs))
+	 (:arms (progn (send self :hand-poses :larm nargs)
+		       (send self :hand-poses :rarm nargs)))
+	 (:larm (send self :hand-poses :larm nargs))
+	 (:rarm (send self :hand-poses :rarm nargs))
 	 (t nil)
 	 )
        )
      )
-  (:fix-upper-to-coords (&rest coords)
-     (if (null coords)
-	 (if (boundp '*aero-lower*)
-	     (send self :newcoords
-		   (send (send *aero-lower* :torso :end-coords)
-			 :worldcoords))
-	   )
-       (send self :newcoords (car coords))
-       )
-     )
+  (:hand-poses (hand args)
+    (let ((pose (car args))
+	  (angle 0)
+	  (hand-vector (float-vector
+			(send self hand :t-1p :joint-angle)
+			(send self hand :f-1p :joint-angle)
+			0 0))
+	  )
+      (case pose
+	    (:reset-pose (setq hand-vector #f(0 0 0 0)))
+	    (:open-pose (if (eq hand :larm) (setq hand-vector #f(-50 50 0 0))
+			  (setq hand-vector #f(50 -50 0 0))))
+	    (:close-pose (if (eq hand :larm) (setq hand-vector #f(50 -50 0 0))
+			   (setq hand-vector #f(-50 50 0 0))))
+	    (:joint-angle (progn
+			    (setq angle (car (cdr args)))
+			    (if (eq hand :larm)
+				(setq hand-vector
+				      (float-vector angle (- angle) 0 0))
+			      (setq hand-vector
+				    (float-vector (- angle) angle 0 0))
+			      )
+			    ))
+	    (t (return-from :hand-poses nil))
+	    )
+      (send self hand :t-1p :joint-angle (elt hand-vector 0))
+      (send self hand :f-1p :joint-angle (elt hand-vector 1))
+      (send self hand :f-2p :joint-angle (elt hand-vector 2))
+      (send self hand :f-3p :joint-angle (elt hand-vector 3))
+      hand-vector)
+    )
+  ;; (:fix-upper-to-coords (&rest coords)
+  ;;    (if (null coords)
+  ;; 	 (if (boundp '*aero-lower*)
+  ;; 	     (send self :newcoords
+  ;; 		   (send (send *aero-lower* :torso :end-coords)
+  ;; 			 :worldcoords))
+  ;; 	   )
+  ;;      (send self :newcoords (car coords))
+  ;;      )
+  ;;    )
   (:move-safe (arm to &key (bits 10)
 			   (world nil))
      (let* ((delta-to 0)
@@ -84,9 +83,9 @@
 			(stop 10))
      (let* ((flag nil))
        (dotimes (j stop)
-	 ; if arm can nolonger be stretched finish                                                                                                                         
+	 ; if arm can nolonger be stretched finish                         
 	 (if (eq flag t) (return))
-	 ; if arm-x is at limit, try adjusting arm-z                                                                                                                       
+	 ; if arm-x is at limit, try adjusting arm-z
 	 (if (eq (send self :move-safe arm toward :world t :bits bits) nil)
 	     (dotimes (k stop)
 	       (setq flag t)
@@ -94,7 +93,7 @@
 				  (v+ toward (scale k adjust))
 				  :world t :bits bits) nil))
 		   (progn (setq flag nil)
-			  (return))) ; if stretching succeeds, continue                                                                                                    
+			  (return))) ; if stretching succeeds, continue
 	       )
 	   )
 	 ))
@@ -151,11 +150,6 @@
 	 nil)
        )
      )
-  (:stroke-vector-all ()
-     (if (boundp '*aero-lower*)
-	 (concatenate float-vector
-		      (send self :stroke-vector) (send *aero-lower* :stroke-vector))
-       (send self :stroke-vector)))
   )
 
 
@@ -178,8 +172,6 @@
    (list :larm-controller
          :rarm-controller
          :torso-controller
-         ;; :lhand-controller
-         ;; :rhand-controller
          :fullbody-controller))
   (:default-controller ()
     (mapcar #'(lambda (ctype) (car (send self ctype))) (send self :default-controller-list)))
@@ -294,28 +286,12 @@
      (if (eq element nil)
 	 (send self :stroke-to-angle actual-state)
        (elt (send self :stroke-to-angle actual-state) element)))
-
-  ;; (:lhand-controller ()
-  ;;  (list
-  ;;   (list
-  ;;    (cons :controller-action "/lhand_controller/follow_joint_trajectory_action")
-  ;;    (cons :controller-state  "/lhand_controller/state")
-  ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
-  ;;    (cons :joint-names (list "LARM_WRIST_R")))))
-  ;; (:rhand-controller ()
-  ;;  (list
-  ;;   (list
-  ;;    (cons :controller-action "/rhand_controller/follow_joint_trajectory_action")
-  ;;    (cons :controller-state  "/rhand_controller/state")
-  ;;    (cons :action-type control_msgs::FollowJointTrajectoryAction)
-  ;;    (cons :joint-names (list "RARM_WRIST_R")))))
   )
 
-(load "package://aero_ros_bridge/euslisp/aero-upper-angles.l")
 
-(defun aero-upper-init (&rest args)
-  (if (not (boundp '*ri-upper*))
-      (setq *ri-upper* (instance* aero-upper-interface :init args)))
-  (if (not (boundp '*aero-upper*))
-      (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
-  )
+;; (defun aero-upper-init (&rest args)
+;;   (if (not (boundp '*ri-upper*))
+;;       (setq *ri-upper* (instance* aero-upper-interface :init args)))
+;;   (if (not (boundp '*aero-upper*))
+;;       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
+;;   )
