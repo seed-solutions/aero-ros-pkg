@@ -66,13 +66,16 @@
 			   (world nil))
      (let* ((delta-to 0)
 	    (coords :local)
+	    (step-before-angle-vector)
 	    )
        (if (eq world t) (setq coords :world))
        (setq delta-to (scale (/ 1.0 bits) to))
        (dotimes (i bits)
+	 (setq step-before-angle-vector (send self :angle-vector))
 	 (send self arm :move-end-pos delta-to coords) ; move a step
 	 (cond ((not (send self :collision-check-all)) ; if collides
-		(send self arm :move-end-pos (scale (- 1) delta-to) coords) ; go back a step 
+		;; (send self arm :move-end-pos (scale (- 1) delta-to) coords) 
+		(send self :angle-vector step-before-angle-vector) ; go back a step
 		(return-from :move-safe nil)
 		))
 	 ))
