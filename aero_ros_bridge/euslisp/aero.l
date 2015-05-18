@@ -176,7 +176,7 @@
     )
   (:reset-manip-pose ()
     (send *aero-upper* :reset-manip-pose)
-    (send *aero-lower* :reset-pose)
+    (send *aero-lower* :reset-manip-pose)
     )
   )
 
