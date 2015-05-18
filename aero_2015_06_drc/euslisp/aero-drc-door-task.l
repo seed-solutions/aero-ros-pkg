@@ -44,7 +44,7 @@
 				    :worldpos)
 			      (send *aero* :upper :larm :end-coords :worldpos))
 	)
-  (send *aero* :reach-arm :larm :stop (abs (elt diff-to-door-knob 0)) :toward (float-vector 1 0 0) :adjust #f(0 0 -1))
+  (send *aero* :upper :reach-arm :larm :stop (abs (elt diff-to-door-knob 0)) :toward (float-vector 1 0 0) :adjust #f(0 0 -1))
   (send *irtviewer* :draw-objects)
   (setq diff-to-door-knob (v- (send (send
 				     (send *door* :joint :door-knob-joint)
@@ -52,7 +52,7 @@
 				    :worldpos)
 			      (send *aero* :upper :larm :end-coords :worldpos))
 	)
-  (send *aero* :reach-arm :larm :stop (abs (elt diff-to-door-knob 1)) :toward (float-vector 0 1 0) :adjust #f(0 0 -1))
+  (send *aero* :upper :reach-arm :larm :stop (abs (elt diff-to-door-knob 1)) :toward (float-vector 0 1 0) :adjust #f(0 0 -1))
   (send *irtviewer* :draw-objects)
   (setq diff-to-door-knob (v- (send (send
 				     (send *door* :joint :door-knob-joint)
@@ -60,7 +60,7 @@
 				    :worldpos)
 			      (send *aero* :upper :larm :end-coords :worldpos))
 	)
-  (send *aero* :reach-arm :larm :stop (abs (elt diff-to-door-knob 2)) :toward (float-vector 0 0 1) :adjust #f(-1 0 0))
+  (send *aero* :upper :reach-arm :larm :stop (abs (elt diff-to-door-knob 2)) :toward (float-vector 0 0 1) :adjust #f(-1 0 0))
   (send *irtviewer* :draw-objects)
   ;; (send *ri* :angle-vector (send *aero* :stroke-vector))
   )
