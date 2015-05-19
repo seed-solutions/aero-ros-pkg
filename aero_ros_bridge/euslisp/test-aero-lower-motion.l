@@ -21,10 +21,10 @@
 (defun reset-terrain-pose
   ()
   "#f(0 -56.1797 79.13 0 -56.1797 79.13 0 -56.1797 79.13 0 -56.1797 79.13 0.0)"
-  (send *aero-lower* :reset-pose)
-  (dolist (link (list :rarm :larm :rleg :lleg))
-    (send *aero-lower* link :move-end-pos
-	  (float-vector 0 0 200) :local :rotation-axis :y))
+  (send *aero-lower* :reset-terrain-pose)
+  ;; (dolist (link (list :rarm :larm :rleg :lleg))
+    ;; (send *aero-lower* link :move-end-pos
+	  ;; (float-vector 0 0 200) :local :rotation-axis :y))
   (set-3legs-to-ground)
   (send *irtviewer* :draw-objects)
   )
@@ -38,7 +38,7 @@
   ;; 単に一脚を接地させるだけのテスト版
   (send *aero-lower* :translate
 	(float-vector
-	 0 0 (- (aref (send (send *aero-lower* :rarm :end-coords) :worldpos) 2))
+	 0 0 (- (aref (send (send *aero* :end-ground-coords :rarm) :worldpos) 2))
 	 ) :world)  
   )
 

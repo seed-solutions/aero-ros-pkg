@@ -6,6 +6,8 @@
 (load "package://aero_ros_bridge/euslisp/aero-lower-strokes.l")
 (load "package://aero_ros_bridge/euslisp/aero-upper-lower-angles.l")
 
+(setq wheel-radius 44.63875)
+
 (defclass AeroRobot-robot
   :super object
   :slots ())
@@ -178,6 +180,19 @@
     (send *aero-upper* :reset-manip-pose)
     (send *aero-lower* :reset-manip-pose)
     )
+  (:reset-terrain-pose ()
+    (send *aero-upper* :reset-terrain-pose)
+    (send *aero-lower* :reset-terrain-pose)
+    )
+
+  ;; The end coords are at the wheels' axes
+  ;; The end ground coords give the point that is touching the ground
+  (:end-ground-coords (limb)
+    (eval `(send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world))
+    ;; (eval `(send self :lower limb :end-coords))
+    )
+
+  
   )
 
 (provide :aero "package://aero_ros_bridge/euslisp/aero.l")
