@@ -19,6 +19,8 @@
   <build_depend>hrpsys_ros_bridge</build_depend>
   <build_depend>hrpsys</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
   <build_depend>trajectory_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
@@ -28,6 +30,8 @@
   <run_depend>hrpsys_ros_bridge</run_depend>
   <run_depend>hrpsys</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
   <run_depend>trajectory_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
