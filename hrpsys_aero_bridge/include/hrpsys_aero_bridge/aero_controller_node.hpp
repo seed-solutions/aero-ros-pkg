@@ -17,6 +17,7 @@
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
 #include <tf/transform_broadcaster.h>
+#include <sensor_msgs/JointState.h>
 #include <std_msgs/Bool.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
@@ -51,6 +52,7 @@ class AeroControllerNode {
   ros::Subscriber wheel_servo_sub_;
   ros::Subscriber wheel_sub_;
   ros::Publisher state_pub_;
+  ros::Publisher joint_state_pub_;
   ros::Timer timer_;
 
   boost::mutex mtx_;
