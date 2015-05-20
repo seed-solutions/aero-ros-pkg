@@ -128,7 +128,7 @@ class AeroControllerProto {
 
   std::vector<AJointIndex> joint_indices_;
 
-    int16_t decode_short_(uint8_t* raw);
+  int16_t decode_short_(uint8_t* raw);
   void encode_short_(int16_t value, uint8_t* raw);
 
   /// @brief stroke_vector (int16_t) to raw_vector(uint8_t)
@@ -161,8 +161,25 @@ class AeroLowerController : public AeroControllerProto {
   void wheel_on();
   void servo_off();
 
+  // wheel command
+  void set_wheel_velocity(std::vector<int16_t>& wheel_vector,
+                          uint16_t time);
+  int32_t get_wheel_index_from_wheel_name(std::string& name);
+  std::vector<int16_t>& get_reference_wheel_vector() {
+    return wheel_ref_vector_;
+  }
+  std::string get_wheel_name(size_t idx) {
+    return wheel_indices_[idx].joint_name;
+  }
+  
  protected:
+  std::vector<int16_t> wheel_vector_;
+  std::vector<int16_t> wheel_ref_vector_;
+  std::vector<int16_t> wheel_cur_vector_;
+
   std::vector<AJointIndex> wheel_indices_;
+
+  bool wheel_servo_;
 };
 
 }  // namespace

@@ -17,6 +17,7 @@
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
 #include <tf/transform_broadcaster.h>
+#include <std_msgs/Bool.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 
@@ -34,6 +35,12 @@ class AeroControllerNode {
       const trajectory_msgs::JointTrajectory::ConstPtr& msg);
   void JointStateCallback(const ros::TimerEvent& event);
 
+  void WheelServoCallback(
+      const std_msgs::Bool::ConstPtr& msg);
+  void WheelCommandCallback(
+      const trajectory_msgs::JointTrajectory::ConstPtr& msg);
+
+
  private:
   ros::NodeHandle handle_;
   AeroUpperController upper_;
@@ -41,6 +48,8 @@ class AeroControllerNode {
 
   ros::Subscriber cmdvel_sub_;
   ros::Subscriber jointtraj_sub_;
+  ros::Subscriber wheel_servo_sub_;
+  ros::Subscriber wheel_sub_;
   ros::Publisher state_pub_;
   ros::Timer timer_;
 
