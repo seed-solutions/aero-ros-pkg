@@ -411,6 +411,11 @@ AeroLowerController::AeroLowerController(const std::string& port) :
   stroke_ref_vector_.resize(AERO_DOF_LOWER);
   stroke_cur_vector_.resize(AERO_DOF_LOWER);
 
+  // wheel_vector
+  wheel_vector_.resize(AERO_DOF_WHEEL);
+  wheel_ref_vector_.resize(AERO_DOF_WHEEL);
+  wheel_cur_vector_.resize(AERO_DOF_WHEEL);
+  
   // indices
   joint_indices_.clear();
   wheel_indices_.clear();
@@ -544,6 +549,40 @@ void AeroLowerController::wheel_on() {
 /// @brief servo off command
 void AeroLowerController::servo_off() {
   servo_command(0, 0);
+}
+
+/// @brief set wheel velocity
+void AeroLowerController::set_wheel_velocity(
+    std::vector<int16_t>& wheel_vector, uint16_t time) {
+
+  std::vector<uint8_t> dat;
+  dat.resize(RAW_DATA_LENGTH);
+
+  // use previous reference strokes to keep its positions
+  stroke_to_raw_(stroke_ref_vector_, dat);
+
+  // wheel to raw
+  for (size_t i = 0; i < wheel_indices_.size(); i++) {
+    AJointIndex& aji = wheel_indices_[i];
+    encode_short_(wheel_vector[aji.stroke_index],
+                  &dat[RAW_HEADER_OFFSET + aji.raw_index * 2]);
+  }
+  ser_.send_command(CMD_MOVE_ABS, time, dat);
+
+  // MoveAbs returns current stroke
+  std::vector<uint8_t> dummy;
+  dummy.resize(RAW_DATA_LENGTH);
+  ser_.read(dummy);
+}
+
+int32_t AeroLowerController::get_wheel_index_from_wheel_name(
+    std::string& name) {
+  for (size_t i = 0; i < wheel_indices_.size(); i++) {
+    if (wheel_indices_[i].joint_name == name) {
+      return static_cast<int32_t>(wheel_indices_[i].stroke_index);
+    }
+  }
+  return -1;
 }
 
 }  // namespace

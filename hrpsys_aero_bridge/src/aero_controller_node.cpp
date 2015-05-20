@@ -28,6 +28,22 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& nh,
           &AeroControllerNode::JointTrajectoryCallback,
           this);
 
+  // wheel
+  ROS_INFO(" create wheel servo sub");
+  wheel_servo_sub_ =
+      handle_.subscribe(
+          "wheel_servo",
+          10,
+          &AeroControllerNode::WheelServoCallback,
+          this);
+  ROS_INFO(" create wheel command sub");
+  wheel_sub_ =
+      handle_.subscribe(
+          "wheel_command",
+          10,
+          &AeroControllerNode::WheelCommandCallback,
+          this);
+
   ROS_INFO(" create timer sub");
   timer_ =
       handle_.createTimer(ros::Duration(0.1),
@@ -149,6 +165,57 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
   }
   state_pub_.publish(state);
 }
+
+///////////////////////////
+// for wheel
+void AeroControllerNode::WheelServoCallback(
+    const std_msgs::Bool::ConstPtr& msg) {
+  if (msg->data) {
+    // wheel_on means all joints and wheels servo on
+    lower_.wheel_on();
+  } else {
+    // servo_on means only joints servo on, and wheels servo off
+    lower_.servo_on();
+  }
+}
+void AeroControllerNode::WheelCommandCallback(
+    const trajectory_msgs::JointTrajectory::ConstPtr& msg) {
+  // wheel name to indeices, if not exist, then return -1
+  std::vector<int32_t> joint_to_wheel_indices;
+  for (size_t i = 0; i < msg->joint_names.size(); i++) {
+    std::string joint_name = msg->joint_names[i];
+    joint_to_wheel_indices.push_back(
+        lower_.get_wheel_index_from_wheel_name(joint_name));
+  }
+
+  // use previous velocity
+  std::vector<int16_t> wheel_vector;
+  std::vector<int16_t>& ref_vector =
+      lower_.get_reference_wheel_vector();
+  wheel_vector.assign(ref_vector.begin(), ref_vector.end());
+
+  // for each trajectory points,
+  for (size_t i = 0; i < msg->points.size(); i++) {
+    // convert positions to stroke vector
+    for (size_t j = 0; j < msg->points[i].positions.size(); j++) {
+      if (lower_joint_to_stroke_indices[j] >= 0) {
+        wheel_vector[
+            static_cast<size_t>(joint_to_wheel_indices[j])] =
+            static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
+      }
+    }
+    double time_sec = msg->points[i].time_from_start.toSec();
+    uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
+    {
+      boost::mutex::scoped_lock lock(mtx_);
+      lower_.flush();
+      lower_.set_wheel_velocity(wheel_vector, time_msec);
+    }
+    usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
+  }
+}
+
+
 
 }  // namespace
 

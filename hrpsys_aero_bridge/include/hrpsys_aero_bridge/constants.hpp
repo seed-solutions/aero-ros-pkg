@@ -28,6 +28,7 @@ const static uint8_t ID_LOWER = 2;
 const static size_t AERO_DOF = 34;
 const static size_t AERO_DOF_UPPER = 22;
 const static size_t AERO_DOF_LOWER = 12;
+const static size_t AERO_DOF_WHEEL = 4;
 
 // joint index in stroke vector
 // UPPER
