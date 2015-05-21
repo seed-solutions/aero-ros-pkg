@@ -116,9 +116,15 @@
   ;; 	  :stop stop :toward toward :adjust adjust :bits bits)
   ;;   )
 
-  (:move-waist (&optional (waist-velocity (float-vector 0 0 0)))
+  (:move-waist
+   (&optional (waist-velocity (float-vector 0 0 0))
+	      &key (draw-objects nil))
     (let ((original-end-coords-list) original-angle-vector
 	  original-coords)
+      (when (< (norm waist-velocity) 3)
+	(warn ";; :move-waist error: waist-velocity is too small~%")
+	(return-from :move-waist nil))
+      ;;
       (setf original-angle-vector (send *aero-lower* :angle-vector))
       (setf original-coords (send *aero-lower* :copy-worldcoords))
       (dolist (link (list :rarm :larm :rleg :lleg))
@@ -130,15 +136,14 @@
 	(unless
 	    (send *aero-lower* link :inverse-kinematics
 		  (car original-end-coords-list) :rotation-axis nil)
-	  ;; (warn ";; move-waist-with-4legs IK failed >> ~S" link)
+	  (warn ";; move-waist IK failed >> ~S~%" link)
 	  (send *aero-lower* :angle-vector original-angle-vector)
 	  (send *aero-lower* :newcoords original-coords)
-	  (send *irtviewer* :draw-objects)
 	  (return-from :move-waist nil)
 	  )
 	(setf original-end-coords-list (cdr original-end-coords-list))
 	)
-      ;; (send *irtviewer* :draw-objects)
+      (if draw-objects (send *irtviewer* :draw-objects))
       t)
     )
   (:cog-balance-check (&optional (legs-on-grounds `(:larm :rarm :rleg :lleg)))
