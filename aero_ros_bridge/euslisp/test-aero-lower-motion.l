@@ -62,20 +62,21 @@
     ;; 四脚を適切な姿勢へ変更
     (dolist (link (list :rarm :larm :rleg :lleg))
       (unless
-	  (send *aero-lower* link :inverse-kinematics
-		(car original-end-coords-list) :rotation-axis nil)
-	;; IKが解けなかった場合は元の状態へ戻す
-	(warn ";; move-waist-with-4legs IK failed >> ~S" link)
-	(send *aero-lower* :angle-vector original-angle-vector)
-	(send *aero-lower* :newcoords original-coords)
-	(send *irtviewer* :draw-objects)
-	(return nil)
-	)
+        (send *aero-lower* link :inverse-kinematics
+                (car original-end-coords-list) :rotation-axis nil)
+        ;; IKが解けなかった場合は元の状態へ戻す
+        (warn ";; move-waist-with-4legs IK failed >> ~S" link)
+        (send *aero-lower* :angle-vector original-angle-vector)
+        (send *aero-lower* :newcoords original-coords)
+        (send *irtviewer* :draw-objects)
+        (return nil)
+        )
       (setf original-end-coords-list (cdr original-end-coords-list))
       )
     ;;
     (send *irtviewer* :draw-objects)
-    ))
+    )
+  )
 
 ;; 重心移動のテスト関数
 (defun test-move-waist-with-4legs
