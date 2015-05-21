@@ -201,7 +201,7 @@ void AeroControllerNode::WheelCommandCallback(
       if (joint_to_wheel_indices[j] >= 0) {
         wheel_vector[
             static_cast<size_t>(joint_to_wheel_indices[j])] =
-            static_cast<int16_t>(100.0 * msg->points[i].positions[j]);
+            static_cast<int16_t>(msg->points[i].positions[j]);
       }
     }
     double time_sec = msg->points[i].time_from_start.toSec();
