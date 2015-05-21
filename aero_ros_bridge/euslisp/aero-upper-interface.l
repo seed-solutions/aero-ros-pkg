@@ -324,5 +324,5 @@
   (unless (boundp '*aero*)
     (warn ";; create *aero* first~S"))
   ;; (unless (boundp '*ri*) (unix:usleep time))
-  (send *ri* :angle-vector (send *aero* :stroke-vector) time)
+  (send *ri* :angle-vector angle-vector time)
   )
