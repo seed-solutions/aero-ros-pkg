@@ -319,10 +319,15 @@
 ;;       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
 ;;   )
 
+(defvar *base-time* 1000)
+(defvar *real* nil)
 (defun send-angle-vector
-  (&key (angle-vector (send *aero* :stroke-vector)) (time 5000))
+  (&key (angle-vector (send *aero* :stroke-vector)) (time (* 5 *base-time*)))
   (unless (boundp '*aero*)
-    (warn ";; create *aero* first~S"))
+    (warn ";; create *aero* first~S") (return))
   ;; (unless (boundp '*ri*) (unix:usleep time))
-  (send *ri* :angle-vector angle-vector time)
+  (when *real*
+    (unless (boundp '*ri*)
+      (warn ";; create *ri* first~S") (return))
+    (send *ri* :angle-vector angle-vector time))
   )
