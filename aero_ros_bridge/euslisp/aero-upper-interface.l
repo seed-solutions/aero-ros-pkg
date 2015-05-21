@@ -168,6 +168,8 @@
             (send self :default-controller-list))
     (ros::roseus "aero_upper_interface")
     (ros::advertise "/aero_controller/command" trajectory_msgs::JointTrajectory)
+    (ros::advertise "/aero_controller/wheel_command" trajectory_msgs::JointTrajectory)
+    (ros::advertise "/aero_controller/wheel_servo" std_msgs::Bool)
     (ros::subscribe "/aero_controller/state" pr2_controllers_msgs::JointTrajectoryControllerState
 		    #'send self :controller-callback 1)
     )
@@ -203,73 +205,91 @@
      (cons :joint-names (list "WAIST_Y" "WAIST_P" "WAIST_R")))))
   (:angle-vector (av &optional (tm 5000))
      (let ((upper-joint-names (list "r_shoulder_pitch_joint"
-				    "r_shoulder_roll_joint"
-				    "r_elbow_yaw_joint"
-				    "r_elbow_pitch_joint"
-				    "r_wrist_roll_joint" ; yaw
-				    "r_wrist_top_joint"
-				    "r_wrist_bottom_joint"
-				    "r_hand_joint"
-				    "l_shoulder_pitch_joint"
-				    "l_shoulder_roll_joint"
-				    "l_elbow_yaw_joint"
-				    "l_elbow_pitch_joint"
-				    "l_wrist_roll_joint" ; yaw
-				    "l_wrist_top_joint"
-				    "l_wrist_bottom_joint"
-				    "l_hand_joint"
-				    "waist_pitch_joint" ; yaw
-				    "waist_right_joint"
-				    "waist_left_joint"
-				    "neck_yaw_joint"
-				    "neck_right_joint"
-				    "neck_left_joint"))
-	   (lower-joint-names (list "r_r_crotch_yaw_joint"
-				    "r_r_crotch_pitch_joint"
-				    "r_r_knee_pitch_joint"
-				    "f_r_crotch_yaw_joint"
-				    "f_r_crotch_pitch_joint"
-				    "f_r_knee_pitch_joint"
-				    "r_l_crotch_yaw_joint"
-				    "r_l_crotch_pitch_joint"
-				    "r_l_knee_pitch_joint"
-				    "f_l_crotch_yaw_joint"
-				    "f_l_crotch_pitch_joint"
-				    "f_l_knee_pitch_joint"))
-	   (type-check (length av)))
+  				    "r_shoulder_roll_joint"
+  				    "r_elbow_yaw_joint"
+  				    "r_elbow_pitch_joint"
+  				    "r_wrist_roll_joint" ; yaw
+  				    "r_wrist_top_joint"
+  				    "r_wrist_bottom_joint"
+  				    "r_hand_joint"
+  				    "l_shoulder_pitch_joint"
+  				    "l_shoulder_roll_joint"
+  				    "l_elbow_yaw_joint"
+  				    "l_elbow_pitch_joint"
+  				    "l_wrist_roll_joint" ; yaw
+  				    "l_wrist_top_joint"
+  				    "l_wrist_bottom_joint"
+  				    "l_hand_joint"
+  				    "waist_pitch_joint" ; yaw
+  				    "waist_right_joint"
+  				    "waist_left_joint"
+  				    "neck_yaw_joint"
+  				    "neck_right_joint"
+  				    "neck_left_joint"))
+  	   (lower-joint-names (list "r_r_crotch_yaw_joint"
+  				    "r_r_crotch_pitch_joint"
+  				    "r_r_knee_pitch_joint"
+  				    "f_r_crotch_yaw_joint"
+  				    "f_r_crotch_pitch_joint"
+  				    "f_r_knee_pitch_joint"
+  				    "r_l_crotch_yaw_joint"
+  				    "r_l_crotch_pitch_joint"
+  				    "r_l_knee_pitch_joint"
+  				    "f_l_crotch_yaw_joint"
+  				    "f_l_crotch_pitch_joint"
+  				    "f_l_knee_pitch_joint"))
+  	   (type-check (length av)))
        (ros::publish "/aero_controller/command"
-		     (case type-check
-		       (28 (instance trajectory_msgs::JointTrajectory
-				     :init
-				     :joint_names upper-joint-names
-				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
-							     :init
-							     :positions (concatenate float-vector
-										     (subseq av 0 8)
-										     (subseq av 11 19)
-										     (subseq av 22 25)
-										     (subseq av 25 28))
-							     :time_from_start (ros::time (/ tm 1000.0))))))
-		       (13 (instance trajectory_msgs::JointTrajectory
-				     :init
-				     :joint_names lower-joint-names
-				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
-							     :init
-							     :positions (subseq av 0 12)
-							     :time_from_start (ros::time (/ tm 1000.0))))))
-		       (41 (instance trajectory_msgs::JointTrajectory
-				     :init
-				     :joint_names (append upper-joint-names lower-joint-names)
-				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
-							     :init
-							     :positions (concatenate float-vector
-										     (subseq av 0 8)
-										     (subseq av 11 19)
-										     (subseq av 22 25)
-										     (subseq av 25 40))
-							     :time_from_start (ros::time (/ tm 1000.0))))))
-		       (t nil))))
+  		     (case type-check
+  		       (28 (instance trajectory_msgs::JointTrajectory
+  				     :init
+  				     :joint_names upper-joint-names
+  				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+  							     :init
+  							     :positions (concatenate float-vector
+  										     (subseq av 0 8)
+  										     (subseq av 11 19)
+  										     (subseq av 22 25)
+  										     (subseq av 25 28))
+  							     :time_from_start (ros::time (/ tm 1000.0))))))
+  		       (13 (instance trajectory_msgs::JointTrajectory
+  				     :init
+  				     :joint_names lower-joint-names
+  				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+  							     :init
+  							     :positions (subseq av 0 12)
+  							     :time_from_start (ros::time (/ tm 1000.0))))))
+  		       (41 (instance trajectory_msgs::JointTrajectory
+  				     :init
+  				     :joint_names (append upper-joint-names lower-joint-names)
+  				     :points (list (instance trajectory_msgs::JointTrajectoryPoint
+  							     :init
+  							     :positions (concatenate float-vector
+  										     (subseq av 0 8)
+  										     (subseq av 11 19)
+  										     (subseq av 22 25)
+  										     (subseq av 25 40))
+  							     :time_from_start (ros::time (/ tm 1000.0))))))
+  		       (t nil))))
      av)
+  (:wheel-vector (av &optional (tm 5000))
+    (let ((wheel-joint-names (list "f_r_wheel_joint"
+				   "r_r_wheel_joint"
+				   "f_l_wheel_joint"
+				   "r_l_wheel_joint")))
+      (ros::publish "/aero_controller/wheel_command"
+		    (instance trajectory_msgs::JointTrajectory
+			      :init
+			      :joint_names wheel-joint-names
+			      :points (list (instance trajectory_msgs::JointTrajectoryPoint
+						      :init
+						      :positions av
+						      :time_from_start (ros::time (/ tm 1000.0))))))
+      av))
+  (:wheel-on ()
+    (ros::publish "/aero_controller/wheel_servo" (instance std_msgs::Bool :data t)))
+  (:wheel-off ()
+    (ros::publish "/aero_controller/wheel_servo" (instance std_msgs::Bool :data nil)))
   (:controller-callback (msg)
      (let ((i 0))
        (setq actual-state '())
