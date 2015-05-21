@@ -3,7 +3,7 @@
 # aero_ros_bridge 
 #
 # Author:     Wesley P. Chan (Univ. of Tokyo)
-# Modified:   2015-05-15
+# Modified:   2015-05-21
 #
 # ########################################
 
@@ -13,20 +13,31 @@
 
 Table of Contents
 
-1. Compiling
-2. Usage 
-   2.1. Euslisp model
-   2.2. Communication with real robot
+1. Compatibility
+2. Compiling
+3. Usage 
+   3.1. Euslisp model
+   3.2. Communication with real robot
 
 
 =================================
 
 
+=================================
+
+1. Compatibility 
+
+=================================
+
+Currently this package has been tested on Ubuntu 12.04 and is working with Ubuntu 12.04.
+
+It does NOT complie on Ubuntu 14.04 at the moment due to compatibility issues of hrpsys_ros_bridge.
+
 
 
 =================================
 
-1. Compiling 
+2. Compiling 
 
 =================================
 
@@ -41,7 +52,7 @@ catkin build or catkin make aero_ros_bridge.
 
 =================================
 
-2. Usage
+3. Usage
 
 =================================
 
@@ -54,10 +65,20 @@ as well as *ri*.
 *aero* is the euslisp model, and *ri* is the interface to the real robot.
 
 
+Note that *aero* is NOT a child class of euscollada-robot. It is simply a chlid class of Object.
+
+This means that certain commands like 
+
+$ objects *aero* 
+
+will NOT work. Instead, a method :draw-on is implemented for visualizing the full model.
+
+
+
 
 ==============================
 
-2.1. Euslisp model
+3.1. Euslisp model
 
 ==============================
 
@@ -70,7 +91,7 @@ as well as *ri*.
 
 ==============================
 
-2.2. Communication with real robot
+3.2. Communication with real robot
 
 ==============================
 
