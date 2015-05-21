@@ -12,9 +12,6 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& nh,
   state_pub_ =
       handle_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
           "state", 10);
-  joint_state_pub_ =
-      handle_.advertise<sensor_msgs::JointState>(
-          "joint_states", 10);
 
   ROS_INFO(" create cmdvel sub");
   cmdvel_sub_ =
@@ -139,13 +136,6 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
   state.desired.positions.resize(AERO_DOF);
   state.actual.positions.resize(AERO_DOF);
 
-  sensor_msgs::JointState joint_state;
-  joint_state.header.stamp = ros::Time::now();
-  joint_state.name.resize(AERO_DOF);
-  joint_state.position.resize(AERO_DOF);
-  joint_state.velocity.resize(AERO_DOF);
-  joint_state.effort.resize(AERO_DOF);
-
   std::vector<int16_t> upper_stroke_vector;
   std::vector<int16_t>& upper_ref_vector =
       upper_.get_reference_stroke_vector();
@@ -165,10 +155,6 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
         static_cast<double>(upper_ref_vector[i]) * 0.01;
     state.actual.positions[i] =
         static_cast<double>(upper_stroke_vector[i]) * 0.01;
-
-    joint_state.name[i] = upper_.get_joint_name(i);
-    joint_state.position[i] =
-        static_cast<double>(upper_ref_vector[i]) * 0.01;
   }
   for (size_t i = 0; i < AERO_DOF_LOWER; i++) {
     state.joint_names[i + AERO_DOF_UPPER] = lower_.get_joint_name(i);
@@ -176,13 +162,8 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
         static_cast<double>(lower_ref_vector[i]) * 0.01;
     state.actual.positions[i + AERO_DOF_UPPER] =
         static_cast<double>(lower_stroke_vector[i]) * 0.01;
-
-    joint_state.name[i + AERO_DOF_UPPER] = lower_.get_joint_name(i);
-    joint_state.position[i + AERO_DOF_UPPER] =
-        static_cast<double>(lower_ref_vector[i]) * 0.01;
   }
   state_pub_.publish(state);
-  joint_state_pub_.publish(joint_state);
 }
 
 ///////////////////////////
