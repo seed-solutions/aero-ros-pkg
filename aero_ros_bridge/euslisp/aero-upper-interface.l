@@ -318,3 +318,11 @@
 ;;   (if (not (boundp '*aero-upper*))
 ;;       (setq *aero-upper* (instance AeroUpperRobot-robot :init)))
 ;;   )
+
+(defun send-angle-vector
+  (&key (angle-vector (send *aero* :stroke-vector)) (time 5000))
+  (unless (boundp '*aero*)
+    (warn ";; create *aero* first~S"))
+  ;; (unless (boundp '*ri*) (unix:usleep time))
+  (send *ri* :angle-vector (send *aero* :stroke-vector) time)
+  )
