@@ -272,7 +272,7 @@
   							     :time_from_start (ros::time (/ tm 1000.0))))))
   		       (t nil))))
      av)
-  (:wheel-vector (av &optional (tm 5000))
+  (:wheel-vector (av)
     (let ((wheel-joint-names (list "f_r_wheel_joint"
 				   "r_r_wheel_joint"
 				   "f_l_wheel_joint"
@@ -284,7 +284,7 @@
 			      :points (list (instance trajectory_msgs::JointTrajectoryPoint
 						      :init
 						      :positions av
-						      :time_from_start (ros::time (/ tm 1000.0))))))
+						      :time_from_start (ros::time 0.0)))))
       av))
   (:wheel-on ()
     (ros::publish "/aero_controller/wheel_servo" (instance std_msgs::Bool :data t)))
