@@ -33,3 +33,55 @@
                  *surprise-task-shower* *surprise-task-button* *surprise-task-lever* *surprise-task-rope*))
   (send *aero* :draw-on)
   )
+
+;; utils
+
+(defvar *exit-flag* nil)
+
+(defun go? (cmd &optional (real *real*))
+  (let (ui) ; ui is user input
+    (if (eq *exit-flag* t)
+	(return-from go? "you've got failed"))
+    (eval cmd)
+    (print cmd)
+    (send *irtviewer* :draw-objects)
+    (cond ((eq real t)
+	   (print "send real?")
+	   (setq ui (read-line))
+	   (if (or (equal ui "exit") (equal ui "q") (equal ui "no"))
+	       (progn (setq *exit-flag* t)
+		      (return-from go? (warn "detected cancelation~%")))
+	     (send *ri* :angle-vector (send *aero* :stroke-vector))))
+	  (t
+	   (setq ui (read-line))
+	   (if (or (equal ui "exit") (equal ui "q") (equal ui "no"))
+	       (progn (setq *exit-flag* t)
+		      (return-from go? (warn "detected cancelation~%")))))
+	  )
+    ))
+
+(defun init-testbed (object
+		     &key (pos #f(0 0 0)) (rpy (list 0 0 0)))
+  (let (init-standing-coords)
+    (setq init-standing-coords
+	  (make-coords :pos (float-vector (aref pos 0) (aref pos 1) 0)
+		       :rpy rpy))
+    (send *aero* :locate
+	  (send (send (send object :copy-worldcoords)
+		      :transform init-standing-coords :local)
+		:pos) :world)
+    (if (not (equal rpy (list 0 0 0)))
+	(send *aero* :rotate
+	      (car (rotation-angle
+		    (send (send (send object :copy-worldcoords)
+				:transform init-standing-coords :local)
+			  :rot))) #f(0 0 1)))
+    (if (not (= (aref pos 2) 0))
+	(send *aero* :move-waist (float-vector 0 0 (aref pos 2))))
+    ))
+
+(defun reset-aero ()
+  (send *aero* :locate (send (make-coords) :pos) :world)
+  (send *aero* :translate (float-vector -1000 500 0))
+  (go? `(send *aero* :reset-manip-pose))
+  )
