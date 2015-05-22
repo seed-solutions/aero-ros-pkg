@@ -6,16 +6,10 @@
 
 (defclass Walker
   :super object
-  :slots (stride-length))
+  :slots ())
  )
 (defmethod Walker
   (:init ()
-    (setq stride-length 120)
-    
-    )
-  (:step (leg)
-    )
-  (:walk (goal)
     )
   ;; @param goal: the coords of the final goal where the robot wants to go
   ;; @param stepping-leg: which leg is stepping
@@ -47,18 +41,17 @@
 
   ;; @param goal: the relative goal position to move leg to
   ;; @param leg: the leg to move
-  (:step (goal leg)
-    ;; (setq goal-coords (send (send *aero* :lower leg :end-coords :copy-worldcoords) :translate goal :world))
+  (:step (goal leg &key (balance-rate-thre 3.0) (step-height 100))
+    (setq goal-coords (send (send *aero* :lower leg :end-coords :copy-worldcoords) :translate goal :world))
     (print (send *aero* :lower leg :end-coords :worldcoords))
-    (setq stepSize 2) ;; tuneable param
-    (setq stepHeight 100) ;; tuneable param
-    (setq balance-rate-thre 1.5) ;;tuneable param
+    (setq stepSize 10) ;; tuneable param
     (setq numSteps (/ (norm goal) stepSize))
     (setq i 1)
     (while (<= i numSteps)
       (setq vel (scale stepSize (normalize-vector goal))) ;; straight trajectory to goal
-      (setq zvel (* (/ (* 8 stepHeight) numSteps) (- 0.5 (/ i numSteps)))) ;; add parabola vertical trajectory
+      (setq zvel (* (/ (* 8 step-height) numSteps) (- 0.5 (/ i numSteps)))) ;; add parabola vertical trajectory
       (setq vel (v+ vel (float-vector 0 0 zvel)))
+      ;; (print (send *aero* :rate-balance (remove leg `(:rarm :larm :rleg :lleg))))
       (if (> (send *aero* :rate-balance (remove leg `(:rarm :larm :rleg :lleg))) balance-rate-thre)
       ;; (if t
           (progn
@@ -67,25 +60,42 @@
             (setq i (+ i 1))
             )
         (progn 
-          (send self :shift-com-to-balance (remove leg `(:rarm :larm :rleg :lleg)))
-          (format t ":step -- balance rate ~f less than threshold ~f, shift center of mass" (send *aero* :rate-balance (remove leg `(:rarm :larm :rleg :lleg))) balance-rate-thre)
+          (send self :shift-com-to-balance (remove leg `(:rarm :larm :rleg :lleg)) balance-rate-thre)
           )
         )
       )
     ;; there might be some intergative error at this point after executing the trajectory.
-    ;; adjust the foot by moving it to the goal position.
-    ;; (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
+    ;; need to adjust the foot by moving it to the goal position.
+    (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
     )
 
   ;; move center of mass (waist) towards the direction of the trianlge center formed by the supporting legs 
-  (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)))
+  (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)) (required-balance-rate 3))
     (let ((balance-center-direction (send self :get-balance-center-direction legs-on-ground)))
       (print balance-center-direction)
-      (send *aero* :move-waist (scale 100 balance-center-direction))
+      (while  (< (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+        (format t ":shift-com-to-balance ~a~%" legs-on-ground)
+        (format t "  balance rate ~f less than threshold ~f, shift center of mass~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+        (send *aero* :move-waist (scale 0.5 balance-center-direction))
+        (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+       
+        (send *irtviewer* :draw-objects)
+        )
+      )
+    )
+
+  ;; Move center of mass on top of the trianlge center formed by the supporting legs.
+  ;; NOTE: this actually simply moves the waist on top of the triangle center for now.
+  (:shift-com-to-support-center (&optional (legs-on-ground `(:rarm :rleg :lleg)))
+    (let ((balance-center-direction (send self :get-balance-center-direction legs-on-ground)))
+      (print balance-center-direction)
+      (send *aero* :move-waist balance-center-direction)
       (send *irtviewer* :draw-objects)
       )
     )
-  ;; returns a unit vector pointing in the direction from the waist center
+
+
+  ;; returns a 2d vector parallel to the ground plane pointing in the direction from the waist center
   ;; to the centor of the triangle from by the three supporting legs
   (:get-balance-center-direction (&optional (legs-on-ground `(:rarm :rleg :lleg)))
     (let ((centroid (scale (/ 1.0 3)
@@ -93,19 +103,20 @@
                                         (send *aero* :lower (cadr legs-on-ground) :end-coords :worldpos)
                                         (send *aero* :lower (caddr legs-on-ground) :end-coords :worldpos))))))
       ;; (send (make-coords :pos centroid) :draw-on :flush t)
-      (setq balance-center-direction-3d (normalize-vector (v- centroid (send *aero* :lower :links :WAIST_LINK0 :worldpos))))
+      ;; (setq balance-center-direction-3d (normalize-vector (v- centroid (send *aero* :lower :links :WAIST_LINK0 :worldpos))))
+      (setq balance-center-direction-3d (v- centroid (send *aero* :get-com)))
       (float-vector (aref balance-center-direction-3d 0) (aref balance-center-direction-3d 1) 0)
       )
     )
   ;; @param stride-length: how wide each step is
   ;; @param goal: the goal position relative to the robot
-  (:walk (&optional (stride-length 120) (goal (float-vector 1000 0 0)))
+  (:walk (&key (stride-length 120) (goal (float-vector 1000 0 0)) (balance-rate-thre 3.0) (step-height 100))
 
     (setq debug nil)
     (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence
     (setq goal-direction-vec (normalize-vector goal))
     (setq goal-pos (v+ goal (send *aero* :lower :links :WAIST_LINK0 :worldpos))) ;; goal coordinates
-    (setq goal-pos-thre 500) ;; stop when we reach within goal-pos-thre from the goal
+    (setq goal-pos-thre 100) ;; stop when we reach within goal-pos-thre from the goal
     (while (> (distance (send *aero* :lower :links :WAIST_LINK0 :worldpos) goal-pos) goal-pos-thre)
       ;; Each time we step a leg, we want to move the waist in goal direction by 1/4 stride-length
       ;; Since when we step a leg, the waist might be moved for balancing, calculate the desired
@@ -122,7 +133,7 @@
         )
 
       ;; step the next leg forward
-      (send self :step (scale stride-length goal-direction-vec) (car gait-seq))
+      (send self :step (scale stride-length goal-direction-vec) (car gait-seq) :balance-rate-thre balance-rate-thre :step-height step-height)
 
       (if debug
           (progn
@@ -135,13 +146,14 @@
       (send *aero* :move-waist (v- next-waist-target-pos (send *aero* :lower :links :WAIST_LINK0 :worldpos)))
       (setq gait-seq `(,@(cdr gait-seq) ,(car gait-seq)))
       )
+    (format t "goal reached within ~f~%" goal-pos-thre)
     )
   )
 
-(send *aero-lower* :newcoords (make-coords :pos #f( 0 0 0 )))
-(send *aero* :reset-terrain-pose)
-(set-3legs-to-ground)
-(setq walker (instance Walker :init))
+;; (send *aero-lower* :newcoords (make-coords :pos #f( 0 0 0 )))
+;; (send *aero* :reset-terrain-pose)
+;; (set-3legs-to-ground)
+;; (setq walker (instance Walker :init))
 ;; (send walker :show-next-foothold goal :larm)
 ;; (setq foothold (send walker :get-next-foothold goal :larm))
 ;; (setq vel 2)

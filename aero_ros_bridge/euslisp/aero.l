@@ -227,7 +227,10 @@
     (send *aero-upper* :reset-terrain-pose)
     (send *aero-lower* :reset-terrain-pose)
     )
-
+  ;; waist posiion slightly higher than terrain-pose
+  (:reset-terrain-pose2 ()
+    (send *aero* :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(35.0 30.0 80.0 -35.0 30.0 80.0 -35.0 30.0 80.0 35.0 30.0 80.0 0.0)))
+    )
   ;; The end coords are at the wheels' axes
   ;; The end ground coords give the point that is touching the ground
   (:end-ground-coords (limb)
