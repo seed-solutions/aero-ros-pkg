@@ -384,3 +384,40 @@
 	  (send-angle-vector :time move-time)))
       )
     ))
+
+(defun rot-hand-vi
+  (&key (robot *aero-upper*) (real *real*) (arm :rarm)
+	(move-time (* 0.5 *base-time*)) (move-ang 5)
+	(move-headp t) (draw-objects t))
+  (let (key-input rot-axis)
+    (when move-headp
+      (send robot :head :look-at (send robot arm :end-coords :worldpos)))
+    (when real
+      (send-angle-vector :time (* 3 *base-time*)))
+    (while t
+      (setf key-input (read-line))
+      (cond
+       ((equal key-input "j") (setf rot-axis :z)) ;; z
+       ((equal key-input "k") (setf rot-axis :-z)) ;; -z
+       ((equal key-input "h") (setf rot-axis :-x)) ;; x
+       ((equal key-input "l") (setf rot-axis :x)) ;; -x
+       ((equal key-input "f") (setf rot-axis :y)) ;; y
+       ((equal key-input "b") (setf rot-axis :-y)) ;; -y
+       ((equal key-input "reset")
+	(send robot arm :inverse-kinematics
+	      (make-coords :pos (send robot arm :end-coords :worldpos))
+	      :rotation-axis :z)
+	(if draw-objects (send *irtviewer* :draw-objects))
+	(when real
+	  (send-angle-vector :time (* 3 *base-time*)))
+	(return-from rot-hand-vi))
+       ((equal key-input "q") (return-from rot-hand-vi)) ;; "q"=quit
+       )
+      (when (send robot arm :move-end-rot move-ang rot-axis :local)
+	(when move-headp
+	  (send robot :head :look-at (send robot arm :end-coords :worldpos)))
+	(if draw-objects (send *irtviewer* :draw-objects))
+	(when real
+	  (send-angle-vector :time move-time)))
+      )
+    ))
