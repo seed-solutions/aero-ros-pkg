@@ -1,0 +1,2 @@
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="A1011R7L",MODE="666",SYMLINK+="aero_upper"
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="A1011SEU",MODE="666",SYMLINK+="aero_lower"

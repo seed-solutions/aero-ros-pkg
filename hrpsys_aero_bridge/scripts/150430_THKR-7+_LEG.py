@@ -22,7 +22,8 @@ def RS485_Open():
 	global SER
 
 	#SER=serial.Serial('/dev/ttyUSB1', 115200)
-	SER=serial.Serial('/dev/ttyUSB1', 1382400)
+	#SER=serial.Serial('/dev/ttyUSB1', 1382400)
+	SER=serial.Serial('/dev/aero_lower', 1382400)
 	#SER.open()
 
 #Com Port Close
