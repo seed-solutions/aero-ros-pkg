@@ -41,7 +41,7 @@
 
   ;; @param goal: the relative goal position to move leg to
   ;; @param leg: the leg to move
-  (:step (goal leg &key (balance-rate-thre 3.0) (step-height 100))
+  (:step (goal leg &key (balance-rate-thre 2.0) (step-height 100))
     (setq goal-coords (send (send *aero* :lower leg :end-coords :copy-worldcoords) :translate goal :world))
     (print (send *aero* :lower leg :end-coords :worldcoords))
     (setq stepSize 10) ;; tuneable param
@@ -110,7 +110,7 @@
     )
   ;; @param stride-length: how wide each step is
   ;; @param goal: the goal position relative to the robot
-  (:walk (&key (stride-length 120) (goal (float-vector 1000 0 0)) (balance-rate-thre 3.0) (step-height 100))
+  (:walk (&key (stride-length 120) (goal (float-vector 1000 0 0)) (balance-rate-thre 2.0) (step-height 100))
 
     (setq debug nil)
     (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence
