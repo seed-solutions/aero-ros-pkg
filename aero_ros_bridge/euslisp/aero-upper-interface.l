@@ -331,3 +331,56 @@
       (warn ";; create *ri* first~S") (return))
     (send *ri* :angle-vector angle-vector time))
   )
+
+(defun move-hand-vi
+  (&key (robot *aero-upper*) (real *real*) (arm :rarm)
+	(move-time (* 0.5 *base-time*)) (move-dist 20)
+	(move-headp t) (draw-objects t))
+  (let (key-input
+	velocity (short-dist (/ move-dist 3.0))
+	(forward-dir (float-vector 1 0 0))
+	(left-dir (float-vector 0 1 0))
+	(up-dir (float-vector 0 0 1)))
+    (when move-headp
+      (send robot :head :look-at (send robot arm :end-coords :worldpos)))
+    (when real
+      (send-angle-vector :time (* 3 *base-time*)))
+    (while t
+      (setf key-input (read-line))
+      (cond
+       ((equal key-input "j")
+	(setf velocity (scale (- move-dist) up-dir))) ;; "j"=down
+       ((equal key-input "k")
+	(setf velocity (scale move-dist up-dir))) ;; "k"=up
+       ((equal key-input "h")
+	(setf velocity (scale move-dist left-dir))) ;; "h"=left
+       ((equal key-input "l")
+	(setf velocity (scale (- move-dist) left-dir))) ;; "l"=right
+       ((equal key-input "f")
+	(setf velocity (scale move-dist forward-dir))) ;; "f"=forward
+       ((equal key-input "b")
+	(setf velocity (scale (- move-dist) forward-dir))) ;; "b"=backward
+
+       ((equal key-input "jj")
+	(setf velocity (scale (- short-dist) up-dir))) ;; "j"=down
+       ((equal key-input "kk")
+	(setf velocity (scale short-dist up-dir))) ;; "k"=up
+       ((equal key-input "hh")
+	(setf velocity (scale short-dist left-dir))) ;; "h"=left
+       ((equal key-input "ll")
+	(setf velocity (scale (- short-dist) left-dir))) ;; "h"=left
+       ((equal key-input "ff")
+	(setf velocity (scale short-dist forward-dir))) ;; "f"=forward
+       ((equal key-input "bb")
+	(setf velocity (scale (- short-dist) forward-dir))) ;; "b"=backward
+
+       ((equal key-input "q") (return-from move-hand-vi)) ;; "q"=quit
+       )
+      (when (send robot arm :move-end-pos velocity :world :rotation-axis :z)
+	(when move-headp
+	  (send robot :head :look-at (send robot arm :end-coords :worldpos)))
+	(if draw-objects (send *irtviewer* :draw-objects))
+	(when real
+	  (send-angle-vector :time move-time)))
+      )
+    ))
