@@ -76,7 +76,7 @@
 	 (setq step-before-angle-vector (send self :angle-vector))
 	 (send self arm :move-end-pos delta-to coords) ; move a step
 	 (cond ((not (send self :collision-check-all)) ; if collides
-		;; (send self arm :move-end-pos (scale (- 1) delta-to) coords) 
+		;; (send self arm :move-end-pos (scale (- 1) delta-to) coords)
 		(send self :angle-vector step-before-angle-vector) ; go back a step
 		(return-from :move-safe nil)
 		))
@@ -88,7 +88,7 @@
 			(stop 10))
      (let* ((flag nil))
        (dotimes (j stop)
-	 ; if arm can nolonger be stretched finish                         
+	 ; if arm can nolonger be stretched finish
 	 (if (eq flag t) (return))
 	 ; if arm-x is at limit, try adjusting arm-z
 	 (if (eq (send self :move-safe arm toward :world t :bits bits) nil)
@@ -345,93 +345,3 @@
       (warn ";; create *ri* first~S") (return))
     (send *ri* :angle-vector angle-vector time))
   )
-
-(defun move-hand-vi
-  (&key (robot *aero-upper*) (real *real*) (arm :rarm)
-	(move-time (* 0.5 *base-time*)) (move-dist 20)
-	(move-headp t) (draw-objects t))
-  (let (key-input
-	velocity (short-dist (/ move-dist 3.0))
-	(forward-dir (float-vector 1 0 0))
-	(left-dir (float-vector 0 1 0))
-	(up-dir (float-vector 0 0 1)))
-    (when move-headp
-      (send robot :head :look-at (send robot arm :end-coords :worldpos)))
-    (when real
-      (send-angle-vector :time (* 3 *base-time*)))
-    (while t
-      (setf key-input (read-line))
-      (cond
-       ((equal key-input "j")
-	(setf velocity (scale (- move-dist) up-dir))) ;; "j"=down
-       ((equal key-input "k")
-	(setf velocity (scale move-dist up-dir))) ;; "k"=up
-       ((equal key-input "h")
-	(setf velocity (scale move-dist left-dir))) ;; "h"=left
-       ((equal key-input "l")
-	(setf velocity (scale (- move-dist) left-dir))) ;; "l"=right
-       ((equal key-input "f")
-	(setf velocity (scale move-dist forward-dir))) ;; "f"=forward
-       ((equal key-input "b")
-	(setf velocity (scale (- move-dist) forward-dir))) ;; "b"=backward
-
-       ((equal key-input "jj")
-	(setf velocity (scale (- short-dist) up-dir))) ;; "j"=down
-       ((equal key-input "kk")
-	(setf velocity (scale short-dist up-dir))) ;; "k"=up
-       ((equal key-input "hh")
-	(setf velocity (scale short-dist left-dir))) ;; "h"=left
-       ((equal key-input "ll")
-	(setf velocity (scale (- short-dist) left-dir))) ;; "h"=left
-       ((equal key-input "ff")
-	(setf velocity (scale short-dist forward-dir))) ;; "f"=forward
-       ((equal key-input "bb")
-	(setf velocity (scale (- short-dist) forward-dir))) ;; "b"=backward
-
-       ((equal key-input "q") (return-from move-hand-vi)) ;; "q"=quit
-       )
-      (when (send robot arm :move-end-pos velocity :world :rotation-axis :z)
-	(when move-headp
-	  (send robot :head :look-at (send robot arm :end-coords :worldpos)))
-	(if draw-objects (send *irtviewer* :draw-objects))
-	(when real
-	  (send-angle-vector :time move-time)))
-      )
-    ))
-
-(defun rot-hand-vi
-  (&key (robot *aero-upper*) (real *real*) (arm :rarm)
-	(move-time (* 0.5 *base-time*)) (move-ang 5)
-	(move-headp t) (draw-objects t))
-  (let (key-input rot-axis)
-    (when move-headp
-      (send robot :head :look-at (send robot arm :end-coords :worldpos)))
-    (when real
-      (send-angle-vector :time (* 3 *base-time*)))
-    (while t
-      (setf key-input (read-line))
-      (cond
-       ((equal key-input "j") (setf rot-axis :z)) ;; z
-       ((equal key-input "k") (setf rot-axis :-z)) ;; -z
-       ((equal key-input "h") (setf rot-axis :-x)) ;; x
-       ((equal key-input "l") (setf rot-axis :x)) ;; -x
-       ((equal key-input "f") (setf rot-axis :y)) ;; y
-       ((equal key-input "b") (setf rot-axis :-y)) ;; -y
-       ((equal key-input "reset")
-	(send robot arm :inverse-kinematics
-	      (make-coords :pos (send robot arm :end-coords :worldpos))
-	      :rotation-axis :z)
-	(if draw-objects (send *irtviewer* :draw-objects))
-	(when real
-	  (send-angle-vector :time (* 3 *base-time*)))
-	(return-from rot-hand-vi))
-       ((equal key-input "q") (return-from rot-hand-vi)) ;; "q"=quit
-       )
-      (when (send robot arm :move-end-rot move-ang rot-axis :local)
-	(when move-headp
-	  (send robot :head :look-at (send robot arm :end-coords :worldpos)))
-	(if draw-objects (send *irtviewer* :draw-objects))
-	(when real
-	  (send-angle-vector :time move-time)))
-      )
-    ))
