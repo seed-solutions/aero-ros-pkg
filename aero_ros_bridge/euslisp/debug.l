@@ -79,7 +79,6 @@
     (do-until-key))
   )
 
-
 (defun av-v-test ()
   (format nil "~A ~A" (send *aero* :angle-vector)
 	  (send *ri* :stroke-to-angle
@@ -95,7 +94,7 @@
   )
 
 (defun stair-test (&key (real nil))
-  (go? `(send *aero* :reset-terrain-pose) real)
+  ;; (go? `(send *aero* :reset-terrain-pose) real)
   (go? `(send *aero* :move-waist #f(0 0 -100)) real)
   (go? `(send *aero* :lower :rleg :move-end-pos #f(-100 -100 0) :world :rotation-axis nil) real)
   (go? `(send *aero* :move-waist #f(-100 -100 0)) real)
@@ -131,4 +130,35 @@
   (go? `(send *aero* :move-waist #f(100 0 0)) real)
   (go? `(send *aero* :lower :rleg :move-end-pos #f(0 0 100) :world :rotation-axis nil) real)
   (go? `(send *aero* :lower :rleg :move-end-pos #f(0 0 -100) :world :rotation-axis nil) real)
+  )
+
+
+(defun init-calib (pose)
+  (send *aero* :lower :angle-vector (send *ri* pose))
+  (send *ri* :angle-vector (send *aero* :stroke-vector))
+  )
+
+(defun calib-test (pose speed time)
+  (send *ri* :wheel-on)
+  (print (list speed time))
+  (setq ans "y")
+  (while (equal ans "y")
+    (print "send robot forward?")
+    (do-until-key)
+    (send *ri* :wheel-vector (float-vector speed (- speed) speed (- speed)))
+    (unix::usleep (round (* time 1000)))
+    (send *ri* :wheel-vector #f(0 0 0 0))
+    (print "do-again? y or n")
+    (setq ans (read-line))
+    )
+  (setq ans "y")
+  (while (equal ans "y")
+    (print "send robot rotate?")
+    (do-until-key)
+    (send *ri* :wheel-vector (float-vector speed (- speed) (- speed) speed))
+    (unix::usleep (round (* time 1000)))
+    (send *ri* :wheel-vector #f(0 0 0 0))
+    (print "do-again? y or n")
+    (setq ans (read-line))
+    )
   )

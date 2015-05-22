@@ -5,6 +5,7 @@
 (load "package://aero_ros_bridge/euslisp/aero-upper-interface.l")
 (load "package://aero_ros_bridge/euslisp/aero-lower-strokes.l")
 (load "package://aero_ros_bridge/euslisp/aero-upper-lower-angles.l")
+(load "package://aero_ros_bridge/euslisp/aero-go-pos.l")
 
 (setq wheel-radius 44.63875)
 
