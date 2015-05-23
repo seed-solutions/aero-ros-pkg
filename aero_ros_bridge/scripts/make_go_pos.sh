@@ -116,11 +116,12 @@ body=''
 tab2=$'  '
 tab3=$'   '
 
+body="${body}(defvar *wheel-velocity* 308.0)\n\n"
 body="${body}(defmethod aero-upper-interface\n"
 body="${body}$(create_go_pos_from_calib go_pos_calib)\n"
 #read -r -a names < /tmp/go_pos_names
 #body="${body}$(create_go_pos_from_calib other_calibs)\n"
-body="${body}${tab2}(:go-pos (x y theta &key (vel 308.0) (robot *aero*))\n"
+body="${body}${tab2}(:go-pos (x y theta &key (vel *wheel-velocity*) (robot *aero*))\n"
 body="${body}${tab2}${tab2}(cond\n"
 read -r -a names < /tmp/go_pos_names
 for e in "${names[@]}"
