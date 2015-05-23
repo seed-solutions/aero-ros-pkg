@@ -239,6 +239,13 @@
     ;; (eval `(send self :lower limb :end-coords))
     )
 
+  (:fix-leg-to-ground (&optional (legs '(:larm :rarm :lleg :rleg)))
+    (let ((leg-height 0))
+      (dolist (x legs)
+	(setq leg-height (+ (aref (send (send self :end-ground-coords x) :pos) 2) leg-height)))
+      (setq leg-height (/ leg-height (length legs)))
+      (send self :translate (float-vector 0 0 (- leg-height)))
+      ))
   
   )
 
