@@ -15,6 +15,7 @@
 ;; real robot logs
 
 (defun log-0516 (&key (real nil))
+  (go? `(setup) nil)
   ;; (go? `(send *aero* :reset-terrain-pose))
   (go? `(send *aero* :move-waist #f(0 0 -100)))
   (go? `(send *aero* :lower :rleg :move-end-pos #f(-100 -100 0) :world :rotation-axis nil))

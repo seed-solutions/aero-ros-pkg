@@ -18,7 +18,7 @@
   ; set poses
   (defvar *rarm-avoid-pose*
     #f(40.1007 -29.388 4.91744 -71.6494 -22.7883 -2.70865 7.77037 15.0 0.0 0.0 0.0))
-  (go? `(send *aero* :upper :reset-manip-pose))
+  (go? `(setup) nil)
   (go? `(send *aero* :upper :rarm :angle-vector *rarm-avoid-pose*))
   ; test-drc-door-task takes a step-by-step fullbody-ik to grasp the knob
   ; memorizes the posture, and sends angle-vector at once for the real robot
