@@ -26,6 +26,7 @@
                       :worldcoords))
         )
       (send (send *aero-lower* :links :WAIST_LINK0) :assoc (send *aero-upper* :links :WAIST_LINK0)))
+      (setq ((send *aero-upper* :head :neck-p) . max-angle) 40)
     )
   (:stroke-vector ()
     (if (and (boundp `*aero-upper*) (boundp `*aero-lower*))
