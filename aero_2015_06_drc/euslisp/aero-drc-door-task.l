@@ -43,7 +43,7 @@
 	     (send *aero* :angle-vector original-angle-vector)
 	     (if (eq real t)
 		 (progn (send *ri* :angle-vector (send *aero* :stroke-vector) 1000)
-			(unix::sleep (* 1000 1000))))
+			(unix::usleep (* 1000 1000))))
 	     (setq max-reach result)
 	     (go? `(send *aero* :translate (float-vector max-reach 0 0)))
 	     (setq far-from-door nil)
@@ -57,22 +57,22 @@
       (send *irtviewer* :draw-objects)
       (cond ((eq real t)
 	     (send *ri* :angle-vector (send *aero* :stroke-vector) 1000)
-	     (unix::sleep (* 1000 1000))))
+	     (unix::usleep (* 1000 1000))))
       (send *aero* :hand arm :open-pose)
       (cond ((eq real t)
 	     (send *ri* :angle-vector (send *aero* :stroke-vector) 3000)
-	     (unix::sleep (* 3000 1000))
+	     (unix::usleep (* 3000 1000))
 	     (setq current-lhand-angle (if (eq arm :larm)
 					   (elt (send *ri* :actual-vector) 7)
 					 (elt (send *ri* :actual-vector) 18)))
 	     (if (> (abs (- current-lhand-angle (send *aero* :upper arm :t-1p))) 60)
 		 (progn (send *aero* :hand arm :close-pose)
 			(send *ri* :angle-vector (send *aero* :stroke-vector) 1000)
-			(unix::sleep (* 1000 1000))
+			(unix::usleep (* 1000 1000))
 			(return-from get-x-distance-to-door result)))
 	     (send *aero* :hand arm :close-pose)
 	     (send *ri* :angle-vector (send *aero* :stroke-vector) 1000)
-	     (unix::sleep (* 1000 1000))
+	     (unix::usleep (* 1000 1000))
 	     )
 	    (t
 	     (send *aero* :hand arm :joint-angle 40)
@@ -98,6 +98,70 @@
 	     )))
     ))
 
+(defun y-ik (pos &optional (real *real*))
+  (if (eq (send *aero* :upper *arm* :move-end-pos pos :world) nil)
+      (progn
+	(dotimes (i 5)
+	  (go? `(send *aero* :translate #f(-20 0 0)))
+	  (go? `(send *aero* :upper *arm* :move-end-pos #f(20 0 0) :world))
+	  (if (not (eq (send *aero* :upper *arm* :move-end-pos pos :world) nil))
+	      (progn (cond ((eq real t)
+			    (send *ri* :angle-vector
+				  (send *aero* :stroke-vector) 3000)
+			    (unix::usleep (* 3000 1000))))
+		     (send *irtviewer* :draw-objects)
+		     (return-from y-ik t))))
+	)
+    (progn
+      (cond ((eq real t)
+	     (send *irtviewer* :draw-objects)
+	     (send *ri* :angle-vector (send *aero* :stroke-vector) 3000)
+	     (unix::usleep (* 3000 1000)))))
+    ))
+  
+
+(defun rotate-knob ()
+  (send *aero* :upper *arm* :wrist-y :joint-angle
+	(if (eq *arm* :larm)
+	    (- (send *aero* :upper *arm* :wrist-y :joint-angle) *open-angle*)
+	  (+ (send *aero* :upper *arm* :wrist-y :joint-angle) *open-angle*)))
+  (send (send *door* :link :door-knob) :rotate (* *open-angle* (/ pi 180)) #f(1 0 0) :world)
+  (go? `(send *aero* :upper *arm* :move-end-pos
+	      (float-vector
+	       0 
+	       (* *grab-point* (- 1 (cos (* *open-angle* (/ pi 180)))))
+	       (- (abs (* *grab-point* (sin (* *open-angle* (/ pi 180)))))))
+	      :world))
+  )
+
+(defun open-door (&optional (real *real*))
+  (setq knob-offset (atan (/ (float *knob-x*) (- *knob-y-pos* *grab-point*))))
+  (dotimes (i 89)
+    (send (send *door* :joint :door-hinge-joint) :joint-angle (+ i 1))
+    (setq hand-pos (send (send (send *aero* :upper :larm :end-coords)
+			       :copy-worldcoords) :pos))
+    (setq hand-goal (float-vector (* (- *knob-y-pos* *grab-point*)
+				     (sin (- (* (+ i 1) (/ pi 180)) knob-offset)))
+				  (* (- *knob-y-pos* *grab-point*)
+				     (cos (- (* (+ i 1) (/ pi 180)) knob-offset)))
+				  (aref hand-pos 2)))
+    (send *aero* :upper *arm* :wrist-p :joint-angle
+	  (- (send *aero* :upper *arm* :wrist-p :joint-angle) 5))
+    (if (eq (send *aero* :upper *arm* :move-end-pos (v- hand-goal hand-pos) :world) nil)
+	(progn (send *aero* :upper *arm* :wrist-p :joint-angle
+		     (+ (send *aero* :upper *arm* :wrist-p :joint-angle) 5))
+	       (if (eq real t)
+		   (progn (send *irtviewer* :draw-objects)
+			  (send *ri* :angle-vector (send *aero* :stroke-vector))
+			  (unix::usleep (* 5000 1000))))
+	       (go? `(send *aero* :hand *arm* :open-pose))
+	       (return-from open-door nil)))
+    (send *irtviewer* :draw-objects)
+    ))
+      
+
+;; grabs
+
 (defun zoom-grab ()
   (go? `(send *aero* :hand *arm* :joint-angle -30))
   (go? `(send *aero* :upper *arm* :move-end-pos
@@ -107,20 +171,28 @@
   (go? `(send *aero* :hand *arm* :joint-angle 30))
   )
 
+(defun normal-grab ()
+  (go? `(send *aero* :upper *arm* :move-end-pos
+	      (float-vector (/ *knob-x* 2) 0 0) :world) nil)
+  (go? `(send *aero* :hand *arm* :joint-angle 0))
+  )
 ;; model samples
 
 (defun sample-v1.00 (&optional (x 0) (y 0) (z 0))
   (defvar *arm* :larm)
+  (defvar *narm* :rarm)
   (defvar *knob-x* 50)
+  (defvar *knob-y-pos* 770)
   (defvar *knob-height* 900)
   (defvar *grab-point* 55)
   (defvar *hand-free-space* 40)
+  (defvar *open-angle* 18.0)
   (setq *init-pos-x* x)
   (setq *init-pos-y* y)
   (setq *init-pos-z* z)
   (setq *exit-flag* nil)
   (send (send *door* :link :door-knob) :translate
-	(float-vector 0 0 (- *knob-height* 845)))
+	(float-vector 0 (- *knob-y-pos* 816) (- *knob-height* 845)))
   (go? `(setup-v1.00 *init-pos-x* *init-pos-y* *init-pos-z*) nil)
   (go? `(hand-yaw-world *narm* (if (eq *narm* :larm) -90 90)))
   (setq x-distance (get-x-distance-to-door *narm* nil))
@@ -131,30 +203,31 @@
   (setq diff-to-door-knob (v- (send (send *door* :link :door-knob) :worldpos)
 			      (send *aero* :upper *arm* :end-coords :worldpos)))
   (go? `(send *aero* :move-waist (float-vector 0 0 (aref diff-to-door-knob 2))))
-  ;; (go? `(send *aero* :upper *arm* :move-end-pos
-  ;; 	      (float-vector (- (aref diff-to-door-knob 0) *hand-free-space*
-  ;; 			       *knob-x* *hand-free-space*) 0 0) :world))
   (go? `(send *aero* :upper *arm* :move-end-pos
-	      (float-vector (- x-distance
-			       (+ *knob-x* *hand-free-space*)) 0 0) :world))
-  (go? `(send *aero* :upper *arm* :move-end-pos
-	      (float-vector 0 (- (aref diff-to-door-knob 1) *grab-point*) 0) :world))
-  ;; hand operation
-  (zoom-grab)
+  	      (float-vector (- x-distance
+  			       (+ *knob-x* *hand-free-space*)) 0 0) :world))
+  (y-ik (float-vector 0 (- (aref diff-to-door-knob 1) *grab-point*) 0))
+  ;; (zoom-grab)
+  (normal-grab)
+  (rotate-knob)
+  (go? `(open-door) nil)
   )
 
 (defun sample-v1.01 (&optional (x -500) (y 500) (z 0))
   (defvar *arm* :larm)
   (defvar *narm* :rarm)
   (defvar *knob-x* 50)
+  (defvar *knob-y-pos* 770)
   (defvar *knob-height* 900)
+  (defvar *grab-point* 55)
   (defvar *hand-free-space* 40) ;; 80 * 0.5
+  (defvar *open-angle* 18.0)
   (setq *init-pos-x* x)
   (setq *init-pos-y* y)
   (setq *init-pos-z* z)
   (setq *exit-flag* nil)
   (send (send *door* :link :door-knob) :translate
-	(float-vector 0 0 (- *knob-height* 845)))
+	(float-vector 0 (- *knob-y-pos* 816) (- *knob-height* 845)))
   (go? `(setup-v1.00 *init-pos-x* *init-pos-y* *init-pos-z*) nil)
   (go? `(hand-yaw-world *narm* (if (eq *narm* :larm) -90 90)))
   (setq x-distance (get-x-distance-to-door *narm*))
@@ -168,8 +241,7 @@
   (go? `(send *aero* :upper *arm* :move-end-pos
 	      (float-vector (- x-distance
 			       (+ *knob-x* *hand-free-space*)) 0 0) :world))
-  ;; hand operation
-  (zoom-grab)
+  (normal-grab)
   )
 
 (defun sample-beta ()
