@@ -356,7 +356,7 @@ if __name__ == "__main__":
 # Move Command
 	Go_front(2000)
 	#SEED_485_Read()
-	time.sleep(2)
+	time.sleep(1)
 
 	Stop()
 	#SEED_485_Read()
@@ -364,27 +364,27 @@ if __name__ == "__main__":
 
 	Go_back(2000)
 	#SEED_485_Read()
-	time.sleep(2)
+	time.sleep(1)
 
 	Stop()
 	#SEED_485_Read()
 	time.sleep(2)
 
-	Right_turn(2000)
-	#SEED_485_Read()
-	time.sleep(2)
+	# Right_turn(2000)
+	# #SEED_485_Read()
+	# time.sleep(1)
 
-	Stop()
-	#SEED_485_Read()
-	time.sleep(2)
+	# Stop()
+	# #SEED_485_Read()
+	# time.sleep(2)
 
-	Left_turn(2000)
-	#SEED_485_Read()
-	time.sleep(2)
+	# Left_turn(2000)
+	# #SEED_485_Read()
+	# time.sleep(1)
 
-	Stop()
-	#SEED_485_Read()
-	time.sleep(2)
+	# Stop()
+	# #SEED_485_Read()
+	# time.sleep(2)
 
 # Dynamixel Servo off
 	Set_Command(2,0x50,0,1,1,1,1,1,0,  1,1,1,1,1,0,  0,0,0,0,  1,1,1,1,1,0,  1,1,1,1,1,0,  0,0,0,0,0,0,0)
