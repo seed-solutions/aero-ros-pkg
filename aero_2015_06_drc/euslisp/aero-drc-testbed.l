@@ -6,6 +6,7 @@
   (send *aero* :locate (send (make-coords) :pos) :world)
   (send *aero* :translate (float-vector -1000 500 0))
   (send *aero* :reset-manip-pose)
+  (send *aero* :fix-leg-to-ground)
   ;; Generate models                 
   (make-drc-door)
   (make-drc-hose-plug)
@@ -39,17 +40,17 @@
 (defvar *exit-flag* nil)
 
 (defun go? (cmd &optional (real *real*))
-  (let (ui) ; ui is user input
+  (let (ui (eval? t)) ; ui is user input
     (if (eq *exit-flag* t)
 	(return-from go? "exiting process"))
     (cond ((eq real t)
 	   ; if the command is not send *ri*
 	   (if (and (position `*ri* cmd)
 		    (position `send cmd))
-	       (if (not (eq (- (position `*ri* cmd)
-			       (position `send cmd)) 1))
-		   (eval cmd))
-	     (eval cmd))
+	       (if (eq (- (position `*ri* cmd)
+			  (position `send cmd)) 1)
+		   (setq eval? nil)))
+	   (if (eq eval? t) (eval cmd))
 	   (print cmd)
 	   (send *irtviewer* :draw-objects)
 	   (print "send real?")
@@ -70,12 +71,20 @@
 			       (/ 180 pi)))
 		      (return-from go? t)
 		      )))
+	   ; rotate *ri* if command is send *aero* :translate
+	   (if (and (position `:translate cmd)
+		    (position `*aero* cmd))
+	       (cond ((eq (- (position `:translate cmd)
+			     (position `*aero* cmd)) 1)
+		      (send *ri* :wheel-on)
+		      (send *ri* :go-pos
+			    (eval (elt cmd (+ (position `:translate cmd) 1) 0))
+			    (eval (elt cmd (+ (position `:transform cmd) 2) 0))
+			    0)
+		      (return-from go? t)
+		      )))
 	   ; if the command is send *ri*
-	   (if (and (position `*ri* cmd)
-		    (position `send cmd))
-	       (if (eq (- (position `*ri* cmd)
-			  (position `send cmd)) 1)
-		   (eval cmd))
+	   (if (eq eval? nil) (eval cmd)
 	     (send *ri* :angle-vector (send *aero* :stroke-vector)))
 	   )
 	  (t
@@ -111,6 +120,7 @@
 			  :rot))) #f(0 0 1)))
     (if (not (= (aref pos 2) 0))
 	(send *aero* :move-waist (float-vector 0 0 (aref pos 2))))
+    (send *aero* :fix-leg-to-ground)
     ))
 
 (defun reset-aero ()
@@ -122,4 +132,5 @@
     (send *aero* :translate (float-vector -1000 500 0))
     (setq *exit-flag* nil)
     (go? `(send *aero* :reset-manip-pose))
+    (send *aero* :fix-leg-to-ground)
     ))
