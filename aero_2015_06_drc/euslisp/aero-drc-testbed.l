@@ -78,8 +78,8 @@
 			     (position `*aero* cmd)) 1)
 		      (send *ri* :wheel-on)
 		      (send *ri* :go-pos
-			    (eval (elt cmd (+ (position `:translate cmd) 1) 0))
-			    (eval (elt cmd (+ (position `:transform cmd) 2) 0))
+			    (elt (elt cmd (+ (position `:translate cmd) 1)) 0)
+			    (elt (elt cmd (+ (position `:translate cmd) 1)) 1)
 			    0)
 		      (return-from go? t)
 		      )))
