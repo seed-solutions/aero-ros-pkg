@@ -1,6 +1,6 @@
 <launch>
   <node pkg="hokuyo_node" type="hokuyo_node" name="aero_urg_node">
-    <param name="serial_port" value="/dev/ttyACM0" />
+    <param name="serial_port" value="/dev/hokuyo" />
     <param name="serial_baud" value="115200" />
     <param name="frame_id" value="urg_frame" />
   </node>

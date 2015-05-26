@@ -1,0 +1,1 @@
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="1115",ATTRS{idProduct}=="0008",MODE="666",SYMLINK+="tilt_motor"
