@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find aero_sensors)/launch/start_urg.launch" />
+  <include file="$(find aero_sensors)/launch/start_dynamixel.launch" />
+</launch>
