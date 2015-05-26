@@ -27,6 +27,12 @@
         )
       (send (send *aero-lower* :links :WAIST_LINK0) :assoc (send *aero-upper* :links :WAIST_LINK0)))
       (setq ((send *aero-upper* :head :neck-p) . max-angle) 40)
+
+      ;; shin coords for kneeling
+      (setq lshin-coords (send (send (make-cascoords :coords (send (send *aero-lower* :larm :end-coords) :copy-worldcoords)) :rotate (deg2rad -120) :y) :locate (float-vector 200 0 -40)))
+      (send (send *aero-lower* :larm :end-coords :parent) :assoc lshin-coords)
+      (setq rshin-coords (send (send (make-cascoords :coords (send (send *aero-lower* :rarm :end-coords) :copy-worldcoords)) :rotate (deg2rad -120) :y) :locate (float-vector 200 0 -40)))
+      (send (send *aero-lower* :rarm :end-coords :parent) :assoc rshin-coords)
     )
   (:stroke-vector ()
     (if (and (boundp `*aero-upper*) (boundp `*aero-lower*))
@@ -276,7 +282,7 @@
     )
   ;; waist posiion slightly higher than terrain-pose
   (:reset-terrain-pose2 ()
-    (send *aero* :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(35.0 30.0 80.0 -35.0 30.0 80.0 -35.0 30.0 80.0 35.0 30.0 80.0 0.0)))
+    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(35.0 30.0 80.0 -35.0 30.0 80.0 -35.0 30.0 80.0 35.0 30.0 80.0 0.0)))
     (send *aero-lower* :links :WAIST_LINK0 :newcoords
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
@@ -296,6 +302,11 @@
       (setq leg-height (/ leg-height (length legs)))
       (send self :translate (float-vector 0 0 (- leg-height)))
       ))
-  
+  (:kneel (target limb)
+    (cond (equal limb ':rarm) (setq shin-coords rshin-coords)
+          (equal limb ':larm) (setq shin-coords lshin-coords)
+       )
+    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos (v+ (send *aero-lower* :worldpos) target)) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
+    )
   )
 (provide :aero "package://aero_ros_bridge/euslisp/aero.l")
