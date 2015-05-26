@@ -21,3 +21,11 @@ time : 2000
 trans : 120.0
 rot : 60.0
 allow : x y theta
+
+name : gp-nil
+angle : 35.0 40.0 80.0 -35.0 40.0 80.0 -35.0 40.0 80.0 35.0 40.0 80.0 0.0
+vel : 100.0
+time : 2000
+trans : 120.0
+rot : 60.0
+allow : x y theta
