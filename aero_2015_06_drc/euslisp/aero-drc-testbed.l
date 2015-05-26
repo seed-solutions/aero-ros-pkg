@@ -38,6 +38,7 @@
 ;; utils
 
 (defvar *exit-flag* nil)
+(defvar *time* 5000)
 
 (defun go? (cmd &optional (real *real*))
   (let (ui (eval? t)) ; ui is user input
@@ -85,7 +86,7 @@
 		      )))
 	   ; if the command is send *ri*
 	   (if (eq eval? nil) (eval cmd)
-	     (send *ri* :angle-vector (send *aero* :stroke-vector)))
+	     (send *ri* :angle-vector (send *aero* :stroke-vector) *time*))
 	   )
 	  (t
 	   (print cmd)
@@ -102,22 +103,27 @@
     ))
 
 (defun init-testbed (object
-		     &key (pos #f(0 0 0)) (rpy (list 0 0 0)))
+		     &key (pos #f(0 0 0)) (rot 0))
   (let (init-standing-coords)
     (reset-aero)
-    (setq init-standing-coords
-	  (make-coords :pos (float-vector (aref pos 0) (aref pos 1) 0)
-		       :rpy rpy))
-    (send *aero* :locate
-	  (send (send (send object :copy-worldcoords)
-		      :transform init-standing-coords :local)
-		:pos) :world)
-    (if (not (equal rpy (list 0 0 0)))
-	(send *aero* :rotate
-	      (car (rotation-angle
-		    (send (send (send object :copy-worldcoords)
-				:transform init-standing-coords :local)
-			  :rot))) #f(0 0 1)))
+    ;; (setq init-standing-coords
+    ;; 	  (make-coords :pos (float-vector (aref pos 0) (aref pos 1) 0)
+    ;; 		       :rpy (list 0 0 0)))
+    ;; (send *aero* :locate
+    ;; 	  (send (send (send object :copy-worldcoords)
+    ;; 		      :transform init-standing-coords :local)
+    ;; 		:pos) :world)
+    ;; (if (not (equal rpy (list 0 0 0)))
+    ;; 	(send *aero* :rotate
+    ;; 	      (car (rotation-angle
+    ;; 		    (send (send (send object :copy-worldcoords)
+    ;; 				:transform init-standing-coords :local)
+    ;; 			  :rot))) #f(0 0 1)))
+    (send *aero* :locate (send (send object :copy-worldcoords) :pos) :world)
+    (send *aero* :fix-leg-to-ground)
+    (if (not (= rot 0))
+    	(send *aero* :rotate rot #f(0 0 1)))
+    (send *aero* :translate (float-vector (aref pos 0) (aref pos 1) 0))
     (if (not (= (aref pos 2) 0))
 	(send *aero* :move-waist (float-vector 0 0 (aref pos 2))))
     (send *aero* :fix-leg-to-ground)
