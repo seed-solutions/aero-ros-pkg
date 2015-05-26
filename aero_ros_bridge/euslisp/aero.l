@@ -130,24 +130,58 @@
       (setf original-angle-vector (send *aero-lower* :angle-vector))
       (setf original-coords (send *aero-lower* :copy-worldcoords))
       (dolist (link (list :rarm :larm :rleg :lleg))
-	(push (send *aero-lower* link :end-coords :copy-worldcoords)
+        (push (send *aero-lower* link :end-coords :copy-worldcoords)
 	      original-end-coords-list))
       (setf original-end-coords-list (nreverse original-end-coords-list))
       (send *aero-lower* :translate waist-velocity)
       (dolist (link (list :rarm :larm :rleg :lleg))
-	(unless
-	    (send *aero-lower* link :inverse-kinematics
-		  (car original-end-coords-list) :rotation-axis nil)
-	  (warn ";; move-waist IK failed >> ~S~%" link)
-	  (send *aero-lower* :angle-vector original-angle-vector)
-	  (send *aero-lower* :newcoords original-coords)
-	  (return-from :move-waist nil)
-	  )
-	(setf original-end-coords-list (cdr original-end-coords-list))
-	)
+        (unless (and
+                 (send *aero-lower* link :inverse-kinematics
+                       (car original-end-coords-list) :rotation-axis nil)
+                 (not (send self :self-collision-check)))
+          (warn ";; move-waist IK failed >> ~S~%" link)
+          (send *aero-lower* :angle-vector original-angle-vector)
+          (send *aero-lower* :newcoords original-coords)
+          (return-from :move-waist nil)
+          )
+        (setf original-end-coords-list (cdr original-end-coords-list))
+        )
       (if draw-objects (send *irtviewer* :draw-objects))
       t)
     )
+  
+  (:rotate-waist
+   (angle axis
+	      &key (draw-objects nil))
+    (let ((original-end-coords-list) original-angle-vector
+	  original-coords)
+      (when (< (abs angle) (deg2rad 0.1))
+	(warn ";; :rotate-waist error: angle is too small~%")
+	(return-from :rotate-waist nil))
+      ;;
+      (setf original-angle-vector (send *aero-lower* :angle-vector))
+      (setf original-coords (send *aero-lower* :links :WAIST_LINK0 :copy-coords))
+      (dolist (link (list :rarm :larm :rleg :lleg))
+        (push (send *aero-lower* link :end-coords :copy-worldcoords)
+              original-end-coords-list))
+      (setf original-end-coords-list (nreverse original-end-coords-list))
+      (send *aero-lower* :links :WAIST_LINK0 :rotate angle axis)
+      (dolist (link (list :rarm :larm :rleg :lleg))
+        (unless (and
+                 (send *aero-lower* link :inverse-kinematics
+                       (car original-end-coords-list) :rotation-axis nil)
+                 (not (send self :self-collision-check)))
+          (warn ";; rotate-waist IK failed >> ~S~%" link)
+          (send *aero-lower* :angle-vector original-angle-vector)
+          (send *aero-lower* :links :WAIST_LINK0 :newcoords original-coords)
+          (return-from :rotate-waist nil)
+          )
+        (setf original-end-coords-list (cdr original-end-coords-list))
+        )
+         (if draw-objects (send *irtviewer* :draw-objects))
+         t)
+    )
+  
   (:cog-balance-check (&optional (legs-on-grounds `(:larm :rarm :rleg :lleg)))
     (let (a b c p A1 B1 c-eval p-eval (tmp-legs))
       (setq tmp-legs legs-on-grounds)
@@ -220,18 +254,33 @@
   (:reset-pose ()
     (send *aero-upper* :reset-pose)
     (send *aero-lower* :reset-pose)
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
     )
   (:reset-manip-pose ()
     (send *aero-upper* :reset-manip-pose)
     (send *aero-lower* :reset-manip-pose)
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
+
     )
   (:reset-terrain-pose ()
     (send *aero-upper* :reset-terrain-pose)
     (send *aero-lower* :reset-terrain-pose)
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
+
     )
   ;; waist posiion slightly higher than terrain-pose
   (:reset-terrain-pose2 ()
     (send *aero* :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(35.0 30.0 80.0 -35.0 30.0 80.0 -35.0 30.0 80.0 35.0 30.0 80.0 0.0)))
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
+
     )
   ;; The end coords are at the wheels' axes
   ;; The end ground coords give the point that is touching the ground
@@ -243,11 +292,10 @@
   (:fix-leg-to-ground (&optional (legs '(:larm :rarm :lleg :rleg)))
     (let ((leg-height 0))
       (dolist (x legs)
-	(setq leg-height (+ (aref (send (send self :end-ground-coords x) :pos) 2) leg-height)))
+        (setq leg-height (+ (aref (send (send self :end-ground-coords x) :pos) 2) leg-height)))
       (setq leg-height (/ leg-height (length legs)))
       (send self :translate (float-vector 0 0 (- leg-height)))
       ))
   
   )
-
 (provide :aero "package://aero_ros_bridge/euslisp/aero.l")

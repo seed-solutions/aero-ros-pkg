@@ -94,6 +94,16 @@
       )
     )
 
+  ;; Move center of mass (waist) on top of the quadrilateral center formed by the supporting legs.
+  ;; NOTE: this actually simply moves the waist on top of the triangle center for now.
+  (:shift-com-to-center ()
+    (let ((leg-quadrilateral-center-direction (send self :get-leg-quadrilateral-center-direction)))
+      (print leg-quadrilateral-center-direction)
+      (send *aero* :move-waist leg-quadrilateral-center-direction)
+      (send *irtviewer* :draw-objects)
+      )
+    )
+
 
   ;; returns a 2d vector parallel to the ground plane pointing in the direction from the waist center
   ;; to the centor of the triangle from by the three supporting legs
@@ -108,6 +118,20 @@
       (float-vector (aref balance-center-direction-3d 0) (aref balance-center-direction-3d 1) 0)
       )
     )
+
+  (:get-leg-quadrilateral-center-direction ()
+    (let ((centroid (scale (/ 1.0 4)
+                           (vplus (list (send *aero* :lower :rarm :end-coords :worldpos)
+                                        (send *aero* :lower :larm :end-coords :worldpos)
+                                        (send *aero* :lower :rleg :end-coords :worldpos)
+                                        (send *aero* :lower :lleg :end-coords :worldpos))))))
+      ;; (send (make-coords :pos centroid) :draw-on :flush t)
+      ;; (setq balance-center-direction-3d (normalize-vector (v- centroid (send *aero* :lower :links :WAIST_LINK0 :worldpos))))
+      (setq leg-quadrilateral-center-direction-3d (v- centroid (send *aero* :get-com)))
+      (float-vector (aref leg-quadrilateral-center-direction-3d 0) (aref leg-quadrilateral-center-direction-3d 1) 0)
+      )
+    )
+
   ;; @param stride-length: how wide each step is
   ;; @param goal: the goal position relative to the robot
   (:walk (&key (stride-length 120) (goal (float-vector 1000 0 0)) (balance-rate-thre 2.0) (step-height 100))
@@ -153,7 +177,7 @@
 ;; (send *aero-lower* :newcoords (make-coords :pos #f( 0 0 0 )))
 ;; (send *aero* :reset-terrain-pose)
 ;; (set-3legs-to-ground)
-;; (setq walker (instance Walker :init))
+(setq walker (instance Walker :init))
 ;; (send walker :show-next-foothold goal :larm)
 ;; (setq foothold (send walker :get-next-foothold goal :larm))
 ;; (setq vel 2)
