@@ -238,7 +238,10 @@
 
 
   ;;;;;;;;;;;;;;;;;; for lower manipulation ;;;;;;;;;;;;;;;;;;
-  (:kneel (target limb)
+  ;; x y components of target is relative to the shoulder/crotch joint.
+  ;; If height-rel is true, z component of target is relative to limb endpoint height,
+  ;; else it is absolute.
+  (:kneel (target limb &key (height-rel t))
     (cond ((equal limb ':rarm)
            (progn
              (setq shin-coords rshin-coords)
@@ -247,11 +250,12 @@
             (progn
               (setq shin-coords lshin-coords)
               (setq shoulder-pos (send *aero-lower* :links :LARM_LINK1 :worldpos))))
-       ) 
-    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos (v+ (send self :project-on-ground shoulder-pos) target)) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
+       )
+    (setq target-worldpos (v+ (send self :project-on-ground shoulder-pos) target))
+    (if height-rel
+        (setq target-worldpos (v+ target-worldpos (float-vector 0 0 (elt (send (send self :end-ground-coords limb) :worldpos) 2)))))
+    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos target-worldpos) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
     )
-
-
 
   ;;;;;;;;;;;;;;;;;; for evaluating ;;;;;;;;;;;;;;;;;;
   (:self-collision-check ()
@@ -382,23 +386,36 @@
     (send *aero-lower* :links :WAIST_LINK0 :newcoords
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
-
     )
+  
   (:reset-terrain-pose ()
     (send *aero-upper* :reset-terrain-pose)
     (send *aero-lower* :reset-terrain-pose)
     (send *aero-lower* :links :WAIST_LINK0 :newcoords
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
-
     )
+
   ;; waist posiion slightly higher than terrain-pose
   (:reset-terrain-pose2 ()
     (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(35.0 30.0 80.0 -35.0 30.0 80.0 -35.0 30.0 80.0 35.0 30.0 80.0 0.0)))
     (send *aero-lower* :links :WAIST_LINK0 :newcoords
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
+    )
 
+  (:reset-climbing-pose ()
+    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(0.0 40.0 80.0 0.0 40.0 80.0 0.0 40.0 80.0 0.0 40.0 80.0 0.0)))
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
+    )
+
+  (:reset-climbing-pose2 ()
+    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(90.0 40.0 80.0 0.0 40.0 80.0 -90.0 40.0 80.0 0.0 40.0 80.0 0.0)))
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
     )
 
   ;; save the current pose of the robot
@@ -418,7 +435,7 @@
   ;; load the previously saved pose and global position of the robot
   (:load-state ()
     (send self :load-pose)
-    (send *aero-lower* :newcoords saved-robot-coords)
+    (send *aero-lower* :newcoords (send saved-robot-coords :copy-coords))
     (send *aero-lower* :links :WAIST_LINK0 :newcoords saved-waist-coords)
     )
 
