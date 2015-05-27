@@ -9,10 +9,14 @@
 
 (setq wheel-radius 44.63875)
 
+
 (defclass AeroRobot-robot
   :super object
   :slots ())
 (defmethod AeroRobot-robot
+
+
+  ;;;;;;;;;;;;;;;;;; init ;;;;;;;;;;;;;;;;;;
   (:init ()
     (progn
       (if (not (boundp `*aero-upper*))
@@ -34,55 +38,10 @@
       (setq rshin-coords (send (send (make-cascoords :coords (send (send *aero-lower* :rarm :end-coords) :copy-worldcoords)) :rotate (deg2rad -120) :y) :locate (float-vector 200 0 -40)))
       (send (send *aero-lower* :rarm :end-coords :parent) :assoc rshin-coords)
     )
-  (:stroke-vector ()
-    (if (and (boundp `*aero-upper*) (boundp `*aero-lower*))
-        (concatenate float-vector
-                     (send *aero-upper* :stroke-vector) (send *aero-lower* :stroke-vector))
-      )
-    )
-  (:draw-on ()
-    ;; executing (objects *aero*) is not going to work. Use this function instead to visualize aero in irtviewer
-    (objects *aero-upper*)
-    (objects *aero-lower*)
-    (send *irtviewer* :draw-objects)
-    )
-  ;; calculate center of mass of the whole robot using center of mass of aero upper and aero lower
-  (:get-com ()
-    (scale (/ 1 (+ (send *aero-upper* :weight) (send *aero-lower* :weight)))
-           (v+ (scale (send *aero-upper* :weight) (send *aero-upper* :centroid))
-               (scale (send *aero-lower* :weight) (send *aero-lower* :centroid))))
-    )
-  ;; helper function for projecting a vector onto ground plane
-  (:project-on-ground (in_coords)
-    (float-vector (aref in_coords 0) (aref in_coords 1) 0)
-    )
-  
-  ;; draw center of mass projected onto ground plane
-  (:draw-centroid-on-ground ()
-    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send self :get-com))))
-          )
-      (send com-on-ground :draw-on :flush t)
-      com-on-ground)  
-    )
 
-  (:draw-upper-centroid-on-ground ()
-    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-upper* :centroid))))
-          )
-      (send com-on-ground :draw-on :flush t)
-      com-on-ground)  
-    )
-  
-  (:draw-lower-centroid-on-ground ()
-    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-lower* :centroid))))
-          )
-      (send com-on-ground :draw-on :flush t)
-      com-on-ground)  
-    )
-  (:self-collision-check ()
-    (and (send *aero-upper* :collision-check-all)
-	 (send *aero-lower* :self-collision-check))
-    )
 
+
+  ;;;;;;;;;;;;;;;;;; for operating full body ;;;;;;;;;;;;;;;;;;
   (:angle-vector (&optional (angles nil))
     (if (eq angles nil)
 	(list (send *aero-upper* :angle-vector) (send *aero-lower* :angle-vector))
@@ -91,39 +50,27 @@
 	(send *aero-lower* :angle-vector (elt angles 1))
 	angles))
     )
+  (:stroke-vector ()
+    (if (and (boundp `*aero-upper*) (boundp `*aero-lower*))
+        (concatenate float-vector
+                     (send *aero-upper* :stroke-vector) (send *aero-lower* :stroke-vector))
+      )
+    )
+  (:translate (p &optional (wrt :local))
+    (send *aero-lower* :translate p wrt)
+    )
+  (:locate (p &optional (wrt :local))
+    (send *aero-lower* :locate p wrt)
+    )
+  (:rotate (theta axis &optional (wrt :local))
+    (send *aero-lower* :rotate theta axis wrt)
+    )
   (:upper (&rest args)
     (eval `(send *aero-upper* ,@args))
     )
   (:lower (&rest args)
     (eval `(send *aero-lower* ,@args))
     )
-  (:hand (&rest args)
-    (if (null args) (return-from :hand nil))
-    (let ((key (car args))
-	  (nargs (cdr args)))
-      (unless (keywordp key)
-	(return-from :hand nil))
-      (case key
-	    (:arms (progn (send *aero-upper* :hand-poses :larm nargs)
-			  (send *aero-upper* :hand-poses :rarm nargs)))
-	    (:larm (send *aero-upper* :hand-poses :larm nargs))
-	    (:rarm (send *aero-upper* :hand-poses :rarm nargs))
-	    (t nil)
-	    )
-      )
-    )
-
-  ;; (:move-safe (arm to &key (bits 10) (world nil))
-  ;;   (send *aero-upper* :move-safe arm to :bits bits :world world)
-  ;;   )
-  ;; (:reach-arm (arm &key (toward (float-vector 1 0 0))
-  ;; 		        (adjust (float-vector 0 0 1))
-  ;; 			(bits 1)
-  ;; 			(stop 10))
-  ;;   (send *aero-upper* :reach-arm arm
-  ;; 	  :stop stop :toward toward :adjust adjust :bits bits)
-  ;;   )
-
   (:move-waist
    (&optional (waist-velocity (float-vector 0 0 0))
 	      &key (draw-objects nil))
@@ -155,7 +102,6 @@
       (if draw-objects (send *irtviewer* :draw-objects))
       t)
     )
-  
   (:rotate-waist
    (angle axis
 	      &key (draw-objects nil))
@@ -187,7 +133,50 @@
          (if draw-objects (send *irtviewer* :draw-objects))
          t)
     )
-  
+  (:fix-leg-to-ground (&optional (legs '(:larm :rarm :lleg :rleg)))
+    (let ((leg-height 0))
+      (dolist (x legs)
+        (setq leg-height (+ (aref (send (send self :end-ground-coords x) :pos) 2) leg-height)))
+      (setq leg-height (/ leg-height (length legs)))
+      (send self :translate (float-vector 0 0 (- leg-height)))
+      ))
+
+
+
+  ;;;;;;;;;;;;;;;;;; for upper manipulation ;;;;;;;;;;;;;;;;;;
+  (:hand (&rest args)
+    (if (null args) (return-from :hand nil))
+    (let ((key (car args))
+	  (nargs (cdr args)))
+      (unless (keywordp key)
+	(return-from :hand nil))
+      (case key
+	    (:arms (progn (send *aero-upper* :hand-poses :larm nargs)
+			  (send *aero-upper* :hand-poses :rarm nargs)))
+	    (:larm (send *aero-upper* :hand-poses :larm nargs))
+	    (:rarm (send *aero-upper* :hand-poses :rarm nargs))
+	    (t nil)
+	    )
+      )
+    )
+
+
+
+  ;;;;;;;;;;;;;;;;;; for lower manipulation ;;;;;;;;;;;;;;;;;;
+  (:kneel (target limb)
+    (cond ((equal limb ':rarm) (setq shin-coords rshin-coords))
+          ((equal limb ':larm) (setq shin-coords lshin-coords))
+       )
+    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos (v+ (send *aero-lower* :worldpos) target)) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
+    )
+
+
+
+  ;;;;;;;;;;;;;;;;;; for evaluating ;;;;;;;;;;;;;;;;;;
+  (:self-collision-check ()
+    (and (send *aero-upper* :collision-check-all)
+	 (send *aero-lower* :self-collision-check))
+    )
   (:cog-balance-check (&optional (legs-on-grounds `(:larm :rarm :rleg :lleg)))
     (let (a b c p A1 B1 c-eval p-eval (tmp-legs))
       (setq tmp-legs legs-on-grounds)
@@ -247,16 +236,58 @@
       )
     )
 
-  (:translate (p &optional (wrt :local))
-    (send *aero-lower* :translate p wrt)
+
+
+  ;;;;;;;;;;;;;;;;;; for returning values ;;;;;;;;;;;;;;;;;;
+  ;; calculate center of mass of the whole robot using center of mass of aero upper and aero lower
+  (:get-com ()
+    (scale (/ 1 (+ (send *aero-upper* :weight) (send *aero-lower* :weight)))
+           (v+ (scale (send *aero-upper* :weight) (send *aero-upper* :centroid))
+               (scale (send *aero-lower* :weight) (send *aero-lower* :centroid))))
     )
-  (:locate (p &optional (wrt :local))
-    (send *aero-lower* :locate p wrt)
+  ;; helper function for projecting a vector onto ground plane
+  (:project-on-ground (in_coords)
+    (float-vector (aref in_coords 0) (aref in_coords 1) 0)
     )
-  (:rotate (theta axis &optional (wrt :local))
-    (send *aero-lower* :rotate theta axis wrt)
+  ;; The end coords are at the wheels' axes
+  ;; The end ground coords give the point that is touching the ground
+  (:end-ground-coords (limb)
+    (eval `(send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world))
+    ;; (eval `(send self :lower limb :end-coords))
     )
 
+
+
+  ;;;;;;;;;;;;;;;;;; for viewing ;;;;;;;;;;;;;;;;;;
+  (:draw-on ()
+    ;; executing (objects *aero*) is not going to work. Use this function instead to visualize aero in irtviewer
+    (objects *aero-upper*)
+    (objects *aero-lower*)
+    (send *irtviewer* :draw-objects)
+    )
+  ;; draw center of mass projected onto ground plane
+  (:draw-centroid-on-ground ()
+    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send self :get-com))))
+          )
+      (send com-on-ground :draw-on :flush t)
+      com-on-ground)  
+    )
+  (:draw-upper-centroid-on-ground ()
+    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-upper* :centroid))))
+          )
+      (send com-on-ground :draw-on :flush t)
+      com-on-ground)  
+    )
+  (:draw-lower-centroid-on-ground ()
+    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-lower* :centroid))))
+          )
+      (send com-on-ground :draw-on :flush t)
+      com-on-ground)  
+    )
+
+
+
+  ;;;;;;;;;;;;;;;;;; poses ;;;;;;;;;;;;;;;;;;  
   (:reset-pose ()
     (send *aero-upper* :reset-pose)
     (send *aero-lower* :reset-pose)
@@ -288,25 +319,10 @@
     (send self :fix-leg-to-ground)
 
     )
-  ;; The end coords are at the wheels' axes
-  ;; The end ground coords give the point that is touching the ground
-  (:end-ground-coords (limb)
-    (eval `(send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world))
-    ;; (eval `(send self :lower limb :end-coords))
-    )
 
-  (:fix-leg-to-ground (&optional (legs '(:larm :rarm :lleg :rleg)))
-    (let ((leg-height 0))
-      (dolist (x legs)
-        (setq leg-height (+ (aref (send (send self :end-ground-coords x) :pos) 2) leg-height)))
-      (setq leg-height (/ leg-height (length legs)))
-      (send self :translate (float-vector 0 0 (- leg-height)))
-      ))
-  (:kneel (target limb)
-    (cond ((equal limb ':rarm) (setq shin-coords rshin-coords))
-          ((equal limb ':larm) (setq shin-coords lshin-coords))
-       )
-    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos (v+ (send *aero-lower* :worldpos) target)) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
-    )
-  )
+
+  );; end of defmethod AeroRobot-robot
+
+
+
 (provide :aero "package://aero_ros_bridge/euslisp/aero.l")
