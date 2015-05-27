@@ -239,10 +239,16 @@
 
   ;;;;;;;;;;;;;;;;;; for lower manipulation ;;;;;;;;;;;;;;;;;;
   (:kneel (target limb)
-    (cond ((equal limb ':rarm) (setq shin-coords rshin-coords))
-          ((equal limb ':larm) (setq shin-coords lshin-coords))
-       )
-    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos (v+ (send *aero-lower* :worldpos) target)) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
+    (cond ((equal limb ':rarm)
+           (progn
+             (setq shin-coords rshin-coords)
+             (setq shoulder-pos (send *aero-lower* :links :RARM_LINK1 :worldpos))))
+           ((equal limb ':larm)
+            (progn
+              (setq shin-coords lshin-coords)
+              (setq shoulder-pos (send *aero-lower* :links :LARM_LINK1 :worldpos))))
+       ) 
+    (send *aero-lower* limb :inverse-kinematics  (make-coords :pos (v+ (send self :project-on-ground shoulder-pos) target)) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
     )
 
 
@@ -327,7 +333,7 @@
   ;; The end coords are at the wheels' axes
   ;; The end ground coords give the point that is touching the ground
   (:end-ground-coords (limb)
-    (eval `(send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world))
+    (send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world)
     ;; (eval `(send self :lower limb :end-coords))
     )
 
@@ -395,7 +401,28 @@
 
     )
 
+  ;; save the current pose of the robot
+  (:save-pose ()
+    (setq saved-pose (send self :angle-vector))
+    )
+  ;; load the previously saved pose of the robot
+  (:load-pose ()
+    (send self :angle-vector saved-pose)
+    )
+  ;; save the current pose and global position of the robot
+  (:save-state ()
+    (send self :save-pose)
+    (setq saved-robot-coords (send *aero-lower* :copy-worldcoords))
+    (setq saved-waist-coords (send *aero-lower* :links :WAIST_LINK0 :copy-coords))
+    )
+  ;; load the previously saved pose and global position of the robot
+  (:load-state ()
+    (send self :load-pose)
+    (send *aero-lower* :newcoords saved-robot-coords)
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords saved-waist-coords)
+    )
 
+  
   );; end of defmethod AeroRobot-robot
 
 
