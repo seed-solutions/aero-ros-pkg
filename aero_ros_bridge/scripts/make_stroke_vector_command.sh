@@ -69,8 +69,8 @@ create_rp_converter_func_from_csv() { # joint_name roll-file pitch-file +/- +/- 
     tab2=$'  '
     lisp="${tab2}(:${1}-rp-table (angle-r angle-p)\n"
     lisp="${lisp}${tab2}${tab2}(let ((roll-stroke nil) (pitch-stroke nil)\n"
-    lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(integral-r (if (< angle-r 0) (floor angle-r) (ceiling angle-r)))\n"
-    lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(integral-p (if (< angle-p 0) (floor angle-p) (ceiling angle-p)))\n"
+    lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(integral-r (if (< angle-r 0) (floor (if (eps= (float (round angle-r)) angle-r) (float (round angle-r)) angle-r)) (ceiling (if (eps= (float (round angle-r)) angle-r) (float (round angle-r)) angle-r))))\n"
+    lisp="${lisp}${tab2}${tab2}${tab2}${tab2}(integral-p (if (< angle-p 0) (floor (if (eps= (float (round angle-p)) angle-p) (float (round angle-p)) angle-p)) (ceiling (if (eps= (float (round angle-p)) angle-p) (float (round angle-p)) angle-p))))\n"
     lisp="${lisp}${tab2}${tab2}${tab2}${tab2}stroke-r interval-r stroke-p interval-p)\n"
 
     strokes=''
