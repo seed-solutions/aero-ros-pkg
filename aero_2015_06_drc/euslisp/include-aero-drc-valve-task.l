@@ -6,12 +6,15 @@
 (defvar *hand-free-space* 40.0)
 (defvar *grab-point* 115.0)
 
+(defvar *exit-once* nil)
+
 (defun setup (&optional (x -1000) (y 0) (z 0) (valve-ang 0))
 					; set to initial position
   (init-testbed *drc-valve* :pos (float-vector x y z) :rot 0)
   (send (send *drc-valve* :joint :crank-joint) :joint-angle valve-ang)
   (objects (list *drc-valve*))
   (send *aero* :draw-on)
+  (setq *exit-once* nil)
   )
 
 ;; functions
@@ -49,16 +52,21 @@
 
 (defun sample-v0.02 ()
   (let (ui rot)
-    (go? `(send *aero* :hand-yaw-world *arm*
-		(if (eq *arm* :larm) (- (- 45 (send (send *drc-valve* :joint :crank-joint)
-						    :joint-angle))) 
-		  (- 45 (send (send *drc-valve* :joint :crank-joint)
-			      :joint-angle)))))
-    (go? `(send *aero* :hand *arm* :open-pose))
+    (cond ((eq *exit-once* nil)
+	   (go? `(send *aero* :hand-yaw-world *arm*
+		       (if (eq *arm* :larm) (- (- 45 (send (send *drc-valve* :joint :crank-joint)
+							   :joint-angle))) 
+			 (- 45 (send (send *drc-valve* :joint :crank-joint)
+				     :joint-angle)))))
+	   (go? `(send *aero* :hand *arm* :open-pose))
+	   ))
     (block :command-line
            (dotimes (i 1000)
              (print "enter command or nil to exit")
              (setq ui (read-line))
+	     (if (equal ui "exit-once")
+		 (progn (setq *exit-once* t)
+			(return-from sample-v0.02)))
              (if (equal ui "nil")
                  (return-from :command-line)
                (go? (read-from-string ui))))
