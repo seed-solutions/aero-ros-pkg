@@ -1,4 +1,11 @@
-To use Futaba RSC-U485 with Ubuntu, Please apply follows:
+# install udev rules first!
+
+```
+% rosrun hrpsys_aero_bridge install_udev_rules
+```
+
+
+# To use Futaba RSC-U485 with Ubuntu, Please apply follows:
 
 
 ## 14.04
