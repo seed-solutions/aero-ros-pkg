@@ -69,14 +69,23 @@
     (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
     )
 
+  (:step-square (goal leg &key (balance-rate-thre 2.0) (step-height 100))
+    ;; up stroke
+    (send self :step (float-vector 0 0 (+ (elt goal 2) step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0)
+    ;; forward stroke
+    (send self :step (float-vector (elt goal 0) (elt goal 1) 0) leg :balance-rate-thre balance-rate-thre :step-height 0)
+    ;; down stroke
+    (send self :step (float-vector 0 0 (- step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0)
+    )
+         
   ;; move center of mass (waist) towards the direction of the trianlge center formed by the supporting legs 
-  (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)) (required-balance-rate 3))
+  (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)) (required-balance-rate 3) &key (step-size 0.5))
     (let ((balance-center-direction (send self :get-balance-center-direction legs-on-ground)))
       (print balance-center-direction)
       (while  (< (send *aero* :rate-balance legs-on-ground) required-balance-rate)
         (format t ":shift-com-to-balance ~a~%" legs-on-ground)
         (format t "  balance rate ~f less than threshold ~f, shift center of mass~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
-        (send *aero* :move-waist (scale 0.5 balance-center-direction))
+        (send *aero* :move-waist (scale step-size balance-center-direction))
         (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
        
         (send *irtviewer* :draw-objects)
