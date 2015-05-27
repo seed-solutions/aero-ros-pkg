@@ -339,3 +339,11 @@
       (warn ";; create *ri* first~S") (return))
     (send *ri* :angle-vector angle-vector time))
   )
+
+(defun reset-manip-pose
+  (&key (time (* 5 *base-time*)) (draw-objects t))
+  (send *aero* :reset-manip-pose)
+  (send-angle-vector :time time)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  )
