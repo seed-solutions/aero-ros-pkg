@@ -74,11 +74,35 @@
   (:move-waist
    (&optional (waist-velocity (float-vector 0 0 0))
 	      &key (draw-objects nil))
+   (let ((step-size 5)
+         (remaining (norm waist-velocity))
+         (waist-velocity-direction (normalize-vector waist-velocity)))
+     (when (< (norm waist-velocity) 3)
+       (warn ";; :move-waist error: waist-velocity is too small~%")
+       (return-from :move-waist nil))
+     (while (> remaining 0)
+       (if (> remaining step-size)
+           (setq step step-size)
+         (setq step remaining))
+       (unless (send self :move-waist-unsafe (scale step waist-velocity-direction) :draw-objects draw-objects)
+         (return-from :move-waist nil))
+       (unless (eq (send self :cog-balance-check) t)
+         (print "unbalacned after moving waist")
+         (return-from :move-waist nil)
+         )
+       (setq remaining (- remaining step-size)) 
+       )
+     t)
+   )
+     
+  (:move-waist-unsafe
+   (&optional (waist-velocity (float-vector 0 0 0))
+	      &key (draw-objects nil))
     (let ((original-end-coords-list) original-angle-vector
 	  original-coords)
       (when (< (norm waist-velocity) 3)
-	(warn ";; :move-waist error: waist-velocity is too small~%")
-	(return-from :move-waist nil))
+	(warn ";; :move-waist-unsafe error: waist-velocity is too small~%")
+	(return-from :move-waist-unsafe nil))
       ;;
       (setf original-angle-vector (send *aero-lower* :angle-vector))
       (setf original-coords (send *aero-lower* :copy-worldcoords))
@@ -92,16 +116,17 @@
                  (send *aero-lower* link :inverse-kinematics
                        (car original-end-coords-list) :rotation-axis nil)
                  (not (send self :self-collision-check)))
-          (warn ";; move-waist IK failed >> ~S~%" link)
+          (warn ";; move-waist-unsafe IK failed >> ~S~%" link)
           (send *aero-lower* :angle-vector original-angle-vector)
           (send *aero-lower* :newcoords original-coords)
-          (return-from :move-waist nil)
+          (return-from :move-waist-unsafe nil)
           )
         (setf original-end-coords-list (cdr original-end-coords-list))
         )
       (if draw-objects (send *irtviewer* :draw-objects))
       t)
     )
+
   (:rotate-waist
    (angle axis
 	      &key (draw-objects nil))
