@@ -11,8 +11,12 @@
   
 
 (defun aero-init (&rest args)
-  (if (not (boundp '*ri*))
-      (setq *ri* (instance* aero-upper-interface :init args))) ;; currently communication with whole robot is implemented in aero-upper-interface
+  (when (not (boundp '*ri*))
+    (let ((disp (copy-object x::*display*)))
+      (setf x::*display* 0)
+      (setq *ri* (instance* aero-upper-interface :init args))
+      (setf x::*display* disp)
+      )) ;; currently communication with whole robot is implemented in aero-upper-interface
   (if (not (boundp '*aero*))
       (setq *aero* (instance AeroRobot-robot :init)))
   )
