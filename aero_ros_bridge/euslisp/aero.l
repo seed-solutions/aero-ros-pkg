@@ -302,13 +302,13 @@
 						     (send (send *aero-lower* (cadr tmp-legs)
 								 :end-coords :copy-worldcoords)
 							   :pos)))))
-		   (setq get-3foot-center (v+ get-3foot-center (scale edge-length foot-pos)))
+		   (setq get-3foot-center (v+ get-3foot-center foot-pos))
 		   (setq edge-lengths (push edge-length edge-lengths)) 
 		   (setq tmp-legs `(,@(cdr tmp-legs) ,(car tmp-legs)))
 		   )
 		 (dolist (x edge-lengths)
 		   (setq s (+ s x)))
-		 (setq get-3foot-center (scale (/ 1.0 s) get-3foot-center))
+		 (setq get-3foot-center (scale (/ 1.0 3) get-3foot-center))
 		 (send (make-coords :pos get-3foot-center) :draw-on :flush t :size 500)
 		 (setq s (/ s 2))
 		 (dolist (x edge-lengths)
@@ -439,6 +439,11 @@
     (send *aero-lower* :links :WAIST_LINK0 :newcoords saved-waist-coords)
     )
 
+  (:match-ri ()
+    (send self :angle-vector (send *ri* :actual-vector))
+    (send *irtviewer* :draw-objects)
+    )
+ 
   
   );; end of defmethod AeroRobot-robot
 
