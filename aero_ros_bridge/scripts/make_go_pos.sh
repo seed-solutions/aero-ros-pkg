@@ -130,6 +130,7 @@ body="${body}$(create_go_pos_from_calib go_pos_calib)\n"
 #body="${body}$(create_go_pos_from_calib other_calibs)\n"
 body="${body}${tab2}(:go-pos (x y theta &key (vel *wheel-velocity*) (robot *aero*))\n"
 body="${body}${tab2}${tab2}(let (ui)\n"
+body="${body}${tab2}${tab2}${tab2}(send self :wheel-on)\n"
 body="${body}${tab2}${tab2}${tab2}(cond\n"
 read -r -a names < /tmp/go_pos_names
 for e in "${names[@]}"
@@ -139,11 +140,14 @@ do
 done
 
 body="${body}${tab2}${tab2}${tab2}${tab2}(t\n"
-    body="${body}${tab2}${tab2}${tab2}${tab3}(print \"not a registered pose! continue?\")\n"
-    body="${body}${tab2}${tab2}${tab2}${tab3}(setq ui (read-line))\n"
-    body="${body}${tab2}${tab2}${tab2}${tab3}(if (or (equal ui \"no\") (equal ui \"n\") (equal ui \"nil\")) (return-from :go-pos (warn \"cancelled~%\")))\n"
+body="${body}${tab2}${tab2}${tab2}${tab3}(print \"not a registered pose! continue?\")\n"
+body="${body}${tab2}${tab2}${tab2}${tab3}(setq ui (read-line))\n"
+body="${body}${tab2}${tab2}${tab2}${tab3}(if (or (equal ui \"no\") (equal ui \"n\") (equal ui \"nil\"))\n"
+body="${body}${tab2}${tab2}${tab2}${tab3}${tab3}(progn (send self :wheel-off) (return-from :go-pos (warn \"cancelled~%\"))))\n"
 body="${body}${tab2}${tab2}${tab2}${tab3}(send self :gp-nil x y theta (float vel) robot))\n"
-body="${body}${tab2}${tab2})))\n"
+body="${body}${tab2}${tab2}${tab2})\n"
+body="${body}${tab2}${tab2}${tab2}(send self :wheel-off)\n"
+body="${body}${tab2}${tab2}))\n"
 body="${body})\n"
 
 echo -e "${body}" > "$(rospack find aero_ros_bridge)/euslisp/aero-go-pos.l"
