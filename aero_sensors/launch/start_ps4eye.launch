@@ -1,0 +1,13 @@
+<launch>
+  <include file="$(find ps4eye)/launch/stereo.launch">
+    <arg name="DEVICE" value="/dev/video0" />
+    <arg name="camera_info_file_right"
+	 value="$(find aero_sensors)/config/ps4eye_right.yaml" />
+    <arg name="camera_info_file_left"
+	 value="$(find aero_sensors)/config/ps4eye_left.yaml" />
+    <arg name="camera_info_url_right"
+	 default="file://$(find aero_sensors)/config/ps4eye_right.yaml" />
+    <arg name="camera_info_url_left"
+	 default="file://$(find aero_sensors)/config/ps4eye_left.yaml" />
+  </include>
+</launch>
