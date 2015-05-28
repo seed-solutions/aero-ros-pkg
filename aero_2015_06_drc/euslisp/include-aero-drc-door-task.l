@@ -9,7 +9,7 @@
 (defvar *grab-point* 55)
 (defvar *grab-point-z* -20)
 (defvar *hand-free-space* 40.0)
-(defvar *open-angle* 50.0)
+(defvar *open-angle* 20.0)
 
 (defvar *exit-once* nil)
 
@@ -54,7 +54,10 @@
 		   (go? `(send *ri* :angle-vector (send *aero* :stroke-vector))))
 	       (return-from rotate-knob nil)))
     (send *irtviewer* :draw-objects)
-    ))
+    )
+  (if (eq real t)
+      (go? `(send *ri* :angle-vector (send *aero* :stroke-vector))))
+  )
     
 
 (defun open-door (&optional (power 0) (real *real*))
