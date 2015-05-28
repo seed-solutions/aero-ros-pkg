@@ -230,8 +230,8 @@
 	(setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
 	(send *irtviewer* :draw-objects)
 	(if (eq real t)
-	    (progn (send *ri* :angle-vector (send self :stroke-vector) 10)
-		   (unix::usleep (* 10 1000))))
+	    (progn (send *ri* :angle-vector (send self :stroke-vector) 20)
+		   (unix::usleep (* 40 1000))))
 	)
       ))
 
