@@ -282,7 +282,7 @@ void AeroControllerProto::get_command(uint8_t cmd,
   std::vector<uint8_t> dat;
   dat.resize(RAW_DATA_LENGTH);
   ser_.send_command(cmd, 0, dat);
-  usleep(1000 * 10);  // wait
+  usleep(1000 * 30);  // wait
   get_data(stroke_vector);
 }
 
