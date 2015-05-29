@@ -40,4 +40,5 @@
     <param name="step_y" value="$(arg quater_step)" />
   </node>
 
+  <node pkg="aero_sensors" type="head_tf.py" name="head_tf" />
 </launch>
