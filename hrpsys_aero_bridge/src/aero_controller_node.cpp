@@ -44,10 +44,18 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& nh,
           &AeroControllerNode::WheelCommandCallback,
           this);
 
-  ROS_INFO(" create timer sub");
-  timer_ =
-      handle_.createTimer(ros::Duration(0.1),
-                     &AeroControllerNode::JointStateCallback, this);
+  // get state
+  // if get_state == false, it will be passed.
+  bool get_state = true;
+  handle_.param<bool> ("get_state", get_state, true);
+  if (get_state) {
+    ROS_INFO(" create timer sub");
+    timer_ =
+        handle_.createTimer(ros::Duration(0.1),
+                            &AeroControllerNode::JointStateCallback, this);
+  } else {
+    ROS_INFO(" controller DO NOT return state.");
+  }
   ROS_INFO(" done");
 }
 
@@ -226,6 +234,21 @@ int main(int argc, char** argv) {
 
   std::string port_upper("/dev/aero_upper");
   std::string port_lower("/dev/aero_lower");
+
+  bool debug = false;
+
+  np.param<bool> ("debug", debug, false);
+
+  if (debug) {
+    port_upper = "";
+    port_lower = "";
+  } else {
+    np.param<std::string> ("port_upper", port_upper, "/dev/aero_upper");
+    np.param<std::string> ("port_lower", port_lower, "/dev/aero_lower");
+  }
+
+  ROS_INFO_STREAM("initializing ctrl with " <<
+                  port_upper << " and " << port_lower);
   aero_controller::AeroControllerNode aero(np, port_upper, port_lower);
   ROS_INFO("configuring done");
 
