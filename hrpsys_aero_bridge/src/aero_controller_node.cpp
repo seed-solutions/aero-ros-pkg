@@ -178,6 +178,7 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
 // for wheel
 void AeroControllerNode::WheelServoCallback(
     const std_msgs::Bool::ConstPtr& msg) {
+  boost::mutex::scoped_lock lock(mtx_);
   if (msg->data) {
     // wheel_on means all joints and wheels servo on
     lower_.wheel_on();
