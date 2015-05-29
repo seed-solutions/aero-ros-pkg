@@ -73,7 +73,7 @@
     )
   (:move-waist
    (&optional (waist-velocity (float-vector 0 0 0))
-	      &key (draw-objects nil))
+	      &key (draw-objects t))
    (let ((step-size 5)
          (remaining (norm waist-velocity))
          (waist-velocity-direction (normalize-vector waist-velocity)))
@@ -97,7 +97,7 @@
      
   (:move-waist-unsafe
    (&optional (waist-velocity (float-vector 0 0 0))
-	      &key (draw-objects nil))
+	      &key (draw-objects t))
     (let ((original-end-coords-list) original-angle-vector
 	  original-coords)
       (when (< (norm waist-velocity) 3)
@@ -112,10 +112,8 @@
       (setf original-end-coords-list (nreverse original-end-coords-list))
       (send *aero-lower* :translate waist-velocity)
       (dolist (link (list :rarm :larm :rleg :lleg))
-        (unless (and
-                 (send *aero-lower* link :inverse-kinematics
-                       (car original-end-coords-list) :rotation-axis nil)
-                 (not (send self :self-collision-check)))
+        (unless (send *aero-lower* link :inverse-kinematics
+                       (car original-end-coords-list) :rotation-axis nil :stop 150)
           (warn ";; move-waist-unsafe IK failed >> ~S~%" link)
           (send *aero-lower* :angle-vector original-angle-vector)
           (send *aero-lower* :newcoords original-coords)
@@ -123,13 +121,19 @@
           )
         (setf original-end-coords-list (cdr original-end-coords-list))
         )
+      (unless (not (send self :self-collision-check))
+        (warn ";; move-waist-unsafe failed at self collision check~%")
+        (send *aero-lower* :angle-vector original-angle-vector)
+        (send *aero-lower* :newcoords original-coords)
+        (return-from :move-waist-unsafe nil)
+        )
       (if draw-objects (send *irtviewer* :draw-objects))
       t)
     )
 
   (:rotate-waist
    (angle axis
-	      &key (draw-objects nil))
+	      &key (draw-objects t))
     (let ((original-end-coords-list) original-angle-vector
 	  original-coords)
       (when (< (abs angle) (deg2rad 0.1))
@@ -144,10 +148,8 @@
       (setf original-end-coords-list (nreverse original-end-coords-list))
       (send *aero-lower* :links :WAIST_LINK0 :rotate angle axis)
       (dolist (link (list :rarm :larm :rleg :lleg))
-        (unless (and
-                 (send *aero-lower* link :inverse-kinematics
+        (unless (send *aero-lower* link :inverse-kinematics
                        (car original-end-coords-list) :rotation-axis nil)
-                 (not (send self :self-collision-check)))
           (warn ";; rotate-waist IK failed >> ~S~%" link)
           (send *aero-lower* :angle-vector original-angle-vector)
           (send *aero-lower* :links :WAIST_LINK0 :newcoords original-coords)
@@ -155,6 +157,13 @@
           )
         (setf original-end-coords-list (cdr original-end-coords-list))
         )
+      (unless (not (send self :self-collision-check))
+        (warn ";; rotate-waist failed at self collision check~%")
+        (send *aero-lower* :angle-vector original-angle-vector)
+        (send *aero-lower* :newcoords original-coords)
+        (return-from :rotate-waist nil)
+        )
+
          (if draw-objects (send *irtviewer* :draw-objects))
          t)
     )
@@ -443,7 +452,7 @@
     )
 
   (:reset-climbing-pose2 ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(90.0 40.0 80.0 0.0 40.0 80.0 -90.0 40.0 80.0 0.0 40.0 80.0 0.0)))
+    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(73.7016 40.3432 78.5655 -0.1388 36.0831 87.7224 -73.6487 40.3196 78.6764 -0.1388 36.0831 87.7224 0.0)))
     (send *aero-lower* :links :WAIST_LINK0 :newcoords
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
@@ -468,6 +477,7 @@
     (send self :load-pose)
     (send *aero-lower* :newcoords (send saved-robot-coords :copy-coords))
     (send *aero-lower* :links :WAIST_LINK0 :newcoords saved-waist-coords)
+    (send *irtviewer* :draw-objects)
     )
 
   (:match-ri ()
