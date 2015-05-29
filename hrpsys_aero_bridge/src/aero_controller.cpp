@@ -282,6 +282,7 @@ void AeroControllerProto::get_command(uint8_t cmd,
   std::vector<uint8_t> dat;
   dat.resize(RAW_DATA_LENGTH);
   ser_.send_command(cmd, 0, dat);
+  usleep(1000 * 30);  // wait
   get_data(stroke_vector);
 }
 
@@ -415,7 +416,7 @@ AeroLowerController::AeroLowerController(const std::string& port) :
   wheel_vector_.resize(AERO_DOF_WHEEL);
   wheel_ref_vector_.resize(AERO_DOF_WHEEL);
   wheel_cur_vector_.resize(AERO_DOF_WHEEL);
-  
+
   // indices
   joint_indices_.clear();
   wheel_indices_.clear();
