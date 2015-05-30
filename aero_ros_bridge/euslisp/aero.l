@@ -243,9 +243,12 @@
       ;; the robot is not going to completely close when grasping an object
       ;; therefore set goal to current angle
       (if (eq real t)
-          (send *aero* :hand *arm* :joint-angle
-                (if (eq *arm* :larm) (elt (car (send *ri* :actual-vector)) 18)
-                  (- (elt (car (send *ri* :actual-vector)) 7)))))
+          (progn (send *aero* :hand *arm* :joint-angle
+		       (if (eq *arm* :larm) (elt (car (send *ri* :actual-vector)) 18)
+			 (- (elt (car (send *ri* :actual-vector)) 7))))
+		 (send *ri* :angle-vector (send *aero* :stroke-vector) 100)
+		 (unix::usleep (* 100 1000))
+		 ))
       ))
   (:magic-open (arm &optional (x 0) (time 100) (real *real*))
     (if (> x 0) (return-from :magic-open (warn "first option must be negative~%")))
