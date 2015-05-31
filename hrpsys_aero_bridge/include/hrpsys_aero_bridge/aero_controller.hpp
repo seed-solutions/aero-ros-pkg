@@ -102,7 +102,10 @@ class AeroControllerProto {
   void get_current(std::vector<int16_t>& stroke_vector);
   void get_temperature(std::vector<int16_t>& stroke_vector);
 
-  void flush() {ser_.flush();}
+  void flush() {
+    boost::mutex::scoped_lock(ctrl_mtx_);
+    ser_.flush();
+  }
 
   bool verbose() {return verbose_;}
   void verbose(bool v) {verbose_ = v;}
@@ -119,6 +122,7 @@ class AeroControllerProto {
 
  protected:
   bool verbose_;
+  boost::mutex ctrl_mtx_;
 
   SEED485Controller ser_;
 
@@ -171,7 +175,7 @@ class AeroLowerController : public AeroControllerProto {
   std::string get_wheel_name(size_t idx) {
     return wheel_indices_[idx].joint_name;
   }
-  
+
  protected:
   std::vector<int16_t> wheel_vector_;
   std::vector<int16_t> wheel_ref_vector_;
