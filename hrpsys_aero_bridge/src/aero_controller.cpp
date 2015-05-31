@@ -187,6 +187,8 @@ void AeroControllerProto::raw_to_stroke_(std::vector<uint8_t>& raw,
 /// @brief servo toggle command
 /// @param d0 1: on, 0: off
 void AeroControllerProto::servo_command(int16_t d0) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
   std::vector<int16_t> stroke_vector;
   stroke_vector.resize(joint_indices_.size());
   for (size_t i = 0; i < stroke_vector.size(); i++) {
@@ -216,6 +218,8 @@ void AeroControllerProto::servo_off() {
 /// @param time time[ms]
 void AeroControllerProto::set_position(std::vector<int16_t>& stroke_vector,
                                        uint16_t time) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
   std::vector<uint8_t> dat;
   dat.resize(RAW_DATA_LENGTH);
 
@@ -249,6 +253,8 @@ void AeroControllerProto::get_data(std::vector<int16_t>& stroke_vector) {
 /// @param stroke_vector stroke vector
 void AeroControllerProto::set_command(uint8_t cmd,
                                       std::vector<int16_t>& stroke_vector) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
   std::vector<uint8_t> dat;
   dat.resize(RAW_DATA_LENGTH);
   stroke_to_raw_(stroke_vector, dat);
@@ -279,6 +285,8 @@ void AeroControllerProto::set_motor_gain(
 /// @param stroke_vector stroke vector
 void AeroControllerProto::get_command(uint8_t cmd,
                                       std::vector<int16_t>& stroke_vector) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
   std::vector<uint8_t> dat;
   dat.resize(RAW_DATA_LENGTH);
   ser_.send_command(cmd, 0, dat);
@@ -509,6 +517,8 @@ AeroLowerController::~AeroLowerController() {
 /// @param d0 1: on, 0: off
 /// @param d1 wheel servo, 1: on, 0: off
 void AeroLowerController::servo_command(int16_t d0, int16_t d1) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
   std::vector<int16_t> stroke_vector;
   stroke_vector.resize(AERO_DOF_LOWER);
   for (size_t i = 0; i < stroke_vector.size(); i++) {
@@ -570,6 +580,7 @@ void AeroLowerController::servo_off() {
 /// @brief set wheel velocity
 void AeroLowerController::set_wheel_velocity(
     std::vector<int16_t>& wheel_vector, uint16_t time) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
 
   std::vector<uint8_t> dat;
   dat.resize(RAW_DATA_LENGTH);
