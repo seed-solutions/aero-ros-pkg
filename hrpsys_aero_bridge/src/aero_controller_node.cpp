@@ -64,15 +64,15 @@ AeroControllerNode::~AeroControllerNode() {
 
 void AeroControllerNode::GoVelocityCallback(
     const geometry_msgs::Twist::ConstPtr& msg) {
-  {
-    boost::mutex::scoped_lock lock(mtx_);
-    lower_.flush();
-  }
+  boost::mutex::scoped_lock lock(mtx_);
+  lower_.flush();
   usleep(1000 * 10);
 }
 
 void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& msg) {
+  boost::mutex::scoped_lock lock(mtx_);
+
   // joint name to indeices, if not exist, then return -1
   std::vector<int32_t> upper_joint_to_stroke_indices;
   std::vector<int32_t> lower_joint_to_stroke_indices;
@@ -122,22 +122,21 @@ void AeroControllerNode::JointTrajectoryCallback(
     }
     double time_sec = msg->points[i].time_from_start.toSec();
     uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
-    {
-      boost::mutex::scoped_lock lock(mtx_);
-      if (upper_count > 0) {
-        upper_.flush();
-        upper_.set_position(upper_stroke_vector, time_msec);
-      }
-      if (lower_count > 0) {
-        lower_.flush();
-        lower_.set_position(lower_stroke_vector, time_msec);
-      }
+    if (upper_count > 0) {
+      upper_.flush();
+      upper_.set_position(upper_stroke_vector, time_msec);
+    }
+    if (lower_count > 0) {
+      lower_.flush();
+      lower_.set_position(lower_stroke_vector, time_msec);
     }
     usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
 }
 
 void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
+  boost::mutex::scoped_lock lock(mtx_);
+
   pr2_controllers_msgs::JointTrajectoryControllerState state;
   state.header.stamp = ros::Time::now();
   state.joint_names.resize(AERO_DOF);
@@ -150,13 +149,10 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
   std::vector<int16_t> lower_stroke_vector;
   std::vector<int16_t>& lower_ref_vector =
       lower_.get_reference_stroke_vector();
-  {
-    boost::mutex::scoped_lock lock(mtx_);
-    upper_.flush();
-    upper_.get_position(upper_stroke_vector);
-    lower_.flush();
-    lower_.get_position(lower_stroke_vector);
-  }
+  upper_.flush();
+  upper_.get_position(upper_stroke_vector);
+  lower_.flush();
+  lower_.get_position(lower_stroke_vector);
   for (size_t i = 0; i < AERO_DOF_UPPER; i++) {
     state.joint_names[i] = upper_.get_joint_name(i);
     state.desired.positions[i] =
@@ -179,6 +175,7 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
 void AeroControllerNode::WheelServoCallback(
     const std_msgs::Bool::ConstPtr& msg) {
   boost::mutex::scoped_lock lock(mtx_);
+
   if (msg->data) {
     // wheel_on means all joints and wheels servo on
     lower_.wheel_on();
@@ -189,6 +186,8 @@ void AeroControllerNode::WheelServoCallback(
 }
 void AeroControllerNode::WheelCommandCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& msg) {
+  boost::mutex::scoped_lock lock(mtx_);
+
   // wheel name to indeices, if not exist, then return -1
   std::vector<int32_t> joint_to_wheel_indices;
   for (size_t i = 0; i < msg->joint_names.size(); i++) {
@@ -215,11 +214,8 @@ void AeroControllerNode::WheelCommandCallback(
     }
     double time_sec = msg->points[i].time_from_start.toSec();
     uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
-    {
-      boost::mutex::scoped_lock lock(mtx_);
-      lower_.flush();
-      lower_.set_wheel_velocity(wheel_vector, time_msec);
-    }
+    lower_.flush();
+    lower_.set_wheel_velocity(wheel_vector, time_msec);
     usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
 }
