@@ -102,6 +102,88 @@
 	  )
     ))
 
+(defun ctrl- (cmd)
+  (print cmd)
+  (setq ~coords~ :local)
+  (if (position `-w cmd) (setq ~coords~ :world))
+  (if (position `-l cmd) (setq ~coords~ :local))
+  (case (car cmd)
+	;; common
+	(m
+	 (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
+	 (if (eq (elt cmd 1) `r) (setq ~arm~ :rarm))
+	 (if (eq (elt cmd 1) `lr) (setq ~arm~ :arms))
+	 (setq ~vector~ (float-vector (elt cmd 2) (elt cmd 3) (elt cmd 4)))
+	 (go? `(send *aero* :upper ~arm~ :move-end-pos ~vector~ ~coords~)))
+	(ra
+	 (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
+	 (if (eq (elt cmd 1) `r) (setq ~arm~ :rarm))
+	 (if (eq (elt cmd 1) `lr) (setq ~arm~ :arms))
+	 (setq ~vector~ (cond ((eq (elt cmd 2) `x) #f(1 0 0))
+			      ((eq (elt cmd 2) `-x) #f(-1 0 0))
+			      ((eq (elt cmd 2) `y) #f(0 1 0))
+			      ((eq (elt cmd 2) `-y) #f(0 -1 0))
+			      ((eq (elt cmd 2) `z) #f(0 0 1))
+			      ((eq (elt cmd 2) `-z) #f(0 0 -1))))
+	 (setq ~vector2~ (cond ((eq (elt cmd 3) `x) #f(1 0 0))
+			       ((eq (elt cmd 3) `-x) #f(-1 0 0))
+			       ((eq (elt cmd 3) `y) #f(0 1 0))
+			       ((eq (elt cmd 3) `-y) #f(0 -1 0))
+			       ((eq (elt cmd 3) `z) #f(0 0 1))
+			       ((eq (elt cmd 3) `-z) #f(0 0 -1))))
+	 (setq ~time~ (elt cmd 4))
+	 (go? `(send *aero* :upper :reach-arm ~arm~
+		     :toward ~vector~ :adjust ~vector2~ :stop ~time~)))
+	(h
+	 (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
+	 (if (eq (elt cmd 1) `r) (setq ~arm~ :rarm))
+	 (if (eq (elt cmd 1) `lr) (setq ~arm~ :arms))
+	 (setq ~pose~ (elt cmd 2))
+	 (go? `(send *aero* :hand ~arm~ ~pose~)))
+	(hc
+	 (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
+	 (if (eq (elt cmd 1) `r) (setq ~arm~ :rarm))
+	 (if (eq (elt cmd 1) `lr) (setq ~arm~ :arms))
+	 (go? `(send *aero* :magic-close ~arm~)))
+	(ho
+	 (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
+	 (if (eq (elt cmd 1) `r) (setq ~arm~ :rarm))
+	 (if (eq (elt cmd 1) `lr) (setq ~arm~ :arms))
+	 (go? `(send *aero* :magic-open ~arm~)))
+	(hy
+	 (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
+	 (if (eq (elt cmd 1) `r) (setq ~arm~ :rarm))
+	 (if (eq (elt cmd 1) `lr) (setq ~arm~ :arms))	 
+	 (setq ~angle~ (elt cmd 2))
+	 (go? `(send *aero* :hand-yaw-world ~arm~ ~angle~)))
+	(mw
+	 (setq ~vector~ (float-vector (elt cmd 1) (elt cmd 2) (elt cmd 3)))
+	 (go? `(send *aero* :move-waist ~vector~)))
+	(gp
+	 (setq ~x~ (elt cmd 1))
+	 (setq ~y~ (elt cmd 2))
+	 (setq ~z~ (elt cmd 3))
+	 (go? `(send *ri* :go-pos ~x~ ~y~ ~z~)))
+	(j
+	 (setq ~link~ (elt cmd 1))
+	 (setq ~joint~ (elt cmd 2))
+	 (setq ~angle~ (elt cmd 3))
+	 (go? `(send *aero* :upper ~link~ ~joint~ :joint-angle ~angle~)))
+	(s
+	 (send-angle-vector))
+	(t nil))
+  )
+
+(defun c-mode ()
+  (dotimes (i 10000)
+    (if (eq *exit-flag* t) (return-from c-mode nil))
+    (setq ~ui~ (read-line))
+    (if (equal ~ui~ "q")
+	(return-from c-mode nil))
+    (ctrl- (read-from-string ~ui~))
+    ))
+
+
 (defun init-testbed (object
 		     &key (pos #f(0 0 0)) (rot 0))
   (reset-aero)
