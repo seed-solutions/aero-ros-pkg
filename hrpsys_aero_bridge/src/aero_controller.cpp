@@ -399,6 +399,12 @@ AeroUpperController::AeroUpperController(const std::string& port) :
   joint_indices_.push_back(
       AJointIndex(ID_UPPER, STROKE_WAIST_P, RAW_WAIST_P,
                   std::string("waist_pitch_joint")));
+
+  // initial pose
+  stroke_ref_vector_[STROKE_RIGHT_SHOULDER_R] = 1119;
+  stroke_ref_vector_[STROKE_RIGHT_HAND] = -900;
+  stroke_ref_vector_[STROKE_LEFT_SHOULDER_R] = 1119;
+  stroke_ref_vector_[STROKE_LEFT_HAND] = -900;
 }
 
 AeroUpperController::~AeroUpperController() {
@@ -486,6 +492,15 @@ AeroLowerController::AeroLowerController(const std::string& port) :
       AJointIndex(ID_LOWER, STROKE_REAR_LEFT_WHEEL, RAW_REAR_LEFT_WHEEL,
                   std::string("r_l_wheel_joint")));
 
+  // initial pose
+  stroke_ref_vector_[STROKE_FRONT_RIGHT_CROTCH_Y] = 3500;
+  stroke_ref_vector_[STROKE_FRONT_RIGHT_KNEE_P] = 650;
+  stroke_ref_vector_[STROKE_REAR_RIGHT_CROTCH_Y] = -3500;
+  stroke_ref_vector_[STROKE_REAR_RIGHT_KNEE_P] = 650;
+  stroke_ref_vector_[STROKE_FRONT_LEFT_CROTCH_Y] = -3500;
+  stroke_ref_vector_[STROKE_FRONT_LEFT_KNEE_P] = 650;
+  stroke_ref_vector_[STROKE_REAR_LEFT_CROTCH_Y] = 3500;
+  stroke_ref_vector_[STROKE_REAR_LEFT_KNEE_P] = 650;
 }
 AeroLowerController::~AeroLowerController() {
 }
