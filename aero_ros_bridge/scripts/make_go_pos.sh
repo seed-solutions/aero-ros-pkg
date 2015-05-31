@@ -146,6 +146,7 @@ body="${body}${tab2}${tab2}${tab2}${tab3}(if (or (equal ui \"no\") (equal ui \"n
 body="${body}${tab2}${tab2}${tab2}${tab3}${tab3}(progn (send self :wheel-off) (return-from :go-pos (warn \"cancelled~%\"))))\n"
 body="${body}${tab2}${tab2}${tab2}${tab3}(send self :gp-nil x y theta (float vel) robot))\n"
 body="${body}${tab2}${tab2}${tab2})\n"
+body="${body}${tab2}${tab2}${tab2}(unix:usleep (* 1000 100))\n"
 body="${body}${tab2}${tab2}${tab2}(send self :wheel-off)\n"
 body="${body}${tab2}${tab2}))\n"
 body="${body})\n"
