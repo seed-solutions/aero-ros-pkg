@@ -34,6 +34,7 @@ class AeroControllerNode {
   void JointTrajectoryCallback(
       const trajectory_msgs::JointTrajectory::ConstPtr& msg);
   void JointStateCallback(const ros::TimerEvent& event);
+  void JointStateOnce();
 
   void WheelServoCallback(
       const std_msgs::Bool::ConstPtr& msg);

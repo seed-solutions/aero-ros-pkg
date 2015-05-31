@@ -55,6 +55,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& nh,
                             &AeroControllerNode::JointStateCallback, this);
   } else {
     ROS_INFO(" controller DO NOT return state.");
+    JointStateOnce();
   }
   ROS_INFO(" done");
 }
@@ -135,6 +136,10 @@ void AeroControllerNode::JointTrajectoryCallback(
 }
 
 void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event) {
+  JointStateOnce();
+}
+
+void AeroControllerNode::JointStateOnce() {
   boost::mutex::scoped_lock lock(mtx_);
 
   pr2_controllers_msgs::JointTrajectoryControllerState state;
