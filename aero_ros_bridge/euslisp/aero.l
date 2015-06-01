@@ -127,7 +127,8 @@
         (send *aero-lower* :newcoords original-coords)
         (return-from :move-waist-unsafe nil)
         )
-      (if draw-objects (send *irtviewer* :draw-objects))
+      (if (and draw-objects (boundp '*irtviewer*))
+          (send *irtviewer* :draw-objects))
       t)
     )
 
@@ -163,12 +164,12 @@
         (send *aero-lower* :newcoords original-coords)
         (return-from :rotate-waist nil)
         )
-
-         (if draw-objects (send *irtviewer* :draw-objects))
+      (if (and draw-objects (boundp '*irtviewer*))
+          (send *irtviewer* :draw-objects))
          t)
     )
   (:fix-leg-to-ground (&optional (legs '(:larm :rarm :lleg :rleg)))
-    (let ((leg-height 0))
+                      (let ((leg-height 0))
       (dolist (x legs)
         (setq leg-height (+ (aref (send (send self :end-ground-coords x) :pos) 2) leg-height)))
       (setq leg-height (/ leg-height (length legs)))
@@ -235,7 +236,8 @@
 				0 0)
 		(float-vector (- pos-bits) 0 0)) :world)
 	(setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
-	(send *irtviewer* :draw-objects)
+    (if (boundp '*irtviewer*)
+        (send *irtviewer* :draw-objects))
 	(if (eq real t)
 	    (progn (send *ri* :angle-vector (send self :stroke-vector) 20)
 		   (unix::usleep (* 40 1000))))
@@ -271,7 +273,8 @@
 				0 0)
 		(float-vector pos-bits 0 0)) :world)
 	(setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
-	(send *irtviewer* :draw-objects)
+    (if (boundp '*irtviewer*)
+          (send *irtviewer* :draw-objects))
 	(if (eq real t)
 	    (progn (send *ri* :angle-vector (send self :stroke-vector) 20)
 		   (unix::usleep (* 40 1000))))
@@ -391,7 +394,8 @@
     ;; executing (objects *aero*) is not going to work. Use this function instead to visualize aero in irtviewer
     (objects *aero-upper*)
     (objects *aero-lower*)
-    (send *irtviewer* :draw-objects)
+    (if (boundp '*irtviewer*)
+        (send *irtviewer* :draw-objects))
     )
   ;; draw center of mass projected onto ground plane
   (:draw-centroid-on-ground ()
@@ -480,15 +484,16 @@
     (send self :load-pose)
     (send *aero-lower* :newcoords (send saved-robot-coords :copy-coords))
     (send *aero-lower* :links :WAIST_LINK0 :newcoords saved-waist-coords)
-    (send *irtviewer* :draw-objects)
+    (if (boundp '*irtviewer*)
+        (send *irtviewer* :draw-objects))
     )
 
   (:match-ri ()
     (send self :angle-vector (send *ri* :actual-vector))
-    (send *irtviewer* :draw-objects)
+    (if (boundp '*irtviewer*)
+        (send *irtviewer* :draw-objects))
     )
  
-  
   );; end of defmethod AeroRobot-robot
 
 
