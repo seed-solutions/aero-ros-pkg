@@ -56,7 +56,8 @@
       ;; (if t
           (progn
             (send self :move-leg vel leg)
-            (send *irtviewer* :draw-objects)
+            (if (boundp '*irtviewer*)
+                (send *irtviewer* :draw-objects))
             (setq i (+ i 1))
             )
         (progn 
@@ -87,8 +88,8 @@
         (format t "  balance rate ~f less than threshold ~f, shift center of mass~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
         (send *aero* :move-waist (scale step-size balance-center-direction))
         (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
-       
-        (send *irtviewer* :draw-objects)
+        (if (boundp '*irtviewer*)
+            (send *irtviewer* :draw-objects))
         )
       )
     )
@@ -99,7 +100,8 @@
     (let ((balance-center-direction (send self :get-balance-center-direction legs-on-ground)))
       (print balance-center-direction)
       (send *aero* :move-waist balance-center-direction)
-      (send *irtviewer* :draw-objects)
+      (if (boundp '*irtviewer*)
+          (send *irtviewer* :draw-objects))
       )
     )
 
@@ -109,7 +111,8 @@
     (let ((leg-quadrilateral-center-direction (send self :get-leg-quadrilateral-center-direction)))
       (print leg-quadrilateral-center-direction)
       (send *aero* :move-waist leg-quadrilateral-center-direction)
-      (send *irtviewer* :draw-objects)
+      (if (boundp '*irtviewer*)
+          (send *irtviewer* :draw-objects))
       )
     )
 
@@ -186,7 +189,8 @@
 ;; (send *aero-lower* :newcoords (make-coords :pos #f( 0 0 0 )))
 ;; (send *aero* :reset-terrain-pose)
 ;; (set-3legs-to-ground)
-(setq walker (instance Walker :init))
+(if (not (boundp 'walker))
+    (setq walker (instance Walker :init)))
 ;; (send walker :show-next-foothold goal :larm)
 ;; (setq foothold (send walker :get-next-foothold goal :larm))
 ;; (setq vel 2)
