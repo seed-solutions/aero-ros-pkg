@@ -39,11 +39,6 @@
   <arg name="PUBLISH_TF" default="true" />
   <node name="camera_transform" pkg="tf" type="static_transform_publisher" args="$(arg parent_transform) $(arg parent_frame) /ps4eye_frame 10" if="$(arg PUBLISH_TF)"/>
 
-  <node pkg="aero_sensors" type="camera_info_publisher.py" name="camera_info_publisher" >
-    <param name="left_file_name"  value="$(arg camera_info_file_left)"  />
-    <param name="right_file_name" value="$(arg camera_info_file_right)" />
-  </node>
-
   <group ns="stereo">
     <include file="$(find stereo_image_proc)/launch/stereo_image_proc.launch">
       <arg name="manager" value="/$(arg manager)" />
@@ -53,4 +48,5 @@
   <!-- start viewer -->
   <node name="stereo_view" pkg="image_view" type="stereo_view" args="stereo:=/stereo image:=image_rect_color" if="$(arg viewer)"/>
 
+  <node pkg="aero_sensors" type="head_tf.py" name="head_tf" />
 </launch>

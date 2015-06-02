@@ -1,32 +1,4 @@
 <launch>
-  <arg name="manager" default="stereo_nodelet_manager" />
-
   <include file="$(find aero_sensors)/launch/start_ps4eye_capture.launch" />
   <include file="$(find aero_sensors)/launch/start_ps4eye_proc.launch" />
-
-  <!-- downsample points -->
-  <!-- <arg name="half_step" default="2" /> -->
-  <!-- <arg name="quater_step" default="4" /> -->
-  <!-- <node pkg="nodelet" -->
-  <!--       type="nodelet" -->
-  <!--       name="stereo_half" -->
-  <!--       args="load jsk_pcl/ResizePointsPublisher $(arg manager)"> -->
-  <!--   <remap from="~input" to="stereo/points2" /> -->
-  <!--   <remap from="~output" to="~points2" /> -->
-  <!--   <param name="not_use_rgb" value="false" /> -->
-  <!--   <param name="step_x" value="$(arg half_step)" /> -->
-  <!--   <param name="step_y" value="$(arg half_step)" /> -->
-  <!-- </node> -->
-  <!-- <node pkg="nodelet" -->
-  <!--       type="nodelet" -->
-  <!--       name="stereo_quater" -->
-  <!--       args="load jsk_pcl/ResizePointsPublisher $(arg manager)"> -->
-  <!--   <remap from="~input" to="stereo/points2" /> -->
-  <!--   <remap from="~output" to="~points2" /> -->
-  <!--   <param name="not_use_rgb" value="false" /> -->
-  <!--   <param name="step_x" value="$(arg quater_step)" /> -->
-  <!--   <param name="step_y" value="$(arg quater_step)" /> -->
-  <!-- </node> -->
-
-  <node pkg="aero_sensors" type="head_tf.py" name="head_tf" />
 </launch>
