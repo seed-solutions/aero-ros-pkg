@@ -56,27 +56,30 @@
 
   (if (numberp (elt cmd 0))
       (progn
-        (if (< (length cmd) 5)
+        (if (< (length cmd) 4)
             (progn
               (print "not enought arguments")
-              (print "expected format: comand x y z theta (coords)")
+              (print "expected format: comand x y z (theta) (coords)")
               (return-from convert-to-narrow-command t)
               )
           (progn
-            (if (< (length cmd) 6)
-                (setq coodrs nil)
-              (setq coords (elt cmd 5)))
+            (setq theta 0)
+            (setq coords 0)
+            (if (> (length cmd) 4)
+                (setq theta (elt cmd 4)))
+            (if (> (length cmd) 5)
+                (setq coords (elt cmd 5)))
             (ros::publish "/aero_network/cmd_narrow_band/streamer"
                           (instance aero_network_tools::AeroNarrowCommand :init
                                     :cmd (elt cmd 0)
                                     :x (elt cmd 1)
                                     :y (elt cmd 2)
                                     :z (elt cmd 3)
-                                    :theta (elt cmd 4)
+                                    :theta theta
                                     :coords coords
                                     ))
-            (format t "send AeroNarrowCommand :cmd ~d :x ~f :y ~f :z ~f :theta ~f :coords ~s~%"
-                    (elt cmd 0) (elt cmd 1) (elt cmd 2) (elt cmd 3) (elt cmd 4) coords )
+            (format t "send AeroNarrowCommand :cmd ~d :x ~d :y ~d :z ~d :theta ~f :coords ~d~%"
+                    (elt cmd 0) (elt cmd 1) (elt cmd 2) (elt cmd 3) theta coords )
             (return-from convert-to-narrow-command t)
             )
           )
@@ -161,16 +164,19 @@
                      (send *aero* :go-pos x y theta)
                      (format t "send *aero* :go-pos ~f ~f ~f~%" (elt cmd 3) (elt cmd 4) (elt cmd 5))
                      )
-                  (progn 
+                  (progn
+                    (if (elt cmd 6)
+                        (setq coords t)
+                      (setq coords nil))
                     (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                   (instance aero_network_tools::AeroNarrowCommand :init
                                             :cmd 10
                                             :x x
                                             :y y
                                             :theta theta
-                                            :coords (elt cmd 6)))
-                    (send *aero* :go-pos x y theta (elt cmd 6))
-                    (format t "send *aero* :go-pos ~f ~f ~f ~s~%" (elt cmd 3) (elt cmd 4) (elt cmd 5) (elt cmd 5))
+                                            :coords coords))
+                    (send *aero* :go-pos x y theta coords)
+                    (format t "send *aero* :go-pos ~f ~f ~f ~s~%" (elt cmd 3) (elt cmd 4) (elt cmd 5) coords)
                     )
                   )
                 )
@@ -367,7 +373,7 @@
                       (let ((x (aref (elt cmd 5) 0))
                             (y (aref (elt cmd 5) 1))
                             (z (aref (elt cmd 5) 2))
-                            (theta (elt cmd 6)))
+                            (theta (rad2deg (elt cmd 6))))
                         (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                       (instance aero_network_tools::AeroNarrowCommand :init
                                                 :cmd 14
@@ -413,7 +419,7 @@
                       (let ((x (aref (elt cmd 5) 0))
                             (y (aref (elt cmd 5) 1))
                             (z (aref (elt cmd 5) 2))
-                            (theta (elt cmd 6)))
+                            (theta (deg2rad (elt cmd 6))))
                         (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                       (instance aero_network_tools::AeroNarrowCommand :init
                                                 :cmd 15

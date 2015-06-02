@@ -2,5 +2,5 @@ int8 cmd
 int32 x
 int32 y
 int32 z
-int32 theta
-bool coords
+float32 theta
+int32 coords
