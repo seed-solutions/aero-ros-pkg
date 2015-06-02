@@ -1,6 +1,11 @@
 <launch>
+  <arg name="manager" default="stereo_nodelet_manager" />
+
   <include file="$(find ps4eye)/launch/stereo.launch">
+    <arg name="manager" value="$(arg manager)" />
     <arg name="DEVICE" value="/dev/video0" />
+    <arg name="parent_frame" value="/head_link" />
+    <arg name="parent_transform" value="0 0 0 -1.570791 0 -1.570791" />
     <arg name="camera_info_file_right"
 	 value="$(find aero_sensors)/config/ps4eye_right.yaml" />
     <arg name="camera_info_file_left"
@@ -10,4 +15,30 @@
     <arg name="camera_info_url_left"
 	 default="file://$(find aero_sensors)/config/ps4eye_left.yaml" />
   </include>
+
+  <!-- downsample points -->
+  <arg name="half_step" default="2" />
+  <arg name="quater_step" default="4" />
+  <node pkg="nodelet"
+        type="nodelet"
+        name="stereo_half"
+        args="load jsk_pcl/ResizePointsPublisher $(arg manager)">
+    <remap from="~input" to="stereo/points2" />
+    <remap from="~output" to="~points2" />
+    <param name="not_use_rgb" value="false" />
+    <param name="step_x" value="$(arg half_step)" />
+    <param name="step_y" value="$(arg half_step)" />
+  </node>
+  <node pkg="nodelet"
+        type="nodelet"
+        name="stereo_quater"
+        args="load jsk_pcl/ResizePointsPublisher $(arg manager)">
+    <remap from="~input" to="stereo/points2" />
+    <remap from="~output" to="~points2" />
+    <param name="not_use_rgb" value="false" />
+    <param name="step_x" value="$(arg quater_step)" />
+    <param name="step_y" value="$(arg quater_step)" />
+  </node>
+
+  <node pkg="aero_sensors" type="head_tf.py" name="head_tf" />
 </launch>
