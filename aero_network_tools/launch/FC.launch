@@ -1,20 +1,23 @@
 <launch>
   <!-- FC to OCS -->
-  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_streamer.py"
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
         name="fc_streamer">
-    <rosparam>                                                                                                                
-      message: jsk_network_tools/FC2OCS                                                                                       
-      to_port: 1024                                                                                                           
+    <rosparam>
+      message: aero_network_tools/AeroJointAngles
+      to_ip: 10.14.1.202
+      to_port: 1024
     </rosparam>
-    <remap from="~input" to="fc2ocs_original" />
+    <remap from="~input" to="/aero_network/av_narrow_band/streamer" />
   </node>
-  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_receiver.py"
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
         output="screen"
         name="fc_receiver">
-    <rosparam>                                                                                                                
-      message: jsk_network_tools/FC2OCS                                                                                       
-      receive_port: 1024                                                                                                      
+    <rosparam>
+      message: aero_network_tools/AeroNarrowCommand
+      recieve_ip: 10.14.1.202
+      receive_port: 1024
     </rosparam>
+    <remap from="~output" to="/aero_network/cmd_narrow_band/receiver" />
   </node>
 </launch>
