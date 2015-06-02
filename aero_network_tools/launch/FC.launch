@@ -7,7 +7,7 @@
     <rosparam>
       message: aero_network_tools/AeroJointAngles
       to_ip: 10.14.1.202
-      to_port: 1024
+      to_port: 1702
     </rosparam>
     <remap from="~input" to="/aero_network/av_narrow_band/streamer" />
   </node>
@@ -16,8 +16,8 @@
         name="fc_receiver">
     <rosparam>
       message: aero_network_tools/AeroNarrowCommand
-      recieve_ip: 10.14.1.202
-      receive_port: 1024
+      receive_ip: 0.0.0.0
+      receive_port: 1701
     </rosparam>
     <remap from="~output" to="/aero_network/cmd_narrow_band/receiver" />
   </node>
