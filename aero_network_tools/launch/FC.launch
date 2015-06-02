@@ -1,0 +1,20 @@
+<launch>
+  <!-- FC to OCS -->
+  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_streamer.py"
+        output="screen"
+        name="fc_streamer">
+    <rosparam>                                                                                                                
+      message: jsk_network_tools/FC2OCS                                                                                       
+      to_port: 1024                                                                                                           
+    </rosparam>
+    <remap from="~input" to="fc2ocs_original" />
+  </node>
+  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_receiver.py"
+        output="screen"
+        name="fc_receiver">
+    <rosparam>                                                                                                                
+      message: jsk_network_tools/FC2OCS                                                                                       
+      receive_port: 1024                                                                                                      
+    </rosparam>
+  </node>
+</launch>
