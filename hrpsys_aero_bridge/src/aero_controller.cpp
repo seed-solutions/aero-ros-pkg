@@ -10,6 +10,8 @@ SEED485Controller::SEED485Controller(const std::string& port, uint8_t id):
     boost::system::error_code err;
 
     ser_.open(port, err);
+    usleep(1000 * 1000);
+
     if (err) {
       std::cerr << "could not open " << port << std::endl;
     } else {
@@ -19,13 +21,19 @@ SEED485Controller::SEED485Controller(const std::string& port, uint8_t id):
         struct termios tio;
 #if ((BOOST_VERSION / 100 % 1000) > 50)
         ::tcgetattr(ser_.lowest_layer().native_handle(), &tio);
+        // ::cfmakeraw(&tio);
         ::cfsetospeed(&tio, 1382400);
         ::cfsetispeed(&tio, 1382400);
+        // ::cfsetospeed(&tio, 115200);
+        // ::cfsetispeed(&tio, 115200);
         ::tcsetattr(ser_.lowest_layer().native_handle(), TCSANOW, &tio);
 #else  // 12.04
         ::tcgetattr(ser_.lowest_layer().native(), &tio);
+        // ::cfmakeraw(&tio);
         ::cfsetospeed(&tio, 1382400);
         ::cfsetispeed(&tio, 1382400);
+        // ::cfsetospeed(&tio, 115200);
+        // ::cfsetispeed(&tio, 115200);
         ::tcsetattr(ser_.lowest_layer().native(), TCSANOW, &tio);
 #endif
       } catch (std::exception& e) {
