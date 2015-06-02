@@ -77,6 +77,6 @@
     (cond ((eq real t)
 	   (send *ri* :angle-vector (send *aero* :stroke-vector) 20)
 	   (unix::usleep (* 40 1000))))
-    (if (and (draw-objects (boundp '*irtviewer*)))
+    (if (boundp '*irtviewer*)
 	(send *irtviewer* :draw-objects))
-  )
+  ))

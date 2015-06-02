@@ -1,13 +1,15 @@
 (load "package://aero_2015_final_drc/euslisp/aero-drc-testbed.l")
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
-(load "package://aero_2015_final_drc/euslisp/walker.l")
+(load "package://aero_ros_bridge/euslisp/walker.l")
 
 (ros::roseus "aero-drc-c-mode")
 (ros::load-ros-manifest "aero_network_tools")
 
 (ros::advertise "/aero_network/cmd_narrow_band/streamer" aero_network_tools::AeroNarrowCommand 50)
 (ros::advertise "/aero_network/sv_narrow_band/streamer" aero_network_tools::AeroJointStrokes 50)
+
+(defvar *task* nil)
 
 (defun av_narrow_receiver_cb (msg)
   (let (av)
@@ -45,9 +47,6 @@
 		 (`r (setq ~arm~ :rarm) (setq ~cmd~ (- ~cmd~ 1)))
 		 (`lr (setq ~arm~ :arms) (setq ~cmd~ (* -1 ~cmd~)))
 		 (t (return-from ctrl- (warn "no such arm~%"))))
-	   ;; (if (eq (elt cmd 1) `l) (setq ~arm~ :larm))
-	   ;; (if (eq (elt cmd 1) `r) (progn (setq ~arm~ :rarm) (setq ~cmd~ (- ~cmd~ 1))))
-	   ;; (if (eq (elt cmd 1) `lr) (progn (setq ~arm~ :arms) (setq ~cmd~ (* -1 ~cmd~))))
 	   (setq ~x~ (elt cmd 2))
 	   (setq ~y~ (elt cmd 3))
 	   (setq ~z~ (elt cmd 4))
@@ -127,7 +126,7 @@
 				   :cmd ~cmd~
 				   :theta ~theta~))
 	   )
-	  (hand-close
+	  (magic-close
 	   (setq ~cmd~ 103)
 	   (case (elt cmd 1)
 		 (`l (setq ~arm~ :larm))
@@ -138,7 +137,7 @@
 			 (instance aero_network_tools::AeroNarrowCommand :init
 				   :cmd ~cmd~))
 	   )
-	  (hand-open
+	  (magic-open
 	   (setq ~cmd~ 105)
 	   (case (elt cmd 1)
 		 (`l (setq ~arm~ :larm))
@@ -181,7 +180,7 @@
 	   (setq ~x~ (elt cmd 1))
 	   (setq ~y~ (elt cmd 2))
 	   (setq ~z~ (elt cmd 3))
-	   (if (>= (send *ri* :go-pos ~x~ ~y~ ~z~ ~flag~) 0)
+	   (if (>= (send *ri* :go-pos ~x~ ~y~ ~z~ (if (= ~flag~ 0) nil t)) 0)
 	       (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			     (instance aero_network_tools::AeroNarrowCommand :init
 				       :cmd ~cmd~
@@ -237,6 +236,8 @@
 	   (ros::spin-once)
 	   )
 	  (rotate-knob
+	   (if (not (equal *task* `door))
+	       (return-from ctrl- (warn "not at door task")))
 	   (setq ~cmd~ 41)
 	   (case (elt cmd 1)
 		 (`l (setq ~arm~ :larm))
@@ -250,6 +251,8 @@
 				   :y ~y~))
 	   )
 	  (open-door
+	   (if (not (equal *task* `door))
+	       (return-from ctrl- (warn "not at door task")))
 	   (setq ~cmd~ 43)
 	   (case (elt cmd 1)
 		 (`l (setq ~arm~ :larm))
@@ -262,7 +265,18 @@
 				   :cmd ~cmd~
 				   :z ~z~))
 	   )
+	  (setup-door
+	   (setup-door)
+	   (objects (list *door*))
+	   (send *aero* :draw-on)
+	   (setq *task* 'door)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 49))
+	   )
 	  (rotate-valve
+	   (if (not (equal *task* `valve))
+	       (return-from ctrl- (warn "not at valve task")))
 	   (setq ~cmd~ 51)
 	   (case (elt cmd 1)
 		 (`l (setq ~arm~ :larm))
@@ -278,6 +292,8 @@
 				   :theta ~theta~))
 	   )
 	  (release-arm
+	   (if (not (equal *task* `valve))
+	       (return-from ctrl- (warn "not at valve task")))
 	   (setq ~cmd~ 53)
 	   (case (elt cmd 1)
 		 (`l (setq ~arm~ :larm))
@@ -287,6 +303,15 @@
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
 				   :cmd ~cmd~))
+	   )
+	  (setup-valve
+	   (setup-valve)
+	   (objects (list *drc-valve*))
+	   (send *aero* :draw-on)
+	   (setq *task* 'valve)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 59))
 	   )
 	  (step
 	   (setq ~cmd~ 64)
@@ -383,6 +408,8 @@
     (if (equal ~ui~ "q")
 	(return-from c-mode nil))
     (ctrl- (read-from-string ~ui~))
+    (if (boundp '*irtviewer*)
+	(send *irtviewer* :draw-objects))
     ))
 
 (make-drc-testbed-models-with-aero)
