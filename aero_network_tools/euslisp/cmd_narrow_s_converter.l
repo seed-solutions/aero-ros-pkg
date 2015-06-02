@@ -6,7 +6,7 @@
 
 ;;;
 (ros::roseus "cmd_narrow_s_converter")
-(ros::advertise "/aero_network/command_narrow_band/streamer" aero_network_tools::AeroNarrowCommand 50)
+(ros::advertise "/aero_network/cmd_narrow_band/streamer" aero_network_tools::AeroNarrowCommand 50)
 
 (defvar *exit-flag* nil)
 
@@ -85,20 +85,20 @@
                             (print "not enough arguments")
                             (return-from convert-to-narrow-command nil)))
                       (let ((theta (elt cmd 5)))
-                        (ros::publish "/aero_network/command_narrow_band/streamer"
+                        (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                       (instance aero_network_tools::AeroNarrowCommand :init
                                                 :cmd -7
                                                 :theta theta))
                         (send *aero* :hand :arms :joint-angle theta))
                       ) ;; end of case (elt cmd 4) = :joint-angle
                     (:open-pose ;; send *aero* :hand :arms :open-pose
-                      (ros::publish "/aero_network/command_narrow_band/streamer"
+                      (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                     (instance aero_network_tools::AeroNarrowCommand :init
                                               :cmd -5))
                       (send *aero* :hand :arms :open-pose)
                       ) ;; end of case (elt cmd 4) = :open-pose
                     (:close-pose ;; send *aero* :hand :arms :close-pose
-                      (ros::publish "/aero_network/command_narrow_band/streamer"
+                      (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                     (instance aero_network_tools::AeroNarrowCommand :init
                                               :cmd -3))
                       (send *aero* :hand :arms :close-pose)
@@ -134,13 +134,14 @@
                       (let ((x (aref (elt cmd 5) 0))
                             (y (aref (elt cmd 5) 1))
                             (z (aref (elt cmd 5) 2)))
-                        (ros::publish "/aero_network/command_narrow_band/streamer"
+                        (ros::publish "/aero_network/cmd_narrow_band/streamer"
                                       (instance aero_network_tools::AeroNarrowCommand :init
                                                 :cmd -1
                                                 :x x
                                                 :y y
                                                 :z z))
-                        (send *aero* :hand :arms :move-end-pos (elt cmd 5)))
+                        (send *aero* :hand :arms :move-end-pos (elt cmd 5))
+                        (format t "send *aero* :hand :arms :move-end-pos ~a~%" (elt cmd 5)))
                       ) ;; end of case (elt cmd 4) = :move-end-pos
                     (otherwise
                      (print "unrecognized command!"))
