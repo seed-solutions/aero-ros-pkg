@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <launch>
   <!-- FC to OCS -->
-  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_streamer.py"
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
         name="fc_streamer">
     <rosparam>                                                                                                                
@@ -9,7 +10,7 @@
     </rosparam>
     <remap from="~input" to="fc2ocs_original" />
   </node>
-  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_receiver.py"
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
         output="screen"
         name="fc_receiver">
     <rosparam>                                                                                                                

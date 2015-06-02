@@ -1,25 +1,23 @@
 <launch>
   <!-- OCS to FC -->
-  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_streamer.py"
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
         name="ocs_streamer">
-    <rosparam>                                                                                                                
-      message: jsk_network_tools/OCS2FC                                                                                       
-      to_port: 1025                                                                                                           
+    <rosparam>                
+      message: aero_network_tools/AeroNarrowCommand
+      to_ip:   10.14.1.203
+      to_port: 1025                        
     </rosparam>
-    <remap from="~input" to="ocs2fc_original" />
+    <remap from="~input" to="/aero_network/cmd_narrow_band/streamer" />
   </node>
-  <node pkg="jsk_network_tools" type="silverhammer_lowspeed_receiver.py"
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
         output="screen"
         name="ocs_receiver">
-    <rosparam>                                                                                                                
-      message: jsk_network_tools/OCS2FC                                                                                       
-      receive_port: 1025                                                                                                      
+    <rosparam>    
+      message: aero_network_tools/AeroJointAngles                                     
+      to_ip:   10.14.1.203
+      receive_port: 1025                             
     </rosparam>
+    <remap from="~output" to="/aero_network/av_narrow_band/receiver" />
   </node>
-  
-  <node pkg="jsk_network_tools" type="fc2ocs_publisher.py" name="fc2ocs_original" />
-  <node pkg="jsk_network_tools" type="ocs2fc_publisher.py" name="ocs2fc_original" />
-  <node pkg="rqt_console" type="rqt_console" name="silverhammer_console" />
-  <node pkg="rqt_graph" type="rqt_graph" name="silverhammer_graph" />
 </launch>

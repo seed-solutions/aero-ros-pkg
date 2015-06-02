@@ -1,6 +1,6 @@
 int8 cmd
-int16 x
-int16 y
-int16 z
-int16 theta
+int32 x
+int32 y
+int32 z
+int32 theta
 bool coords
