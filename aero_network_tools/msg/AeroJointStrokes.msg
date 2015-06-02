@@ -1,1 +1,1 @@
-float32[41] strokeVector
+float32[34] strokeVector
