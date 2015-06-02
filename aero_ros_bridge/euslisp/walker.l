@@ -1,4 +1,4 @@
-pp;; (require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
+;; (require :aero-upper "package://aero_ros_bridge/models/aero_upper.l")
 ;; (require :aero-lower "package://aero_ros_bridge/models/aero-lower.l")
 (load "package://aero_ros_bridge/euslisp/aero-interface.l")
 (require "package://aero_ros_bridge/euslisp/test-aero-lower-motion.l")
