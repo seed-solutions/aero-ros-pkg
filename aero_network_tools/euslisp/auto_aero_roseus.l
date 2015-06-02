@@ -1,4 +1,7 @@
 #!/usr/bin/env roseus
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
+(load "package://aero_ros_bridge/euslisp/walker.l")
 
 (ros::roseus "auto_aero_roseus")
 (ros::load-ros-manifest "aero_network_tools")
@@ -39,7 +42,7 @@
       (case (send msg :cmd)
 	    (-126 (setq av-msg
 			(instance aero_network_tools::AeroJointAngles :init))
-		  (setq tmp (send *aero* :angle-vector))
+		  (setq tmp (send *ri* :actual-vector))
 		  (send av-msg :angleVector (concatenate float-vector
 							 (subseq (elt tmp 0) 0 8)
 							 (subseq (elt tmp 0) 11 19)
@@ -125,6 +128,14 @@
 					:actual-vector)
 				       )))
 		(send-angle-vector))
+	    (41 (rotate-knob :larm (send msg :y)))
+	    (43 (open-door :larm (send msg :z)))
+	    (49 (setup-door))
+	    (50 (rotate-valve :rarm (send msg :x) (send msg :theta)))
+	    (51 (rotate-valve :larm (send msg :x) (send msg :theta)))
+	    (52 (release-arm :rarm))
+	    (53 (release-arm :larm))
+	    (59 (setup-valve))
 	    (61 (if (eq (send *walker* :step
 			      (float-vector (send msg :x) (send msg :y) (send msg :z))
 			      :rarm :balance-rate-thre (send msg :theta)
@@ -215,7 +226,7 @@
 	    (107 (send *aero* :hand-yaw-world :larm (send msg :theta)))
 	    (t (send r-msg :resp -1))
 	    )
-	    (setq last-msg (send msg :cmd))
+      (setq last-msg (send msg :cmd))
       (ros::publish "/aero_network/resp_narrow_band/streamer" r-msg)
       ))
   )
