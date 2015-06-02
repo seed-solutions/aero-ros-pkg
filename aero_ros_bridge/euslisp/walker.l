@@ -186,9 +186,6 @@
     )
   )
 
-;; (send *aero-lower* :newcoords (make-coords :pos #f( 0 0 0 )))
-;; (send *aero* :reset-terrain-pose)
-;; (set-3legs-to-ground)
 (if (not (boundp '*walker*))
     (setq *walker* (instance Walker :init)))
 ;; (send walker :show-next-foothold goal :larm)
