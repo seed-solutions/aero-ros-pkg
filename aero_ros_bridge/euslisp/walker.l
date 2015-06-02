@@ -5,7 +5,8 @@
 
 (defclass Walker
   :super object
-  :slots (def_balance_rate_thre def_step_height def_step_square_height def_stride_length))
+  :slots (def_balance_rate_thre def_step_height def_step_square_height def_stride_length
+           def_walk_goal))
  )
 (defmethod Walker
   (:init ()
@@ -13,6 +14,7 @@
     (send self :set-val 'def_step_height 100)
     (send self :set-val 'def_step_square_height 10)
     (send self :set-val 'def_stride_length 120)
+    (send self :set-val 'def_walk_goal #f(500 0 0))
     )
   ;; @param goal: the coords of the final goal where the robot wants to go
   ;; @param stepping-leg: which leg is stepping
@@ -174,7 +176,7 @@
 
   ;; @param stride-length: how wide each step is
   ;; @param goal: the goal position relative to the robot
-  (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (float-vector 500 0 0)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)))
+  (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)))
 
     (setq debug nil)
     (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence

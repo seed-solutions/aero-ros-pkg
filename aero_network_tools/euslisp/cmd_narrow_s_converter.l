@@ -44,6 +44,8 @@
       (convert-to-narrow-command (read-from-string ~ui~))
       )
     (ros::spin-once)
+    (if (boundp '*irtviewer*)
+        (send *irtviewer* :draw-objects))
     )
     (format t "ros::ok returned false~%")
     (format t "exit narrow-band-mode~%")
@@ -121,9 +123,35 @@
              (ros::publish "/aero_network/cmd_narrow_band/streamer"
                            (instance aero_network_tools::AeroNarrowCommand :init
                                      :cmd 16 :x 1))
-             (:reset-terrain-pose)
+             (send *aero* :reset-terrain-pose)
              (print "send *aero* :reset-terrain-pose")
               )
+
+            (:reset-terrain-pose2 ;; send *aero* :reset-terrain-pose2
+             (ros::publish "/aero_network/cmd_narrow_band/streamer"
+                           (instance aero_network_tools::AeroNarrowCommand :init
+                                     :cmd 16 :x 2))
+             (send *aero* :reset-terrain-pose2)
+             (print "send *aero* :reset-terrain-pose2")
+              )
+
+            (:reset-climbing-pose ;; send *aero* :reset-climbing-pose
+             (ros::publish "/aero_network/cmd_narrow_band/streamer"
+                           (instance aero_network_tools::AeroNarrowCommand :init
+                                     :cmd 16 :x 3))
+             (send *aero* :reset-climbing-pose)
+             (print "send *aero* :reset-climbing-pose")
+              )
+
+            (:reset-climbing-pose2 ;; send *aero* :reset-climbing-pose2
+             (ros::publish "/aero_network/cmd_narrow_band/streamer"
+                           (instance aero_network_tools::AeroNarrowCommand :init
+                                     :cmd 16 :x 4))
+             (send *aero* :reset-climbing-pose2)
+             (print "send *aero* :reset-climbing-pose2")
+              )
+                        
+
             
             (:move-waist ;; send *aero* :move-waist
               (if (< (length cmd) 4)
@@ -654,6 +682,137 @@
              (print "unrecognized command!"))
             ) ;; end of case (elt cmd 2)
           ) ;; end of case (elt cmd 1) = *aero*
+
+
+
+
+        (*walker* ;; send walker
+          (if (< (length cmd) 3)
+          (progn
+            (print "not enough arguments")
+            (return-from convert-to-narrow-command nil)))
+          (case (elt cmd 2)
+            (:step ;; send walker :step
+              (if (< (length cmd) 5)
+                  (progn
+                    (print "not enough arguments")
+                    (return-from convert-to-narrow-command nil)))
+              (let ((x (aref (elt cmd 3) 0))
+                    (y (aref (elt cmd 3) 1))
+                    (z (aref (elt cmd 3) 2)))
+                
+                (case (elt cmd 4)
+                      (:rarm
+                       (setq cmdCode 61))
+                      (:larm
+                       (setq cmdCode 62))
+                      (:lleg
+                       (setq cmdCode 63))
+                      (:rleg
+                       (setq cmdCode 64))
+                      (otherwise
+                       (print "expecting limb as 5th argument")
+                       (return-from convert-to-narrow-command nil))
+                      )
+                (if (position ':balance-rate-thre cmd)
+                    (setq balance-rate-thre (elt cmd (+ 1 (position ':balance-rate-thre cmd))))
+                  (setq balance-rate-thre (send *walker* :get-val `def_balance_rate_thre)))
+                (if (position ':step-height cmd)
+                    (setq step-height (elt cmd (+ 1 (position ':step-height cmd))))
+                  (setq step-height (send *walker* :get-val `def_step_height)))
+                
+                (ros::publish "/aero_network/cmd_narrow_band/streamer"
+                              (instance aero_network_tools::AeroNarrowCommand :init
+                                        :cmd cmdCode
+                                        :x x
+                                        :y y
+                                        :z z
+                                        :theta balance-rate-thre
+                                        :coords step-height))
+                (send *walker* :step (elt cmd 3) (elt cmd 4) :balance-rate-thre balance-rate-thre :step-height step-height)
+                (format t "send *walker* :step ~a ~s :balance-rate-thre ~f :step-height ~d~%" (elt cmd 3) (elt cmd 4) balance-rate-thre step-height))
+              ) ;; end of (elt cmd 2) = :step
+
+            (:step-square ;; send walker :step-square
+              (if (< (length cmd) 5)
+                  (progn
+                    (print "not enough arguments")
+                    (return-from convert-to-narrow-command nil)))
+              (let ((x (aref (elt cmd 3) 0))
+                    (y (aref (elt cmd 3) 1))
+                    (z (aref (elt cmd 3) 2)))
+                
+                (case (elt cmd 4)
+                      (:rarm
+                       (setq cmdCode 65))
+                      (:larm
+                       (setq cmdCode 66))
+                      (:lleg
+                       (setq cmdCode 67))
+                      (:rleg
+                       (setq cmdCode 68))
+                      (otherwise
+                       (print "expecting limb as 5th argument")
+                       (return-from convert-to-narrow-command nil))
+                      )
+                (if (position ':balance-rate-thre cmd)
+                    (setq balance-rate-thre (elt cmd (+ 1 (position ':balance-rate-thre cmd))))
+                  (setq balance-rate-thre (send *walker* :get-val `def_balance_rate_thre)))
+                (if (position ':step-height cmd)
+                    (setq step-height (elt cmd (+ 1 (position ':step-height cmd))))
+                  (setq step-height (send *walker* :get-val `def_step_square_height)))
+                
+                (ros::publish "/aero_network/cmd_narrow_band/streamer"
+                              (instance aero_network_tools::AeroNarrowCommand :init
+                                        :cmd cmdCode
+                                        :x x
+                                        :y y
+                                        :z z
+                                        :theta balance-rate-thre
+                                        :coords step-height))
+                (send *walker* :step-square (elt cmd 3) (elt cmd 4) :balance-rate-thre balance-rate-thre :step-height step-height)
+                (format t "send *walker* :step-square ~a ~s :balance-rate-thre ~f :step-height ~d~%" (elt cmd 3) (elt cmd 4) balance-rate-thre step-height))
+              ) ;; end of (elt cmd 2) = :step-square
+
+
+            (:walk ;; send walker :walk                
+              (if (position ':goal cmd)
+                  (setq goal (elt cmd (+ 1 (position ':goal cmd))))
+                (setq goal (send *walker* :get-val `def_walk_goal)))
+              (setq x (aref goal 0))
+              (setq y (aref goal 1))
+              (if (position ':stride-length cmd)
+                  (setq stride-length (elt cmd (+ 1 (position ':stride-length cmd))))
+                (setq stride-length (send *walker* :get-val `def_stride_length)))
+              (if (position ':step-height cmd)
+                  (setq step-height (elt cmd (+ 1 (position ':step-height cmd))))
+                (setq step-height (send *walker* :get-val `def_step_height)))
+              (if (position ':balance-rate-thre cmd)
+                  (setq balance-rate-thre (elt cmd (+ 1 (position ':balance-rate-thre cmd))))
+                (setq balance-rate-thre (send *walker* :get-val `def_balance_rate_thre)))
+              
+              (ros::publish "/aero_network/cmd_narrow_band/streamer"
+                            (instance aero_network_tools::AeroNarrowCommand :init
+                                      :cmd 69
+                                      :x x
+                                      :y y
+                                      :z step-height
+                                      :theta balance-rate-thre
+                                      :coords stride-length))
+              (send *walker* :walk :goal (float-vector x y 0) :balance-rate-thre balance-rate-thre :step-height step-height :stride-length stride-length)
+              (format t "send *walker* :walk :goal #f(~f ~f 0) :balance-rate-thre ~f :step-height ~d :stride-length ~d~%" x y balance-rate-thre step-height stride-length)
+              ) ;; end of (elt cmd 2) = :walk
+            
+            (otherwise
+             (print "unrecognized command!"))
+            ) ;; end of case (elt cmd 2)
+          ) ;; end of case (elt cmd 1) = walker
+        
+        
+        
+      
+
+        
         (otherwise
          (print "unrecognized command!"))
         ) ;; end of case (elt cmd 1)
