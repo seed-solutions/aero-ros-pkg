@@ -23,13 +23,13 @@
   </node>
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
-        name="av_narrow_streamer_compressed">
+        name="fc_av_narrow_streamer_compressed">
     <rosparam>                
       message: aero_network_tools/AeroJointAnglesCompressed
       to_ip: localhost
       to_port: 1705                    
     </rosparam>
-    <remap from="~input" to="/aero_network/av_narrow_band_compressed/streamer" />
+    <remap from="~input" to="/aero_network/fc_av_narrow_band_compressed/streamer" />
   </node>
 
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"

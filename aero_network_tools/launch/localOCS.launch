@@ -44,12 +44,12 @@
   </node>
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
         output="screen"
-        name="av_narrow_receiver_compressed">
+        name="ocs_av_narrow_receiver_compressed">
     <rosparam>
       message: aero_network_tools/AeroJointAnglesCompressed
       receive_ip: localhost
       receive_port: 1705
     </rosparam>
-    <remap from="~output" to="/aero_network/av_narrow_band_compressed/receiver" />
+    <remap from="~output" to="/aero_network/ocs_av_narrow_band_compressed/receiver" />
   </node>
 </launch>

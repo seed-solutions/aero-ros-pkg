@@ -12,7 +12,7 @@
   (:init ()
     (ros::advertise "/aero_network/resp_narrow_band/streamer" aero_network_tools::AeroNarrowResponse)
     (ros::advertise "/aero_network/fc_av_narrow_band/streamer" aero_network_tools::AeroJointAngles)
-    (ros::advertise "/aero_network/av_narrow_band_compressed/streamer" aero_network_tools::AeroJointAnglesCompressed)
+    (ros::advertise "/aero_network/fc_av_narrow_band_compressed/streamer" aero_network_tools::AeroJointAnglesCompressed)
     (ros::subscribe
      "/aero_network/cmd_narrow_band/receiver"
      aero_network_tools::AeroNarrowCommand #'send self :cmd-cb)
@@ -65,7 +65,7 @@
 			      (round (/ (elt tmp 31) 2)) ;flY
 			      (round (elt tmp 32)) ;flP
 			      (round (elt tmp 33)))) ;flkP
-    (ros::publish "/aero_network/av_narrow_band_compressed/streamer"
+    (ros::publish "/aero_network/fc_av_narrow_band_compressed/streamer"
 		  (instance aero_network_tools::AeroJointAnglesCompressed :init
 			    :angleVector tmp))
     )
