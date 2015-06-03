@@ -31,7 +31,7 @@
   (setq *points* nil)
   (ros::spin-once)
   (when *points*
-    (send *points* :newcoords *camera-co*)
+    (send *points* :newcoords (send *camera-co* :copy-worldcoords))
     (objects *points*)
     )
   )
