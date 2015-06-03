@@ -32,6 +32,6 @@
   (ros::spin-once)
   (when *points*
     (send *points* :newcoords (send *camera-co* :copy-worldcoords))
-    (objects *points*)
+    (send *irtviewer* :objects *points*)
     )
   )
