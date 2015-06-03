@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+<group ns="ip15">
+  <!-- FC to OCS -->
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
+        output="screen"
+        name="av_narrow_streamer">
+    <rosparam>
+      message: aero_network_tools/AeroJointAngles
+      to_ip: 10.14.2.15
+      to_port: 1703
+    </rosparam>
+    <remap from="~input" to="/aero_network/av_narrow_band/streamer" />
+  </node>
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
+        output="screen"
+        name="resp_narrow_streamer">
+    <rosparam>
+      message: aero_network_tools/AeroNarrowResponse
+      to_ip: 10.14.2.15
+      to_port: 1702
+    </rosparam>
+    <remap from="~input" to="/aero_network/resp_narrow_band/streamer" />
+  </node>
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
+        output="screen"
+        name="av_narrow_streamer_compressed">
+    <rosparam>                
+      message: aero_network_tools/AeroJointAnglesCompressed
+      to_ip: 10.14.2.15
+      to_port: 1705                    
+    </rosparam>
+    <remap from="~input" to="/aero_network/av_narrow_band_compressed/streamer" />
+  </node>
+
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
+        output="screen"
+        name="fc_receiver">
+    <rosparam>
+      message: aero_network_tools/AeroNarrowCommand
+      receive_ip: 0.0.0.0
+      receive_port: 1701
+    </rosparam>
+    <remap from="~output" to="/aero_network/cmd_narrow_band/receiver" />
+  </node>
+  <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
+        output="screen"
+        name="sv_narrow_receiver">
+    <rosparam>
+      message: aero_network_tools/AeroJointStrokes
+      receive_ip: 0.0.0.0
+      receive_port: 1704
+    </rosparam>
+    <remap from="~output" to="/aero_network/sv_narrow_band/receiver" />
+  </node>
+</launch>

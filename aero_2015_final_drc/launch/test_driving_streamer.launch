@@ -1,0 +1,10 @@
+<launch>
+  <!-- ps4eye @ robot /-->
+  <include file="$(find aero_sensors)/launch/start_ps4eye_capture.launch"/>
+
+  <!-- GigE camera @ robot /-->
+  <node name="run_gige_capture" pkg="aero_hand_leg_eyes" type="run_gige_capture.sh"/>
+
+  <!-- streamer @ robot /-->
+  <include file="$(find aero_vision_network_tools)/launch/aero_streamer.launch"/>
+</launch>
