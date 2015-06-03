@@ -3,7 +3,7 @@
 (ros::roseus "auto_aero_roseus")
 (ros::load-ros-manifest "aero_network_tools")
 
-(defvar *auto-aero-debug* t)
+(defvar *auto-aero-debug* nil)
 
 (defclass auto-aero-roseus-class
   :super propertied-object
