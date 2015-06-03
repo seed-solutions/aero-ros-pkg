@@ -7,11 +7,11 @@
 (ros::load-ros-manifest "aero_network_tools")
 
 (ros::advertise "/aero_network/cmd_narrow_band/streamer" aero_network_tools::AeroNarrowCommand 50)
-(ros::advertise "/aero_network/sv_narrow_band/streamer" aero_network_tools::AeroJointStrokes 50)
+(ros::advertise "/aero_network/ocs_av_narrow_band/streamer" aero_network_tools::AeroJointAngles 50)
 
 (defvar *task* nil)
 
-(defun av_narrow_receiver_cb (msg)
+(defun av_cb (msg)
   (let (av)
   (setq av (send msg :angleVector))
   (send *aero* :angle-vector
@@ -28,8 +28,8 @@
       (send *irtviewer* :draw-objects))
   )
 
-(ros::subscribe "/aero_network/av_narrow_band/receiver"
-		aero_network_tools::AeroJointAngles #'av_narrow_receiver_cb)
+(ros::subscribe "/aero_network/ocs_av_narrow_band/receiver"
+		aero_network_tools::AeroJointAngles #'av_cb)
 
 (defun ctrl- (cmd)
   (let (~vector~ ~arm~ ~coords~ ~pose~ (~cmd~ 127) (~x~ 0) (~y~ 0) (~z~ 0) (~theta~ 0) (~flag~ 0)
@@ -179,14 +179,14 @@
 	   (setq ~cmd~ 10)
 	   (setq ~x~ (elt cmd 1))
 	   (setq ~y~ (elt cmd 2))
-	   (setq ~z~ (elt cmd 3))
-	   (if (>= (send *ri* :go-pos ~x~ ~y~ ~z~ (if (= ~flag~ 0) nil t)) 0)
+	   (setq ~theta~ (elt cmd 3))
+	   (if (>= (send *ri* :go-pos ~x~ ~y~ ~theta~ (if (= ~flag~ 0) nil t)) 0)
 	       (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			     (instance aero_network_tools::AeroNarrowCommand :init
 				       :cmd ~cmd~
 				       :x ~x~
 				       :y ~y~
-				       :z ~z~
+				       :theta ~theta~
 				       :coords ~flag~))
 	     (warn "detected warning! was not sent~%"))
 	   )
@@ -218,15 +218,15 @@
 				   :x 0))
 	   )
 	  (send-angle-vector
-	   (send-angle-vector)
-	   (setq ~vector~ (send *aero* :stroke-vector))
-	   (ros::publish "/aero_network/sv_narrow_band/streamer"
-			 (instance aero_network_tools::AeroJointStrokes :init
-				   :strokeVector
+	   (setq ~vector~ (send *aero* :angle-vector))
+	   (ros::publish "/aero_network/ocs_av_narrow_band/streamer"
+			 (instance aero_network_tools::AeroJointAngles :init
+				   :angleVector
 				   (concatenate float-vector
-						(subseq ~vector~ 0 8)
-						(subseq ~vector~ 11 19)
-						(subseq ~vector~ 22 41))))
+						(subseq (elt ~vector~ 0) 0 8)
+						(subseq (elt ~vector~ 0) 11 19)
+						(subseq (elt ~vector~ 0) 22 28)
+						(subseq (elt ~vector~ 1) 0 12))))
 	   )
 	  (actual-vector
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"

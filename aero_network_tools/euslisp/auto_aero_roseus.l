@@ -3,7 +3,7 @@
 (ros::roseus "auto_aero_roseus")
 (ros::load-ros-manifest "aero_network_tools")
 
-(defvar *auto-aero-debug* nil)
+(defvar *auto-aero-debug* t)
 
 (defclass auto-aero-roseus-class
   :super propertied-object
@@ -11,14 +11,14 @@
 (defmethod auto-aero-roseus-class
   (:init ()
     (ros::advertise "/aero_network/resp_narrow_band/streamer" aero_network_tools::AeroNarrowResponse)
-    (ros::advertise "/aero_network/av_narrow_band/streamer" aero_network_tools::AeroJointAngles)
+    (ros::advertise "/aero_network/fc_av_narrow_band/streamer" aero_network_tools::AeroJointAngles)
     (ros::advertise "/aero_network/av_narrow_band_compressed/streamer" aero_network_tools::AeroJointAnglesCompressed)
     (ros::subscribe
      "/aero_network/cmd_narrow_band/receiver"
      aero_network_tools::AeroNarrowCommand #'send self :cmd-cb)
     (ros::subscribe
-     "/aero_network/sv_narrow_band/receiver"
-     aero_network_tools::AeroJointStrokes #'send self :sv-cb)
+     "/aero_network/fc_av_narrow_band/receiver"
+     aero_network_tools::AeroJointAngles #'send self :av-cb)
     (setq last-msg -999)
     (setq msg-streak 0)
     )
@@ -69,16 +69,18 @@
 		  (instance aero_network_tools::AeroJointAnglesCompressed :init
 			    :angleVector tmp))
     )
-  (:sv-cb (msg)
-    (setq tmp (send msg :strokeVector))
-    (send *ri* :angle-vector (concatenate float-vector
-					  (subseq tmp 0 8)
-					  #f(0.0 0.0 0.0)
-					  (subseq tmp 8 16)
-					  #f(0.0 0.0 0.0)
-					  (subseq tmp 16 34)
-					  #f(0.0)))
-    (send *aero* (send *ri* :actual-vector))
+  (:av-cb (msg)
+    (setq tmp (send msg :angleVector))
+    (send *aero* :angle-vector (list (concatenate float-vector
+						  (subseq tmp 0 8)
+						  #f(0.0 0.0 0.0)
+						  (subseq tmp 8 16)
+						  #f(0.0 0.0 0.0)
+						  (subseq tmp 16 22))
+				     (concatenate float-vector
+						  (subseq tmp 22 34)
+						  #f(0.0))))
+    (send-angle-vector)
     (ros::publish "/aero_network/resp_narrow_band/streamer"
 		  (instance aero_network_tools::AeroNarrowResponse :init
 			    :cmd 127 :resp 0))
@@ -102,7 +104,7 @@
 							 (subseq (elt tmp 0) 11 19)
 							 (subseq (elt tmp 0) 22 28)
 							 (subseq (elt tmp 1) 0 12)))
-		  (ros::publish "/aero_network/av_narrow_band/streamer" av-msg)
+		  (ros::publish "/aero_network/fc_av_narrow_band/streamer" av-msg)
 		  )
 	    (-7 (send *aero* :hand :arms :joint-angle (send msg :theta))
 		(send-angle-vector))
