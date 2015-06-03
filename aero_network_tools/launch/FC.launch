@@ -3,13 +3,13 @@
   <!-- FC to OCS -->
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
-        name="av_narrow_streamer">
+        name="fc_av_narrow_streamer">
     <rosparam>
       message: aero_network_tools/AeroJointAngles
       to_ip: 10.14.2.12
       to_port: 1703
     </rosparam>
-    <remap from="~input" to="/aero_network/av_narrow_band/streamer" />
+    <remap from="~input" to="/aero_network/fc_av_narrow_band/streamer" />
   </node>
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
@@ -23,13 +23,13 @@
   </node>
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_streamer.py"
         output="screen"
-        name="av_narrow_streamer_compressed">
+        name="fc_av_narrow_streamer_compressed">
     <rosparam>                
       message: aero_network_tools/AeroJointAnglesCompressed
       to_ip: 10.14.2.12
       to_port: 1705                    
     </rosparam>
-    <remap from="~input" to="/aero_network/av_narrow_band_compressed/streamer" />
+    <remap from="~input" to="/aero_network/fc_av_narrow_band_compressed/streamer" />
   </node>
 
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
@@ -44,12 +44,12 @@
   </node>
   <node pkg="aero_network_tools" type="silverhammer_lowspeed_receiver.py"
         output="screen"
-        name="sv_narrow_receiver">
+        name="fc_av_narrow_receiver">
     <rosparam>
-      message: aero_network_tools/AeroJointStrokes
+      message: aero_network_tools/AeroJointAngles
       receive_ip: 0.0.0.0
       receive_port: 1704
     </rosparam>
-    <remap from="~output" to="/aero_network/sv_narrow_band/receiver" />
+    <remap from="~output" to="/aero_network/fc_av_narrow_band/receiver" />
   </node>
 </launch>
