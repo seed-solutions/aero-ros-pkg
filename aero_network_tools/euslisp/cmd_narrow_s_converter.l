@@ -7,7 +7,7 @@
 ;;;
 (ros::roseus "cmd_narrow_s_converter")
 (ros::advertise "/aero_network/cmd_narrow_band/streamer" aero_network_tools::AeroNarrowCommand 50)
-(ros::advertise "/aero_network/sv_narrow_band/streamer" aero_network_tools::AeroJointStrokes 50)
+(ros::advertise "/aero_network/ocs_av_narrow_band/streamer" aero_network_tools::AeroJointAngles 50)
 
 (defvar *exit-flag* nil)
 
@@ -28,7 +28,7 @@
       (send *irtviewer* :draw-objects))
   )
 
-(ros::subscribe "/aero_network/av_narrow_band/receiver" aero_network_tools::AeroJointAngles #'av_narrow_receiver_cb)
+(ros::subscribe "/aero_network/ocs_av_narrow_band/receiver" aero_network_tools::AeroJointAngles #'av_narrow_receiver_cb)
 
 
 (defun narrow-band-mode ()
@@ -105,22 +105,22 @@
             (return-from convert-to-narrow-command nil)))
           (case (elt cmd 2)
 
-            (:angle-vector ;; send *aero* :angle-vector
+            (:match-ri ;; send *aero* :match-ri
              (ros::publish "/aero_network/cmd_narrow_band/streamer"
                            (instance aero_network_tools::AeroNarrowCommand :init
-                                     :cmd -128))
+                                     :cmd -126))
              (print "send *aero* :angle-vector")
               ) 
 
-            (:stroke-vector ;; send *aero* :stroke-vector
-             (setq sv (send *aero* :stroke-vector))
-             (ros::publish "/aero_network/sv_narrow_band/streamer"
-                           (instance aero_network_tools::AeroJointStrokes :init
-                                     :strokeVector (concatenate float-vector
-                                                                (subseq sv 0 8)
-                                                                (subseq sv 11 19)
-                                                                (subseq sv 22 41))))
-             (print "send *aero* :stroke-vector")
+            (:angle-vector ;; send *aero* :angle-vector
+             (setq av (send *aero* :angle-vector))
+             (ros::publish "/aero_network/ocs_av_narrow_band/streamer"
+                           (instance aero_network_tools::AeroJointAngles :init
+                                     :angleVector (concatenate float-vector
+                                                                (subseq av 0 8)
+                                                                (subseq av 11 19)
+                                                                (subseq av 22 41))))
+             (print "send *aero* :angle-vector")
               )
             
             (:reset-manip-pose ;; send *aero* :reset-manip-pose
