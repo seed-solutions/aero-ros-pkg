@@ -3,7 +3,7 @@
 (ros::roseus "auto_aero_roseus")
 (ros::load-ros-manifest "aero_network_tools")
 
-(defvar *auto-aero-debug* t)
+(defvar *auto-aero-debug* nil)
 
 (defclass auto-aero-roseus-class
   :super propertied-object
@@ -22,6 +22,53 @@
     (setq last-msg -999)
     (setq msg-streak 0)
     )
+  (:send-feedback ()
+    (if (eq *auto-aero-debug* t)
+	(setq tmp (send *aero* :angle-vector))
+      (setq tmp (send *ri* :actual-vector)))
+    (setq tmp (concatenate float-vector
+			   (subseq (elt tmp 0) 0 8)
+			   (subseq (elt tmp 0) 11 19)
+			   (subseq (elt tmp 0) 22 28)
+			   (subseq (elt tmp 1) 0 12)))
+    (setq tmp (integer-vector (round (elt tmp 0)) ;rsP
+			      (round (elt tmp 1)) ;rsR
+			      (round (/ (elt tmp 2) 2)) ;rsY
+			      (round (+ (elt tmp 3) 50)) ;re
+			      (round (/ (elt tmp 4) 2)) ;rwY
+			      (round (elt tmp 5)) ;rwP
+			      (round (elt tmp 6)) ;rwR
+			      (round (elt tmp 7)) ;rt1
+			      (round (elt tmp 8)) ;lsP
+			      (round (elt tmp 9)) ;lsR
+			      (round (/ (elt tmp 10) 2)) ;lsY
+			      (round (+ (elt tmp 11) 50)) ;le
+			      (round (/ (elt tmp 12) 2)) ;lwY
+			      (round (elt tmp 13)) ;lwP
+			      (round (elt tmp 14)) ;lwR
+			      (round (elt tmp 15)) ;lt1
+			      (round (/ (elt tmp 16) 2)) ;wY
+			      (round (elt tmp 17)) ;wP
+			      (round (elt tmp 18)) ;wR
+			      (round (/ (elt tmp 19) 2)) ;nY
+			      (round (elt tmp 20)) ;nP
+			      (round (elt tmp 21)) ;nR
+			      (round (/ (elt tmp 22) 2)) ;rrY
+			      (round (elt tmp 23)) ;rrP
+			      (round (elt tmp 24)) ;rrkP
+			      (round (/ (elt tmp 25) 2)) ;frY
+			      (round (elt tmp 26)) ;frP
+			      (round (elt tmp 27)) ;frkP
+			      (round (/ (elt tmp 28) 2)) ;rlY
+			      (round (elt tmp 29)) ;rlP
+			      (round (elt tmp 30)) ;rlkP
+			      (round (/ (elt tmp 31) 2)) ;flY
+			      (round (elt tmp 32)) ;flP
+			      (round (elt tmp 33)))) ;flkP
+    (ros::publish "/aero_network/av_narrow_band_compressed/streamer"
+		  (instance aero_network_tools::AeroJointAnglesCompressed :init
+			    :angleVector tmp))
+    )
   (:sv-cb (msg)
     (setq tmp (send msg :strokeVector))
     (send *ri* :angle-vector (concatenate float-vector
@@ -31,6 +78,11 @@
 					  #f(0.0 0.0 0.0)
 					  (subseq tmp 16 34)
 					  #f(0.0)))
+    (send *aero* (send *ri* :actual-vector))
+    (ros::publish "/aero_network/resp_narrow_band/streamer"
+		  (instance aero_network_tools::AeroNarrowResponse :init
+			    :cmd 127 :resp 0))
+    (send self :send-feedback)
     )
   (:cmd-cb (msg)
     (let (r-msg av-msg (tmp))
@@ -230,51 +282,7 @@
 	    )
       (setq last-msg (send msg :cmd))
       (ros::publish "/aero_network/resp_narrow_band/streamer" r-msg)
-      (if (eq *auto-aero-debug* t)
-	  (setq tmp (send *aero* :angle-vector))
-	(setq tmp (send *ri* :actual-vector)))
-      (setq tmp (concatenate float-vector
-			     (subseq (elt tmp 0) 0 8)
-			     (subseq (elt tmp 0) 11 19)
-			     (subseq (elt tmp 0) 22 28)
-			     (subseq (elt tmp 1) 0 12)))
-      (setq tmp (integer-vector (round (elt tmp 0)) ;rsP
-				(round (elt tmp 1)) ;rsR
-				(round (/ (elt tmp 2) 2)) ;rsY
-				(round (+ (elt tmp 3) 50)) ;re
-				(round (/ (elt tmp 4) 2)) ;rwY
-				(round (elt tmp 5)) ;rwP
-				(round (elt tmp 6)) ;rwR
-				(round (elt tmp 7)) ;rt1
-				(round (elt tmp 8)) ;lsP
-				(round (elt tmp 9)) ;lsR
-				(round (/ (elt tmp 10) 2)) ;lsY
-				(round (+ (elt tmp 11) 50)) ;le
-				(round (/ (elt tmp 12) 2)) ;lwY
-				(round (elt tmp 13)) ;lwP
-				(round (elt tmp 14)) ;lwR
-				(round (elt tmp 15)) ;lt1
-				(round (/ (elt tmp 16) 2)) ;wY
-				(round (elt tmp 17)) ;wP
-				(round (elt tmp 18)) ;wR
-				(round (/ (elt tmp 19) 2)) ;nY
-				(round (elt tmp 20)) ;nP
-				(round (elt tmp 21)) ;nR
-				(round (/ (elt tmp 22) 2)) ;rrY
-				(round (elt tmp 23)) ;rrP
-				(round (elt tmp 24)) ;rrkP
-				(round (/ (elt tmp 25) 2)) ;frY
-				(round (elt tmp 26)) ;frP
-				(round (elt tmp 27)) ;frkP
-				(round (/ (elt tmp 28) 2)) ;rlY
-				(round (elt tmp 29)) ;rlP
-				(round (elt tmp 30)) ;rlkP
-				(round (/ (elt tmp 31) 2)) ;flY
-				(round (elt tmp 32)) ;flP
-				(round (elt tmp 33)))) ;flkP
-      (ros::publish "/aero_network/av_narrow_band_compressed/streamer"
-		    (instance aero_network_tools::AeroJointAnglesCompressed :init
-			      :angleVector tmp))
+      (send self :send-feedback)
       ))
   )
 
