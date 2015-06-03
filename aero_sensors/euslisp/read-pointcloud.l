@@ -15,6 +15,8 @@
 
 (defun callback (msg)
   ;; ROSのメッセージをeuslispのpointcloudに変換
+  (when (and (boundp '*points*) (find *points* (objects)))
+    (send *irtviewer* :objects (remove *points* (objects))))
   (setq *points*
         (make-eus-pointcloud-from-ros-msg
          msg :remove-nan t)) ;; for replace -> :remove-nan :replace
