@@ -1,10 +1,9 @@
 #!/usr/bin/env roseus
-(load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
-(load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
-(load "package://aero_ros_bridge/euslisp/walker.l")
 
 (ros::roseus "auto_aero_roseus")
 (ros::load-ros-manifest "aero_network_tools")
+
+(defvar *auto-aero-debug* t)
 
 (defclass auto-aero-roseus-class
   :super propertied-object
@@ -13,6 +12,7 @@
   (:init ()
     (ros::advertise "/aero_network/resp_narrow_band/streamer" aero_network_tools::AeroNarrowResponse)
     (ros::advertise "/aero_network/av_narrow_band/streamer" aero_network_tools::AeroJointAngles)
+    (ros::advertise "/aero_network/av_narrow_band_compressed/streamer" aero_network_tools::AeroJointAnglesCompressed)
     (ros::subscribe
      "/aero_network/cmd_narrow_band/receiver"
      aero_network_tools::AeroNarrowCommand #'send self :cmd-cb)
@@ -42,7 +42,9 @@
       (case (send msg :cmd)
 	    (-126 (setq av-msg
 			(instance aero_network_tools::AeroJointAngles :init))
-		  (setq tmp (send *ri* :actual-vector))
+		  (if (eq *auto-aero-debug* t)
+		      (setq tmp (send *aero* :angle-vector))
+		    (setq tmp (send *ri* :actual-vector)))
 		  (send av-msg :angleVector (concatenate float-vector
 							 (subseq (elt tmp 0) 0 8)
 							 (subseq (elt tmp 0) 11 19)
@@ -228,14 +230,63 @@
 	    )
       (setq last-msg (send msg :cmd))
       (ros::publish "/aero_network/resp_narrow_band/streamer" r-msg)
+      (if (eq *auto-aero-debug* t)
+	  (setq tmp (send *aero* :angle-vector))
+	(setq tmp (send *ri* :actual-vector)))
+      (setq tmp (concatenate float-vector
+			     (subseq (elt tmp 0) 0 8)
+			     (subseq (elt tmp 0) 11 19)
+			     (subseq (elt tmp 0) 22 28)
+			     (subseq (elt tmp 1) 0 12)))
+      (setq tmp (integer-vector (round (elt tmp 0)) ;rsP
+				(round (elt tmp 1)) ;rsR
+				(round (/ (elt tmp 2) 2)) ;rsY
+				(round (+ (elt tmp 3) 50)) ;re
+				(round (/ (elt tmp 4) 2)) ;rwY
+				(round (elt tmp 5)) ;rwP
+				(round (elt tmp 6)) ;rwR
+				(round (elt tmp 7)) ;rt1
+				(round (elt tmp 8)) ;lsP
+				(round (elt tmp 9)) ;lsR
+				(round (/ (elt tmp 10) 2)) ;lsY
+				(round (+ (elt tmp 11) 50)) ;le
+				(round (/ (elt tmp 12) 2)) ;lwY
+				(round (elt tmp 13)) ;lwP
+				(round (elt tmp 14)) ;lwR
+				(round (elt tmp 15)) ;lt1
+				(round (/ (elt tmp 16) 2)) ;wY
+				(round (elt tmp 17)) ;wP
+				(round (elt tmp 18)) ;wR
+				(round (/ (elt tmp 19) 2)) ;nY
+				(round (elt tmp 20)) ;nP
+				(round (elt tmp 21)) ;nR
+				(round (/ (elt tmp 22) 2)) ;rrY
+				(round (elt tmp 23)) ;rrP
+				(round (elt tmp 24)) ;rrkP
+				(round (/ (elt tmp 25) 2)) ;frY
+				(round (elt tmp 26)) ;frP
+				(round (elt tmp 27)) ;frkP
+				(round (/ (elt tmp 28) 2)) ;rlY
+				(round (elt tmp 29)) ;rlP
+				(round (elt tmp 30)) ;rlkP
+				(round (/ (elt tmp 31) 2)) ;flY
+				(round (elt tmp 32)) ;flP
+				(round (elt tmp 33)))) ;flkP
+      (ros::publish "/aero_network/av_narrow_band_compressed/streamer"
+		    (instance aero_network_tools::AeroJointAnglesCompressed :init
+			      :angleVector tmp))
       ))
   )
 
 (setq auto-aero-roseus (instance auto-aero-roseus-class :init))
 
 (load "package://aero_ros_bridge/euslisp/aero-interface.l")
-(load "package://aero_ros_bridge/euslip/walker.l")
-(aero-init)
+(load "package://aero_2015_final_drc/euslisp/aero-drc-testbed.l")
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
+(load "package://aero_ros_bridge/euslisp/walker.l")
+;; (aero-init)
+(make-drc-testbed-models-with-aero)
 (setq *real* t)
 
 (while (ros::ok)
