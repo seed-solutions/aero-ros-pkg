@@ -7,6 +7,7 @@
 ;;;
 (ros::roseus "cmd_narrow_s_converter")
 (ros::advertise "/aero_network/cmd_narrow_band/streamer" aero_network_tools::AeroNarrowCommand 50)
+(ros::advertise "/aero_network/sv_narrow_band/streamer" aero_network_tools::AeroJointStrokes 50)
 
 (defvar *exit-flag* nil)
 
@@ -111,6 +112,17 @@
              (print "send *aero* :angle-vector")
               ) 
 
+            (:stroke-vector ;; send *aero* :stroke-vector
+             (setq sv (send *aero* :stroke-vector))
+             (ros::publish "/aero_network/sv_narrow_band/streamer"
+                           (instance aero_network_tools::AeroJointStrokes :init
+                                     :strokeVector (concatenate float-vector
+                                                                (subseq sv 0 8)
+                                                                (subseq sv 11 19)
+                                                                (subseq sv 22 41))))
+             (print "send *aero* :stroke-vector")
+              )
+            
             (:reset-manip-pose ;; send *aero* :reset-manip-pose
              (ros::publish "/aero_network/cmd_narrow_band/streamer"
                            (instance aero_network_tools::AeroNarrowCommand :init
