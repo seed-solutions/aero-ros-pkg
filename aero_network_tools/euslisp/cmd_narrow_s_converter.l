@@ -108,7 +108,7 @@
             (:angle-vector ;; send *aero* :angle-vector
              (ros::publish "/aero_network/cmd_narrow_band/streamer"
                            (instance aero_network_tools::AeroNarrowCommand :init
-                                     :cmd -128))
+                                     :cmd -126))
              (print "send *aero* :angle-vector")
               ) 
 
