@@ -110,3 +110,17 @@
     (setq ans (read-line))
     )
   )
+
+(defun ik-with-torso-test ()
+  (unless (boundp '*aero*)
+    (aero-init)
+    (send *aero* :draw-on))
+  ;; test using torso
+  (dotimes (i 5)
+    (send *aero-upper* :rarm :inverse-kinematics
+	  (send (send (send *aero-upper* :rarm :end-coords) :copy-worldcoords)
+		:translate (float-vector 100 0 0) :world)
+	  :link-list (send *aero-upper* :link-list
+			   (send *aero-upper* :rarm :end-coords :parent)) :debug-view t)
+    )
+  )
