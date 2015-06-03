@@ -210,6 +210,27 @@
 				   :cmd 16
 				   :x 1))
 	   )
+	  (reset-terrain-pose2
+	   (send *aero* :reset-terrain-pose2)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 16
+				   :x 2))
+	   )
+	  (reset-climbing-pose
+	   (send *aero* :reset-climbing-pose)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 16
+				   :x 3))
+	   )
+	  (reset-climbing-pose2
+	   (send *aero* :reset-climbing-pose2)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 16
+				   :x 4))
+	   )
 	  (gp-thk-x
 	   (send *aero* :angle-vector (send *ri* :gp-thk-x))
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
@@ -398,6 +419,11 @@
 				       :z ~z~
 				       :theta ~balance-thre~
 				       :coords ~stride-length~)))
+	   )
+	  (flush
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd -125))
 	   )
 	  (t (warn "invalid command~%")))
     ))

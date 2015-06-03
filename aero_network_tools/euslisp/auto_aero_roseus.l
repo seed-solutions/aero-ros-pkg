@@ -106,6 +106,7 @@
 							 (subseq (elt tmp 1) 0 12)))
 		  (ros::publish "/aero_network/fc_av_narrow_band/streamer" av-msg)
 		  )
+	    (-125 t)
 	    (-7 (send *aero* :hand :arms :joint-angle (send msg :theta))
 		(send-angle-vector))
 	    (-5 (send *aero* :hand :arms :open-pose)
@@ -171,6 +172,9 @@
 	    (16 (send *aero* (case (send msg :x)
 				   (0 :reset-manip-pose)
 				   (1 :reset-terrain-pose)
+				   (2 :reset-terrain-pose2)
+				   (3 :reset-climbing-pose)
+				   (4 :reset-climbing-pose2)
 				   (t
 				    (send r-msg :resp -4)
 				    :angle-vector)
