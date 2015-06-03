@@ -1,3 +1,4 @@
+<!-- Launch at BRIX (Robot) -->
 <launch>
   <!-- ps4eye @ robot /-->
   <include file="$(find aero_sensors)/launch/start_ps4eye_capture.launch"/>
