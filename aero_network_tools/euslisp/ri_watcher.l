@@ -60,7 +60,7 @@
     (send *irtviewer* :draw-objects)
     ))
 
-(ros::subscribe "/aero_network/av_narrow_band_compressed/receiver"
+(ros::subscribe "/aero_network/ocs_av_narrow_band_compressed/receiver"
 		aero_network_tools::AeroJointAnglesCompressed
 		#'av_compressed_narrow_receiver_cb)
 
