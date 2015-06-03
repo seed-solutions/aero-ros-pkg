@@ -376,7 +376,31 @@
     (send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world)
     ;; (eval `(send self :lower limb :end-coords))
     )
-
+  (:error-vector ()
+    (mapcar 'v- (send *ri* :actual-vector) (send *aero* :angle-vector))
+    )
+  (:upper-error-sum (&optional (part :all))
+    (setq sum 0)
+    (setq upper-error-vector (elt (send self :error-vector) 0))
+    (case part
+          (:rarm
+           (setq startIndex 0)
+           (setq numJoints 11)
+           )
+          (:larm
+           (setq startIndex 11)
+           (setq numJoints 11)
+           )
+          (otherwise
+           (setq startIndex 0)
+           (setq numJoints (length upper-error-vector))
+           )
+          )
+    (dotimes (i numjoints)
+      (setq sum (+ sum (abs (aref upper-error-vector (+ i startIndex)))))
+      )
+    sum
+    )
 
 
   ;;;;;;;;;;;;;;;;;; for viewing ;;;;;;;;;;;;;;;;;;
@@ -406,7 +430,54 @@
       (send com-on-ground :draw-on :flush t)
       com-on-ground)  
     )
+  
+  (:print-lower-error-vector ()
+    (setq lower-error-vector (elt error-vector 1))
+    (setq lower-joint-names (send *aero-lower* :joint-list :name))
+    (print "------- lower ------")
+    (dotimes (i (length lower-error-vector))
+      ;; (format t "~f ~s~%" (aref lower-error-vector i) (elt lower-joint-names i))
+      (format t "~s ~a~%" (elt lower-joint-names i) (aref lower-error-vector i))
+      )
+    )
 
+  (:print-upper-error-vector (&optional (part :all))
+    (setq upper-joint-names (send *aero-upper* :joint-list :name))
+    (setq upper-error-vector (elt (send self :error-vector) 0))
+    (case part
+          (:rarm
+           (setq startIndex 0)
+           (setq numJoints 11)
+           )
+          (:larm
+           (setq startIndex 11)
+           (setq numJoints 11)
+           )
+          (otherwise
+           (setq startIndex 0)
+           (setq numJoints (length upper-error-vector))
+           )
+          )
+    (format t "------- upper ~a ------~%" part)
+    (dotimes (i numjoints)
+      (format t "~s ~a~%" (elt upper-joint-names (+ i startIndex)) (aref upper-error-vector (+ i startIndex)))
+      )
+    (send self :print-upper-error-sum part)
+    )
+  
+  (:print-upper-error-sum (&optional (part :all))
+    (format t "~a sum ~a~%" part (send self :upper-error-sum part))
+    )
+  
+  (:print-joint-error (upperOrLower jointID)
+    (setq error-vector (send self :error-vector))
+    (if (equal upperOrLower :upper)
+        (setq error-vector (elt error-vector 0))
+        (setq error-vector (elt error-vector 1)))
+    (setq joint-names (send self upperOrLower :joint-list :name))
+      ;; (format t "~f ~s~%" (aref upper-error-vector i) (elt upper-joint-names i))
+    (format t "~s ~a~%" (elt joint-names jointID) (aref error-vector jointID))
+    )
 
 
   ;;;;;;;;;;;;;;;;;; poses ;;;;;;;;;;;;;;;;;;  
