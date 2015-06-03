@@ -10,6 +10,7 @@ add_message_files(FILES
   AeroNarrowResponse.msg
   AeroJointStrokes.msg
   AeroJointAngles.msg
+  AeroJointAnglesCompressed.msg
 )
 
 generate_messages()
