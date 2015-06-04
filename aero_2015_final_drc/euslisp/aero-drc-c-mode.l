@@ -9,6 +9,7 @@
 (ros::advertise "/aero_network/ocs_av_narrow_band/streamer" aero_network_tools::AeroJointAngles 50)
 
 (defvar *task* nil)
+(defvar *saved-pose* nil)
 
 (defun av_cb (msg)
   (let (av)
@@ -29,6 +30,9 @@
 
 (ros::subscribe "/aero_network/ocs_av_narrow_band/receiver"
 		aero_network_tools::AeroJointAngles #'av_cb)
+
+(defun save-pose ()
+  (setq *saved-pose* (send *aero* :angle-vector)))
 
 (defun ctrl- (cmd)
   (let (~vector~ ~arm~ ~coords~ ~pose~ (~cmd~ 127) (~x~ 0) (~y~ 0) (~z~ 0) (~theta~ 0) (~flag~ 0)
@@ -237,6 +241,20 @@
 				   :cmd 16
 				   :x 5))
 	   )
+	  (reset-door-pose
+	   (send *aero* :reset-door-pose)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 16
+				   :x 6))
+	   )
+	  (reset-valve-pose
+	   (send *aero* :reset-valve-pose)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 16
+				   :x 7))
+	   )
 	  (gp-thk-x
 	   (send *aero* :angle-vector (send *ri* :gp-thk-x))
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
@@ -430,6 +448,20 @@
 				       :z ~z~
 				       :theta ~balance-thre~
 				       :coords ~stride-length~)))
+	   )
+	  (read-pose
+	   (cond ((not (eq *saved-pose* nil))
+		  (send *aero* :angle-vector *saved-pose*)
+		  (setq ~vector~ (send *aero* :angle-vector))
+		  (ros::publish "/aero_network/ocs_av_narrow_band/streamer"
+				(instance aero_network_tools::AeroJointAngles :init
+					  :angleVector
+					  (concatenate float-vector
+						       (subseq (elt ~vector~ 0) 0 8)
+						       (subseq (elt ~vector~ 0) 11 19)
+						       (subseq (elt ~vector~ 0) 22 28)
+						       (subseq (elt ~vector~ 1) 0 12))))
+		  ))
 	   )
 	  (flush
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"

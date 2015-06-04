@@ -59,7 +59,8 @@
 		      (send (send (send *aero-upper* arm :end-coords) :copy-worldcoords)
 			    :translate (v- hand-goal hand-pos) :world)
 		      :link-list (send *aero-upper* :link-list
-				       (send *aero-upper* arm :end-coords :parent))) nil)
+				       (send *aero-upper* arm :end-coords :parent))
+		      :rotation-axis :z) nil)
 	    (eq (send *aero* :upper arm :move-end-rot -1 #f(1 0 0) :world) nil))
 	(return-from rotate-valve i))
     (cond ((eq real t)
