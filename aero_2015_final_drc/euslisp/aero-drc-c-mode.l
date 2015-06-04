@@ -1,4 +1,3 @@
-(load "package://aero_2015_final_drc/euslisp/aero-drc-testbed.l")
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
 (load "package://aero_ros_bridge/euslisp/walker.l")
@@ -273,11 +272,13 @@
 		 (`r (setq ~arm~ :rarm) (setq ~cmd~ (- ~cmd~ 1)))
 		 (t (return-from ctrl- (warn "no such arm~%"))))
 	   (if (> (length cmd) 2) (setq ~y~ (elt cmd 2)) (setq ~y~ 0))
+	   (if (> (length cmd) 3) (setq ~theta~ (elt cmd 3)) (setq ~theta~ *open-angle*)) 
 	   (rotate-knob ~arm~ ~y~)
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
 				   :cmd ~cmd~
-				   :y ~y~))
+				   :y ~y~
+				   :theta ~theta~))
 	   )
 	  (open-door
 	   (if (not (equal *task* `door))
@@ -296,8 +297,6 @@
 	   )
 	  (setup-door
 	   (setup-door)
-	   (objects (list *door*))
-	   (send *aero* :draw-on)
 	   (setq *task* 'door)
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
@@ -335,8 +334,6 @@
 	   )
 	  (setup-valve
 	   (setup-valve)
-	   (objects (list *drc-valve*))
-	   (send *aero* :draw-on)
 	   (setq *task* 'valve)
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
@@ -456,8 +453,3 @@
     (if (boundp '*irtviewer*)
 	(send *irtviewer* :draw-objects))
     ))
-
-(make-drc-testbed-models-with-aero)
-(send *aero* :draw-on)
-
-(load "package://aero_sensors/euslisp/read-pointcloud.l")
