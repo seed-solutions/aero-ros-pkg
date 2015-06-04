@@ -47,7 +47,7 @@
 
   ;; @param goal: the relative goal position to move leg to
   ;; @param leg: the leg to move
-  (:step (goal leg &key (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)))
+  (:step (goal leg &key (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
     (setq goal-coords (send (send *aero* :lower leg :end-coords :copy-worldcoords) :translate goal :world))
     (print (send *aero* :lower leg :end-coords :worldcoords))
     (setq stepSize 10) ;; tuneable param
@@ -58,6 +58,10 @@
       (setq zvel (* (/ (* 8 step-height) numSteps) (- 0.5 (/ i numSteps)))) ;; add parabola vertical trajectory
       (setq vel (v+ vel (float-vector 0 0 zvel)))
       ;; (print (send *aero* :rate-balance (remove leg `(:rarm :larm :rleg :lleg))))
+      (if debug
+          (progn
+            (print ":step -- hit enter to step through loop")
+            (read-char)))
       (if (> (send *aero* :rate-balance (remove leg `(:rarm :larm :rleg :lleg))) balance-rate-thre)
       ;; (if t
           (progn
@@ -65,13 +69,13 @@
               (print ":step failed move-leg")
               (return-from :step nil)
               )
-
+            (send-angle-vector :time (* 0.1 *base-time*))
             (if (boundp '*irtviewer*)
                 (send *irtviewer* :draw-objects))
             (setq i (+ i 1))
             )
         (progn 
-          (unless (send self :shift-com-to-balance (remove leg `(:rarm :larm :rleg :lleg)) balance-rate-thre)
+          (unless (send self :shift-com-to-balance (remove leg `(:rarm :larm :rleg :lleg)) balance-rate-thre :debug debug)
             (print ":step -- shift-com-to-balance failed")
             (return-from :step nil))
           )
@@ -80,22 +84,23 @@
     ;; there might be some intergative error at this point after executing the trajectory.
     ;; need to adjust the foot by moving it to the goal position.
     (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
+    (send-angle-vector :time (* 0.1 *base-time*))
     t
     )
 
-  (:step-square (goal leg &key (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)))
+  (:step-square (goal leg &key (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
     ;; up stroke
-    (unless (send self :step (float-vector 0 0 (+ (elt goal 2) step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0)
+    (unless (send self :step (float-vector 0 0 (+ (elt goal 2) step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0 :debug debug)
       (print ":step-square failed at up stroke")
       (return-from :step-square nil)
       )
     ;; forward stroke
-    (unless (send self :step (float-vector (elt goal 0) (elt goal 1) 0) leg :balance-rate-thre balance-rate-thre :step-height 0)
+    (unless (send self :step (float-vector (elt goal 0) (elt goal 1) 0) leg :balance-rate-thre balance-rate-thre :step-height 0 :debug debug)
       (print ":step-square failed at forward stroke")
       (return-from :step-square nil)
       )
     ;; down stroke
-    (unless (send self :step (float-vector 0 0 (- step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0)
+    (unless (send self :step (float-vector 0 0 (- step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0 :debug debug)
       (print ":step-square failed at down stroke")
       (return-from :step-square nil)
       )
@@ -103,14 +108,19 @@
     )
          
   ;; move center of mass (waist) towards the direction of the trianlge center formed by the supporting legs 
-  (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)) (required-balance-rate 3) &key (step-size 0.5))
+  (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)) (required-balance-rate 3) &key (step-size 0.5) (debug nil))
     (setq count 0)
     (while  (< (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+      (if debug
+          (progn
+            (print ":step -- hit enter to step through loop")
+            (read-char)))
       (setq balance-center-direction (send self :get-balance-center-direction legs-on-ground))
       (format t ":shift-com-to-balance ~a~%" legs-on-ground)
       (format t "  balance rate ~f less than threshold ~f, shift center of mass~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
       (send *aero* :move-waist (scale step-size balance-center-direction))
       (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+      (send-angle-vector :time (* 0.1 *base-time*))
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
       (if (> count 20)
@@ -176,9 +186,8 @@
 
   ;; @param stride-length: how wide each step is
   ;; @param goal: the goal position relative to the robot
-  (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)))
+  (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
 
-    (setq debug nil)
     (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence
     (setq goal-direction-vec (normalize-vector goal))
     (setq goal-pos (v+ goal (send *aero* :lower :links :WAIST_LINK0 :worldpos))) ;; goal coordinates
@@ -199,10 +208,11 @@
         )
 
       ;; step the next leg forward
-      (unless (send self :step (scale stride-length goal-direction-vec) (car gait-seq) :balance-rate-thre balance-rate-thre :step-height step-height)
+      (unless (send self :step (scale stride-length goal-direction-vec) (car gait-seq) :balance-rate-thre balance-rate-thre :step-height step-height :debug debug)
         (format t ":walk -- failed to step >> ~s~%" (car gait-seq))
         (return-from :walk nil)
         )
+
 
       (if debug
           (progn
@@ -216,6 +226,7 @@
         (format t ":walk -- failed to move-waist forward~%")
         (return-from :walk nil)
         )
+      (send-angle-vector :time (* 0.5 *base-time*))
       
       (setq gait-seq `(,@(cdr gait-seq) ,(car gait-seq)))
       )
