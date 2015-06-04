@@ -4,4 +4,5 @@
     <param name="serial_baud" value="115200" />
     <param name="frame_id" value="urg_frame" />
   </node>
+  <node pkg="aero_sensors" type="urg_to_pcl.py" name="aero_urg_pcl" />
 </launch>
