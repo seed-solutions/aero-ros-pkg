@@ -345,7 +345,7 @@
 		 (dolist (x edge-lengths)
 		   (setq s (+ s x)))
 		 (setq get-3foot-center (scale (/ 1.0 3) get-3foot-center))
-		 (send (make-coords :pos get-3foot-center) :draw-on :flush t :size 500)
+		 ;; (send (make-coords :pos get-3foot-center) :draw-on :flush t :size 500)
 		 (setq s (/ s 2))
 		 (dolist (x edge-lengths)
 		   (setq area (* (- s x) area)))
