@@ -191,6 +191,7 @@
 				   (2 :reset-terrain-pose2)
 				   (3 :reset-climbing-pose)
 				   (4 :reset-climbing-pose2)
+				   (5 :reset-running-pose)
 				   (t
 				    (send r-msg :resp -4)
 				    :angle-vector)
