@@ -45,21 +45,6 @@
   (send *aero* :fix-leg-to-ground)
   )
 
-(defun reset-env-to (object angle)
-  (send *aero* :locate (send (send object :copy-worldcoords) :pos) :world)
-  (send *aero* :fix-leg-to-ground)
-  (if (not (= angle 0))
-      (send *aero* :rotate angle #f(0 0 1)))
-  (setq rot (rotation-angle
-             (send (send (send *aero* :upper :torso :end-coords) :copy-worldcoords)
-                   :rot)))
-  (cond ((not (eq rot nil))
-	 (setq rot (car rot))
-	 (send *aero* :rotate rot #f(0 0 1) :world)
-	 (send object :rotate rot #f(0 0 1) :world)))
-  )
-
-
 (defun eps-m3= (mat1 mat2)
   (dotimes (i 3)
     (if (not (eps-v= (matrix-row mat1 i) (matrix-row mat2 i)))

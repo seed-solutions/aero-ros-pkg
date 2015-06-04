@@ -420,6 +420,16 @@
 				       :theta ~balance-thre~
 				       :coords ~stride-length~)))
 	   )
+	  (w
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 18))
+	   )
+	  (ww
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 19))
+	   )
 	  (flush
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
@@ -433,9 +443,15 @@
     (setq ~ui~ (read-line))
     (if (equal ~ui~ "q")
 	(return-from c-mode nil))
+    (if (not (and (equal #\( (char ~ui~ 0))
+		  (equal #\) (char ~ui~ (- (length ~ui~) 1)))))
+	(setq ~ui~ (format nil "(~a)" ~ui~)))
     (ctrl- (read-from-string ~ui~))
     (if (boundp '*irtviewer*)
 	(send *irtviewer* :draw-objects))
     ))
 
 (make-drc-testbed-models-with-aero)
+(send *aero* :draw-on)
+
+(load "package://aero_sensors/euslisp/read-pointcloud.l")
