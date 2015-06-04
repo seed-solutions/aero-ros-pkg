@@ -231,6 +231,13 @@
 				   :cmd 16
 				   :x 4))
 	   )
+	  (reset-running-pose
+	   (send *aero* :reset-running-pose)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 16
+				   :x 5))
+	   )
 	  (gp-thk-x
 	   (send *aero* :angle-vector (send *ri* :gp-thk-x))
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
