@@ -207,7 +207,7 @@
 				       )))
 		(send-angle-vector)
 		(setq wait-intp t))
-	    (41 (rotate-knob :larm (send msg :y)))
+	    (41 (rotate-knob :larm (send msg :y) (send msg :theta)))
 	    (43 (open-door :larm (send msg :z)))
 	    (49 (setup-door))
 	    (50 (rotate-valve :rarm (send msg :x) (send msg :theta)))
@@ -322,12 +322,10 @@
 (setq auto-aero-roseus (instance auto-aero-roseus-class :init))
 
 (load "package://aero_ros_bridge/euslisp/aero-interface.l")
-(load "package://aero_2015_final_drc/euslisp/aero-drc-testbed.l")
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
 (load "package://aero_ros_bridge/euslisp/walker.l")
-;; (aero-init)
-(make-drc-testbed-models-with-aero)
+(aero-init)
 (setq *real* t)
 
 (while (ros::ok)
