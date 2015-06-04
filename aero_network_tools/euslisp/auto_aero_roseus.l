@@ -192,6 +192,8 @@
 				   (3 :reset-climbing-pose)
 				   (4 :reset-climbing-pose2)
 				   (5 :reset-running-pose)
+				   (6 :reset-door-pose)
+				   (7 :reset-valve-pose)
 				   (t
 				    (send r-msg :resp -4)
 				    :angle-vector)
