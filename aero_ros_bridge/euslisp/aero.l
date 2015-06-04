@@ -78,7 +78,8 @@
     (let ((original-end-coords-list) original-angle-vector
 	  original-coords)
       (when (< (norm waist-velocity) 3)
-	(warn ";; :move-waist error: waist-velocity is too small~%")
+        (unless *real*
+          (warn ";; :move-waist error: waist-velocity is too small~%"))
 	(return-from :move-waist nil))
       ;;
       (setf original-angle-vector (send *aero-lower* :angle-vector))
@@ -91,7 +92,8 @@
       (dolist (link (list :rarm :larm :rleg :lleg))
         (unless (send *aero-lower* link :inverse-kinematics
                        (car original-end-coords-list) :rotation-axis nil :stop 150)
-          (warn ";; move-waist IK failed >> ~S~%" link)
+        (unless *real*
+          (warn ";; move-waist IK failed >> ~S~%" link))
           (send *aero-lower* :angle-vector original-angle-vector)
           (send *aero-lower* :newcoords original-coords)
           (return-from :move-waist nil)
@@ -99,13 +101,15 @@
         (setf original-end-coords-list (cdr original-end-coords-list))
         )
       (unless (not (send self :self-collision-check))
-        (warn ";; move-waist failed at self collision check~%")
+        (unless *real*
+          (warn ";; move-waist failed at self collision check~%"))
         (send *aero-lower* :angle-vector original-angle-vector)
         (send *aero-lower* :newcoords original-coords)
         (return-from :move-waist nil)
         )
       (unless (eq (send self :cog-balance-check) t)
-        (warn ";; move-waist failed: unbalacned after moving waist~%")
+        (unless *real*
+          (warn ";; move-waist failed: unbalacned after moving waist~%"))
         (send *aero-lower* :angle-vector original-angle-vector)
         (send *aero-lower* :newcoords original-coords)
         (return-from :move-waist nil)
@@ -121,7 +125,8 @@
     (let ((original-end-coords-list) original-angle-vector
 	  original-coords)
       (when (< (abs angle) (deg2rad 0.1))
-	(warn ";; :rotate-waist error: angle is too small~%")
+        (unless *real*
+          (warn ";; :rotate-waist error: angle is too small~%"))
 	(return-from :rotate-waist nil))
       ;;
       (setf original-angle-vector (send *aero-lower* :angle-vector))
@@ -134,7 +139,8 @@
       (dolist (link (list :rarm :larm :rleg :lleg))
         (unless (send *aero-lower* link :inverse-kinematics
                        (car original-end-coords-list) :rotation-axis nil)
-          (warn ";; rotate-waist IK failed >> ~S~%" link)
+          (unless *real*
+            (warn ";; rotate-waist IK failed >> ~S~%" link))
           (send *aero-lower* :angle-vector original-angle-vector)
           (send *aero-lower* :links :WAIST_LINK0 :newcoords original-coords)
           (return-from :rotate-waist nil)
@@ -142,13 +148,15 @@
         (setf original-end-coords-list (cdr original-end-coords-list))
         )
       (unless (not (send self :self-collision-check))
-        (warn ";; rotate-waist failed at self collision check~%")
+        (unless *real*
+          (warn ";; rotate-waist failed at self collision check~%"))
         (send *aero-lower* :angle-vector original-angle-vector)
         (send *aero-lower* :links :WAIST_LINK0 :newcoords original-coords)
         (return-from :rotate-waist nil)
         )
       (unless (eq (send self :cog-balance-check) t)
-        (warn ";; rotate-waist failed: unbalacned after moving waist~%")
+        (unless *real*
+          (warn ";; rotate-waist failed: unbalacned after moving waist~%"))
         (send *aero-lower* :angle-vector original-angle-vector)
         (send *aero-lower* :links :WAIST_LINK0 :newcoords original-coords)
         (return-from :move-waist nil)

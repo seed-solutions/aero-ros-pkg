@@ -39,7 +39,8 @@
     (setq current-leg-end-coords (send *aero* :lower leg :end-coords :copy-worldcoords))
     (unless
         (send *aero-lower* leg :inverse-kinematics (send current-leg-end-coords :translate velocity :world) :rotation-axis nil :thre 0.1)
-      (warn ";; move-leg IK failed >> ~S" leg)
+      (unless *real*
+        (warn ";; move-leg IK failed >> ~S" leg))
       (return-from :move-leg nil)
       )
     t
@@ -49,7 +50,6 @@
   ;; @param leg: the leg to move
   (:step (goal leg &key (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
     (setq goal-coords (send (send *aero* :lower leg :end-coords :copy-worldcoords) :translate goal :world))
-    (print (send *aero* :lower leg :end-coords :worldcoords))
     (setq stepSize 10) ;; tuneable param
     (setq numSteps (/ (norm goal) stepSize))
     (setq i 1)
@@ -66,7 +66,8 @@
       ;; (if t
           (progn
             (unless (send self :move-leg vel leg)
-              (print ":step failed move-leg")
+              (unless *real*
+                (print ":step failed move-leg"))
               (return-from :step nil)
               )
             (send-angle-vector :time (* 0.1 *base-time*))
@@ -76,7 +77,8 @@
             )
         (progn 
           (unless (send self :shift-com-to-balance (remove leg `(:rarm :larm :rleg :lleg)) balance-rate-thre :debug debug)
-            (print ":step -- shift-com-to-balance failed")
+            (unless *real*
+              (print ":step -- shift-com-to-balance failed"))
             (return-from :step nil))
           )
         )
@@ -91,17 +93,20 @@
   (:step-square (goal leg &key (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
     ;; up stroke
     (unless (send self :step (float-vector 0 0 (+ (elt goal 2) step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0 :debug debug)
-      (print ":step-square failed at up stroke")
+      (unless *real*
+        (print ":step-square failed at up stroke"))
       (return-from :step-square nil)
       )
     ;; forward stroke
     (unless (send self :step (float-vector (elt goal 0) (elt goal 1) 0) leg :balance-rate-thre balance-rate-thre :step-height 0 :debug debug)
-      (print ":step-square failed at forward stroke")
+      (unless *real*
+        (print ":step-square failed at forward stroke"))
       (return-from :step-square nil)
       )
     ;; down stroke
     (unless (send self :step (float-vector 0 0 (- step-height)) leg :balance-rate-thre balance-rate-thre :step-height 0 :debug debug)
-      (print ":step-square failed at down stroke")
+      (unless *real*
+        (print ":step-square failed at down stroke"))
       (return-from :step-square nil)
       )
     t
@@ -116,16 +121,19 @@
             (print ":step -- hit enter to step through loop")
             (read-char)))
       (setq balance-center-direction (send self :get-balance-center-direction legs-on-ground))
-      (format t ":shift-com-to-balance ~a~%" legs-on-ground)
-      (format t "  balance rate ~f less than threshold ~f, shift center of mass~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+      (unless *real*
+        (format t ":shift-com-to-balance ~a~%" legs-on-ground)
+        (format t "  balance rate ~f less than threshold ~f, shift center of mass~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate))
       (send *aero* :move-waist (scale step-size balance-center-direction))
-      (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate)
+      (unless *real*
+        (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate))
       (send-angle-vector :time (* 0.1 *base-time*))
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
       (if (> count 20)
           (progn
-            (print ":shift-com-to-balance loop reached max iteration")
+            (unless *real*
+              (print ":shift-com-to-balance loop reached max iteration"))
             (return-from :shift-com-to-balance nil)
             )
         )
@@ -138,7 +146,6 @@
   ;; NOTE: this actually simply moves the waist on top of the triangle center for now.
   (:shift-com-to-support-center (&optional (legs-on-ground `(:rarm :rleg :lleg)))
     (let ((balance-center-direction (send self :get-balance-center-direction legs-on-ground)))
-      (print balance-center-direction)
       (send *aero* :move-waist balance-center-direction)
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
@@ -149,7 +156,6 @@
   ;; NOTE: this actually simply moves the waist on top of the triangle center for now.
   (:shift-com-to-center ()
     (let ((leg-quadrilateral-center-direction (send self :get-leg-quadrilateral-center-direction)))
-      (print leg-quadrilateral-center-direction)
       (send *aero* :move-waist leg-quadrilateral-center-direction)
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
@@ -209,7 +215,8 @@
 
       ;; step the next leg forward
       (unless (send self :step (scale stride-length goal-direction-vec) (car gait-seq) :balance-rate-thre balance-rate-thre :step-height step-height :debug debug)
-        (format t ":walk -- failed to step >> ~s~%" (car gait-seq))
+        (unless *real*
+          (format t ":walk -- failed to step >> ~s~%" (car gait-seq)))
         (return-from :walk nil)
         )
 
@@ -223,14 +230,17 @@
 
       ;; shift waist by 1/4 stride-length towards goal direction
       (unless (send *aero* :move-waist (v- next-waist-target-pos (send *aero* :lower :links :WAIST_LINK0 :worldpos)))
-        (format t ":walk -- failed to move-waist forward~%")
+        (unless *real*
+          (format t ":walk -- failed to move-waist forward~%"))
         (return-from :walk nil)
         )
       (send-angle-vector :time (* 0.5 *base-time*))
       
       (setq gait-seq `(,@(cdr gait-seq) ,(car gait-seq)))
       )
-    (format t "goal reached within ~f~%" goal-pos-thre)
+    (unless *real*
+        (format t "goal reached within ~f~%" goal-pos-thre))
+    t
     )
   )
 
