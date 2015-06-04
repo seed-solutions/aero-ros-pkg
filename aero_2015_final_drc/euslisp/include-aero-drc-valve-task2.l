@@ -1,3 +1,5 @@
+(load "package://aero_ros_bridge/euslisp/physical-interaction-tools.l")
+
 (defun ready-pose-valve ()
   (send *aero* :reset-manip-pose)
   (send *aero* :upper :rarm :move-end-pos #f(0 -100 100))
@@ -7,7 +9,7 @@
       (send *irtviewer* :draw-objects))
   )
 
-(defun grasp-and-rotate ()
+(defun grasp-and-rotate (&key hand-grasp-range #f(-40 0)))
   (setq rotate-vector #f(0 0 30))
   (setq start-angle-vector (send *aero* :angle-vector))
   (setq grasp-vector #f(100 100 0))
