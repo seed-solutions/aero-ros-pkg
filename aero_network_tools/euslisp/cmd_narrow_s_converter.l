@@ -11,24 +11,24 @@
 
 (defvar *exit-flag* nil)
 
-(defun av_narrow_receiver_cb (msg)
-  ;; (print (send msg :angleVector))
-  (send *aero* :angle-vector
-        (setq angle-vector (list
-                            (concatenate float-vector
-                                         (subseq (send msg :angleVector) 0 8)
-                                         #f(0 0 0)
-                                         (subseq (send msg :angleVector) 8 16)
-                                         #f(0 0 0)
-                                         (subseq (send msg :angleVector) 16 22))
-                            (concatenate float-vector
-                                         (subseq (send msg :angleVector)  22 34)
-                                         #f(0)))))
-  (if (boundp '*irtviewer*)
-      (send *irtviewer* :draw-objects))
-  )
+;; (defun av_narrow_receiver_cb (msg)
+;;   ;; (print (send msg :angleVector))
+;;   (send *aero* :angle-vector
+;;         (setq angle-vector (list
+;;                             (concatenate float-vector
+;;                                          (subseq (send msg :angleVector) 0 8)
+;;                                          #f(0 0 0)
+;;                                          (subseq (send msg :angleVector) 8 16)
+;;                                          #f(0 0 0)
+;;                                          (subseq (send msg :angleVector) 16 22))
+;;                             (concatenate float-vector
+;;                                          (subseq (send msg :angleVector)  22 34)
+;;                                          #f(0)))))
+;;   (if (boundp '*irtviewer*)
+;;       (send *irtviewer* :draw-objects))
+;;   )
 
-(ros::subscribe "/aero_network/ocs_av_narrow_band/receiver" aero_network_tools::AeroJointAngles #'av_narrow_receiver_cb)
+;; (ros::subscribe "/aero_network/ocs_av_narrow_band/receiver" aero_network_tools::AeroJointAngles #'av_narrow_receiver_cb)
 
 
 (defun narrow-band-mode ()
