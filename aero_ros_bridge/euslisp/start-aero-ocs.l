@@ -1,0 +1,17 @@
+(load "package://aero_ros_bridge/euslisp/aero-interface.l")
+(load "package://aero_ros_bridge/euslisp/walker.l")
+(load "package://aero_network_tools/euslisp/cmd_narrow_s_converter.l")
+;; (load "package://aero_ros_bridge/euslisp/physical-interaction-tools.l")
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-door-task.l")
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
+(load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task2.l")
+(load "package://aero_2015_final_drc/euslisp/aero-drc-c-mode.l")
+(load "package://aero_sensors/euslisp/read-pointcloud.l")
+
+(aero-init)
+(send *aero* :draw-on)
+(send *aero* :lower :newcoords (make-coords :pos #f( 0 0 0 )))
+(send *aero* :reset-manip-pose)
+(if (boundp `*irtviewer*)
+    (send *irtviewer* :draw-objects))
+
