@@ -45,16 +45,16 @@
 				 (elt (elt av 0) 27)) ;nR
 		   (float-vector (* (elt (elt av 1) 0) 2) ;rrY
 				 (elt (elt av 1) 1) ;rrP
-				 (elt (elt av 1) 2) ;rrkP
+				 (+ (elt (elt av 1) 2) 50) ;rrkP
 				 (* (elt (elt av 1) 3) 2) ;frY
 				 (elt (elt av 1) 4) ;frP
-				 (elt (elt av 1) 5) ;frkP
+				 (+ (elt (elt av 1) 5) 50) ;frkP
 				 (* (elt (elt av 1) 6) 2) ;rlY
 				 (elt (elt av 1) 7) ;rlP
-				 (elt (elt av 1) 8) ;rlkP
+				 (+ (elt (elt av 1) 8) 50) ;rlkP
 				 (* (elt (elt av 1) 9) 2) ;flY
 				 (elt (elt av 1) 10) ;flP
-				 (elt (elt av 1) 11) ;flkP
+				 (+ (elt (elt av 1) 11) 50) ;flkP
 				 (elt (elt av 1) 12)))) ;dummy
     (send *aero* :angle-vector av)
     (send *irtviewer* :draw-objects)

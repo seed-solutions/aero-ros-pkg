@@ -253,6 +253,7 @@
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
 				   :cmd -126))
+	   (warn "press enter to proceed~%")
 	   (read-line)
 	   (ros::spin-once)
 	   )
@@ -264,7 +265,7 @@
 		 (`l (setq ~arm~ :larm))
 		 (`r (setq ~arm~ :rarm) (setq ~cmd~ (- ~cmd~ 1)))
 		 (t (return-from ctrl- (warn "no such arm~%"))))
-	   (if (> (length cmd) 3) (setq ~y~ (elt cmd 2)) (setq ~y~ 0))
+	   (if (> (length cmd) 2) (setq ~y~ (elt cmd 2)) (setq ~y~ 0))
 	   (rotate-knob ~arm~ ~y~)
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
@@ -352,9 +353,11 @@
 	   (if (position `-sh cmd)
 	       (setq ~step-height~ (elt cmd (+ (position `-sh cmd) 1)))
 	     (setq ~step-height~ 100))
-	   (if (eq (send *walker* :step ~vector~ ~arm~
-			 :balance-rate-thre ~balance-thre~
-			 :step-height ~step-height~) nil)
+	   (send *walker* :step ~vector~ ~arm~
+		 :balance-rate-thre ~balance-thre~
+		 :step-height ~step-height~)
+	   (warn "enter \"step\" if walking is okay~%")
+	   (if (equal (read-line) "step")
 	       (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			     (instance aero_network_tools::AeroNarrowCommand :init
 				       :cmd ~cmd~
@@ -363,7 +366,7 @@
 				       :z ~z~
 				       :theta ~balance-thre~
 				       :coords ~step-height~)))
-	     )
+	   )
 	  (step-square
 	   (setq ~cmd~ 68)
 	   (case (elt cmd 1)
@@ -382,9 +385,11 @@
 	   (if (position `-sh cmd)
 	       (setq ~step-height~ (elt cmd (+ (position `-sh cmd) 1)))
 	     (setq ~step-height~ 100))
-	   (if (not (eq (send *walker* :step-square ~vector~ ~arm~
-			      :balance-rate-thre ~balance-thre~
-			      :step-height ~step-height~) nil))
+	   (send *walker* :step-square ~vector~ ~arm~
+		 :balance-rate-thre ~balance-thre~
+		 :step-height ~step-height~)
+	   (warn "enter \"step\" if walking is okay~%")
+	   (if (equal (read-line) "step")
 	       (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			     (instance aero_network_tools::AeroNarrowCommand :init
 				       :cmd ~cmd~
@@ -393,10 +398,10 @@
 				       :z ~z~
 				       :theta ~balance-thre~
 				       :coords ~step-height~)))
-	     )
+	   )
 	  (walk
-	   (setq ~x~ (elt cmd 2))
-	   (setq ~y~ (elt cmd 3))
+	   (setq ~x~ (elt cmd 1))
+	   (setq ~y~ (elt cmd 2))
 	   (setq ~vector~ (float-vector ~x~ ~y~ 0))
 	   (if (position `-br cmd)
 	       (setq ~balance-thre~ (elt cmd (+ (position `-br cmd) 1)))
@@ -407,28 +412,20 @@
 	   (if (position '-sl cmd)
 	       (setq ~stride-length~ (elt cmd (+ (position `-sl cmd) 1)))
 	     (setq ~stride-length~ 120))
-	   (if (not (eq (send *walker* :walk :goal ~vector~
-			      :balance-rate-thre ~balance-thre~
-			      :step-height ~z~
-			      :stride-length ~stride-length~) nil))
+	   (send *walker* :walk :goal ~vector~
+		 :balance-rate-thre ~balance-thre~
+		 :step-height ~z~
+		 :stride-length ~stride-length~)
+	   (warn "enter \"walk\" if walking is okay~%")
+	   (if (equal (read-line) "walk")
 	       (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			     (instance aero_network_tools::AeroNarrowCommand :init
-				       :cmd ~cmd~
+				       :cmd 69
 				       :x ~x~
 				       :y ~y~
 				       :z ~z~
 				       :theta ~balance-thre~
 				       :coords ~stride-length~)))
-	   )
-	  (w
-	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
-			 (instance aero_network_tools::AeroNarrowCommand :init
-				   :cmd 18))
-	   )
-	  (ww
-	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
-			 (instance aero_network_tools::AeroNarrowCommand :init
-				   :cmd 19))
 	   )
 	  (flush
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
@@ -443,10 +440,12 @@
     (setq ~ui~ (read-line))
     (if (equal ~ui~ "q")
 	(return-from c-mode nil))
-    (if (not (and (equal #\( (char ~ui~ 0))
-		  (equal #\) (char ~ui~ (- (length ~ui~) 1)))))
-	(setq ~ui~ (format nil "(~a)" ~ui~)))
-    (ctrl- (read-from-string ~ui~))
+    (if (not (equal ~ui~ ""))
+	(progn (if (not (and (equal #\( (char ~ui~ 0))
+			     (equal #\) (char ~ui~ (- (length ~ui~) 1)))))
+		   (setq ~ui~ (format nil "(~a)" ~ui~)))
+	       (ctrl- (read-from-string ~ui~)))
+      (warn "invalid command~%"))
     (if (boundp '*irtviewer*)
 	(send *irtviewer* :draw-objects))
     ))

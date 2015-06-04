@@ -55,16 +55,16 @@
 			      (round (elt tmp 21)) ;nR
 			      (round (/ (elt tmp 22) 2)) ;rrY
 			      (round (elt tmp 23)) ;rrP
-			      (round (elt tmp 24)) ;rrkP
+			      (round (- (elt tmp 24) 50)) ;rrkP
 			      (round (/ (elt tmp 25) 2)) ;frY
 			      (round (elt tmp 26)) ;frP
-			      (round (elt tmp 27)) ;frkP
+			      (round (- (elt tmp 27) 50)) ;frkP
 			      (round (/ (elt tmp 28) 2)) ;rlY
 			      (round (elt tmp 29)) ;rlP
-			      (round (elt tmp 30)) ;rlkP
+			      (round (- (elt tmp 30) 50)) ;rlkP
 			      (round (/ (elt tmp 31) 2)) ;flY
 			      (round (elt tmp 32)) ;flP
-			      (round (elt tmp 33)))) ;flkP
+			      (round (- (elt tmp 33) 50)))) ;flkP
     (ros::publish "/aero_network/fc_av_narrow_band_compressed/streamer"
 		  (instance aero_network_tools::AeroJointAnglesCompressed :init
 			    :angleVector tmp))
@@ -84,7 +84,7 @@
     (ros::publish "/aero_network/resp_narrow_band/streamer"
 		  (instance aero_network_tools::AeroNarrowResponse :init
 			    :cmd 127 :resp 0))
-    (unix::usleep (* 5000 1000))
+    (if (eq *auto-aero-debug* nil) (unix::usleep (* 5000 1000)))
     (send self :send-feedback)
     )
   (:cmd-cb (msg)
@@ -166,14 +166,14 @@
 	       (send-angle-vector)
 	       (setq wait-intp t))
 	    (8 (if (eq (send *aero* :move-waist
-			     (float-vector (send msg :x)
-					   (send msg :y)
-					   (send msg :z)))
-		       nil)
-		   (send r-msg :resp -2)
-		 (progn (send-angle-vector)
-			(setq wait-intp t))))
-	    (10 (setq tmp (send *ri* :go-pos
+	       		     (float-vector (send msg :x)
+	       				   (send msg :y)
+	       				   (send msg :z)))
+	       	       nil)
+	       	   (send r-msg :resp -2)))
+	    (10 (ros::publish "/aero_network/resp_narrow_band/streamer" r-msg)
+		(send r-msg :cmd -125)
+		(setq tmp (send *ri* :go-pos
 				(send msg :x) (send msg :y) (send msg :theta)
 				(send msg :coords)))
 		(if (< tmp 0) (send r-msg :resp -3)))
@@ -206,8 +206,6 @@
 				       )))
 		(send-angle-vector)
 		(setq wait-intp t))
-	    (18 (setq *wheel-stop* t))
-	    (19 (setq *wheel-emergency-stop* t))
 	    (41 (rotate-knob :larm (send msg :y)))
 	    (43 (open-door :larm (send msg :z)))
 	    (49 (setup-door))
@@ -314,7 +312,7 @@
 	    )
       (setq last-msg (send msg :cmd))
       (ros::publish "/aero_network/resp_narrow_band/streamer" r-msg)
-      (if (and (eq wait-intp t) (eq *auto-aero-debug* t))
+      (if (and (eq wait-intp t) (eq *auto-aero-debug* nil))
 	  (unix::usleep (* 5000 1000)))
       (send self :send-feedback)
       ))
