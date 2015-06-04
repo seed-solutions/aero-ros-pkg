@@ -195,10 +195,13 @@
   (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
 
     (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence
+    (setq first-limb (car gait-seq))
     (setq goal-direction-vec (normalize-vector goal))
-    (setq goal-pos (v+ goal (send *aero* :lower :links :WAIST_LINK0 :worldpos))) ;; goal coordinates
+    (setq goal-pos (v+ goal (send *aero* :lower :worldpos))) ;; goal coordinates
     (setq goal-pos-thre 100) ;; stop when we reach within goal-pos-thre from the goal
-    (while (> (distance (send *aero* :lower :links :WAIST_LINK0 :worldpos) goal-pos) goal-pos-thre)
+    (while (or
+            (> (distance (send *aero* :lower :worldpos) goal-pos) goal-pos-thre)
+            (not (equal (car gait-seq) first-limb)))
       ;; Each time we step a leg, we want to move the waist in goal direction by 1/4 stride-length
       ;; Since when we step a leg, the waist might be moved for balancing, calculate the desired
       ;; waist target pos now first.
