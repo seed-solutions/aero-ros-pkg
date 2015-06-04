@@ -15,7 +15,7 @@ class URGTFPublisher():
         tm = msg.header.stamp
         angle = msg.current_pos
         self.br.sendTransform(
-            (0, 0, 0),
+            (0.09, 0, 0.028),
             tf.transformations.quaternion_from_euler(angle, 0, 0),
             rospy.Time.now(),
             "urg_frame",

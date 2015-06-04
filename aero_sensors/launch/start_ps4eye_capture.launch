@@ -83,4 +83,7 @@
     <param name="right_file_name" value="$(arg camera_info_file_right)" />
   </node>
 
+  <node pkg="aero_sensors" type="set_ps4eye_autogain.sh"
+	name="set_ps4eye_autogain" />
+
 </launch>
