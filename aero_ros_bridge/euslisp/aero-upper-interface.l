@@ -356,3 +356,11 @@
   (when (and draw-objects (boundp '*irtviewer*))
     (send *irtviewer* :draw-objects))
   )
+
+(defun reset-running-pose
+  (&key (time (* 7 *base-time*)) (draw-objects t))
+  (send *aero* :reset-running-pose)
+  (send-angle-vector :time time)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  )
