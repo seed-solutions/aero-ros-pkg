@@ -7,6 +7,7 @@
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task2.l")
 (load "package://aero_2015_final_drc/euslisp/aero-drc-c-mode.l")
 (load "package://aero_sensors/euslisp/read-pointcloud.l")
+(load "package://aero_teleop/euslisp/vi-teleop.l")
 
 (aero-init)
 (send *aero* :draw-on)
