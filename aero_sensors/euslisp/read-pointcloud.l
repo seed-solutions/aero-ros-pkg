@@ -6,7 +6,8 @@
   (send *aero* :reset-manip-pose)
   (send *aero* :draw-on))
 
-(setq *points* nil)
+(setq *points* nil
+      *urg-points* nil)
 (setq *head-co* (send (car (last (send *aero* :upper :head))) :worldcoords))
 (setq *camera-co*
       (make-cascoords :pos (v+ (send *head-co* :worldpos) #f(20 50 80))
@@ -26,20 +27,45 @@
     (setq *points* nil))
   *points*)
 
+(defun urg-callback (msg)
+  ;; ROSのメッセージをeuslispのpointcloudに変換
+  (when (and (boundp '*urg-points*) (find *urg-points* (objects)))
+    (send *irtviewer* :objects (remove *urg-points* (objects)))
+    (objects))
+  (setq *urg-points*
+        (make-eus-pointcloud-from-ros-msg
+         msg :remove-nan t)) ;; for replace -> :remove-nan :replace
+  (if (and *urg-points* (> (send *urg-points* :size) 0))
+      (setf (get *urg-points* :header) (send msg :header))
+    (setq *urg-points* nil))
+
+  (setq waist-co
+	(send (car (send *aero* :upper :links)) :copy-worldcoords))
+  (setq urg-co
+	(send *tfl* :lookup-transform
+	      "base_link" "urg_frame" (ros::time 0)))
+  (send *urg-points* :newcoords (send waist-co :transform urg-co))
+  *urg-points*)
+
 (defvar *points* nil)
 (ros::subscribe "/stereo/points2"
                 sensor_msgs::PointCloud2
                 #'callback)
+(defvar *urg-points* nil)
+(ros::subscribe "/urg_points"
+                sensor_msgs::PointCloud2
+                #'urg-callback)
 
 (defun update-pointcloud (&optional (draw-objects t))
   (ros::spin-once)
   (ros::spin-once)
   (when *points*
     (send *points* :newcoords (send *camera-co* :copy-worldcoords))
-    (send *irtviewer* :objects *points*)
-    (when draw-objects
-      (send *irtviewer* :draw-objects)
-      )
+    (send *irtviewer* :objects *points*))
+  (when *urg-points*
+    (send *irtviewer* :objects *urg-points*))
+  (when draw-objects
+    (send *irtviewer* :draw-objects)
     )
   )
 
