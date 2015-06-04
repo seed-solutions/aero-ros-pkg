@@ -114,6 +114,7 @@
 
             (:angle-vector ;; send *aero* :angle-vector
              (setq av (send *aero* :angle-vector))
+             (setq av (concatenate float-vector (elt av 0) (elt av 1)))
              (ros::publish "/aero_network/ocs_av_narrow_band/streamer"
                            (instance aero_network_tools::AeroJointAngles :init
                                      :angleVector (concatenate float-vector
