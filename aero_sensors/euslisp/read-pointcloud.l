@@ -9,7 +9,7 @@
 (setq *points* nil)
 (setq *head-co* (send (car (last (send *aero* :upper :head))) :worldcoords))
 (setq *camera-co*
-      (make-cascoords :pos (v+ (send *head-co* :worldpos) #f(60 0 80))
+      (make-cascoords :pos (v+ (send *head-co* :worldpos) #f(20 50 80))
 		      :rpy (list -pi/2 0 -pi/2)))
 (send (car (last (send *aero* :upper :head))) :assoc *camera-co*)
 
