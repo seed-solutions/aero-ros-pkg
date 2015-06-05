@@ -207,6 +207,56 @@
       )
     )
 
+    ;; theta in degrees
+  ;; NOTE: only works on level ground
+  (:turn (theta &key (debug nil))
+     (if (> (abs theta) 20)
+         (progn
+           (format t ":turn -- can't turn more than 20 degrees at once")
+           (return-from :turn nil)
+           )
+       )
+     (setq start-pose (send *aero* :angle-vector))
+     (setq legs `(:rarm :larm :rleg :lleg)) 
+     (setq opposite-legs `(:lleg :rleg :larm :rarm))
+
+     (setq diameter-vectors nil)
+     (dotimes (i (length legs))
+       (setq diameter-vectors (append diameter-vectors 
+                                    (list (v-
+                                           (send *aero* :lower (elt legs i) :end-coords :worldpos)
+                                           (send *aero* :lower (elt opposite-legs i) :end-coords :worldpos)))))
+     )
+     (setq radius (/ (norm (elt diameter-vectors 0)) 2))
+     (dotimes (i (length legs))
+       (if debug
+           (read-char))
+       (setq normal (normalize-vector (elt diameter-vectors i)))
+       (setq tangent (normalize-vector (float-vector (aref normal 1) (- (aref normal 0)) 0)))
+       ;; (setq goal (v+ (send *aero* :lower (elt legs i) :end-coords :worldpos)
+                      ;; (scale (* radius (sin (deg2rad theta))) tanget)))
+       ;; (setq goal (v+ goal            
+                      ;; (scale (- radius (* radius (cos (deg2rad theta)))) normal)))
+       (setq goal (v+ (scale (* radius (- (sin (deg2rad theta)))) tangent)
+                      (scale (- (* radius (cos (deg2rad theta))) radius) normal)))
+
+       (unless (send self :step goal (elt legs i))
+         (return-from :turn nil))
+       )
+     (send *aero* :rotate-waist (deg2rad theta) #f(0 0 1))
+     (send-angle-vector :time (* 1 *base-time*))
+     (if *real*
+        (unix:usleep (round (* 1000 (* 1.1 *base-time*)))))
+     (send *aero* :angle-vector start-pose)
+     (send-angle-vector :time (* 1 *base-time*))
+     (if *real*
+         (unix:usleep (round (* 1000 (* 1.1 *base-time*)))))
+     (if (boundp `*irtviewer*)
+         (send *irtviewer* :draw-objects))
+     (send *aero-lower* :links :WAIST_LINK0 :newcoords
+           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0))) ;; this line is required otherwise subsequent calls to walk and step will move the robot in weird directions
+     )
+  
   ;; @param stride-length: how wide each step is
   ;; @param goal: the goal position relative to the robot
   (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
@@ -274,6 +324,24 @@
           (t  ;; left and back left 
            (setq gait-seq `(:lleg :rarm :larm :rleg)))
           )
+    )
+
+  (:running-pose-to-terrain-pose ()
+    (send self :step #f(-9.94248 100.817 0) :larm :balance-rate-thre 5 :step-height 50)
+    (send self :step #f(-9.94248 -100.817 0) :rarm :balance-rate-thre 5 :step-height 50)
+    (send self :step #f(17.9083 -12.5389 0) :lleg :balance-rate-thre 5 :step-height 50)
+    (send self :step #f(17.9083 12.5389 0) :rleg :balance-rate-thre 5 :step-height 50)
+    (send *aero* :reset-terrain-pose2)
+    (send-angle-vector :time (* 3 *base-time*))
+    )
+
+  (:terrain-pose-to-running-pose ()
+    (send self :step #f(-17.9083 -12.5389 0) :rleg :balance-rate-thre 5 :step-height 50)
+    (send self :step #f(-17.9083 12.5389 0) :lleg :balance-rate-thre 5 :step-height 50)
+    (send self :step #f(9.94248 100.817 0) :rarm :balance-rate-thre 5 :step-height 50)
+    (send self :step #f(9.94248 -100.817 0) :larm :balance-rate-thre 5 :step-height 50)
+    (send *aero* :reset-running-pose)
+    (send-angle-vector :time (* 3 *base-time*))
     )
   )
 
