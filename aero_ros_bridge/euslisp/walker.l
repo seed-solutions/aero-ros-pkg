@@ -6,7 +6,7 @@
 (defclass Walker
   :super object
   :slots (def_balance_rate_thre def_step_height def_step_square_height def_stride_length
-           def_walk_goal))
+           def_walk_goal)
  )
 (defmethod Walker
   (:init ()
@@ -194,7 +194,7 @@
   ;; @param goal: the goal position relative to the robot
   (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
 
-    (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence
+    (setq gait-seq (send self :get-gait-seq goal)) ;; define gait sequence
     (setq first-limb (car gait-seq))
     (setq goal-direction-vec (normalize-vector goal))
     (setq goal-pos (v+ goal (send *aero* :lower :worldpos))) ;; goal coordinates
@@ -245,7 +245,20 @@
         (format t "goal reached within ~f~%" goal-pos-thre))
     t
     )
+
+  (:get-gait-seq (goal)
+    (cond ((and (> (aref goal 0) 0) (>= (aref goal 1) 0)) ;; front and front left
+           (setq gait-seq `(:larm :rleg :rarm :lleg)))
+          ((and (>= (aref goal 0) 0) (> (aref goal 1) 0)) ;; front right and right
+           (setq gait-seq `(:rarm :lleg :rleg :larm)))
+          ((and (< (aref goal 0) 0) (<= (aref goal 1) 0)) ;; back right and back
+           (setq gait-seq `(:rleg :larm :lleg :rarm)))
+          (t  ;; left and back left 
+           (setq gait-seq `(:lleg :rarm :larm :rleg)))
+    
+    )
   )
+
 
 (if (not (boundp '*walker*))
     (setq *walker* (instance Walker :init)))
