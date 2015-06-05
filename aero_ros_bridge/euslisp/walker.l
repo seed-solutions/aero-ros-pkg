@@ -80,7 +80,8 @@
               (return-from :step nil)
               )
             (send-angle-vector :time (* 0.5 *base-time*))
-            (unix:usleep (round (* 1000 (* 0.6 *base-time*))))
+            (if *real*
+              (unix:usleep (round (* 1000 (* 0.6 *base-time*)))))
             (if (boundp '*irtviewer*)
                 (send *irtviewer* :draw-objects))
             (setq i (+ i 1))
@@ -98,7 +99,8 @@
     ;; need to adjust the foot by moving it to the goal position.
     (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
     (send-angle-vector :time (* 0.5 *base-time*))
-    (unix:usleep (round (* 1000 (* 0.6 *base-time*))))
+    (if *real*
+      (unix:usleep (round (* 1000 (* 0.6 *base-time*)))))
     t
     )
 
@@ -140,7 +142,8 @@
       (unless *real*
         (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate))
       (send-angle-vector :time (* 1 *base-time*))
-      (unix:usleep (round (* 1000 (* 1.1 *base-time*))))
+      (if *real*
+        (unix:usleep (round (* 1000 (* 1.1 *base-time*)))))
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
       (if (> count 20)
@@ -251,7 +254,8 @@
         (return-from :walk nil)
         )
       (send-angle-vector :time (* 2 *base-time*))
-      (unix:usleep (round (* 1000 (* 2.1 *base-time*))))
+      (if *real*
+        (unix:usleep (round (* 1000 (* 2.1 *base-time*)))))
       (setq gait-seq `(,@(cdr gait-seq) ,(car gait-seq)))
       )
     (unless *real*
@@ -262,7 +266,7 @@
   (:get-gait-seq (goal)
     (cond ((and (> (aref goal 0) 0) (>= (aref goal 1) 0)) ;; front and front left
            (setq gait-seq `(:larm :rleg :rarm :lleg)))
-          ((and (>= (aref goal 0) 0) (> (aref goal 1) 0)) ;; front right and right
+          ((and (>= (aref goal 0) 0) (< (aref goal 1) 0)) ;; front right and right
            (setq gait-seq `(:rarm :lleg :rleg :larm)))
           ((and (< (aref goal 0) 0) (<= (aref goal 1) 0)) ;; back right and back
            (setq gait-seq `(:rleg :larm :lleg :rarm)))
