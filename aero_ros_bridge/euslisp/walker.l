@@ -6,7 +6,7 @@
 (defclass Walker
   :super object
   :slots (def_balance_rate_thre def_step_height def_step_square_height def_stride_length
-           def_walk_goal))
+           def_walk_goal)
  )
 (defmethod Walker
   (:init ()
@@ -80,7 +80,8 @@
               (return-from :step nil)
               )
             (send-angle-vector :time (* 0.5 *base-time*))
-            (unix:usleep (round (* 1000 (* 0.6 *base-time*))))
+            (if *real*
+              (unix:usleep (round (* 1000 (* 0.6 *base-time*)))))
             (if (boundp '*irtviewer*)
                 (send *irtviewer* :draw-objects))
             (setq i (+ i 1))
@@ -98,7 +99,8 @@
     ;; need to adjust the foot by moving it to the goal position.
     (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
     (send-angle-vector :time (* 0.5 *base-time*))
-    (unix:usleep (round (* 1000 (* 0.6 *base-time*))))
+    (if *real*
+      (unix:usleep (round (* 1000 (* 0.6 *base-time*)))))
     t
     )
 
@@ -140,7 +142,8 @@
       (unless *real*
         (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate))
       (send-angle-vector :time (* 1 *base-time*))
-      (unix:usleep (round (* 1000 (* 1.1 *base-time*))))
+      (if *real*
+        (unix:usleep (round (* 1000 (* 1.1 *base-time*)))))
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
       (if (> count 20)
@@ -207,7 +210,7 @@
   ;; @param goal: the goal position relative to the robot
   (:walk (&key (stride-length (send self :get-val `def_stride_length)) (goal (send self :get-val `def_walk_goal)) (balance-rate-thre (send self :get-val `def_balance_rate_thre)) (step-height (send self :get-val `def_step_height)) (debug nil))
 
-    (setq gait-seq `(:larm :rleg :rarm :lleg)) ;; define gait sequence
+    (setq gait-seq (send self :get-gait-seq goal)) ;; define gait sequence
     (setq first-limb (car gait-seq))
     (setq goal-direction-vec (normalize-vector goal))
     (setq goal-pos (v+ goal (send *aero* :lower :worldpos))) ;; goal coordinates
@@ -251,14 +254,28 @@
         (return-from :walk nil)
         )
       (send-angle-vector :time (* 2 *base-time*))
-      (unix:usleep (round (* 1000 (* 2.1 *base-time*))))
+      (if *real*
+        (unix:usleep (round (* 1000 (* 2.1 *base-time*)))))
       (setq gait-seq `(,@(cdr gait-seq) ,(car gait-seq)))
       )
     (unless *real*
         (format t "goal reached within ~f~%" goal-pos-thre))
     t
     )
+
+  (:get-gait-seq (goal)
+    (cond ((and (> (aref goal 0) 0) (>= (aref goal 1) 0)) ;; front and front left
+           (setq gait-seq `(:larm :rleg :rarm :lleg)))
+          ((and (>= (aref goal 0) 0) (< (aref goal 1) 0)) ;; front right and right
+           (setq gait-seq `(:rarm :lleg :rleg :larm)))
+          ((and (< (aref goal 0) 0) (<= (aref goal 1) 0)) ;; back right and back
+           (setq gait-seq `(:rleg :larm :lleg :rarm)))
+          (t  ;; left and back left 
+           (setq gait-seq `(:lleg :rarm :larm :rleg)))
+    
+    )
   )
+
 
 (if (not (boundp '*walker*))
     (setq *walker* (instance Walker :init)))
