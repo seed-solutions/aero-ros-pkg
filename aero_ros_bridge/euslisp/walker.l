@@ -10,10 +10,10 @@
  )
 (defmethod Walker
   (:init ()
-    (send self :set-val 'def_balance_rate_thre 5)
-    (send self :set-val 'def_step_height 100)
-    (send self :set-val 'def_step_square_height 10)
-    (send self :set-val 'def_stride_length 120)
+    (send self :set-val 'def_balance_rate_thre 10)
+    (send self :set-val 'def_step_height 50)
+    (send self :set-val 'def_step_square_height 20)
+    (send self :set-val 'def_stride_length 100)
     (send self :set-val 'def_walk_goal #f(500 0 0))
     )
   ;; @param goal: the coords of the final goal where the robot wants to go
@@ -53,9 +53,18 @@
     (setq stepSize 10) ;; tuneable param
     (setq numSteps (/ (norm goal) stepSize))
     (setq i 1)
-    (while (<= i numSteps)
-      (setq vel (scale stepSize (normalize-vector goal))) ;; straight trajectory to goal
-      (setq zvel (* (/ (* 8 step-height) numSteps) (- 0.5 (/ i numSteps)))) ;; add parabola vertical trajectory
+    (setq remainingDist (norm goal))
+    (while (> remainingDist 0)
+      (if (> remainingDist stepSize)
+          (progn
+            (setq vel (scale stepSize (normalize-vector goal))) ;; straight trajectory to goal
+            (setq zvel (* (/ (* 8 step-height) numSteps) (- 0.5 (/ i numSteps)))) ;; add parabola vertical trajectory
+            )
+        (progn
+          (setq vel (scale remainingDist (normalize-vector goal))) ;; straight trajectory to goal
+          (setq zvel 0)
+          )
+        )
       (setq vel (v+ vel (float-vector 0 0 zvel)))
       ;; (print (send *aero* :rate-balance (remove leg `(:rarm :larm :rleg :lleg))))
       (if debug
@@ -70,7 +79,8 @@
                 (print ":step failed move-leg"))
               (return-from :step nil)
               )
-            (send-angle-vector :time (* 0.1 *base-time*))
+            (send-angle-vector :time (* 0.5 *base-time*))
+            (unix:usleep (round (* 1000 (* 0.6 *base-time*))))
             (if (boundp '*irtviewer*)
                 (send *irtviewer* :draw-objects))
             (setq i (+ i 1))
@@ -82,11 +92,13 @@
             (return-from :step nil))
           )
         )
+      (setq remainingDist (- remainingDist stepSize))
       )
     ;; there might be some intergative error at this point after executing the trajectory.
     ;; need to adjust the foot by moving it to the goal position.
     (send *aero-lower* leg :inverse-kinematics goal-coords :rotation-axis nil :thre 100)
-    (send-angle-vector :time (* 0.1 *base-time*))
+    (send-angle-vector :time (* 0.5 *base-time*))
+    (unix:usleep (round (* 1000 (* 0.6 *base-time*))))
     t
     )
 
@@ -127,7 +139,8 @@
       (send *aero* :move-waist (scale step-size balance-center-direction))
       (unless *real*
         (format t ":shift-com-to-balance -- balance rate after shifting center of mass ~f~%" (send *aero* :rate-balance legs-on-ground) required-balance-rate))
-      (send-angle-vector :time (* 0.1 *base-time*))
+      (send-angle-vector :time (* 1 *base-time*))
+      (unix:usleep (round (* 1000 (* 1.1 *base-time*))))
       (if (boundp '*irtviewer*)
           (send *irtviewer* :draw-objects))
       (if (> count 20)
@@ -237,8 +250,8 @@
           (format t ":walk -- failed to move-waist forward~%"))
         (return-from :walk nil)
         )
-      (send-angle-vector :time (* 0.5 *base-time*))
-      
+      (send-angle-vector :time (* 2 *base-time*))
+      (unix:usleep (round (* 1000 (* 2.1 *base-time*))))
       (setq gait-seq `(,@(cdr gait-seq) ,(car gait-seq)))
       )
     (unless *real*
