@@ -125,7 +125,8 @@
       )
     t
     )
-         
+
+
   ;; move center of mass (waist) towards the direction of the trianlge center formed by the supporting legs 
   (:shift-com-to-balance (&optional (legs-on-ground `(:rarm :rleg :lleg)) (required-balance-rate 3) &key (step-size 0.5) (debug nil))
     (setq count 0)
@@ -272,10 +273,9 @@
            (setq gait-seq `(:rleg :larm :lleg :rarm)))
           (t  ;; left and back left 
            (setq gait-seq `(:lleg :rarm :larm :rleg)))
-    
+          )
     )
   )
-
 
 (if (not (boundp '*walker*))
     (setq *walker* (instance Walker :init)))
