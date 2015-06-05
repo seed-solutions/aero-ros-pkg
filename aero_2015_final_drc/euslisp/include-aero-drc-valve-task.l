@@ -36,6 +36,7 @@
 (defun rotate-valve (arm grab-at-where rotate-how-much &optional (real *real*))
   ;; grab-at-where is valve degree you grabbed at, rotate-how-much is valve degree you rotate from current grab
   (let ((crank-joint-angle 0))
+    (setq rotate-how-much (round (/ rotate-how-much 10)))
     (dotimes (i rotate-how-much)
       (setq hand-pos (float-vector 0
 				   (* *grab-point*
@@ -45,7 +46,7 @@
 				      (cos (deg2rad (+ grab-at-where
 						       crank-joint-angle))))
 				   ))
-      (incf crank-joint-angle)
+      (setq crank-joint-angle (+ crank-joint-angle 10))
       (setq hand-goal (float-vector 0
 				    (* *grab-point*
 				       (sin (deg2rad (+ grab-at-where
@@ -61,11 +62,14 @@
 		      :link-list (send *aero-upper* :link-list
 				       (send *aero-upper* arm :end-coords :parent))
 		      :rotation-axis :z) nil)
-	    (eq (send *aero* :upper arm :move-end-rot -1 #f(1 0 0) :world) nil))
+	    ;; (eq (send *aero* :upper arm :move-end-rot -1 #f(1 0 0) :world) nil))
+	    (eq (send *aero* :upper arm :move-end-rot -10 #f(1 0 0) :world) nil))
 	(return-from rotate-valve i))
     (cond ((eq real t)
-	   (send *ri* :angle-vector (send *aero* :stroke-vector) 20)
-	   (unix::usleep (* 40 1000))))
+	   ;; (send *ri* :angle-vector (send *aero* :stroke-vector) 20)
+	   ;; (unix::usleep (* 40 1000))))
+	   (send *ri* :angle-vector (send *aero* :stroke-vector) 500)
+	   (unix::usleep (* 600 1000))))
     (if (boundp '*irtviewer*)
 	(send *irtviewer* :draw-objects))
   ))
