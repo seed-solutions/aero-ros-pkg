@@ -364,3 +364,86 @@
   (when (and draw-objects (boundp '*irtviewer*))
     (send *irtviewer* :draw-objects))
   )
+
+(defun drive-pose
+  (&key (time (* 7 *base-time*)) (draw-objects t))
+  (send *aero* :drive-pose)
+  (send-angle-vector :time time)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  )
+
+(defun go-over-stack
+  (&key (draw-objects t))
+  ;; start from drive-pose
+  (send *aero* :move-waist (float-vector 0 0 -105))
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :lower :rarm :move-end-pos
+	(float-vector 0 0 40) :world :rotation-axis :y)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :lower :rarm :move-end-pos
+	(float-vector 80 0 0) :world :rotation-axis :y)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :lower :rarm :move-end-pos
+	(float-vector 0 0 -40) :world :rotation-axis :y)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;----
+  (send *aero* :lower :larm :move-end-pos
+	(float-vector 0 0 40) :world :rotation-axis :y)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :lower :larm :move-end-pos
+	(float-vector 80 0 0) :world :rotation-axis :y)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :lower :larm :move-end-pos
+	(float-vector 0 0 -40) :world :rotation-axis :y)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :upper :rarm :elbow-p :joint-angle -120)
+  (send *aero* :upper :larm :elbow-p :joint-angle -120)
+  (send *aero* :upper :torso :waist-p :joint-angle 20)
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  ;;
+  (send *aero* :move-waist (float-vector 0 0 105))
+  (when (and draw-objects (boundp '*irtviewer*))
+    (send *irtviewer* :draw-objects))
+  (send-angle-vector)
+  (when *real*
+    (unix:usleep (* 5 1100000)))
+  )
