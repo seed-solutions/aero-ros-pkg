@@ -456,6 +456,12 @@
 				       :theta ~balance-thre~
 				       :coords ~stride-length~)))
 	   )
+	  (go-over-stack
+	   (send *aero* :go-over-stack)
+	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
+			 (instance aero_network_tools::AeroNarrowCommand :init
+				   :cmd 31))
+	   )
 	  (read-pose
 	   (cond ((not (eq *saved-pose* nil))
 		  (send *aero* :angle-vector *saved-pose*)

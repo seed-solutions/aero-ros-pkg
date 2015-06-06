@@ -211,6 +211,7 @@
 				       )))
 		(send-angle-vector)
 		(setq wait-intp t))
+	    (31 (send *aero* :go-over-stack))
 	    (41 (rotate-knob :larm (send msg :y) (send msg :theta)))
 	    (43 (open-door :larm (send msg :z)))
 	    (49 (setup-door))
