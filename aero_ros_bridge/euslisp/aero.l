@@ -31,6 +31,8 @@
         )
       (send (send *aero-lower* :links :WAIST_LINK0) :assoc (send *aero-upper* :links :WAIST_LINK0)))
       (setq ((send *aero-upper* :head :neck-p) . max-angle) 40)
+      (setq ((send *aero-lower* :rarm :shoulder-y) . max-angle) 0)
+      (setq ((send *aero-lower* :larm :shoulder-y) . min-angle) 0)
 
       ;; shin coords for kneeling
       (setq lshin-coords (send (send (make-cascoords :coords (send (send *aero-lower* :larm :end-coords) :copy-worldcoords)) :rotate (deg2rad -120) :y) :locate (float-vector 200 0 -40)))
