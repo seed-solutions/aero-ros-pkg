@@ -457,7 +457,7 @@
 				       :coords ~stride-length~)))
 	   )
 	  (go-over-stack
-	   (send *aero* :go-over-stack)
+	   (go-over-stack)
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
 			 (instance aero_network_tools::AeroNarrowCommand :init
 				   :cmd 31))
