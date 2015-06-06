@@ -371,10 +371,10 @@
 	   (setq ~vector~ (float-vector ~x~ ~y~ ~z~))
 	   (if (position `-br cmd)
 	       (setq ~balance-thre~ (elt cmd (+ (position `-br cmd) 1)))
-	     (setq ~balance-thre~ 2.0))
+	     (setq ~balance-thre~ 5.0))
 	   (if (position `-sh cmd)
 	       (setq ~step-height~ (elt cmd (+ (position `-sh cmd) 1)))
-	     (setq ~step-height~ 100))
+	     (setq ~step-height~ 50))
 	   (send *walker* :step ~vector~ ~arm~
 		 :balance-rate-thre ~balance-thre~
 		 :step-height ~step-height~)
@@ -403,10 +403,10 @@
 	   (setq ~vector~ (float-vector ~x~ ~y~ ~z~))
 	   (if (position `-br cmd)
 	       (setq ~balance-thre~ (elt cmd (+ (position `-br cmd) 1)))
-	     (setq ~balance-thre~ 2.0))
+	     (setq ~balance-thre~ 5.0))
 	   (if (position `-sh cmd)
 	       (setq ~step-height~ (elt cmd (+ (position `-sh cmd) 1)))
-	     (setq ~step-height~ 100))
+	     (setq ~step-height~ 30))
 	   (send *walker* :step-square ~vector~ ~arm~
 		 :balance-rate-thre ~balance-thre~
 		 :step-height ~step-height~)
@@ -427,13 +427,13 @@
 	   (setq ~vector~ (float-vector ~x~ ~y~ 0))
 	   (if (position `-br cmd)
 	       (setq ~balance-thre~ (elt cmd (+ (position `-br cmd) 1)))
-	     (setq ~balance-thre~ 2.0))
+	     (setq ~balance-thre~ 10.0))
 	   (if (position `-sh cmd)
 	       (setq ~z~ (elt cmd (+ (position `-sh cmd) 1)))
-	     (setq ~z~ 100))
+	     (setq ~z~ 50))
 	   (if (position '-sl cmd)
 	       (setq ~stride-length~ (elt cmd (+ (position `-sl cmd) 1)))
-	     (setq ~stride-length~ 120))
+	     (setq ~stride-length~ 100))
 	   (send *walker* :walk :goal ~vector~
 		 :balance-rate-thre ~balance-thre~
 		 :step-height ~z~

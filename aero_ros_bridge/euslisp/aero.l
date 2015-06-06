@@ -529,18 +529,17 @@
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
     )
-  (:reset-running-pose
-   ()
+  (:reset-running-pose ()
    (send self :angle-vector (list (float-vector 0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0) (float-vector 35.0 58.2789 119.707 0.0 58.2789 119.707 -35.0 58.279 119.707 0.0 58.2789 119.707 0.0)))
    (send *aero-lower* :links :WAIST_LINK0 :newcoords
 	 (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
    (send self :fix-leg-to-ground)
    )
   (:reset-door-pose ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 50.0 -50.0 0.0 0.0 0.0 15.0 0.0 -90.0 -75.0 0.0 0.0 -50.0 50.0 0.0 0.0 0.0 0.0 0.0 0.0 35.0 0.0) #f(35.0 0.0 35.0 -35.0 0.0 35.0 -35.0 0.0 35.0 35.0 0.0 35.0 0.0)))
-   (send *aero-lower* :links :WAIST_LINK0 :newcoords
-	 (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-   (send self :fix-leg-to-ground)
+    (send self :angle-vector (list #f(0.0 -15.0 0.0 -138 0.0 0.0 0.0 50.0 -50.0 0.0 0.0 0.0 15.0 0.0 -90.0 -75.0 0.0 0.0 -50.0 50.0 0.0 0.0 0.0 0.0 0.0 0.0 35.0 0.0) #f(35.0 0.0 35.0 -35.0 0.0 35.0 -35.0 0.0 35.0 35.0 0.0 35.0 0.0)))
+    (send *aero-lower* :links :WAIST_LINK0 :newcoords
+	  (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
+    (send self :fix-leg-to-ground)
     )
   (:reset-valve-pose ()
     (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 50.0 -50.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 -50.0 50.0 0.0 0.0 0.0 0.0 0.0 0.0 35.0 0.0) #f(35.0 0.0 35.0 -35.0 0.0 35.0 -35.0 0.0 35.0 35.0 0.0 35.0 0.0)))
