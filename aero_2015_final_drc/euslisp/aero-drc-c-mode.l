@@ -206,12 +206,19 @@
 				   :cmd 16
 				   :x 0))
 	   )
-	  (reset-terrain-pose
-	   (send *aero* :reset-terrain-pose)
+	  ;; (reset-terrain-pose
+	  ;;  (send *aero* :reset-terrain-pose)
+	  ;;  (ros::publish "/aero_network/cmd_narrow_band/streamer"
+	  ;; 		 (instance aero_network_tools::AeroNarrowCommand :init
+	  ;; 			   :cmd 16
+	  ;; 			   :x 1))
+	  ;;  )
+	  (drive-pose
+	   (send *aero* :drive-pose)
 	   (ros::publish "/aero_network/cmd_narrow_band/streamer"
-			 (instance aero_network_tools::AeroNarrowCommand :init
-				   :cmd 16
-				   :x 1))
+	  		 (instance aero_network_tools::AeroNarrowCommand :init
+	  			   :cmd 16
+	  			   :x 1))
 	   )
 	  (reset-terrain-pose2
 	   (send *aero* :reset-terrain-pose2)
