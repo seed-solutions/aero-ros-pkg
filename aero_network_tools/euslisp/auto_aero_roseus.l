@@ -170,7 +170,8 @@
 	       				   (send msg :y)
 	       				   (send msg :z)))
 	       	       nil)
-	       	   (send r-msg :resp -2)))
+	       	   (send r-msg :resp -2)
+		 (send-angle-vector)))
 	    (10 (ros::publish "/aero_network/resp_narrow_band/streamer" r-msg)
 		(send r-msg :cmd -125)
 		(setq tmp (send *ri* :go-pos
@@ -328,6 +329,7 @@
 (load "package://aero_2015_final_drc/euslisp/include-aero-drc-valve-task.l")
 (load "package://aero_ros_bridge/euslisp/walker.l")
 (aero-init)
+(send *aero* :reset-manip-pose)
 (setq *real* t)
 
 (while (ros::ok)
