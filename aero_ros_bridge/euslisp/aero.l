@@ -190,17 +190,17 @@
       ))
   (:grasp (arm &optional (time 500))
     (send self :hand arm :close-pose)
-    (send *ri* :angle-vector (send self :stroke-vector) time)
+    (send *ri* :angle-vector (send *aero-upper* :stroke-vector) time)
     (unix::usleep (* (+ time 1000) 1000)) ;; sleep an extra 1 sec to get proper value
     (send self :hand arm :joint-angle
 	  (if (eq arm :larm) (elt (car (send *ri* :actual-vector)) 18)
 	    (- (elt (car (send *ri* :actual-vector)) 7))))
-    (send *ri* :angle-vector (send self :stroke-vector) 100)
+    (send *ri* :angle-vector (send *aero-upper* :stroke-vector) 100)
     (unix::usleep(* 100 1000))
     )
   (:ungrasp (arm &optional (time 100))
     (send self :hand arm :open-pose)
-    (send *ri* :angle-vector (send self :stroke-vector) time)
+    (send *ri* :angle-vector (send *aero-upper* :stroke-vector) time)
     (unix::usleep(* time 1000))
     )
   ;; do not pick faster than 1 sec
@@ -213,7 +213,7 @@
 	  )
       (send self :hand arm :joint-angle -20) ;; tuned value -20
       (send *aero-upper* arm :move-end-pos (transform toward #f(15 0 0)) :world) ;; tuned value 15
-      (send *ri* :angle-vector (send self :stroke-vector) half-time)
+      (send *ri* :angle-vector (send *aero-upper* :stroke-vector) half-time)
       (unix::usleep (* (+ half-time 10) 1000))
       (send self :grasp arm half-time)
       ))
