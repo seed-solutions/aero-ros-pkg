@@ -67,13 +67,12 @@
   (:rotate (theta axis &optional (wrt :local))
     (send *aero-lower* :rotate theta axis wrt)
     )
-  (:upper (&rest args)
+  (:upper (&rest args) ;; will be deprecated
     (eval `(send *aero-upper* ,@args))
     )
-  (:lower (&rest args)
+  (:lower (&rest args) ;; will be deprecated
     (eval `(send *aero-lower* ,@args))
     )
-     
   (:move-waist
    (&optional (waist-velocity (float-vector 0 0 0))
 	      &key (draw-objects t))
@@ -120,7 +119,6 @@
           (send *irtviewer* :draw-objects))
       t)
     )
-
   (:rotate-waist
    (angle axis
 	      &key (draw-objects t))
@@ -192,93 +190,68 @@
 	    (:rarm (send *aero-upper* :hand-poses :rarm nargs))
 	    (t nil)
 	    )
-      )
+      ))
+  (:grasp (arm &optional (time 500))
+    (send self :hand arm :close-pose)
+    (send *ri* :angle-vector (send self :stroke-vector) time)
+    (unix::usleep (* (+ time 1000) 1000)) ;; sleep an extra 1 sec to get proper value
+    (send self :hand arm :joint-angle
+	  (if (eq arm :larm) (elt (car (send *ri* :actual-vector)) 18)
+	    (- (elt (car (send *ri* :actual-vector)) 7))))
+    (send *ri* :angle-vector (send self :stroke-vector) 100)
+    (unix::usleep(* 100 1000))
     )
-  ;; hand-yaw's zero position is not parallel to ground at manip-pose
-  ;; this function will help when you want to set angle values according to ground coords
-  ;; please! only use this function at manip-pose
-  (:hand-yaw-world (arm angle)
-    (let (rot)
-      (setq rot (car (rotation-angle
-		      (send (send (send *aero-upper* :torso :end-coords) :copy-worldcoords)
-			    :rot))))
-      (if rot
-	  (send self :rotate rot #f(0 0 1)))
-      (send *aero-upper* arm :wrist-y :joint-angle 0)
-      (send *aero-upper* arm :wrist-y :joint-angle
-	    (+ (* (car (rotation-angle
-			(send (send (send self :upper arm :end-coords)
-				    :copy-worldcoords) :rot)))
-		  (if (eq arm :larm) (/ 180 pi) (/ -180 pi)))
-	       angle))
-      (if rot
-	  (send self :rotate (- rot) #f(0 0 1)))
+  (:ungrasp (arm &optional (time 100))
+    (send self :hand arm :open-pose)
+    (send *ri* :angle-vector (send self :stroke-vector) time)
+    (unix::usleep(* time 1000))
+    )
+  ;; do not pick faster than 1 sec
+  (:pick (arm &optional (time 1000))
+    (let ((half-time (round (* time 0.5)))
+	  (toward (m* (send (send (send *aero-upper* arm :end-coords) :copy-worldcoords) :rot)
+		      (rotation-matrix (deg2rad (if (eq arm :larm) -45 45)) #f(0 0 1))
+		      (inverse-matrix
+		       (send (send (send *aero-upper* arm :end-coords) :copy-worldcoords) :rot))))
+	  )
+      (send self :hand arm :joint-angle -20) ;; tuned value -20
+      (send *aero-upper* arm :move-end-pos (transform toward #f(15 0 0)) :world) ;; tuned value 15
+      (send *ri* :angle-vector (send self :stroke-vector) half-time)
+      (unix::usleep (* (+ half-time 10) 1000))
+      (send self :grasp arm half-time)
       ))
-  (:magic-close (arm &optional (x 0) (time 100) (real *real*))
-    (if (< x 0) (return-from :magic-close (warn "first option must be positive~%")))
+  (:unpick (arm &optional (time 100))
+    (let ((toward (m* (send (send (send *aero-upper* arm :end-coords) :copy-worldcoords) :rot)
+		      (rotation-matrix (deg2rad (if (eq arm :larm) -45 45)) #f(0 0 1))
+		      (inverse-matrix
+		       (send (send (send *aero-upper* arm :end-coords) :copy-worldcoords) :rot))))
+	  )
+      (send *aero-upper* arm :move-end-pos (transform toward #f(-15 0 0)) :world) ;; tuned value 15
+      (send self :ungrasp arm time)
+      ))
+  ;; do not grasp-hard faster than 1 sec
+  (:grasp-hard (arm &optional (time 1000) (x 0))
+    (if (< x 0) (return-from grasp-hard (warn "first option must be positive~%")))
     (if (= (send self :hand arm :joint-angle) 50.0)
-	(return-from :magic-close (warn "already closed~%")))
-    (let (index-end angle-bits pos-bits forward-hand)
-      (setq forward-hand (+ x 49.2))
-      (setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
-      (setq angle-bits (/ (- 50.0 (send self :hand arm :joint-angle)) time))
-      (setq pos-bits (/ (float forward-hand) time))
-      (dotimes (i time)
-	(send self :hand arm :joint-angle (+ (send *aero-upper* :hand arm :joint-angle) angle-bits))
-	(send *aero-upper* arm :move-end-pos
-	      (if (> (aref index-end 0)
-		     (aref (send (send (send *aero-upper* arm :f-3p :child-link)
-				       :copy-worldcoords) :pos) 0))
-		  (float-vector (- (aref index-end 0)
-				   (aref (send (send (send *aero-upper* arm :f-3p :child-link)
-						     :copy-worldcoords) :pos) 0)
-				   pos-bits)
-				0 0)
-		(float-vector (- pos-bits) 0 0)) :world)
-	(setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
-    (if (boundp '*irtviewer*)
-        (send *irtviewer* :draw-objects))
-	(if (eq real t)
-	    (progn (send *ri* :angle-vector (send self :stroke-vector) 20)
-		   (unix::usleep (* 40 1000))))
-	)
-      ;; the robot is not going to completely close when grasping an object
-      ;; therefore set goal to current angle
-      (if (eq real t)
-          (progn (send *aero* :hand arm :joint-angle
-		       (if (eq arm :larm) (elt (car (send *ri* :actual-vector)) 18)
-			 (- (elt (car (send *ri* :actual-vector)) 7))))
-		 (send *ri* :angle-vector (send *aero* :stroke-vector) 100)
-		 (unix::usleep (* 100 1000))
-		 ))
+	(return-from grasp-hard (warn "already closed~%")))
+    (let ((grasp-angle 1.0))
+      (if (> (send self :hand arm :joint-angle) 0)
+	  (setq grasp-angle (* (- 50 (send self :hand arm :joint-angle)) 0.02)))
+      (send *aero-upper* arm :move-end-pos (float-vector (+ x (* 49.2 grasp-angle)) 0 0) :local
+	    :revert-if-fail nil)
+      (send self :grasp :larm time)
       ))
-  (:magic-open (arm &optional (x 0) (time 100) (real *real*))
-    (if (> x 0) (return-from :magic-open (warn "first option must be negative~%")))
+  ;; do not ungrasp-hard faster than 1 sec
+  (:ungrasp-hard (arm &optional (time 1000) (x 0))
+    (if (> x 0) (return-from magic-open (warn "first option must be negative~%")))
     (if (= (send self :hand arm :joint-angle) -50.0)
-	(return-from :magic-open (warn "already open~%")))
-    (let (index-end angle-bits pos-bits backward-hand)
-      (setq backward-hand (- x 49.2))
-      (setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
-      (setq angle-bits (/ (- (send self :hand arm :joint-angle) -50.0) time))
-      (setq pos-bits (/ (float backward-hand) time))
-      (dotimes (i time)
-	(send self :hand arm :joint-angle (- (send *aero-upper* :hand arm :joint-angle) angle-bits))
-	(send *aero-upper* arm :move-end-pos
-	      (if (> (aref index-end 0)
-		     (aref (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos) 0))
-		  (float-vector (+ (- (aref (send (send (send *aero-upper* arm :f-3p :child-link)
-							:copy-worldcoords) :pos) 0)
-				      (aref index-end 0))
-				   pos-bits)
-				0 0)
-		(float-vector pos-bits 0 0)) :world)
-	(setq index-end (send (send (send *aero-upper* arm :f-3p :child-link) :copy-worldcoords) :pos))
-    (if (boundp '*irtviewer*)
-          (send *irtviewer* :draw-objects))
-	(if (eq real t)
-	    (progn (send *ri* :angle-vector (send self :stroke-vector) 20)
-		   (unix::usleep (* 40 1000))))
-	)
+	(return-from magic-open (warn "already open~%")))
+    (let ((grasp-angle 1.0))
+      (if (> (send self :hand arm :joint-angle) 0)
+	  (setq grasp-angle (* (send *aero* :hand arm :joint-angle) 0.02)))
+      (send *aero-upper* arm :move-end-pos (float-vector (- x (* 49.2 grasp-angle)) 0 0) :local
+	    :revert-if-fail nil)
+      (send self :ungrasp :larm time)
       ))
 
 
@@ -302,6 +275,8 @@
         (setq target-worldpos (v+ target-worldpos (float-vector 0 0 (elt (send (send self :end-ground-coords limb) :worldpos) 2)))))
     (send *aero-lower* limb :inverse-kinematics  (make-coords :pos target-worldpos) :move-target shin-coords :debug-view t :rotation-axis :z :translation-axis :x)
     )
+
+
 
   ;;;;;;;;;;;;;;;;;; for evaluating ;;;;;;;;;;;;;;;;;;
   (:self-collision-check ()
@@ -338,39 +313,39 @@
 	  (area 1)
 	  inner-radius
 	  )
-      (if (eq (send self :cog-balance-check legs-on-grounds) t)
-	  (progn (dolist (link legs-on-grounds)
-		   (setq foot-pos (send self :project-on-ground
-					(send (send *aero-lower* (car tmp-legs) :end-coords :copy-worldcoords)
-					      :pos)))
-		   (setq edge-length (norm (v- foot-pos
-					       (send self :project-on-ground
-						     (send (send *aero-lower* (cadr tmp-legs)
-								 :end-coords :copy-worldcoords)
-							   :pos)))))
-		   (setq get-3foot-center (v+ get-3foot-center foot-pos))
-		   (setq edge-lengths (push edge-length edge-lengths)) 
-		   (setq tmp-legs `(,@(cdr tmp-legs) ,(car tmp-legs)))
-		   )
-		 (dolist (x edge-lengths)
-		   (setq s (+ s x)))
-		 (setq get-3foot-center (scale (/ 1.0 3) get-3foot-center))
-		 ;; (send (make-coords :pos get-3foot-center) :draw-on :flush t :size 500)
-		 (setq s (/ s 2))
-		 (dolist (x edge-lengths)
-		   (setq area (* (- s x) area)))
-		 (setq area (sqrt (* s area)))
-		 (setq inner-radius (/ area s))
-		 (/ inner-radius (norm (v- get-3foot-center com-on-ground)))
-		 )
-	0.0)
-      )
-    )
+      (if (not (eq (send self :cog-balance-check legs-on-grounds) t))
+	  (return-from :rate-balance 0.0))
+      (dolist (link legs-on-grounds)
+	(setq foot-pos
+	      (send self :project-on-ground
+		    (send (send *aero-lower* (car tmp-legs)
+				:end-coords :copy-worldcoords) :pos)
+		    ))
+	(setq edge-length
+	      (norm (v- foot-pos
+			(send self :project-on-ground
+			      (send (send *aero-lower* (cadr tmp-legs)
+					  :end-coords :copy-worldcoords) :pos)
+			      ))))
+	(setq get-3foot-center (v+ get-3foot-center foot-pos))
+	(setq edge-lengths (push edge-length edge-lengths))
+	(setq tmp-legs `(,@(cdr tmp-legs) ,(car tmp-legs)))
+	)
+      (dolist (x edge-lengths) (setq s (+ s x)))
+      (setq get-3foot-center (scale (/ 1.0 3) get-3foot-center))
+      ;; (send (make-coords :pos get-3foot-center) :draw-on :flush t :size 500)
+      (setq s (/ s 2))
+      (dolist (x edge-lengths) (setq area (* (- s x) area)))
+      (setq area (sqrt (* s area)))
+      (setq inner-radius (/ area s))
+      (/ inner-radius (norm (v- get-3foot-center com-on-ground)))
+      ))
 
 
 
   ;;;;;;;;;;;;;;;;;; for returning values ;;;;;;;;;;;;;;;;;;
-  ;; calculate center of mass of the whole robot using center of mass of aero upper and aero lower
+  ;; calculate center of mass of the whole robot using
+  ;; center of mass of aero upper and aero lower
   (:get-com ()
     (scale (/ 1 (+ (send *aero-upper* :weight) (send *aero-lower* :weight)))
            (v+ (scale (send *aero-upper* :weight) (send *aero-upper* :centroid))
@@ -383,7 +358,8 @@
   ;; The end coords are at the wheels' axes
   ;; The end ground coords give the point that is touching the ground
   (:end-ground-coords (limb)
-    (send (send (send self :lower limb :end-coords) :copy-worldcoords) :translate (float-vector 0 0 (- wheel-radius)) :world)
+    (send (send (send self :lower limb :end-coords) :copy-worldcoords)
+	  :translate (float-vector 0 0 (- wheel-radius)) :world)
     ;; (eval `(send self :lower limb :end-coords))
     )
   (:error-vector ()
@@ -413,9 +389,11 @@
     )
 
 
+
   ;;;;;;;;;;;;;;;;;; for viewing ;;;;;;;;;;;;;;;;;;
   (:draw-on ()
-    ;; executing (objects *aero*) is not going to work. Use this function instead to visualize aero in irtviewer
+    ;; executing (objects *aero*) is not going to work.
+    ;; Use this function instead to visualize aero in irtviewer
     (objects *aero-upper*)
     (objects *aero-lower*)
     (if (boundp '*irtviewer*)
@@ -423,24 +401,26 @@
     )
   ;; draw center of mass projected onto ground plane
   (:draw-centroid-on-ground ()
-    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send self :get-com))))
+    (let ((com-on-ground (make-coords
+			  :pos (send self :project-on-ground (send self :get-com))))
           )
       (send com-on-ground :draw-on :flush t)
-      com-on-ground)  
+      com-on-ground)
     )
   (:draw-upper-centroid-on-ground ()
-    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-upper* :centroid))))
+    (let ((com-on-ground (make-coords
+			  :pos (send self :project-on-ground (send *aero-upper* :centroid))))
           )
       (send com-on-ground :draw-on :flush t)
-      com-on-ground)  
+      com-on-ground)
     )
   (:draw-lower-centroid-on-ground ()
-    (let ((com-on-ground (make-coords :pos (send self :project-on-ground (send *aero-lower* :centroid))))
+    (let ((com-on-ground (make-coords
+			  :pos (send self :project-on-ground (send *aero-lower* :centroid))))
           )
       (send com-on-ground :draw-on :flush t)
-      com-on-ground)  
+      com-on-ground)
     )
-  
   (:print-lower-error-vector ()
     (setq lower-error-vector (elt error-vector 1))
     (setq lower-joint-names (send *aero-lower* :joint-list :name))
@@ -450,7 +430,6 @@
       (format t "~s ~a~%" (elt lower-joint-names i) (aref lower-error-vector i))
       )
     )
-
   (:print-upper-error-vector (&optional (part :all))
     (setq upper-joint-names (send *aero-upper* :joint-list :name))
     (setq upper-error-vector (elt (send self :error-vector) 0))
@@ -474,11 +453,9 @@
       )
     (send self :print-upper-error-sum part)
     )
-  
   (:print-upper-error-sum (&optional (part :all))
     (format t "~a sum ~a~%" part (send self :upper-error-sum part))
     )
-  
   (:print-joint-error (upperOrLower jointID)
     (setq error-vector (send self :error-vector))
     (if (equal upperOrLower :upper)
@@ -488,6 +465,7 @@
       ;; (format t "~f ~s~%" (aref upper-error-vector i) (elt upper-joint-names i))
     (format t "~s ~a~%" (elt joint-names jointID) (aref error-vector jointID))
     )
+
 
 
   ;;;;;;;;;;;;;;;;;; poses ;;;;;;;;;;;;;;;;;;  
@@ -505,57 +483,6 @@
           (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
     (send self :fix-leg-to-ground)
     )  
-  ;; (:reset-terrain-pose ()
-  ;;   (send *aero-upper* :reset-terrain-pose)
-  ;;   (send *aero-lower* :reset-terrain-pose)
-  ;;   (send *aero-lower* :links :WAIST_LINK0 :newcoords
-  ;;         (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-  ;;   (send self :fix-leg-to-ground)
-  ;;   )
-  ;; waist posiion slightly higher than terrain-pose
-  (:reset-terrain-pose2 ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(35.0 30.0 80.0 -35.0 30.0 80.0 -35.0 30.0 80.0 35.0 30.0 80.0 0.0)))
-    (send *aero-lower* :links :WAIST_LINK0 :newcoords
-          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-    (send self :fix-leg-to-ground)
-    )
-  (:reset-climbing-pose ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(0.0 40.0 80.0 0.0 40.0 80.0 0.0 40.0 80.0 0.0 40.0 80.0 0.0)))
-    (send *aero-lower* :links :WAIST_LINK0 :newcoords
-          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-    (send self :fix-leg-to-ground)
-    )
-  (:reset-climbing-pose2 ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) #f(73.7016 40.3432 78.5655 -0.1388 36.0831 87.7224 -73.6487 40.3196 78.6764 -0.1388 36.0831 87.7224 0.0)))
-    (send *aero-lower* :links :WAIST_LINK0 :newcoords
-          (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-    (send self :fix-leg-to-ground)
-    )
-  (:reset-running-pose ()
-   (send self :angle-vector (list (float-vector 0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0) (float-vector 35.0 58.2789 119.707 0.0 58.2789 119.707 -35.0 58.279 119.707 0.0 58.2789 119.707 0.0)))
-   (send *aero-lower* :links :WAIST_LINK0 :newcoords
-	 (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-   (send self :fix-leg-to-ground)
-   )
-  (:drive-pose
-   ()
-   (send self :angle-vector (list (float-vector 0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 20.0 0.0) (float-vector 30.0 49.2418 109.676 0.0 49.2281 109.662 -30.0 49.2418 109.676 0.0 49.2281 109.662 0.0)))
-   (send *aero-lower* :links :WAIST_LINK0 :newcoords
-	 (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-   (send self :fix-leg-to-ground)
-   )
-  (:reset-door-pose ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -138 0.0 0.0 0.0 50.0 -50.0 0.0 0.0 0.0 15.0 0.0 -90.0 -75.0 0.0 0.0 -50.0 50.0 0.0 0.0 0.0 0.0 0.0 0.0 35.0 0.0) #f(35.0 0.0 35.0 -35.0 0.0 35.0 -35.0 0.0 35.0 35.0 0.0 35.0 0.0)))
-    (send *aero-lower* :links :WAIST_LINK0 :newcoords
-	  (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-    (send self :fix-leg-to-ground)
-    )
-  (:reset-valve-pose ()
-    (send self :angle-vector (list #f(0.0 -15.0 0.0 -90.0 0.0 0.0 0.0 50.0 -50.0 0.0 0.0 0.0 15.0 0.0 -90.0 0.0 0.0 0.0 -50.0 50.0 0.0 0.0 0.0 0.0 0.0 0.0 35.0 0.0) #f(35.0 0.0 35.0 -35.0 0.0 35.0 -35.0 0.0 35.0 35.0 0.0 35.0 0.0)))
-   (send *aero-lower* :links :WAIST_LINK0 :newcoords
-	 (make-coords :pos (send *aero-lower* :links :WAIST_LINK0 :pos) :rpy #f(0 0 0)))
-   (send self :fix-leg-to-ground)
-   )
 
   ;; save the current pose of the robot
   (:save-pose ()
@@ -579,7 +506,6 @@
     (if (boundp '*irtviewer*)
         (send *irtviewer* :draw-objects))
     )
-
   (:match-ri ()
     (send self :angle-vector (send *ri* :actual-vector))
     (if (boundp '*irtviewer*)
