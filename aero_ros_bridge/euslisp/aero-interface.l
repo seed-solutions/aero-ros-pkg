@@ -19,6 +19,7 @@
       )) ;; currently communication with whole robot is implemented in aero-upper-interface
   (if (not (boundp '*aero*))
       (setq *aero* (instance AeroRobot-robot :init)))
+  (send *aero* :angle-vector (send *ri* :actual-vector))
   )
 
 
