@@ -18,24 +18,23 @@
 
   ;;;;;;;;;;;;;;;;;; init ;;;;;;;;;;;;;;;;;;
   (:init ()
-    (progn
-      (if (not (boundp `*aero-upper*))
-          (setq *aero-upper* (instance AeroUpperRobot-robot :init))
-	)
-      (if (not (boundp '*aero-lower*)) 
-          (setq *aero-lower* (instance AeroLowerRobot-robot :init))
-	)
-      ;; move aero-upper to top location of aero-lower
-      (if (boundp '*aero-lower*)
-          (send *aero-upper* :newcoords
-                (send (send *aero-lower* :torso :end-coords)
-                      :worldcoords))
-        )
-      (send (send *aero-lower* :links :WAIST_LINK0)
-	    :assoc (send *aero-upper* :links :WAIST_LINK0)))
-      (setq ((send *aero-upper* :head :neck-p) . max-angle) 40)
-      (setq ((send *aero-lower* :rarm :shoulder-y) . max-angle) 0)
-      (setq ((send *aero-lower* :larm :shoulder-y) . min-angle) 0)
+    (if (not (boundp `*aero-upper*))
+	(setq *aero-upper* (instance AeroUpperRobot-robot :init))
+      )
+    (if (not (boundp '*aero-lower*))
+	(setq *aero-lower* (instance AeroLowerRobot-robot :init))
+      )
+    ;; move aero-upper to top location of aero-lower
+    (if (boundp '*aero-lower*)
+	(send *aero-upper* :newcoords
+	      (send (send *aero-lower* :torso :end-coords)
+		    :worldcoords))
+      )
+    (send (send *aero-lower* :links :WAIST_LINK0)
+	  :assoc (send *aero-upper* :links :WAIST_LINK0))
+    (setq ((send *aero-upper* :head :neck-p) . max-angle) 40)
+    (setq ((send *aero-lower* :rarm :shoulder-y) . max-angle) 0)
+    (setq ((send *aero-lower* :larm :shoulder-y) . min-angle) 0)
     )
 
 
