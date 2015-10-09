@@ -22,7 +22,7 @@
        default="file://$(arg camera_info_file_left)" />
 
   <!-- arguments for tf coords -->
-  <arg name="parent_frame" default="/base_link" />
+  <arg name="parent_frame" default="/head_base_link" />
   <arg name="parent_transform" default="0.06 0 0.08 -1.570791 0 -1.570791" />
 
   <!-- This launchfile should bring up a node that broadcasts a ros image
