@@ -38,7 +38,7 @@ namespace aero
     void AeroJointStatePublisher::StrokeCallback
     (const pr2_controllers_msgs::JointTrajectoryControllerState _msg)
     {
-      common::Stroke2Angle(this->jointState, _msg);
+      common::Stroke2Angle(this->jointState.position, _msg.actual.positions);
     }
 
     //////////////////////////////////////////////////

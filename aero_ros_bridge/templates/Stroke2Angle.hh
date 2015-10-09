@@ -6,8 +6,6 @@
 #define _STROKE_TO_ANGLE_H_
 
 #include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
-#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
 namespace aero
 {
@@ -22,8 +20,7 @@ namespace aero
 
     //////////////////////////////////////////////////
     void Stroke2Angle
-    (sensor_msgs::JointState& _angles,
-     const pr2_controllers_msgs::JointTrajectoryControllerState _strokes)
+    (std::vector<double>& _angles, const std::vector<double> _strokes)
     {
       float leftWristRollStroke =
 	(l_wrist_top_joint + l_wrist_bottom_joint) * 0.5;
@@ -63,7 +60,8 @@ namespace aero
 	-deg2Theta * (l_hand_joint * 5.556 + 50.0);
       meta = 0;
       meta = 0;
-      meta = 0;
+      meta =
+	deg2Theta * (l_hand_joint * 5.556 + 50.0);
 
       meta =
 	deg2Theta * neck_yaw_joint;
@@ -90,10 +88,11 @@ namespace aero
 	deg2Theta * WristRollInvTable(-fabs(rightWristRollStroke))
 	* (rightWristRollStroke >= 0 ? 1 : -1);
       meta =
-	deg2Theta * (r_hand_joint * 5.556 + 50.0);
+	deg2Theta * (r_hand_joint * 8.475 + 50.0);
       meta = 0;
       meta = 0;
-      meta = 0;
+      meta =
+	-deg2Theta * (r_hand_joint * 8.475 + 50.0);
 
       meta = 0;
       meta =

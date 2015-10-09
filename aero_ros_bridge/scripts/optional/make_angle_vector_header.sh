@@ -7,7 +7,7 @@ cp $input_file $output_file
 total_joints=$(grep -o 'meta =' $output_file | wc -l)
 for (( joint_number=0; joint_number<=${total_joints}; joint_number++ ))
 do
-    sed -i "0,/meta =/s//_angles.position[${joint_number}] =/" $output_file
+    sed -i "0,/meta =/s//_angles[${joint_number}] =/" $output_file
 done
 
 hrpsys_names_file="$(rospack find aero_ros_bridge)/config/hrpsys_joint_id_map.txt"
@@ -15,7 +15,7 @@ number=0
 while read line
 do
     name=$(echo "$line" | cut -d ' ' -f1)
-    sed -i "s/${name}/_strokes.actual.positions[${number}]/g" $output_file
+    sed -i "s/${name}/_strokes[${number}]/g" $output_file
     number=$(($number + 1))
 done < $hrpsys_names_file
 
