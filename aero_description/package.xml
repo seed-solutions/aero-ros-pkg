@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <name>aero_description</name>
+  <version>1.0.0</version>
+  <description>The aero_description package</description>
+
+  <license>EPL</license>
+  <maintainer email="sasabuchi@jsk.t.u-tokyo.ac.jp">
+    Kazuhiro Sasabuchi
+  </maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>hrpsys_ros_bridge</build_depend>
+  <run_depend>hrpsys_ros_bridge</run_depend>
+
+  <export/>
+</package>

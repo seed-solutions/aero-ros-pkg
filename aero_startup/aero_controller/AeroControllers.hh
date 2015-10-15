@@ -1,0 +1,77 @@
+#ifndef AERO_CONTROLLER_AERO_CONTROLLERS_H_
+#define AERO_CONTROLLER_AERO_CONTROLLERS_H_
+
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <stdint.h>
+#include <unistd.h>
+
+#include <boost/asio.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/thread.hpp>
+
+#include "aero_controller/Constants.hh"
+#include "aero_controller/AJointIndex.hh"
+#include "aero_controller/AeroControllerProto.hh"
+
+namespace aero
+{
+  namespace controller
+  {
+
+    class AeroUpperController : public AeroControllerProto
+    {
+    public: AeroUpperController(const std::string& _port);
+
+    public: ~AeroUpperController();
+    };
+
+    class AeroLowerController : public AeroControllerProto
+    {
+    public: AeroLowerController(const std::string& _port);
+
+    public: ~AeroLowerController();
+
+    /// @brief servo on command, wheels will servo off
+    public: void servo_on();
+
+    /// @brief servo off command
+    public: void servo_off();
+
+    /// @brief servo on command including wheel
+    ///   if you want to servo off only wheel, call servo_on()
+    public: void wheel_on();
+
+    /// @brief servo toggle command with wheels
+    /// @param _d0 joints 1: on, 0: off
+    /// @param _d1 wheels 1: on, 0: off
+    protected: void servo_command(int16_t _d0, int16_t _d1);
+
+    public: int32_t get_wheel_id(std::string& _name);
+
+    public: std::string get_wheel_name(size_t _idx);
+
+    public: std::vector<int16_t>& get_reference_wheel_vector();
+
+    /// @brief set wheel velocity
+    public: void set_wheel_velocity(std::vector<int16_t>& _wheel_vector,
+				    uint16_t _time);
+
+    protected:
+      std::vector<int16_t> wheel_vector_;
+      std::vector<int16_t> wheel_ref_vector_;
+      std::vector<int16_t> wheel_cur_vector_;
+
+      std::vector<AJointIndex> wheel_indices_;
+
+      bool wheel_servo_;
+    };
+
+  }
+}
+
+#endif
