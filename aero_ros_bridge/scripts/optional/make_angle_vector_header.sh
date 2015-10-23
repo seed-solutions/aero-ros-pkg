@@ -85,8 +85,8 @@ create_table_func_from_csv() { # joint_name offset output_file function_name
 	idx=$(($idx + 1))
     done
 
+    tab6=$'      '
     tab8=$'        '
-    tab10=$'          '
     code=''
 
     # negative stroke value case
@@ -95,9 +95,9 @@ create_table_func_from_csv() { # joint_name offset output_file function_name
     do
 	if [[ $e != "" ]]
 	then
-	    code="${code}${tab8}case -${idx}:\n"
+	    code="${code}${tab6}case -${idx}:\n"
 	    candidates=$(echo -e "${e}" | sed -e "s/..$//")
-	    code="${code}${tab10}candidates = std::vector<S2AData>({${candidates}});\n"
+	    code="${code}${tab8}candidates = std::vector<S2AData>({${candidates}});\n"
 	    if [[ $idx -lt $((${#ntable[@]} - 1)) ]]
 	    then
 		j=1
@@ -106,9 +106,9 @@ create_table_func_from_csv() { # joint_name offset output_file function_name
 		    j=2
 		fi
 		appendix=$(echo -e "${ntable[$(($idx + $j))]}" | sed -e "s/..$//")
-		code="${code}${tab10}appendix = std::vector<S2AData>({${appendix}});\n"
+		code="${code}${tab8}appendix = std::vector<S2AData>({${appendix}});\n"
 	    fi
-	    code="${code}${tab10}break;\n"
+	    code="${code}${tab8}break;\n"
 	fi
 	idx=$(($idx + 1))
     done
@@ -119,15 +119,15 @@ create_table_func_from_csv() { # joint_name offset output_file function_name
     do
 	if [[ $e != "" ]]
 	then
-	    code="${code}${tab8}case ${idx}:\n"
+	    code="${code}${tab6}case ${idx}:\n"
 	    candidates=$(echo -e "${e}" | sed -e "s/..$//")
-	    code="${code}${tab10}candidates = std::vector<S2AData>({${candidates}});\n"
+	    code="${code}${tab8}candidates = std::vector<S2AData>({${candidates}});\n"
 	    if [[ $idx -lt $((${#table[@]} - 1)) ]]
 	    then
 		appendix=$(echo -e "${table[$(($idx + 1))]}" | sed -e "s/..$//")
-		code="${code}${tab10}appendix = std::vector<S2AData>({${appendix}});\n"
+		code="${code}${tab8}appendix = std::vector<S2AData>({${appendix}});\n"
 	    fi
-	    code="${code}${tab10}break;\n"
+	    code="${code}${tab8}break;\n"
 	fi
 	idx=$(($idx + 1))
     done
