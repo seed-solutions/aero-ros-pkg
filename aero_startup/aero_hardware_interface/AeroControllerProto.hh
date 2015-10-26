@@ -8,6 +8,7 @@
 #include <string>
 #include <stdint.h>
 #include <unistd.h>
+#include <unordered_map>
 
 #include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>

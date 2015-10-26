@@ -16,6 +16,9 @@
 #define AERO_COMMON_STROKE_TO_ANGLE_H_
 
 #include <vector>
+#include <algorithm>
+#include <stdint.h>
+#include "aero_common/Stroke2Angle.hh"
 
 namespace aero
 {

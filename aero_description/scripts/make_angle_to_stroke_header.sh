@@ -277,3 +277,4 @@ head -n $edit_start $output_file > /tmp/aero_modify_header_head
 cat /tmp/aero_modify_header_head > $output_file
 cat /tmp/aero_modify_header >> $output_file
 sed -i "/\/\/\/\/\/\//d" $output_file
+sed -i "/#include \"aero_common\/Angle2Stroke.hh\"/d" $output_file

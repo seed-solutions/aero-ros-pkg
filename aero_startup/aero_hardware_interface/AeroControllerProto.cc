@@ -1,8 +1,8 @@
 #include "AeroControllerProto.hh"
 
 using namespace boost::asio;
-using namespace aero
-using namespace controller
+using namespace aero;
+using namespace controller;
 
 //////////////////////////////////////////////////
 SEED485Controller::SEED485Controller(
@@ -138,7 +138,7 @@ void SEED485Controller::set_check_sum(std::vector<uint8_t>& _dat)
 
   for (size_t i = 2; i < RAW_DATA_LENGTH - 1; ++i)
   {
-    b_check_sum += dat[i];
+    b_check_sum += _dat[i];
   }
 
   _dat[RAW_DATA_LENGTH - 1] =
@@ -234,7 +234,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
 
   ser_.read(dat);
 
-  stroke_vector.resize(stroke_joint_indices_.size());
+  _stroke_vector.resize(stroke_joint_indices_.size());
   raw_to_stroke_(dat, _stroke_vector);
 }
 
