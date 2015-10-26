@@ -12,11 +12,9 @@
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_broadcaster.h>
 
-ros::Publisher marker_pub;
+// ros::Publisher marker_pub;
 ros::Publisher markern_pub;
 ros::Publisher pcl_pub;
-// ros::Publisher grasp_pose_pub;
-// tf::TransformListener *tf_;
 
 void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
@@ -178,35 +176,29 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   Eigen::Quaternionf transpose_z(cos(theta_z / 2), sin(theta_z / 2), 0, 0);
   Eigen::Quaternionf pose_q = axis_pose_q * transpose_z;
 
-  // std::cout << axis[0] << " " << axis[1] << " " << axis[2] << "\n";
-  // std::cout << normal[0] << " " << normal[1] << " " << normal[2] << "\n";
-  // std::cout << theta_z << "\n";
-  // std::cout << axis_pose_q.w() << " " << axis_pose_q.x() << " " << axis_pose_q.y() << " " << axis_pose_q.z() << "\n";
-  // std::cout << transpose_z.w() << " " << transpose_z.x() << " " << transpose_z.y() << " " << transpose_z.z() << "\n\n";
-
-  visualization_msgs::Marker marker_axis;
-  marker_axis.header.frame_id = "ps4eye_frame";
-  marker_axis.header.stamp = ros::Time::now();
-  marker_axis.ns = "object";
-  marker_axis.id = 0;
-  marker_axis.type = visualization_msgs::Marker::ARROW;
-  marker_axis.action = visualization_msgs::Marker::ADD;
-  marker_axis.pose.position.x = center[0];
-  marker_axis.pose.position.y = center[1];
-  marker_axis.pose.position.z = center[2];
-  marker_axis.pose.orientation.x = axis_pose_q.x();
-  marker_axis.pose.orientation.y = axis_pose_q.y();
-  marker_axis.pose.orientation.z = axis_pose_q.z();
-  marker_axis.pose.orientation.w = axis_pose_q.w();
-  marker_axis.scale.x = 0.0001 * vertices.size(); // 0.1
-  marker_axis.scale.y = 0.01;
-  marker_axis.scale.z = 0.01;
-  marker_axis.color.r = 0.0f;
-  marker_axis.color.g = 1.0f;
-  marker_axis.color.b = 0.0f;
-  marker_axis.color.a = 1.0f;
-  marker_axis.lifetime = ros::Duration();
-  marker_pub.publish(marker_axis);
+  // visualization_msgs::Marker marker_axis;
+  // marker_axis.header.frame_id = "ps4eye_frame";
+  // marker_axis.header.stamp = ros::Time::now();
+  // marker_axis.ns = "object";
+  // marker_axis.id = 0;
+  // marker_axis.type = visualization_msgs::Marker::ARROW;
+  // marker_axis.action = visualization_msgs::Marker::ADD;
+  // marker_axis.pose.position.x = center[0];
+  // marker_axis.pose.position.y = center[1];
+  // marker_axis.pose.position.z = center[2];
+  // marker_axis.pose.orientation.x = axis_pose_q.x();
+  // marker_axis.pose.orientation.y = axis_pose_q.y();
+  // marker_axis.pose.orientation.z = axis_pose_q.z();
+  // marker_axis.pose.orientation.w = axis_pose_q.w();
+  // marker_axis.scale.x = 0.0001 * vertices.size(); // 0.1
+  // marker_axis.scale.y = 0.01;
+  // marker_axis.scale.z = 0.01;
+  // marker_axis.color.r = 0.0f;
+  // marker_axis.color.g = 1.0f;
+  // marker_axis.color.b = 0.0f;
+  // marker_axis.color.a = 1.0f;
+  // marker_axis.lifetime = ros::Duration();
+  // marker_pub.publish(marker_axis);
 
   pcl::PCLPointCloud2 pcl_out;
   sensor_msgs::PointCloud2 msg;
@@ -224,52 +216,6 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
 					"ps4eye_frame", "object"));
 
-  // tf::StampedTransform transform;
-  // ros::Time now = ros::Time::now();
-  // tf_->waitForTransform("leg_base_link", "ps4eye_frame", now, ros::Duration(2.0));
-  // tf_->lookupTransform("leg_base_link", "ps4eye_frame", now, transform);
-
-  // geometry_msgs::Pose pose_msg;
-  // Eigen::Quaternionf orig_q(transform.getRotation().getW(),
-  // 			    transform.getRotation().getAxis().getX(),
-  // 			    transform.getRotation().getAxis().getY(),
-  // 			    transform.getRotation().getAxis().getZ());
-  // Eigen::Quaternionf q = orig_q * pose_q;
-  // Eigen::Vector3f p = orig_q * center;
-
-  // pose_msg.position.x = p[0] + transform.getOrigin().x();
-  // pose_msg.position.y = p[1] + transform.getOrigin().y();
-  // pose_msg.position.z = p[2] + transform.getOrigin().z();
-  // pose_msg.orientation.x = q.x();
-  // pose_msg.orientation.y = q.y();
-  // pose_msg.orientation.z = q.z();
-  // pose_msg.orientation.w = q.w();
-  // grasp_pose_pub.publish(pose_msg);
-
-  // visualization_msgs::Marker marker;
-  // marker.header.frame_id = "leg_base_link";
-  // marker.header.stamp = ros::Time::now();
-  // marker.ns = "object";
-  // marker.id = 0;
-  // marker.type = visualization_msgs::Marker::ARROW;
-  // marker.action = visualization_msgs::Marker::ADD;
-  // marker.pose.position.x = pose_msg.position.x;
-  // marker.pose.position.y = pose_msg.position.y;
-  // marker.pose.position.z = pose_msg.position.z;
-  // marker.pose.orientation.x = pose_msg.orientation.x;
-  // marker.pose.orientation.y = pose_msg.orientation.y;
-  // marker.pose.orientation.z = pose_msg.orientation.z;
-  // marker.pose.orientation.w = pose_msg.orientation.w;
-  // marker.scale.x = 0.0001 * vertices.size(); // 0.1
-  // marker.scale.y = 0.01;
-  // marker.scale.z = 0.01;
-  // marker.color.r = 0.0f;
-  // marker.color.g = 1.0f;
-  // marker.color.b = 0.0f;
-  // marker.color.a = 1.0f;
-  // marker.lifetime = ros::Duration();
-  // marker_pub.publish(marker);
-
   // blue : -107 ~ -128 , 235 ~ 255
   // red : 0 ~ 17 , 235 ~ 255
   // green : 56 ~ 49 , 106 ~ 183
@@ -281,15 +227,12 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "object_features");
   ros::NodeHandle nh;
 
-  // tf_ = new tf::TransformListener;
-
-  marker_pub = nh.advertise<visualization_msgs::Marker>("/visualized_object_feature", 100);
+  // marker_pub = nh.advertise<visualization_msgs::Marker>("/visualized_object_feature", 100);
   markern_pub = nh.advertise<visualization_msgs::Marker>("/visualized_object_normal", 100);
   ros::Subscriber sub = nh.subscribe("/stereo/hsi_color_filter/hsi_output", 1000,
 				     SubscribePoints);
 
   pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/visualized_object_pcl", 100);
-  // grasp_pose_pub = nh.advertise<geometry_msgs::Pose>("/object_grasp", 100);
 
   ros::spin();
 
