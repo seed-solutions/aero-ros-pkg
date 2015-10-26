@@ -1,5 +1,5 @@
 # include <ros/ros.h>
-# include "aero_controller/AeroControllerNode.hh"
+# include "aero_hardware_interface/AeroControllerNode.hh"
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "aero_controller");

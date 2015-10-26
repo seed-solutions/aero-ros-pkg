@@ -9,8 +9,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include "aero_controller/Constants.hh"
-#include "aero_controller/AeroControllers.hh"
+#include "aero_hardware_interface/Constants.hh"
+#include "aero_hardware_interface/AeroControllers.hh"
 
 #include "aero_common/AngleJointNames.hh"
 #include "aero_common/Stroke2Angle.hh"

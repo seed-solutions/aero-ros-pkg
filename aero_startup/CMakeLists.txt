@@ -23,14 +23,14 @@ catkin_package(
   roscpp tf std_msgs sensor_msgs trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
   DEPENDS
   INCLUDE_DIRS
-  LIBRARIES aero_controller
+  LIBRARIES aero_hardware_interface
 )
 include_directories(include ${Boost_INCLUDE_DIRS})
 
 include_directories(${aero_startup_SOURCE_DIR})
 
 add_library(aero_controller
-  aero_controller/AeroControllerMain.cc
-  aero_controller/AeroControllerNode.cc
-  aero_controller/AeroControllers.cc)
+  aero_hardware_interface/AeroControllerMain.cc
+  aero_hardware_interface/AeroControllerNode.cc
+  aero_hardware_interface/AeroControllers.cc)
 target_link_libraries(aero_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})

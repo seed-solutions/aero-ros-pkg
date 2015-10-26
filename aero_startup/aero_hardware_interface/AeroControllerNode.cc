@@ -1,4 +1,4 @@
-#include "aero_controller/AeroControllerNode.hh"
+#include "aero_hardware_interface/AeroControllerNode.hh"
 
 using namespace aero;
 using namespace controller;
@@ -9,7 +9,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
                                        const std::string& _port_lower) :
     nh_(_nh), upper_(_port_upper), lower_(_port_lower)
 {
-  ROS_INFO("starting aero_controller");
+  ROS_INFO("starting aero_hardware_interface");
 
   ROS_INFO(" create publisher");
   state_pub_ =

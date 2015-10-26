@@ -10,7 +10,7 @@ printf "Creating urdf ...\n\n"
 
 ./scripts/create_urdf.sh $dir $upper_name $lower_name
 
-printf "writing files to aero_startup/aero_controller ...\n\n"
+printf "writing files to aero_startup/aero_hardware_interface ...\n\n"
 
 ./scripts/make_controller.sh $dir
 

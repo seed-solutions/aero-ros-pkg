@@ -4,18 +4,18 @@
 # prerequisites : /tmp/aero_ros_order_upper < create_urdf
 # prerequisites : /tmp/aero_ros_order_lower < create_urdf
 
-# generates : aero_startup/aero_controller/AeroControllers.cc
+# generates : aero_startup/aero_hardware_interface/AeroControllers.cc
 # generates : aero_startup/aero_common/AngleJointNames.hh
 # generates : aero_startup/aero_common/AngleJointNames.cc
-# generates : aero_startup/aero_controller/Constants.hh
+# generates : aero_startup/aero_hardware_interface/Constants.hh
 
 dir=$1
 
 input_header="$(rospack find aero_description)/${dir}/headers/Constants.hh"
-output_header="$(rospack find aero_description)/../aero_startup/aero_controller/Constants.hh"
+output_header="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Constants.hh"
 
-input_file="$(rospack find aero_description)/../aero_startup/.templates/aero_controller/AeroControllers.cc"
-output_file="$(rospack find aero_description)/../aero_startup/aero_controller/AeroControllers.cc"
+input_file="$(rospack find aero_description)/../aero_startup/.templates/aero_hardware_interface/AeroControllers.cc"
+output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/AeroControllers.cc"
 
 read_include="$(rospack find aero_description)/../aero_startup/.templates/aero_common/AngleJointNames.hh"
 generate_include="$(rospack find aero_description)/../aero_startup/aero_common/AngleJointNames.hh"
@@ -55,7 +55,7 @@ write_joint_indices() {
 	fi
     done
 
-    echo -e "${code}" > /tmp/aero_controller_tmp_code_block
+    echo -e "${code}" > /tmp/aero_hardware_interface_tmp_code_block
 }
 
 write_wheel_indices() {
@@ -77,7 +77,7 @@ write_wheel_indices() {
 	code="${code}${tab6}AJointIndex(${id}, ${can_id}, ${raw_id}, std::string(\"${can_name}\")));\n"
     done
 
-    echo -e "${code}" >> /tmp/aero_controller_tmp_code_block
+    echo -e "${code}" >> /tmp/aero_hardware_interface_tmp_code_block
 }
 
 # write_angle_joint_indices also generates code for AngleJointNames.hh
@@ -106,8 +106,8 @@ write_angle_joint_indices() {
     done < /tmp/aero_ros_order_lower
 
     echo -e "${code}" > /tmp/aero_angle_joint_names_tmp_code_block
-    echo -e "${code_upper}" > /tmp/aero_controller_tmp_code_block_u
-    echo -e "${code_lower}" > /tmp/aero_controller_tmp_code_block_l
+    echo -e "${code_upper}" > /tmp/aero_hardware_interface_tmp_code_block_u
+    echo -e "${code_lower}" > /tmp/aero_hardware_interface_tmp_code_block_l
 }
 
 
@@ -156,8 +156,8 @@ cat /tmp/aero_modify_header >> $generate_include
 
 # complete AeroUpperController
 
-awk "/AeroUpperController::AeroUpperController/,/}/" $output_file > /tmp/aero_controller_tmp
-write_to_line=$(grep -n -m 1 "// adding code" /tmp/aero_controller_tmp | cut -d ':' -f1)
+awk "/AeroUpperController::AeroUpperController/,/}/" $output_file > /tmp/aero_hardware_interface_tmp
+write_to_line=$(grep -n -m 1 "// adding code" /tmp/aero_hardware_interface_tmp | cut -d ':' -f1)
 write_origin=$(grep -n -m 1 "AeroUpperController::AeroUpperController" $output_file | cut -d ':' -f1)
 write_to_line=$(($write_origin + $write_to_line))
 
@@ -168,19 +168,19 @@ while read line
 do
     echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
     write_to_line=$(($write_to_line + 1))
-done < /tmp/aero_controller_tmp_code_block
+done < /tmp/aero_hardware_interface_tmp_code_block
 
 IFS=''
 while read line
 do
     echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
     write_to_line=$(($write_to_line + 1))
-done < /tmp/aero_controller_tmp_code_block_u
+done < /tmp/aero_hardware_interface_tmp_code_block_u
 
 # complete AeroLowerController
 
-awk "/AeroLowerController::AeroLowerController/,/}/" $output_file > /tmp/aero_controller_tmp
-write_to_line=$(grep -n -m 1 "// adding code" /tmp/aero_controller_tmp | cut -d ':' -f1)
+awk "/AeroLowerController::AeroLowerController/,/}/" $output_file > /tmp/aero_hardware_interface_tmp
+write_to_line=$(grep -n -m 1 "// adding code" /tmp/aero_hardware_interface_tmp | cut -d ':' -f1)
 write_origin=$(grep -n -m 1 "AeroLowerController::AeroLowerController" $output_file | cut -d ':' -f1)
 write_to_line=$(($write_origin + $write_to_line))
 
@@ -193,14 +193,14 @@ while read line
 do
     echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
     write_to_line=$(($write_to_line + 1))
-done < /tmp/aero_controller_tmp_code_block
+done < /tmp/aero_hardware_interface_tmp_code_block
 
 IFS=''
 while read line
 do
     echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
     write_to_line=$(($write_to_line + 1))
-done < /tmp/aero_controller_tmp_code_block_l
+done < /tmp/aero_hardware_interface_tmp_code_block_l
 
 write_encode_short() {
     input_header=$1
@@ -223,11 +223,11 @@ write_encode_short() {
 	code="${code}${tab2}encode_short_(_d1, &dat[RAW_HEADER_OFFSET + ${wheel_id} * 2]);\n"
     done
 
-    echo -e "${code}" > /tmp/aero_controller_tmp_code_block
+    echo -e "${code}" > /tmp/aero_hardware_interface_tmp_code_block
 }
 
-awk "/AeroLowerController::servo_command/,/}/" $output_file > /tmp/aero_controller_tmp
-write_to_line=$(grep -n -m 1 "// adding code" /tmp/aero_controller_tmp | cut -d ':' -f1)
+awk "/AeroLowerController::servo_command/,/}/" $output_file > /tmp/aero_hardware_interface_tmp
+write_to_line=$(grep -n -m 1 "// adding code" /tmp/aero_hardware_interface_tmp | cut -d ':' -f1)
 write_origin=$(grep -n -m 1 "AeroLowerController::servo_command" $output_file | cut -d ':' -f1)
 write_to_line=$(($write_origin + $write_to_line))
 
@@ -238,12 +238,12 @@ while read line
 do
     echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
     write_to_line=$(($write_to_line + 1))
-done < /tmp/aero_controller_tmp_code_block
+done < /tmp/aero_hardware_interface_tmp_code_block
 
 # write warnings
 
 sed -i "1i\/*" $output_file
 sed -i "2i\ * This file auto-generated from script. Do not Edit!" $output_file
-sed -i "3i\ * Original : aero_startup/.templates/aero_controller/AeroControllers.cc" $output_file
+sed -i "3i\ * Original : aero_startup/.templates/aero_hardware_interface/AeroControllers.cc" $output_file
 sed -i "4i\ * Depend : aero_description/{my_robot}/headers/Constants.hh" $output_file
 sed -i "5i\*/" $output_file

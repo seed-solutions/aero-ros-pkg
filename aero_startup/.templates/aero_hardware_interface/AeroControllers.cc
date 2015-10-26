@@ -1,4 +1,4 @@
-#include "aero_controller/AeroControllers.hh"
+#include "aero_hardware_interface/AeroControllers.hh"
 
 using namespace aero;
 using namespace controller;
