@@ -127,7 +127,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     {
       // try finding name from lower_
       id_in_msg_to_ordered_id[i] =
-        upper_.get_ordered_angle_id(_msg->joint_names[i]);
+        lower_.get_ordered_angle_id(_msg->joint_names[i]);
     }
     else
     {
@@ -165,7 +165,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     // why convert when we want strokes as our final result?
     //   a single change in angle could change multiple stroke values
     //   therefore, we cannot find out the changing strokes beforehand
-    std::vector<double> ref_angles;
+    std::vector<double> ref_angles(number_of_angle_joints);
     common::Stroke2Angle(ref_angles, ref_strokes);
 
     // fill in with current values
