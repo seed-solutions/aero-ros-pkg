@@ -74,9 +74,9 @@ namespace aero
       meta = scale * left_wrist.two;
       meta = scale * (rad2Deg * l_thumb_joint - 50.0) * 0.18;
 
-      meta = scale * rad2Deg * waist_y_joint;
       meta = scale * waist.two;
       meta = scale * waist.one;
+      meta = scale * rad2Deg * waist_y_joint;
 
       meta = -scale * rad2Deg * fr_hip_y_joint;
       meta = scale * CrotchPitchTable(rad2Deg * fr_hip_p_joint);
