@@ -17,6 +17,8 @@ output_header="$(rospack find aero_description)/../aero_startup/aero_hardware_in
 input_file="$(rospack find aero_description)/../aero_startup/.templates/aero_hardware_interface/AeroControllers.cc"
 output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/AeroControllers.cc"
 
+mkdir $(rospack find aero_description)/../aero_startup/aero_common
+
 read_include="$(rospack find aero_description)/../aero_startup/.templates/aero_common/AngleJointNames.hh"
 generate_include="$(rospack find aero_description)/../aero_startup/aero_common/AngleJointNames.hh"
 generate_source="$(rospack find aero_description)/../aero_startup/aero_common/AngleJointNames.cc"

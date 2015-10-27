@@ -29,16 +29,12 @@ include_directories(include ${Boost_INCLUDE_DIRS})
 
 include_directories(${aero_startup_SOURCE_DIR})
 
-add_library(aero_controller
+add_executable(aero_controller_node
   aero_common/Angle2Stroke.cc
   aero_common/Stroke2Angle.cc
   aero_common/AngleJointNames.cc
   aero_hardware_interface/AeroControllers.cc
-  aero_hardware_interface/AeroControllerProto.cc)
-target_link_libraries(aero_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-add_executable(aero_controller_node
+  aero_hardware_interface/AeroControllerProto.cc
   aero_hardware_interface/AeroControllerMain.cc
   aero_hardware_interface/AeroControllerNode.cc)
-target_link_libraries(aero_controller_node aero_controller
-  ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(aero_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
