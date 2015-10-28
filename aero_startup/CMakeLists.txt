@@ -38,3 +38,7 @@ add_executable(aero_controller_node
   aero_hardware_interface/AeroControllerMain.cc
   aero_hardware_interface/AeroControllerNode.cc)
 target_link_libraries(aero_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(aero_joint_state_publisher
+  aero_controller_manager/AeroJointStatePublisher.cc)
+target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
