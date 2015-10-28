@@ -1,17 +1,32 @@
-(load "package://aero_ros_bridge/euslisp/aero-interface.l")
-(load "package://aero_ros_bridge/euslisp/tf.l")
+#!/usr/bin/env roseus
 
-(setq ((send *aero-upper* :torso :waist-p) . max-angle) 40)
-(setq ((send *aero-upper* :rarm :elbow-p) . max-angle) -1)
-(setq ((send *aero-upper* :torso :waist-y) . min-angle) -30)
-(setq ((send *aero-upper* :torso :waist-y) . max-angle) 30)
-(setq ((send *aero-upper* :head :neck-y) . min-angle) -45)
-(setq ((send *aero-upper* :head :neck-y) . max-angle) 45)
-(setq ((send *aero-upper* :head :neck-r) . min-angle) 0)
-(setq ((send *aero-upper* :head :neck-r) . max-angle) 0)
+(ros::load-ros-manifest "roseus")
+
+(load "package://aeroeus/aero-interface.l")
+;; (load "package://aero_ros_bridge/euslisp/tf.l")
+
+(aero-init)
+
+(setq ((send *aero* :head :neck-r) . min-angle) 0)
+(setq ((send *aero* :head :neck-r) . max-angle) 0)
 
 (setq l-hand-center #f(-50 20 0))
 (setq r-hand-center #f(-50 -20 0))
+
+(setq *tl* (instance ros::transform-listener :init))
+
+(defun ~tf (&optional (arm nil))
+  (let (m
+        )
+    (ros::spin-once)
+    (setq m (send *tl* :lookup-transform "leg_base_link" "tomato" (ros::time)))
+    (if (eq m nil) (return-from ~tf nil))
+    (setq m (make-coords :pos (v+ (send m :pos)
+				  (send (send (car (send *aero* :links))
+					      :copy-worldcoords) :pos))))
+    (send m :draw-on :flush t)
+    m))
+
 
 (defun setup-limits (arm &key (torso nil))
   (let (origin
@@ -19,90 +34,90 @@
 	(result nil)
 	)
     (send *aero* :reset-manip-pose)
-    (setq origin (send *aero-upper* arm :end-coords :copy-worldcoords))
+    (setq origin (send *aero* arm :end-coords :copy-worldcoords))
     ;; z-
     (setq limit-search (make-coords
 			:pos (v+ (send origin :pos) #f(0 0 -10000))))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics limit-search
+	(send *aero* arm :inverse-kinematics limit-search
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics limit-search
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics limit-search
 	    :revert-if-fail nil)
       )
     (push (elt (send 
-		(send *aero-upper* arm :end-coords :copy-worldcoords)
+		(send *aero* arm :end-coords :copy-worldcoords)
 		:pos) 2) result) 
     ;; z+
     (setq limit-search (make-coords
 			:pos (v+ (send origin :pos) #f(0 0 10000))))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics limit-search
+	(send *aero* arm :inverse-kinematics limit-search
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics limit-search
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics limit-search
 	    :revert-if-fail nil)
       )
     (push (elt (send 
-		(send *aero-upper* arm :end-coords :copy-worldcoords)
+		(send *aero* arm :end-coords :copy-worldcoords)
 		:pos) 2) result)
     ;; y-
     (setq limit-search (make-coords
 			:pos (v+ (send origin :pos) #f(0 -10000 0))))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics limit-search
+	(send *aero* arm :inverse-kinematics limit-search
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics limit-search
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics limit-search
 	    :revert-if-fail nil)
       )
     (push (elt (send 
-		(send *aero-upper* arm :end-coords :copy-worldcoords)
+		(send *aero* arm :end-coords :copy-worldcoords)
 		:pos) 1) result) 
     ;; y+
     (setq limit-search (make-coords
 			:pos (v+ (send origin :pos) #f(0 10000 0))))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics limit-search
+	(send *aero* arm :inverse-kinematics limit-search
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics limit-search
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics limit-search
 	    :revert-if-fail nil)
       )
     (push (elt (send 
-		(send *aero-upper* arm :end-coords :copy-worldcoords)
+		(send *aero* arm :end-coords :copy-worldcoords)
 		:pos) 1) result)
     ;; x-
     (setq limit-search (make-coords
 			:pos (v+ (send origin :pos) #f(-10000 0 0))))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics limit-search
+	(send *aero* arm :inverse-kinematics limit-search
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics limit-search
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics limit-search
 	    :revert-if-fail nil)
       )
     (push (elt (send 
-		(send *aero-upper* arm :end-coords :copy-worldcoords)
+		(send *aero* arm :end-coords :copy-worldcoords)
 		:pos) 0) result) 
     ;; x+
     (setq limit-search (make-coords
 			:pos (v+ (send origin :pos) #f(10000 0 0))))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics limit-search
+	(send *aero* arm :inverse-kinematics limit-search
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics limit-search
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics limit-search
 	    :revert-if-fail nil)
       )
     (push (elt (send 
-		(send *aero-upper* arm :end-coords :copy-worldcoords)
+		(send *aero* arm :end-coords :copy-worldcoords)
 		:pos) 0) result)
     result))
 
@@ -119,21 +134,21 @@
 	(arm-list-actual nil)
 	(arm-list-model nil)
 	)
-    (setq head-p (send *aero-upper* :head :neck-p :joint-angle))
-    (setq head-y (send *aero-upper* :head :neck-y :joint-angle))
+    (setq head-p (send *aero* :head :neck-p :joint-angle))
+    (setq head-y (send *aero* :head :neck-y :joint-angle))
     (cond ((eq arm :larm)
 	   (setq arm-limits (setup-limits :larm :torso torso))
-	   (send *aero-upper* :rarm :shoulder-r :joint-angle -30)
-	   (send *aero-upper* :rarm :shoulder-y :joint-angle -90)
+	   (send *aero* :rarm :shoulder-r :joint-angle -30)
+	   (send *aero* :rarm :shoulder-y :joint-angle -90)
 	   )
 	  (t
 	   (setq arm-limits (setup-limits :rarm :torso torso))
-	   (send *aero-upper* :larm :shoulder-r :joint-angle 30)
-	   (send *aero-upper* :larm :shoulder-y :joint-angle 90)
+	   (send *aero* :larm :shoulder-r :joint-angle 30)
+	   (send *aero* :larm :shoulder-y :joint-angle 90)
 	   )
 	  )
-    (send *aero-upper* :head :neck-p :joint-angle head-p)
-    (send *aero-upper* :head :neck-y :joint-angle head-y)
+    (send *aero* :head :neck-p :joint-angle head-p)
+    (send *aero* :head :neck-y :joint-angle head-y)
     (setq x-steps (/ (- (elt arm-limits 0) (elt arm-limits 1)) bits))
     (setq y-steps (/ (- (elt arm-limits 2) (elt arm-limits 3)) bits))
     (setq z-steps (/ (- (elt arm-limits 4) (elt arm-limits 5)) bits))
@@ -143,16 +158,16 @@
 					    (elt arm-limits 5))))
     (setq target (send target-origin :copy-worldcoords))
     (if (eq torso t)
-	(send *aero-upper* arm :inverse-kinematics target
+	(send *aero* arm :inverse-kinematics target
 	      :revert-if-fail nil
-	      :link-list (send *aero-upper* :link-list
-			       (send *aero-upper* arm :end-coords :parent)))
-      (send *aero-upper* arm :inverse-kinematics target
+	      :link-list (send *aero* :link-list
+			       (send *aero* arm :end-coords :parent)))
+      (send *aero* arm :inverse-kinematics target
 	    :revert-if-fail nil)
       )
     (cond ((eq *real* t)
 	   (send *ri* :angle-vector
-	   	 (send *aero-upper* :stroke-vector) 2000)
+	   	 (send *aero* :stroke-vector) 2000)
 	   (unix::usleep (* 4000 1000))
 	   )
 	  )
@@ -165,22 +180,22 @@
 			(v+ (send (send target-origin :copy-worldcoords) :pos)
 			    (float-vector (* i bits) (* j bits) (* k bits))))) 
 	  (if (eq torso t)
-	      (send *aero-upper* arm :inverse-kinematics target
+	      (send *aero* arm :inverse-kinematics target
 		    :revert-if-fail nil
-		    :link-list (send *aero-upper* :link-list
-				     (send *aero-upper*
+		    :link-list (send *aero* :link-list
+				     (send *aero*
 					   arm :end-coords :parent)))
-	    (send *aero-upper* arm :inverse-kinematics target
+	    (send *aero* arm :inverse-kinematics target
 		  :revert-if-fail nil)
 	    )
-	  (send *aero-upper* :head :look-at
-		(send (send *aero-upper* arm :end-coords :copy-worldcoords)
+	  (send *aero* :head :look-at
+		(send (send *aero* arm :end-coords :copy-worldcoords)
 		      :pos))
 	  (send *irtviewer* :draw-objects)
 	  (cond ((eq *real* t)
 		 (print "moving arm to pose")
 		 (send *ri* :angle-vector
-		       (send *aero-upper* :stroke-vector) 2000)
+		       (send *aero* :stroke-vector) 2000)
 		 (unix::usleep (* 5000 1000))
 		 (setq n-found (~tf))
 		 (block find-hand
@@ -198,7 +213,7 @@
 						 ))
 					  (return-from find-hand))
 				 )
-			       (let ((tmp-hand (send *aero-upper* arm
+			       (let ((tmp-hand (send *aero* arm
 						     :end-coords
 						     :copy-worldcoords))
 				     )
@@ -210,9 +225,9 @@
 							 r-hand-center))
 					    )
 					(float-vector
-					 (send *aero-upper*
+					 (send *aero*
 					       :head :neck-p :joint-angle)
-					 (send *aero-upper*
+					 (send *aero*
 					       :head :neck-y :joint-angle)
 					 )
 					) arm-list-model))
@@ -226,18 +241,18 @@
 		 )
 		)
 	  (cond ((eq with-head t)
-		 (setq head-p (send *aero-upper* :head :neck-p :joint-angle))
-		 (setq head-y (send *aero-upper* :head :neck-y :joint-angle))
+		 (setq head-p (send *aero* :head :neck-p :joint-angle))
+		 (setq head-y (send *aero* :head :neck-y :joint-angle))
 		 (dotimes (l 3)
-		   (send *aero-upper* :head :neck-p :joint-angle
+		   (send *aero* :head :neck-p :joint-angle
 			 (+ head-p (* (- l 1) p-bits)))
 		   (dotimes (m 3)
-		     (send *aero-upper* :head :neck-y :joint-angle
+		     (send *aero* :head :neck-y :joint-angle
 			   (+ head-y (* (- m 1) y-bits)))
 		     (send *irtviewer* :draw-objects)
 		     (cond ((eq *real* t)
 			    (send *ri* :angle-vector
-			    	  (send *aero-upper* :stroke-vector) 2000)
+			    	  (send *aero* :stroke-vector) 2000)
 			    (unix::usleep (* 4000 1000))
 			    )
 			   )

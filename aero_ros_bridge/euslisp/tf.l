@@ -27,7 +27,7 @@
     (if (eq m nil) (return-from ~tf nil))
 
     (setq target-p (v+ (send m :pos)
-		       (send (send (car (send *aero-upper* :links))
+		       (send (send (car (send *aero* :links))
 				   :copy-worldcoords) :pos)))
 
     (setq target-m (m* (send m :rot)
