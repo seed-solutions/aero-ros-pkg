@@ -51,7 +51,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   cloud->points.reserve(raw->points.size());
 
   int vertices_count = 0;
-  Eigen::Vector3f center;
+  Eigen::Vector3f center(0, 0, 0);
   std::vector<Eigen::Vector3f> vertices;
   vertices.reserve(raw->points.size());
   for (unsigned int i = 0; i < raw_vertices.size(); ++i)
@@ -61,6 +61,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
     {
       vertices.push_back(raw_vertices[i]);
       center += raw_vertices[i];
+
       cloud->points.push_back(pcl::PointXYZ(raw_vertices[i][0],
 					    raw_vertices[i][1], raw_vertices[i][2]));
       ++vertices_count;
@@ -68,7 +69,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   vertices.resize(vertices_count);
   cloud->points.resize(vertices_count);
   center = center * (1.0 / vertices_count);
-  
+
   // Calculate Object Normal
 
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
@@ -218,7 +219,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 
   // blue : -107 ~ -128 , 235 ~ 255
   // red : 0 ~ 17 , 235 ~ 255
-  // green : 56 ~ 49 , 106 ~ 183
+  // green : 46 ~ 97, 42 ~ 194 //56 ~ 49 , 106 ~ 183
 };
 
 
