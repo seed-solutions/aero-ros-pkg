@@ -1,19 +1,19 @@
 <launch>
+
   <arg name="viewer" default="false" /> <!-- Must be globally qualified -->
   <arg name="manager" default="capture_nodelet_manager" /> <!-- Must be globally qualified -->
   <arg name="respawn" default="false" />
-  <!-- TODO Arguments for debayer, interpolation methods? -->
 
-  <arg     if="$(arg respawn)" name="bond" value="" />
+  <arg if="$(arg respawn)" name="bond" value="" />
   <arg unless="$(arg respawn)" name="bond" value="--no-bond" />
 
   <node pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager" output="screen" />
 
   <!-- arguments for camera param uri -->
   <arg name="camera_info_file_right"
-       default="$(find aero_sensors)/config/ps4eye_right.yaml" />
+       default="$(find aero_startup)/aero_sensors/config/ps4eye_right.yaml" />
   <arg name="camera_info_file_left"
-       default="$(find aero_sensors)/config/ps4eye_left.yaml" />
+       default="$(find aero_startup)/aero_sensors/config/ps4eye_left.yaml" />
   <arg name="camera_info_url_default"
        default="file://$(find ps4eye)/camera_info/default.yaml" />
   <arg name="camera_info_url_right"
@@ -77,13 +77,13 @@
     <remap from="/stereo/left/camera_info" to="/null/left/camera_info" />
   </node>
 
-  <node pkg="aero_sensors" type="camera_info_publisher.py"
-	name="camera_info_publisher" >
+  <node pkg="aero_startup" type="camera_info_publisher.py"
+        name="camera_info_publisher" >
     <param name="left_file_name"  value="$(arg camera_info_file_left)"  />
     <param name="right_file_name" value="$(arg camera_info_file_right)" />
   </node>
 
-  <node pkg="aero_sensors" type="set_ps4eye_autogain.sh"
-	name="set_ps4eye_autogain" />
+  <node pkg="aero_startup" type="set_ps4eye_autogain.sh"
+        name="set_ps4eye_autogain" />
 
 </launch>

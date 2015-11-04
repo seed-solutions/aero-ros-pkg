@@ -25,7 +25,7 @@ class CameraInfoPublisher:
         self.left_cam_info_org = 0
         self.right_cam_info_org = 0
 
-        # yamlファイルを読み込んでCameraInfoを返す
+        # read yaml file and return CameraInfo
         left_file_name  = rospy.get_param(
             '~left_file_name',
             rospack.get_path('ps4eye')+'/camera_info/left.yaml')
@@ -37,7 +37,7 @@ class CameraInfoPublisher:
         left_topic = "/" + camera_name + "/left/camera_info"
         right_topic = "/" + camera_name + "/right/camera_info"
 
-        # Timestampを合わせるためにsubする必要あり
+        # subscribe to match Timestamp
         # rospy.Subscriber("/null/left/image_raw", Image, self.callback)
         # rospy.Subscriber("/null/right/image_raw", Image, self.callback)
         rospy.Subscriber("/null/left/camera_info", CameraInfo, self.callback)
