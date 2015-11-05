@@ -83,6 +83,20 @@ do
     write_to_line=$(($write_to_line + 1))
 done < /tmp/tmp_in_handc
 
+awk "/@define NORMALIZE_DATA/,/\*\//" $configuration_file > /tmp/tmp_in_handc
+sed -i "/@define/d" /tmp/tmp_in_handc
+sed -i "/*\//d" /tmp/tmp_in_handc
+
+write_to_line=$(grep -n -m 1 "implement here read_line" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
 sed -i "3i\ * This file auto-generated from configure. Do not Edit!" $output_file
 sed -i "4i\ * Original : aero_startup/.templates/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc" $output_file
 sed -i "5i\ * Depend : aero_startup/aero_object_manipulation/calibration/{my_configuration_file}.hh" $output_file

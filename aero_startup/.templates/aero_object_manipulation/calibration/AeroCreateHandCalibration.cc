@@ -56,7 +56,7 @@ std::vector<double> SVR(svm_model *_model,
   std::cout << "Test...\n";
 
   std::vector<double> y_test(_data_test.size());
-  svm_node testdat[5];
+  svm_node testdat[nodes];
 
   for (unsigned int i = 0; i< _data_test.size(); ++i)
   {
