@@ -15,8 +15,25 @@ endif()
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp tf std_msgs sensor_msgs trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
+  message_generation
 )
 find_package(Boost REQUIRED COMPONENTS filesystem system signals thread)
+
+set(FOUND_LIBSVM)
+
+if(FOUND_LIBSVM)
+  message(STATUS "found libsvm")
+
+  add_service_files(
+    FILES
+    AeroReachControllerService.srv
+  )
+
+  generate_messages(
+    DEPENDENCIES
+    std_msgs
+  )
+endif()
 
 catkin_package(
   CATKIN_DEPENDS
@@ -42,3 +59,7 @@ target_link_libraries(aero_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES
 add_executable(aero_joint_state_publisher
   aero_controller_manager/AeroJointStatePublisher.cc)
 target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+if(FOUND_LIBSVM)
+  # auto-add executables from aero_object_manipulation/manipulation/configure
+endif()
