@@ -51,6 +51,12 @@ output_file="$(rospack find aero_startup)/aero_object_manipulation/manipulation/
 
 libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
 
+if [[ "$libsvm_dir" = "" ]]
+then
+    echo "aborting, expected file not found"
+    exit
+fi
+
 cp $input_file $output_file
 
 sed -i "s@libsvm/svm.h@${libsvm_dir}@" $output_file
@@ -146,13 +152,18 @@ cmake_file="$(rospack find aero_startup)/CMakeLists.txt"
 sed -i "s/set(FOUND_LIBSVM)/set(FOUND_LIBSVM 1)/g" $cmake_file
 
 lowered_filename=$(echo $output_filename | awk '{print tolower($1)}')
-write_to_line=$(grep -n -m 1 "auto-add executables from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
-write_to_line=$(($write_to_line + 1))
-echo "${tab2}add_executable(aero_reach_controller_${lowered_filename}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-echo "${tab2}${tab2}aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
-echo "${tab2}${tab2}${libsvmcpp_dir})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-echo "${tab2}target_link_libraries(aero_reach_controller_${lowered_filename} \${catkin_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+check_if_exists=$(grep "add_executable(aero_reach_controller_${lowered_filename}" $cmake_file)
+
+if [[ "$check_if_exists" = "" ]]
+then
+    write_to_line=$(grep -n -m 1 "auto-add executables from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}add_executable(aero_reach_controller_${lowered_filename}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}${tab2}aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+    libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+    echo "${tab2}${tab2}${libsvmcpp_dir})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}target_link_libraries(aero_reach_controller_${lowered_filename} \${catkin_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+fi
