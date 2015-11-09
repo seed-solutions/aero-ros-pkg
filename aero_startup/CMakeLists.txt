@@ -54,9 +54,9 @@ endif()
 set(FOUND_LIBSVM)
 if(FOUND_LIBSVM)
   message(STATUS "found libsvm")
+  # auto-add services from aero_object_manipulation/manipulation/configure
   add_service_files(
     FILES
-    AeroReachControllerService.srv
   )
   generate_messages(
     DEPENDENCIES

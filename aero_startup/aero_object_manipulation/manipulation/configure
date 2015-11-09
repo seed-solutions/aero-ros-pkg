@@ -4,7 +4,7 @@
 # prerequisites : {my_learned_file_for_output1}.hh ...
 
 # generates : aero_startup/aero_object_manipulation/manipulation/AeroReachController{name}.cc
-# generates : aero_startup/srv/AeroReachControllerService.srv
+# generates : aero_startup/srv/AeroReachControllerService{configure}.srv
 # modifies  : aero_startup/CMakeLists.txt
 
 output_filename=$1 # e.g. Larm
@@ -17,8 +17,10 @@ sed -i "/struct points/d" /tmp/points_def_in_handc
 sed -i "/{/d" /tmp/points_def_in_handc
 sed -i "/};/d" /tmp/points_def_in_handc
 
+srv_output_name=$(echo "$configuration_file" | awk -F/ '{print $NF}' | cut -d '.' -f1)
+
 mkdir $(rospack find aero_startup)/srv
-srv_output_file="$(rospack find aero_startup)/srv/AeroReachControllerService.srv"
+srv_output_file="$(rospack find aero_startup)/srv/AeroReachControllerService${srv_output_name}.srv"
 cp /tmp/points_def_in_handc $srv_output_file
 sed -i "s/float/float32/g" $srv_output_file
 sed -i "s/double/float64/g" $srv_output_file
@@ -60,7 +62,8 @@ fi
 cp $input_file $output_file
 
 sed -i "s@libsvm/svm.h@${libsvm_dir}@" $output_file
-
+sed -i "s@aero_startup/AeroReachControllerService.h@aero_startup/AeroReachControllerService${srv_output_name}.h@" $output_file
+sed -i "s@aero_startup::AeroReachControllerService::@aero_startup::AeroReachControllerService${srv_output_name}::@" $output_file
 
 write_to_line=$(grep -n -m 1 "#include <ros/ros.h>" $output_file | cut -d  ':' -f1)
 write_to_line=$(($write_to_line + 1))
@@ -166,4 +169,13 @@ then
     echo "${tab2}${tab2}${libsvmcpp_dir})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     write_to_line=$(($write_to_line + 1))
     echo "${tab2}target_link_libraries(aero_reach_controller_${lowered_filename} \${catkin_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+fi
+
+check_if_exists=$(grep "AeroReachControllerService${srv_output_name}.srv" $cmake_file)
+
+if [[ "$check_if_exists" = "" ]]
+then
+    write_to_line=$(grep -n -m 1 "auto-add services from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 3))
+    echo "${tab2}${tab2}AeroReachControllerService${srv_output_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 fi
