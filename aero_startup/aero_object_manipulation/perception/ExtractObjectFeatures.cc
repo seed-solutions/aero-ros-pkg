@@ -120,6 +120,83 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   if ((Eigen::Vector3f(1, 0, 0)).dot(axis) < 0) theta_axis = M_PI - theta_axis;
   transpose_axis.normalize();
 
+  // Extract Object Normal Component Perpendicular to Object Axis
+
+  Eigen::Quaternionf axis_pose_q(cos(theta_axis / 2),
+				 transpose_axis[0] * sin(theta_axis / 2),
+				 transpose_axis[1] * sin(theta_axis / 2),
+				 transpose_axis[2] * sin(theta_axis / 2));
+
+  Eigen::Vector3f normal_x_axis = normal.cross(axis);
+  normal_x_axis.normalize();
+  Eigen::Vector3f axis_z = axis_pose_q * Eigen::Vector3f(0, 0, 1);
+  axis_z.normalize();
+  float theta_z = asin((normal_x_axis.cross(axis_z)).norm()) + M_PI/2;
+  if (normal_x_axis.dot(axis_z) < 0) theta_z = 2 * M_PI - theta_z;
+  Eigen::Quaternionf transpose_z(cos(theta_z / 2), sin(theta_z / 2), 0, 0);
+  Eigen::Quaternionf pose_q = axis_pose_q * transpose_z;
+
+  // Transform Object Pose to Grasping Coordinates
+
+  static tf::TransformListener tf_;
+
+  tf::StampedTransform base_to_eye;
+  ros::Time now = ros::Time::now();
+  tf_.waitForTransform("leg_base_link", "ps4eye_frame", now, ros::Duration(2.0));
+
+  try
+  {
+    tf_.lookupTransform("leg_base_link", "ps4eye_frame", now, base_to_eye);
+    Eigen::Quaternionf base_to_eye_q =
+      Eigen::Quaternionf(base_to_eye.getRotation().w(),
+			 base_to_eye.getRotation().x(),
+			 base_to_eye.getRotation().y(),
+			 base_to_eye.getRotation().z());
+    Eigen::Quaternionf world_q = base_to_eye_q * pose_q;
+    Eigen::Vector3f world_center =
+      Eigen::Vector3f(base_to_eye.getOrigin().x(),
+		      base_to_eye.getOrigin().y(),
+		      base_to_eye.getOrigin().z()) + base_to_eye_q * center;
+    // X : axis, Z : normal -> X : normal , Z : axis
+    Eigen::Quaternionf grasp_q = // rotate on axis Y by M_PI/2
+      world_q * Eigen::Quaternionf(0.707107, 0.0, 0.707107, 0.0);
+    Eigen::Vector3f coordinate_sgn = grasp_q * Eigen::Vector3f(0, 0, 1);
+    Eigen::Quaternionf pose_q_l = grasp_q;
+    Eigen::Quaternionf pose_q_r = grasp_q;
+    // reset coords to grasp-able direction if needed
+    if (coordinate_sgn.dot(Eigen::Vector3f(-1, -1, 1)) <
+	coordinate_sgn.dot(Eigen::Vector3f(1, 1, -1)))
+      pose_q_l = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
+    if (coordinate_sgn.dot(Eigen::Vector3f(-1, 1, 1)) <
+	coordinate_sgn.dot(Eigen::Vector3f(1, -1, -1)))
+      pose_q_r = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
+
+    // feature in left-hand grasp coords
+    static tf::TransformBroadcaster br_l;
+    tf::Transform transform_l;
+    transform_l.setOrigin(
+        tf::Vector3(world_center[0], world_center[1], world_center[2]));
+    tf::Quaternion q_l(pose_q_l.x(), pose_q_l.y(), pose_q_l.z(), pose_q_l.w());
+    transform_l.setRotation(q_l);
+    br_l.sendTransform(tf::StampedTransform(transform_l, ros::Time::now(),
+					    "leg_base_link", "object_l"));
+
+    // feature in right-hand grasp coords
+    static tf::TransformBroadcaster br_r;
+    tf::Transform transform_r;
+    transform_r.setOrigin(
+        tf::Vector3(world_center[0], world_center[1], world_center[2]));
+    tf::Quaternion q_r(pose_q_r.x(), pose_q_r.y(), pose_q_r.z(), pose_q_r.w());
+    transform_r.setRotation(q_r);
+    br_r.sendTransform(tf::StampedTransform(transform_r, ros::Time::now(),
+					    "leg_base_link", "object_r"));
+  }
+  catch (std::exception e)
+  {
+    ROS_ERROR("failed tf listen");
+  }
+
+
   // Export results
 
   visualization_msgs::Marker marker_normal;
@@ -146,20 +223,6 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   marker_normal.lifetime = ros::Duration();
   markern_pub.publish(marker_normal);
 
-  Eigen::Quaternionf axis_pose_q(cos(theta_axis / 2),
-				 transpose_axis[0] * sin(theta_axis / 2),
-				 transpose_axis[1] * sin(theta_axis / 2),
-				 transpose_axis[2] * sin(theta_axis / 2));
-
-  Eigen::Vector3f normal_x_axis = normal.cross(axis);
-  normal_x_axis.normalize();
-  Eigen::Vector3f axis_z = axis_pose_q * Eigen::Vector3f(0, 0, 1);
-  axis_z.normalize();
-  float theta_z = asin((normal_x_axis.cross(axis_z)).norm()) + M_PI/2;
-  if (normal_x_axis.dot(axis_z) < 0) theta_z = 2 * M_PI - theta_z;
-  Eigen::Quaternionf transpose_z(cos(theta_z / 2), sin(theta_z / 2), 0, 0);
-  Eigen::Quaternionf pose_q = axis_pose_q * transpose_z;
-
   pcl::PCLPointCloud2 pcl_out;
   sensor_msgs::PointCloud2 msg;
   pcl::toPCLPointCloud2(*cloud, pcl_out);
@@ -168,6 +231,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   msg.header.stamp = ros::Time(0); // get possible recent
   pcl_pub.publish(msg);
 
+  // originally calculated feature
   static tf::TransformBroadcaster br;
   tf::Transform transform;
   transform.setOrigin(tf::Vector3(center[0], center[1], center[2]));

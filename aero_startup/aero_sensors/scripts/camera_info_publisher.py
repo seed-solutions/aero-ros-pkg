@@ -6,7 +6,7 @@
 import sys
 import yaml
 import roslib
-roslib.load_manifest("aero_sensors");
+roslib.load_manifest("aero_startup");
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 import rospy
