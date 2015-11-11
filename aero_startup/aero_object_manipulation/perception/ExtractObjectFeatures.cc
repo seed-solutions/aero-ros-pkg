@@ -82,7 +82,11 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   ne.setRadiusSearch(0.01);
   ne.compute(*normals);
 
-  if (normals->points.size() == 0) return; // object detection failed
+  if (normals->points.size() == 0)
+  {
+    ROS_ERROR("no points detected");
+    return; // object detection failed
+  }
 
   // Calculate Object Normal
 
@@ -96,7 +100,11 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 
   Eigen::Vector3f transpose_normal = Eigen::Vector3f(1, 0, 0).cross(normal);
   float theta_normal  = asin(transpose_normal.norm());
-  if (theta_normal != theta_normal) return; // check nan
+  if (theta_normal != theta_normal) // check nan
+  {
+    ROS_ERROR("error occured while calculation normal");
+    return;
+  }
   if ((Eigen::Vector3f(1, 0, 0)).dot(normal) < 0) theta_normal = M_PI - theta_normal;
   transpose_normal.normalize();
 
@@ -116,7 +124,11 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 
   Eigen::Vector3f transpose_axis = Eigen::Vector3f(1, 0, 0).cross(axis);
   float theta_axis = asin(transpose_axis.norm());
-  if (theta_axis != theta_axis) return; // check nan
+  if (theta_axis != theta_axis) // check nan
+  {
+    ROS_ERROR("error occured while calculating axis");
+    return;
+  }
   if ((Eigen::Vector3f(1, 0, 0)).dot(axis) < 0) theta_axis = M_PI - theta_axis;
   transpose_axis.normalize();
 
@@ -195,7 +207,6 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   {
     ROS_ERROR("failed tf listen");
   }
-
 
   // Export results
 

@@ -1,7 +1,7 @@
 <launch>
   <arg name="DEVICE" default="/dev/video0"/>
-  <arg name="camera_info_file_left" default="$(find aero_startup)/sensors/config/ps4eye_left.yaml"/>
-  <arg name="camera_info_file_right" default="$(find aero_startup)/sensors/config/ps4eye_right.yaml"/>
+  <arg name="camera_info_file_left" default="$(find aero_startup)/aero_sensors/config/ps4eye_left.yaml"/>
+  <arg name="camera_info_file_right" default="$(find aero_startup)/aero_sensors/config/ps4eye_right.yaml"/>
 
   <include file="$(find aero_startup)/aero_sensors/launch/incl_start_ps4eye_capture.launch">
     <arg name="DEVICE" value="$(arg DEVICE)"/>
