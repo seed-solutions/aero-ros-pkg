@@ -74,7 +74,7 @@
     )
   (:ungrasp (arm &optional (time 100))
     (send self :hand arm :open-pose)
-    (send *ri* :angle-vector (send self :stroke-vector) time)
+    (send *ri* :angle-vector (send self :angle-vector) time)
     (unix::usleep(* time 1000))
     )
   ;; do not grasp-hard faster than 1 sec
@@ -304,7 +304,8 @@
     )
   (setq ((send *aero* :head :neck-p) . max-angle) 40)
   (setq ((send *aero* :torso :waist-p) . max-angle) 40)
-  (setq ((send *aero* :rarm :elbow-p) . max-angle) -1)
+  (setq ((send *aero* :rarm :elbow-p) . max-angle) -10)
+  (setq ((send *aero* :larm :elbow-p) . max-angle) -10)
   (setq ((send *aero* :torso :waist-y) . min-angle) -30)
   (setq ((send *aero* :torso :waist-y) . max-angle) 30)
   (setq ((send *aero* :head :neck-y) . min-angle) -45)

@@ -28,7 +28,7 @@ else()
 endif()
 
 # find ROS
-find_package(catkin REQUIRED COMPONENTS roscpp pr2_controllers_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp pr2_controllers_msgs tf)
 if(NOT catkin_INCLUDE_DIRS)
   message(WARNING "required packages not found")
 else()
@@ -39,9 +39,16 @@ endif()
 
 catkin_package()
 
-if (catkin_INCLUDE_DIRS)
-  add_executable(aero_joint_state_publisher src/AeroJointStatePublisher.cc)
-  target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-endif()
+add_executable(svm_calib_test src/SVMCalibTest.cc ~/libsvm/svm.cpp)
+add_executable(svm_ik src/SVMIK.cc ~/libsvm/svm.cpp)
+target_link_libraries(svm_ik ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+find_package(PCL 1.3 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+add_executable(object_features src/ObjectFeatures.cc)
+target_link_libraries(object_features ${PCL_LIBRARIES}
+  ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # catkin build aero_world --verbose

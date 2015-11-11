@@ -1,4 +1,0 @@
-<launch>
-  <include file="$(find aero_sensors)/launch/start_ps4eye_capture.launch" />
-  <include file="$(find aero_sensors)/launch/start_ps4eye_proc.launch" />
-</launch>

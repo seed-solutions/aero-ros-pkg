@@ -1,0 +1,181 @@
+#!/bin/bash
+
+# prerequisites : {my_configuration_file}.hh
+# prerequisites : {my_learned_file_for_output1}.hh ...
+
+# generates : aero_startup/aero_object_manipulation/manipulation/AeroReachController{name}.cc
+# generates : aero_startup/srv/AeroReachControllerService{configure}.srv
+# modifies  : aero_startup/CMakeLists.txt
+
+output_filename=$1 # e.g. Larm
+configuration_file=$2
+
+# create AeroReachControllerService.srv
+
+awk "/struct points/,/};/" $configuration_file > /tmp/points_def_in_handc
+sed -i "/struct points/d" /tmp/points_def_in_handc
+sed -i "/{/d" /tmp/points_def_in_handc
+sed -i "/};/d" /tmp/points_def_in_handc
+
+srv_output_name=$(echo "$configuration_file" | awk -F/ '{print $NF}' | cut -d '.' -f1)
+
+mkdir $(rospack find aero_startup)/srv
+srv_output_file="$(rospack find aero_startup)/srv/AeroReachControllerService${srv_output_name}.srv"
+cp /tmp/points_def_in_handc $srv_output_file
+sed -i "s/float/float32/g" $srv_output_file
+sed -i "s/double/float64/g" $srv_output_file
+sed -i 's/^[ \t]*//' $srv_output_file
+sed -i "s/;//g" $srv_output_file
+
+tab2=$'  '
+svm_model_write=''
+set_res_write=''
+svm_load_write=''
+srv_write="---\n"
+
+for e in "${@:3}"
+do
+    varfile=$(echo "$e" | awk -F/ '{print $NF}') # in case input has ~/
+    varfile=$(find / -name $varfile 2>/dev/null | head -n1)
+    var=$(echo "$e" | awk -F/ '{print $NF}' | awk -F_ '{print $NF}')
+    svm_model_write="${svm_model_write}svm_model* model_${var};\n"
+    set_res_write="${set_res_write}${tab2}res.${var} = svm_predict(model_${var}, testdat);\n"
+    svm_load_write="${svm_load_write}${tab2}model_${var} = svm_load_model(\"${varfile}\");\n"
+    srv_write="${srv_write}float64 ${var}\n"
+done
+
+echo -e "${srv_write}" >> $srv_output_file
+
+# create AeroReachController.cc
+
+input_file="$(rospack find aero_startup)/.templates/aero_object_manipulation/manipulation/AeroReachControllerTemplate.cc"
+output_file="$(rospack find aero_startup)/aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc"
+
+libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
+
+if [[ "$libsvm_dir" = "" ]]
+then
+    echo "aborting, expected file not found"
+    exit
+fi
+
+cp $input_file $output_file
+
+sed -i "s@libsvm/svm.h@${libsvm_dir}@" $output_file
+sed -i "s@aero_startup/AeroReachControllerService.h@aero_startup/AeroReachControllerService${srv_output_name}.h@" $output_file
+sed -i "s@aero_startup::AeroReachControllerService::@aero_startup::AeroReachControllerService${srv_output_name}::@" $output_file
+
+write_to_line=$(grep -n -m 1 "#include <ros/ros.h>" $output_file | cut -d  ':' -f1)
+write_to_line=$(($write_to_line + 1))
+echo -e "#include \"${configuration_file}\"" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+
+
+echo -e "${svm_model_write}" > /tmp/tmp_in_handc
+write_to_line=$(grep -n -m 1 "implement here svm_model" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+
+body=''
+bodyreq=''
+index=0
+varid=1
+while read line
+do
+    varname=$(echo "${line}" | awk '{print $2}' | cut -d ';' -f1)
+    body="${body}${tab2}testdat[${index}].index = ${varid};\n"
+    body="${body}${tab2}testdat[${index}].value = data.${varname};\n"
+    bodyreq="${bodyreq}${tab2}data.${varname} = req.${varname};\n"
+    index=$(($index + 1))
+    varid=$(($varid + 1))
+done </tmp/points_def_in_handc
+body="${body}${tab2}testdat[${index}].index = -1;\n\n"
+body="${tab2}svm_node testdat[${varid}];\n${body}"
+echo -e "${body}" > /tmp/tmp_in_handc
+write_to_line=$(grep -n -m 1 "implement here to_input_data" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+
+echo -e "${bodyreq}" > /tmp/tmp_in_handc
+awk "/@define NORMALIZE_DATA/,/\*\//" $configuration_file >> /tmp/tmp_in_handc
+sed -i "/@define/d" /tmp/tmp_in_handc
+sed -i "/*\//d" /tmp/tmp_in_handc
+sed -i "s/tmp/data/g" /tmp/tmp_in_handc
+write_to_line=$(grep -n -m 1 "implement here normalization" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+
+echo -e "${set_res_write}" > /tmp/tmp_in_handc
+write_to_line=$(grep -n -m 1 "implement here set_res" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+
+echo -e "${svm_load_write}" > /tmp/tmp_in_handc
+write_to_line=$(grep -n -m 1 "implement here svm_load" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+
+sed -i "3i\ * This file auto-generated from configure. Do not Edit!" $output_file
+sed -i "4i\ * Original : aero_startup/.templates/aero_object_manipulation/manipulation/AeroReachControllerTemplate.cc" $output_file
+sed -i "5i\ * Depend : aero_startup/aero_object_manipulation/calibration/{my_configuration_file}.hh" $output_file
+sed -i "5i\ * Depend : aero_startup/aero_object_manipulation/manipulation/{my_learned_file_for_output1}.hh ..." $output_file
+
+
+# modify CMakeLists.txt
+
+cmake_file="$(rospack find aero_startup)/CMakeLists.txt"
+sed -i "s/set(FOUND_LIBSVM)/set(FOUND_LIBSVM 1)/g" $cmake_file
+
+lowered_filename=$(echo $output_filename | awk '{print tolower($1)}')
+check_if_exists=$(grep "add_executable(aero_reach_controller_${lowered_filename}" $cmake_file)
+
+if [[ "$check_if_exists" = "" ]]
+then
+    write_to_line=$(grep -n -m 1 "auto-add executables from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}add_executable(aero_reach_controller_${lowered_filename}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}${tab2}aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+    libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+    echo "${tab2}${tab2}${libsvmcpp_dir})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}target_link_libraries(aero_reach_controller_${lowered_filename} \${catkin_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+fi
+
+check_if_exists=$(grep "AeroReachControllerService${srv_output_name}.srv" $cmake_file)
+
+if [[ "$check_if_exists" = "" ]]
+then
+    write_to_line=$(grep -n -m 1 "auto-add services from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 3))
+    echo "${tab2}${tab2}AeroReachControllerService${srv_output_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+fi
