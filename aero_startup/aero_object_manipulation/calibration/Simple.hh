@@ -9,10 +9,11 @@ static const int validation_seed = 10;
 /*
   @define NORMALIZE_DATA
   tmp.x /= 1000.0;
+  tmp.y += 300.0;
   tmp.y /= 1000.0;
-  tmp.z -= 500.0;
-  tmp.z /= 1000.0;
-  tmp.neck_y /= 90.0;
+  tmp.z /= 300.0;
+  tmp.neck_y += 10.0;
+  tmp.neck_y /= 60.0;
 */
 
 // input features

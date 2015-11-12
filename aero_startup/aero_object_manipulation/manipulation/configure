@@ -35,8 +35,20 @@ srv_write="---\n"
 
 for e in "${@:3}"
 do
-    varfile=$(echo "$e" | awk -F/ '{print $NF}') # in case input has ~/
-    varfile=$(find / -name $varfile 2>/dev/null | head -n1)
+    here=$(pwd)
+    prefix=$(echo "$e" | cut -d '/' -f1)
+    if [[ prefix = "~" ]] # in case input has ~/
+    then
+	varfile=$(echo "$e" | sed -e "s@~@$HOME@")
+    elif [[ prefix = "." ]] # in case input has ./
+    then
+	varfile=$(echo "$e" | sed -e "s@./@$here/@")
+    elif [[ prefix = "" ]] # in case absolute path
+    then
+	varfile=$e
+    else # in case input has ../ or relative path
+	varfile=$(echo "$here/$e")
+    fi
     var=$(echo "$e" | awk -F/ '{print $NF}' | awk -F_ '{print $NF}')
     svm_model_write="${svm_model_write}svm_model* model_${var};\n"
     set_res_write="${set_res_write}${tab2}res.${var} = svm_predict(model_${var}, testdat);\n"
