@@ -69,7 +69,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   cloud->points.resize(vertices_count);
   center = center * (1.0 / vertices_count);
 
-  // Calculate Object Normal
+  // Calculate Object Normal of each cloud point
 
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
   ne.setInputCloud(cloud);
@@ -88,7 +88,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
     return; // object detection failed
   }
 
-  // Calculate Object Normal
+  // Calculate Object Normal (average of point normals)
 
   Eigen::Vector3f normal(0, 0, 0);
   for (unsigned int i = 0; i < normals->points.size(); ++i)
@@ -208,7 +208,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
     ROS_ERROR("failed tf listen");
   }
 
-  // Export results
+  // Export results (mainly for debug)
 
   visualization_msgs::Marker marker_normal;
   marker_normal.header.frame_id = "ps4eye_frame";
