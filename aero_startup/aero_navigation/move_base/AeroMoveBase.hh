@@ -68,9 +68,7 @@ namespace aero
 
     private: bool MoveBaseOnce();
 
-    private: wheels Translate(float _x, float _y);
-
-    private: wheels Rotate(float _theta);
+    private: wheels Translate(float _x, float _y, float _theta);
 
     private: pose dX(std::vector<double> _vels, float _dt);
 
@@ -106,6 +104,10 @@ namespace aero
     private: ros::Publisher servo_pub_;
 
     private: ros::Subscriber simple_goal_sub_;
+
+    private: class AeroMoveBaseImpl;
+
+    private: std::shared_ptr<AeroMoveBaseImpl> impl_;
     };
 
     typedef std::shared_ptr<AeroMoveBase> AeroMoveBasePtr;

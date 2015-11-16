@@ -121,12 +121,7 @@ bool AeroMoveBase::MoveBaseOnce()
 //////////////////////////////////////////////////
 void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
 {
-  wheels wheel_data;
-
-  if (fabs(_theta) < 0.0001) // if translate
-    wheel_data = this->Translate(_x , _y);
-  else // if rotate
-    wheel_data = this->Rotate(_theta);
+  wheels wheel_data = this->Translate(_x, _y, _theta);
 
   // set goals
 
