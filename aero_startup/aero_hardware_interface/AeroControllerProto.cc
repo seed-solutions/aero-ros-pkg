@@ -28,18 +28,19 @@ SEED485Controller::SEED485Controller(
 
   try
   {
-    struct termios tio;
-#if ((BOOST_VERSION / 100 % 1000) > 50)
-    ::tcgetattr(ser_.lowest_layer().native_handle(), &tio);
-    ::cfsetospeed(&tio, 1382400);
-    ::cfsetispeed(&tio, 1382400);
-    ::tcsetattr(ser_.lowest_layer().native_handle(), TCSANOW, &tio);
-#else  // 12.04
-    ::tcgetattr(ser_.lowest_layer().native(), &tio);
-    ::cfsetospeed(&tio, 1382400);
-    ::cfsetispeed(&tio, 1382400);
-    ::tcsetattr(ser_.lowest_layer().native(), TCSANOW, &tio);
-#endif
+    ser_.set_option(serial_port_base::baud_rate(1000000));
+//     struct termios tio;
+// #if ((BOOST_VERSION / 100 % 1000) > 50)
+//     ::tcgetattr(ser_.lowest_layer().native_handle(), &tio);
+//     ::cfsetospeed(&tio, 1000000);
+//     ::cfsetispeed(&tio, 1000000);
+//     ::tcsetattr(ser_.lowest_layer().native_handle(), TCSANOW, &tio);
+// #else  // 12.04
+//     ::tcgetattr(ser_.lowest_layer().native(), &tio);
+//     ::cfsetospeed(&tio, 1000000);
+//     ::cfsetispeed(&tio, 1000000);
+//     ::tcsetattr(ser_.lowest_layer().native(), TCSANOW, &tio);
+// #endif
   }
   catch (std::exception& e)
   {
@@ -72,12 +73,12 @@ SEED485Controller::~SEED485Controller()
 //////////////////////////////////////////////////
 void SEED485Controller::read(std::vector<uint8_t>& _read_data)
 {
-  _read_data.resize(77);
+  _read_data.resize(RAW_DATA_LENGTH);
 
   if (ser_.is_open())
   {
     boost::mutex::scoped_lock lock(mtx_);
-    ser_.read_some(buffer(_read_data, 77));
+    ser_.read_some(buffer(_read_data, RAW_DATA_LENGTH));
   }
 
   if (verbose_)
@@ -121,14 +122,15 @@ void SEED485Controller::flush()
 void SEED485Controller::set_command_header(
     uint8_t _cmd, uint16_t _time, std::vector<uint8_t>& _dat)
 {
-  _dat[0] = 0xFA;
-  _dat[1] = 0xAF;
-  _dat[2] = 0xF0 + id_;
+  _dat[0] = 0xFD;
+  _dat[1] = 0xDF;
+  _dat[2] = 0x40;
   _dat[3] = _cmd;
+  _dat[4] = 0x00;
 
   //  time (2 bytes)
-  _dat[4] = static_cast<uint8_t>(0xff & (_time >> 8));
-  _dat[5] = static_cast<uint8_t>(0xff & _time);
+  _dat[65] = static_cast<uint8_t>(0xff & (_time >> 8));
+  _dat[66] = static_cast<uint8_t>(0xff & _time);
 }
 
 //////////////////////////////////////////////////

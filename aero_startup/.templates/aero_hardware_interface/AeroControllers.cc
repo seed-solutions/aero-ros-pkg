@@ -99,12 +99,12 @@ void AeroLowerController::set_wheel_velocity(
     encode_short_(_wheel_vector[aji.stroke_index],
                   &dat[RAW_HEADER_OFFSET + aji.raw_index * 2]);
   }
-  ser_.send_command(CMD_MOVE_ABS, _time, dat);
+  ser_.send_command(CMD_MOVE_SPD, _time, dat);
 
   // MoveAbs returns current stroke
-  std::vector<uint8_t> dummy;
-  dummy.resize(RAW_DATA_LENGTH);
-  ser_.read(dummy);
+  // std::vector<uint8_t> dummy;
+  // dummy.resize(RAW_DATA_LENGTH);
+  // ser_.read(dummy);
 }
 
 //////////////////////////////////////////////////
