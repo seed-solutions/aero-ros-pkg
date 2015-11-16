@@ -8,6 +8,8 @@
   @define WaistRollInvTable from waist-r offset 0
   @define NeckPitchInvTable from neck-p offset 0
   @define NeckRollInvTable from neck-r offset 0
+  @define CrotchPitchInvTable from crotch-p offset 0
+  @define KneePitchInvTable from knee-p offset 0
  */
 
 #ifndef AERO_COMMON_STROKE_TO_ANGLE_H_
@@ -113,6 +115,11 @@ namespace aero
 	-deg2Rad * (scale * can_r_hand * 8.475 + 50.0);
 
       meta = 0;
+      meta = 0;
+      meta =
+	deg2Rad * CrotchPitchInvTable(scale * can_down);
+      meta =
+	deg2Rad * KneePitchInvTable(scale * can_up);
     };
 
   }

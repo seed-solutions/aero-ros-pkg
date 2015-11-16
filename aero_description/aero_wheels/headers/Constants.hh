@@ -5,10 +5,10 @@ namespace aero
 {
   namespace controller
   {
-    // header offset = 6bytes
-    const static size_t RAW_HEADER_OFFSET = 6;
-    // data length = 77bytes
-    const static size_t RAW_DATA_LENGTH = 77;
+    // header offset = 5bytes
+    const static size_t RAW_HEADER_OFFSET = 5;
+    // data length = 68bytes
+    const static size_t RAW_DATA_LENGTH = 68;
     // id: upper = 1, lower = 2
     const static uint8_t ID_UPPER = 1;
     const static uint8_t ID_LOWER = 2;
@@ -58,6 +58,10 @@ namespace aero
     const static size_t CAN_WAIST_LEFT = 20;
     const static size_t CAN_WAIST_Y = 21;
 
+    // LOWER:
+    const static size_t CAN_DOWN = 0;
+    const static size_t CAN_UP = 1;
+
     // WHEEL:
     const static size_t CAN_FRONT_R_WHEEL = 0;
     const static size_t CAN_REAR_R_WHEEL = 1;
@@ -80,26 +84,28 @@ namespace aero
     const static size_t RAW_WAIST_RIGHT = 10;
     const static size_t RAW_R_HAND = 11;
     // 12 - 15: Force Sensor (uint8_t * 6, 2bytes N/A)
-    const static size_t RAW_WAIST_Y = 16;
+    const static size_t RAW_WAIST_Y = 15;
     // 17 - 18: N/A
-    const static size_t RAW_L_SHOULDER_P = 19;
-    const static size_t RAW_L_SHOULDER_R = 20;
-    const static size_t RAW_L_ELBOW_Y = 21;
-    const static size_t RAW_L_ELBOW_P = 22;
-    const static size_t RAW_L_WRIST_Y = 23;
-    const static size_t RAW_L_WRIST_TOP = 24;
-    const static size_t RAW_L_WRIST_BOTTOM = 25;
-    const static size_t RAW_WAIST_LEFT = 26;
-    const static size_t RAW_L_HAND = 27;
+    const static size_t RAW_L_SHOULDER_P = 18;
+    const static size_t RAW_L_SHOULDER_R = 19;
+    const static size_t RAW_L_ELBOW_Y = 20;
+    const static size_t RAW_L_ELBOW_P = 21;
+    const static size_t RAW_L_WRIST_Y = 22;
+    const static size_t RAW_L_WRIST_TOP = 23;
+    const static size_t RAW_L_WRIST_BOTTOM = 24;
+    const static size_t RAW_WAIST_LEFT = 25;
+    const static size_t RAW_L_HAND = 26;
     // 28 - 31: Force Sensor (uint8_t * 6, 2bytes N/A)
     // 32 - 34: N/A
 
     // LOWER :
-    const static size_t RAW_FRONT_R_WHEEL = 5;
-    const static size_t RAW_REAR_R_WHEEL = 11;
+    const static size_t RAW_DOWN = 0;
+    const static size_t RAW_UP = 1;
+    const static size_t RAW_FRONT_R_WHEEL = 2;
+    const static size_t RAW_REAR_R_WHEEL = 3;
     // 12 - 15: N/A
-    const static size_t RAW_FRONT_L_WHEEL = 21;
-    const static size_t RAW_REAR_L_WHEEL = 27;
+    const static size_t RAW_FRONT_L_WHEEL = 4;
+    const static size_t RAW_REAR_L_WHEEL = 5;
     // 28 - 31: N/A
     // 32 - 34: IMU (uint8_t * 6)
 
@@ -131,15 +137,15 @@ namespace aero
     // LOWER :
 
     // command list
-    const static uint8_t CMD_MOTOR_CUR = 0x20;
-    const static uint8_t CMD_MOTOR_ACC = 0x24;
-    const static uint8_t CMD_MOTOR_GAIN = 0x25;
-    const static uint8_t CMD_GET_POS = 0x42;
-    const static uint8_t CMD_GET_CUR = 0x43;
-    const static uint8_t CMD_GET_TMP = 0x45;
-    const static uint8_t CMD_MOTOR_SRV = 0x50;
-    const static uint8_t CMD_MOVE_INC = 0x67;
-    const static uint8_t CMD_MOVE_ABS = 0x68;
+    const static uint8_t CMD_MOTOR_CUR = 0x01;
+    const static uint8_t CMD_MOTOR_ACC = 0x03;
+    const static uint8_t CMD_MOTOR_GAIN = 0x04;
+    const static uint8_t CMD_GET_POS = 0x41;
+    const static uint8_t CMD_GET_CUR = 0x42;
+    const static uint8_t CMD_GET_TMP = 0x43;
+    const static uint8_t CMD_MOTOR_SRV = 0x21; // servo
+    const static uint8_t CMD_MOVE_ABS = 0x14;
+    const static uint8_t CMD_MOVE_SPD = 0x15; // wheels
   }
 }
 

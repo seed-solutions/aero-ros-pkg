@@ -41,12 +41,12 @@ namespace aero
     /// @brief create command header into data buffer
     /// @param _cmd command id
     /// @param _time time[ms]
-    /// @param _dat data buffer, must be RAW_DATA_LENGTH(77) bytes.
+    /// @param _dat data buffer, must be RAW_DATA_LENGTH bytes.
     private: void set_command_header(uint8_t _cmd, uint16_t _time,
 				    std::vector<uint8_t>& _dat);
 
     /// @brief calc checksum and put into last byte, MUST be called LAST.
-    /// @param _dat data buffer, MUST be RAW_DATA_LENGTH(77) bytes.
+    /// @param _dat data buffer, MUST be RAW_DATA_LENGTH bytes.
     private: void set_check_sum(std::vector<uint8_t>& _dat);
 
     private: void send_data(std::vector<uint8_t>& _send_data);

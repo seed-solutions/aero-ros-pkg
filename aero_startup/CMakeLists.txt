@@ -15,7 +15,9 @@ endif()
 
 # catkin ROS
 find_package(catkin REQUIRED COMPONENTS
-  roscpp tf std_msgs sensor_msgs trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
+  roscpp tf std_msgs sensor_msgs
+  trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
+  move_base_msgs
   message_generation
 )
 if(NOT catkin_LIBRARIES)
@@ -69,7 +71,8 @@ endif()
 
 catkin_package(
   CATKIN_DEPENDS
-  roscpp tf std_msgs sensor_msgs trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
+  roscpp tf std_msgs sensor_msgs
+  trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs move_base_msgs
   DEPENDS
   INCLUDE_DIRS
   LIBRARIES aero_hardware_interface
@@ -83,13 +86,19 @@ add_executable(aero_controller_node
   aero_common/AngleJointNames.cc
   aero_hardware_interface/AeroControllers.cc
   aero_hardware_interface/AeroControllerProto.cc
-  aero_hardware_interface/AeroControllerMain.cc
-  aero_hardware_interface/AeroControllerNode.cc)
+  aero_hardware_interface/AeroControllerNode.cc
+  aero_hardware_interface/Main.cc)
 target_link_libraries(aero_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(aero_joint_state_publisher
   aero_controller_manager/AeroJointStatePublisher.cc)
 target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(aero_base_controller_node
+  aero_navigation/move_base/AeroMoveBase.cc
+  aero_navigation/move_base/AeroBaseController.cc
+  aero_navigation/move_base/Main.cc)
+target_link_libraries(aero_base_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 if(FOUND_LIBSVM)
   # auto-add executables from aero_object_manipulation/manipulation/configure

@@ -21,13 +21,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
       nh_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
           "stroke_state", 10);
 
-  ROS_INFO(" create cmdvel sub");
-  cmdvel_sub_ =
-      nh_.subscribe(
-          "cmd_vel",
-          10,
-          &AeroControllerNode::GoVelocityCallback,
-          this);
+  // ROS_INFO(" create cmdvel sub");
+  // cmdvel_sub_ =
+  //     nh_.subscribe(
+  //         "cmd_vel",
+  //         10,
+  //         &AeroControllerNode::GoVelocityCallback,
+  //         this);
 
   ROS_INFO(" create command sub");
   jointtraj_sub_ =
@@ -78,13 +78,13 @@ AeroControllerNode::~AeroControllerNode()
 }
 
 //////////////////////////////////////////////////
-void AeroControllerNode::GoVelocityCallback(
-    const geometry_msgs::Twist::ConstPtr& _msg)
-{
-  boost::mutex::scoped_lock lock(mtx_);
-  lower_.flush();
-  usleep(1000 * 10);
-}
+// void AeroControllerNode::GoVelocityCallback(
+//     const geometry_msgs::Twist::ConstPtr& _msg)
+// {
+//   boost::mutex::scoped_lock lock(mtx_);
+//   lower_.flush();
+//   usleep(1000 * 10);
+// }
 
 //////////////////////////////////////////////////
 void AeroControllerNode::JointTrajectoryCallback(
@@ -189,7 +189,7 @@ void AeroControllerNode::JointTrajectoryCallback(
 	strokes.begin() + AERO_DOF_UPPER, strokes.end());
 
     double time_sec = _msg->points[i].time_from_start.toSec();
-    uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
+    uint16_t time_msec = static_cast<uint16_t>(time_sec * 100.0);
 
     if (upper_count > 0)
     {
@@ -342,7 +342,7 @@ void AeroControllerNode::WheelCommandCallback(
     }
 
     double time_sec = _msg->points[i].time_from_start.toSec();
-    uint16_t time_msec = static_cast<uint16_t>(time_sec * 1000.0);
+    uint16_t time_msec = static_cast<uint16_t>(time_sec * 100.0);
     lower_.flush();
     lower_.set_wheel_velocity(wheel_vector, time_msec);
     usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));

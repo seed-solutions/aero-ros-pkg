@@ -38,8 +38,8 @@ namespace aero
 				  const std::string& _port_lower);
     public: ~AeroControllerNode();
 
-    private: void GoVelocityCallback(
-        const geometry_msgs::Twist::ConstPtr& _msg);
+    // private: void GoVelocityCallback(
+    //     const geometry_msgs::Twist::ConstPtr& _msg);
 
     private: void JointTrajectoryCallback(
         const trajectory_msgs::JointTrajectory::ConstPtr& _msg);
@@ -60,7 +60,7 @@ namespace aero
 
     private: ros::NodeHandle nh_;
 
-    private: ros::Subscriber cmdvel_sub_;
+    // private: ros::Subscriber cmdvel_sub_;
 
     private: ros::Subscriber jointtraj_sub_;
 
