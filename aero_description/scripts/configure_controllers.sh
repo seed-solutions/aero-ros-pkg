@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# prerequisites : {my_robot}/controllers.txt
+# prerequisites : {my_robot}/controllers.cfg
 
-# generates : copied files listed in {my_robot}/controllers.txt
+# generates : copied files listed in {my_robot}/controllers.cfg
 # modifies  : aero_startup/CMakeLists.txt
 
 robot=$1
-input_file="$(rospack find aero_description)/${robot}/controllers.txt"
+input_file="$(rospack find aero_description)/${robot}/controllers.cfg"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 
 delete_from_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
