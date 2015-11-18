@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(aero_startup)
 
+# Dependencies
+
 # c++11/c++0x
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c+11" COMPILER_SUPPORTS_CXX11)
@@ -56,7 +58,17 @@ endif()
 set(FOUND_LIBSVM)
 if(FOUND_LIBSVM)
   message(STATUS "found libsvm")
-  # auto-add services from aero_object_manipulation/manipulation/configure
+else()
+  message(WARNING "libsvm not found, disabled")
+endif()
+
+
+
+# ROS setups
+
+set(GENERATE_SRV)
+if(GENERATE_SRV)
+  # auto-add services
   add_service_files(
     FILES
   )
@@ -64,10 +76,7 @@ if(FOUND_LIBSVM)
     DEPENDENCIES
     std_msgs
   )
-else()
-  message(WARNING "libsvm not found, disabled")
 endif()
-
 
 catkin_package(
   CATKIN_DEPENDS
@@ -79,6 +88,10 @@ catkin_package(
 )
 
 include_directories(${aero_startup_SOURCE_DIR})
+
+
+
+# Executables
 
 add_executable(aero_controller_node
   aero_common/Angle2Stroke.cc
@@ -94,11 +107,8 @@ add_executable(aero_joint_state_publisher
   aero_controller_manager/AeroJointStatePublisher.cc)
 target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(aero_base_controller_node
-  aero_navigation/move_base/AeroMoveBase.cc
-  aero_navigation/move_base/AeroBaseController.cc
-  aero_navigation/move_base/Main.cc)
-target_link_libraries(aero_base_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+# >>> add controllers
+# <<< add controllers
 
 if(FOUND_LIBSVM)
   # auto-add executables from aero_object_manipulation/manipulation/configure

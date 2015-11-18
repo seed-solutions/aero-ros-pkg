@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # prerequisites : {my_configuration_file}.hh
-# prerequisites : {my_learned_file_for_output1}.hh ...
+# prerequisites : {my_learned_file_for_output1} ...
 
 # generates : aero_startup/aero_object_manipulation/manipulation/AeroReachController{name}.cc
 # generates : aero_startup/srv/AeroReachControllerService{configure}.srv
@@ -187,7 +187,8 @@ check_if_exists=$(grep "AeroReachControllerService${srv_output_name}.srv" $cmake
 
 if [[ "$check_if_exists" = "" ]]
 then
-    write_to_line=$(grep -n -m 1 "auto-add services from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
+    sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
+    write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
     write_to_line=$(($write_to_line + 3))
     echo "${tab2}${tab2}AeroReachControllerService${srv_output_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 fi
