@@ -2,6 +2,15 @@
 #include <trajectory_msgs/JointTrajectory.h>
 #include <aero_startup/AeroTorsoController.h>
 
+/*
+  @define srv
+  float64 x
+  float64 z
+  string coordinate
+  ---
+  string status
+*/
+
 static const double link1_length = 290.09;
 static const double link2_length = 290.09;
 static const double x_origin = 0.0;
