@@ -5,8 +5,7 @@
   @define WristRollPitchTable from wrist-p wrist-r symmetric 1
   @define WaistRollPitchTable from waist-r waist-p symmetric 0
   @define NeckRollPitchTable from neck-r neck-p symmetric 0
-  @define CrotchPitchTable from crotch-p offset 0
-  @define KneePitchTable from knee-p offset 0
+  @define LegTable from lamia offset 0
  */
 
 #ifndef AERO_COMMON_ANGLE_TO_STROKE_H_
@@ -78,8 +77,8 @@ namespace aero
       meta = scale * waist.one;
       meta = scale * rad2Deg * waist_y_joint;
 
-      meta = scale * CrotchPitchTable(rad2Deg * hip_joint);
-      meta = scale * KneePitchTable(rad2Deg * knee_joint);
+      meta = scale * LegTable(rad2Deg * hip_joint);
+      meta = scale * LegTable(rad2Deg * (knee_joint - hip_joint));
     };
 
   }

@@ -25,9 +25,9 @@ namespace aero
     //  lower : 0DOF
     //    (wheel: 1DOF * 4)
 
-    const static size_t AERO_DOF = 34;
+    const static size_t AERO_DOF = 24;
     const static size_t AERO_DOF_UPPER = 22;
-    const static size_t AERO_DOF_LOWER = 0;
+    const static size_t AERO_DOF_LOWER = 2;
     const static size_t AERO_DOF_WHEEL = 4;
 
     // joint index in stroke vector

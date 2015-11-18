@@ -8,8 +8,7 @@
   @define WaistRollInvTable from waist-r offset 0
   @define NeckPitchInvTable from neck-p offset 0
   @define NeckRollInvTable from neck-r offset 0
-  @define CrotchPitchInvTable from crotch-p offset 0
-  @define KneePitchInvTable from knee-p offset 0
+  @define LegInvTable from lamia offset 0
  */
 
 #ifndef AERO_COMMON_STROKE_TO_ANGLE_H_
@@ -46,6 +45,7 @@ namespace aero
       float neck_pitch_stroke =
 	(scale * can_neck_right + scale * can_neck_left) * 0.5;
       float deg2Rad = M_PI / 180.0;
+      float crotch_angle = deg2Rad * LegInvTable(scale * can_down);
 
       // can_order -> ros_order
       meta =
@@ -115,11 +115,9 @@ namespace aero
 	-deg2Rad * (scale * can_r_hand * 8.475 + 50.0);
 
       meta = 0;
-      meta = 0;
+      meta = crotch_angle;
       meta =
-	deg2Rad * CrotchPitchInvTable(scale * can_down);
-      meta =
-	deg2Rad * KneePitchInvTable(scale * can_up);
+	deg2Rad * LegInvTable(scale * can_up) + crotch_angle;
     };
 
   }
