@@ -1,16 +1,8 @@
 #!/bin/bash
 
-# prerequisites : aero_startup/aero_navigation/move_base/AeroMoveBase.hh
-# prerequisites : aero_startup/aero_navigation/move_base/AeroMoveBase.cc
-# prerequisites : aero_description/{my_robot}/controllers/{my_base_controller}.cc
+# tests : aero_description/{my_robot}/controllers/{my_base_controller}.cc
 
-# generates : aero_startup/aero_navigation/move_base/{my_base_controller}.cc
-# modifies  : aero_startup/CMakeLists.txt
-
-executable_name=$1
-input_file=$2
-
-cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
+input_file=$1
 
 # check if input file requires conditions
 
@@ -34,28 +26,3 @@ then
     echo "aborting, file expects definition of dX"
     exit
 fi
-
-# copy controller file
-
-source=$(echo $input_file | awk -F/ '{print $NF}')
-output_file="$(rospack find aero_description)/../aero_startup/aero_navigation/move_base/${source}"
-cp $input_file $output_file
-sed -i "1i\/*" $output_file
-sed -i "2i\ * This file auto-generated from script. Do not Edit!" $output_file
-sed -i "3i\ * Original : aero_description/${robot}/controllers/${source}" $output_file
-sed -i "4i\*/" $output_file
-
-# add executable to CMakeLists.txt
-
-tab2=$'  '
-write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
-write_to_line=$(($write_to_line + 1))
-echo "add_executable(aero_${executable_name}_controller_node" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-echo "${tab2}aero_navigation/move_base/AeroMoveBase.cc" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-echo "${tab2}aero_navigation/move_base/${source}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-echo "${tab2}aero_navigation/move_base/Main.cc)" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-write_to_line=$(($write_to_line + 1))
-echo "target_link_libraries(aero_${executable_name}_controller_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
