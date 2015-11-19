@@ -14,6 +14,18 @@ then
     sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
 fi
 
+# delete applications from CMakeLists.txt
+
+delete_from_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
+delete_from_line=$(($delete_from_line + 1))
+delete_to_line=$(grep -n -m 1 "<<< add applications" $cmake_file | cut -d ':' -f1)
+
+if [[ $delete_to_line -ne $delete_from_line ]]
+then
+    delete_to_line=$(($delete_to_line - 1))
+    sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
+fi
+
 # delete srv
 
 num_of_srvs=$(grep ".srv" $cmake_file | wc -l)
