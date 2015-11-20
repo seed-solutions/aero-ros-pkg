@@ -25,8 +25,9 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
     nh_.subscribe("move_base_simple/goal",
 		  10, &AeroMoveBase::SetSimpleGoal, this);
 
-  nh_.createTimer(ros::Duration(ros_rate_),
-		  &AeroMoveBase::MoveBase, this);
+  timer_ =
+    nh_.createTimer(ros::Duration(ros_rate_),
+		    &AeroMoveBase::MoveBase, this);
 
   as_.registerGoalCallback(boost::bind(&AeroMoveBase::SetActionGoal, this));
   as_.registerPreemptCallback(boost::bind(&AeroMoveBase::CancelGoal, this));
