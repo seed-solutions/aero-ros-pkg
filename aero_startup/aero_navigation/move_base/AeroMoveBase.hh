@@ -105,6 +105,8 @@ namespace aero
 
     private: ros::Subscriber simple_goal_sub_;
 
+    private: ros::Timer timer_;
+
     private: class AeroMoveBaseImpl;
 
     private: std::shared_ptr<AeroMoveBaseImpl> impl_;
