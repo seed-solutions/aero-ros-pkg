@@ -7,6 +7,21 @@
 robot=$1
 input_file="$(rospack find aero_description)/${robot}/applications.cfg"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
+launch_file="$(rospack find aero_description)/../aero_startup/applications.launch"
+
+# delete applications in launch
+
+delete_from_launch=$(grep -n -m 1 ">>> add applications" $launch_file | cut -d ':' -f1)
+delete_from_launch=$(($delete_from_launch + 1))
+delete_to_launch=$(grep -n -m 1 "<<< add applications" $launch_file | cut -d ':' -f1)
+
+if [[ $delete_to_launch -ne $delete_from_launch ]]
+then
+    delete_to_launch=$(($delete_to_launch - 1))
+    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
+fi
+
+# delete applications in CMakeLists.txt
 
 delete_from_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
 delete_from_line=$(($delete_from_line + 1))
@@ -48,6 +63,18 @@ do
     fi
     source=$(echo "${find_source}" | awk -F/ '{print $NF}')
 
+    # add to launch
+    tab6=$'      '
+    write_to_line=$delete_from_launch
+    if [[ $executable_name == *".launch" ]]
+    then
+	echo "${tab2}<include file=\"\$(find aero_startup)/${executable_dir}/launch/${executable_name}\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+    else
+	echo "${tab2}<node name=\"${executable_name}\" pkg=\"aero_startup\"" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+	write_to_line=$(($write_to_line + 1))
+	echo "${tab2}${tab6}type=\"${executable_name}\" output=\"screen\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+    fi
+
     if [[ $proto == "&" ]] # requires special installation script
     then
 	install=$(echo $line | cut -d: -f3)
@@ -78,6 +105,7 @@ do
 	    fi
 	done
 	write_to_line=$delete_from_line
+
 	tab=''
 	if [[ $ifs != "" ]]
 	then

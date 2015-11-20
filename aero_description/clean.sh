@@ -14,6 +14,19 @@ then
     sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
 fi
 
+# delete controllers from aero_bringup.launch
+
+launch_file="$(rospack find aero_description)/../aero_startup/aero_bringup.launch"
+delete_from_launch=$(grep -n -m 1 ">>> add controllers" $launch_file | cut -d ':' -f1)
+delete_from_launch=$(($delete_from_launch + 1))
+delete_to_launch=$(grep -n -m 1 "<<< add controllers" $launch_file | cut -d ':' -f1)
+
+if [[ $delete_to_launch -ne $delete_from_launch ]]
+then
+    delete_to_launch=$(($delete_to_launch - 1))
+    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
+fi
+
 # delete applications from CMakeLists.txt
 
 delete_from_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
@@ -24,6 +37,19 @@ if [[ $delete_to_line -ne $delete_from_line ]]
 then
     delete_to_line=$(($delete_to_line - 1))
     sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
+fi
+
+# delete applications from applications.launch
+
+launch_file="$(rospack find aero_description)/../aero_startup/applications.launch"
+delete_from_launch=$(grep -n -m 1 ">>> add applications" $launch_file | cut -d ':' -f1)
+delete_from_launch=$(($delete_from_launch + 1))
+delete_to_launch=$(grep -n -m 1 "<<< add applications" $launch_file | cut -d ':' -f1)
+
+if [[ $delete_to_launch -ne $delete_from_launch ]]
+then
+    delete_to_launch=$(($delete_to_launch - 1))
+    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
 fi
 
 # delete srv

@@ -8,6 +8,21 @@
 robot=$1
 input_file="$(rospack find aero_description)/${robot}/controllers.cfg"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
+launch_file="$(rospack find aero_description)/../aero_startup/aero_bringup.launch"
+
+# delete controllers in launch
+
+delete_from_launch=$(grep -n -m 1 ">>> add controllers" $launch_file | cut -d ':' -f1)
+delete_from_launch=$(($delete_from_launch + 1))
+delete_to_launch=$(grep -n -m 1 "<<< add controllers" $launch_file | cut -d ':' -f1)
+
+if [[ $delete_to_launch -ne $delete_from_launch ]]
+then
+    delete_to_launch=$(($delete_to_launch - 1))
+    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
+fi
+
+# delete controllers in CMakeLists.txt
 
 delete_from_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
 delete_from_line=$(($delete_from_line + 1))
@@ -25,6 +40,10 @@ while read line
 do
     header=$(echo $line | cut -d ':' -f1)
     proto=$(echo $header | awk '{print $1}')
+    if [[ $proto == "#" ]] # comment out
+    then
+        continue
+    fi
     executable_name=$(echo $header | awk '{print $2}')
     body=$(echo $line | cut -d ':' -f2)
     reference=$(echo $body | awk '{print $1}')
@@ -96,4 +115,12 @@ do
 	    echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	fi
     fi
+
+    # add to launch
+    tab6=$'      '
+    write_to_line=$delete_from_launch
+    echo "${tab2}<node name=\"aero_${executable_name}_controller_node\" pkg=\"aero_startup\"" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+    write_to_line=$(($write_to_line + 1))
+    echo "${tab2}${tab6}type=\"aero_${executable_name}_controller_node\" output=\"screen\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+
 done < $input_file
