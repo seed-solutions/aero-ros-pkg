@@ -40,7 +40,7 @@ if(NOT EIGEN3_INCLUDE_DIR)
   message(WARNING "Eigen3 not found, disabled")
 else()
   include_directories(${EIGEN3_INCLUDE_DIR})
-  set(FOUND_EIGEN 1)
+  set(FOUND_Eigen 1)
 endif()
 
 # pcl
@@ -110,13 +110,5 @@ target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIB
 # >>> add controllers
 # <<< add controllers
 
-if(FOUND_LIBSVM)
-  # auto-add executables from aero_object_manipulation/manipulation/configure
-endif()
-
-if(FOUND_EIGEN AND FOUND_PCL)
-  add_executable(extract_object_features
-    aero_object_manipulation/perception/ExtractObjectFeatures.cc)
-  target_link_libraries(extract_object_features ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-endif()
+# >>> add applications
+# <<< add applications

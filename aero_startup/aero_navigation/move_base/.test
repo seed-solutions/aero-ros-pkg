@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# tests : aero_description/{my_robot}/controllers/{my_base_controller}.cc
+
+input_file=$1
+
+# check if input file requires conditions
+
+check_init=$(grep -n -m 1 "AeroMoveBase::Init" $input_file)
+if [[ $check_init == "" ]]
+then
+    echo "aborting, file expects definition of Init"
+    exit
+fi
+
+check_translate=$(grep -n -m 1 "AeroMoveBase::Translate" $input_file)
+if [[ $check_translate == "" ]]
+then
+    echo "aborting, file expects definition of Translate"
+    exit
+fi
+
+check_dX=$(grep -n -m 1 "AeroMoveBase::dX" $input_file)
+if [[ $check_dX == "" ]]
+then
+    echo "aborting, file expects definition of dX"
+    exit
+fi

@@ -19,8 +19,8 @@ sed -i "/};/d" /tmp/points_def_in_handc
 
 srv_output_name=$(echo "$configuration_file" | awk -F/ '{print $NF}' | cut -d '.' -f1)
 
-mkdir $(rospack find aero_startup)/srv
-srv_output_file="$(rospack find aero_startup)/srv/AeroReachControllerService${srv_output_name}.srv"
+mkdir $(rospack find aero_description)/../aero_startup/srv
+srv_output_file="$(rospack find aero_description)/../aero_startup/srv/AeroReachControllerService${srv_output_name}.srv"
 cp /tmp/points_def_in_handc $srv_output_file
 sed -i "s/float/float32/g" $srv_output_file
 sed -i "s/double/float64/g" $srv_output_file
@@ -60,10 +60,11 @@ echo -e "${srv_write}" >> $srv_output_file
 
 # create AeroReachController.cc
 
-input_file="$(rospack find aero_startup)/.templates/aero_object_manipulation/manipulation/AeroReachControllerTemplate.cc"
-output_file="$(rospack find aero_startup)/aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc"
+input_file="$(rospack find aero_description)/../aero_startup/.templates/aero_object_manipulation/manipulation/AeroReachControllerTemplate.cc"
+output_file="$(rospack find aero_description)/../aero_startup/aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc"
 
-libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
+# libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
+libsvm_dir=$(locate svm.h | grep libsvm/svm.h)
 
 if [[ "$libsvm_dir" = "" ]]
 then
@@ -163,7 +164,7 @@ sed -i "5i\ * Depend : aero_startup/aero_object_manipulation/manipulation/{my_le
 
 # modify CMakeLists.txt
 
-cmake_file="$(rospack find aero_startup)/CMakeLists.txt"
+cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 sed -i "s/set(FOUND_LIBSVM)/set(FOUND_LIBSVM 1)/g" $cmake_file
 
 lowered_filename=$(echo $output_filename | awk '{print tolower($1)}')
@@ -177,7 +178,8 @@ then
     write_to_line=$(($write_to_line + 1))
     echo "${tab2}${tab2}aero_object_manipulation/manipulation/AeroReachController${output_filename}.cc" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     write_to_line=$(($write_to_line + 1))
-    libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+    # libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+    libsvmcpp_dir=$(locate svm.cpp | grep libsvm/svm.cpp | grep -v "\.o")
     echo "${tab2}${tab2}${libsvmcpp_dir})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     write_to_line=$(($write_to_line + 1))
     echo "${tab2}target_link_libraries(aero_reach_controller_${lowered_filename} \${catkin_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
