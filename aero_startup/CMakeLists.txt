@@ -40,7 +40,7 @@ if(NOT EIGEN3_INCLUDE_DIR)
   message(WARNING "Eigen3 not found, disabled")
 else()
   include_directories(${EIGEN3_INCLUDE_DIR})
-  set(FOUND_EIGEN 1)
+  set(FOUND_Eigen 1)
 endif()
 
 # pcl
