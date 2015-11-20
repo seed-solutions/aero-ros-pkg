@@ -1,6 +1,6 @@
 <launch>
   <!--hardware controller-->
-  <node name="aero_controller_node" pkg="aero_startup"
+  <node name="aero_controller" pkg="aero_startup"
   	type="aero_controller_node" output="screen"/>
 
   <!--robot tfs-->
