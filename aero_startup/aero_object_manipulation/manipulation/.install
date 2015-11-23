@@ -24,6 +24,9 @@ do
 	if [[ $e == "Larm" ]]
 	then
 	    ./configure Larm ../calibration/Simple.hh data/larm_learned_x data/larm_learned_y data/larm_learned_z
+	elif [[ $e == "TorsoLarm" ]]
+	then
+	    ./configure TorsoLarm ../calibration/Complex.hh data/torso_larm_learned_x data/torso_larm_learned_y data/torso_larm_learned_z data/torso_larm_learned_wp data/torso_larm_learned_wy
 	fi
     else
 	lowered_filename=$(echo $e | awk '{print tolower($1)}')

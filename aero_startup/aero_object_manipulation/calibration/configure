@@ -11,7 +11,8 @@ configuration_file=$1
 
 input_cmake="$(rospack find aero_startup)/.templates/aero_object_manipulation/calibration/CMakeLists.txt"
 output_cmake="$(rospack find aero_startup)/aero_object_manipulation/calibration/CMakeLists.txt"
-libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+# libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+libsvmcpp_dir=$(locate svm.cpp 2>/dev/null | grep libsvm/svm.cpp | grep -v "\.o")
 
 if [[ "$libsvmcpp_dir" = "" ]]
 then
@@ -27,7 +28,8 @@ sed -i "s@libsvm/svm.cpp@${libsvmcpp_dir}@" $output_cmake
 
 input_file="$(rospack find aero_startup)/.templates/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc"
 output_file="$(rospack find aero_startup)/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc"
-libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
+# libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
+libsvm_dir=$(locate svm.h 2>/dev/null | grep libsvm/svm.h)
 
 cp $input_file $output_file
 
