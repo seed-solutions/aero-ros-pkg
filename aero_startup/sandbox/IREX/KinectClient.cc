@@ -126,6 +126,7 @@ public:
     transform.setOrigin(tf::Vector3(0,0,0));
     transform.setRotation(
 			  tf::Quaternion(0, 0, 0, 1));
+
     br_kinect.sendTransform(
 	  tf::StampedTransform(transform, ros::Time::now(),
 			       "/leg_base_link", "/kinect"));
@@ -134,9 +135,14 @@ public:
     {
       static tf::TransformBroadcaster br;
 
-      br.sendTransform(
-	  tf::StampedTransform(iter->second, ros::Time::now(),
-			       "/kinect", iter->first));
+      if (person_lost_ > 30)
+	br.sendTransform(
+	    tf::StampedTransform(transform, ros::Time::now(),
+				 "/kinect", iter->first));
+      else
+	br.sendTransform(
+	    tf::StampedTransform(iter->second, ros::Time::now(),
+				 "/kinect", iter->first));
     }
   }
 

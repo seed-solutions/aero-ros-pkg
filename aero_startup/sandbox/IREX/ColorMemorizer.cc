@@ -303,7 +303,7 @@ void SubscribePersonExists(const std_msgs::Int32 _msg)
   msg.joint_names = {"neck_y_joint", "neck_p_joint"};
   msg.points.resize(1);
 
-  if (_msg.data == 1 && !in_wait)
+  if (_msg.data == 1 && !in_wait && !in_check)
   {
     msg.points[0].positions = {-0.79, 0.0};
     robot_pose_pub.publish(msg);
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   in_wait = false;
-  in_check = true;
+  in_check = false;
   joint_subscriber = nh.subscribe("/aero_controller/state",
 				  1, SubscribeRobotPose);
   cloud_subscriber = nh.subscribe("/stereo/points2",
