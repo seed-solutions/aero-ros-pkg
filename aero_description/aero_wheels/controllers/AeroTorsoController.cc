@@ -9,6 +9,8 @@
   string coordinate
   ---
   string status
+  float64 x
+  float64 z
 */
 
 static const double link1_length = 290.09;
@@ -95,6 +97,8 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   z_now = goal_position_z;
 
   res.status = "success";
+  res.x = x_now - x_origin;
+  res.z = z_now - z_origin;
   return true;
 };
 

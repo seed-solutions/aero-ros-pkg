@@ -1,0 +1,15 @@
+*~
+aero_startup/aero_common/
+aero_startup/aero_controller_manager/AeroJointStatePublisher.cc
+aero_startup/aero_controller_manager/AeroTorsoController.cc
+aero_startup/aero_controller_manager/AeroHandController.cc
+aero_startup/aero_hardware_interface/AeroControllers.cc
+aero_startup/aero_hardware_interface/Constants.hh
+aero_startup/aero_navigation/move_base/AeroBaseController.cc
+aero_startup/aero_object_manipulation/calibration/build/
+aero_startup/aero_object_manipulation/calibration/CMakeLists.txt
+aero_startup/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc
+aero_startup/aero_object_manipulation/manipulation/AeroReachControllerLarm.cc
+aero_startup/aero_object_manipulation/manipulation/AeroReachControllerTorsoLarm.cc
+aero_startup/aero_object_manipulation/manipulation/launch/
+aeroeus/demo/

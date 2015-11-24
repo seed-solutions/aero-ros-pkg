@@ -104,7 +104,8 @@ do
 		ifs="${ifs} AND FOUND_${target}"
 	    fi
 	done
-	write_to_line=$delete_from_line
+	write_to_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
+	write_to_line=$(($write_to_line + 1))
 
 	tab=''
 	if [[ $ifs != "" ]]
