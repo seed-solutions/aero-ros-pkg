@@ -65,7 +65,8 @@ do
     sed -i "4i\*/" $output_file
 
     # add executable to CMakeLists.txt
-    write_to_line=$delete_from_line
+    write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
     echo "add_executable(aero_${executable_name}_controller_node" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     write_to_line=$(($write_to_line + 1))
     includes_main=$(find $copy_to_dir -name Main.cc 2>/dev/null)
