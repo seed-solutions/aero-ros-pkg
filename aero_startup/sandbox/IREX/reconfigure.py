@@ -22,3 +22,14 @@ def set_hsi(hM, hm, sM, sm, iM, im):
                                  "s_limit_max":sM, "s_limit_min":sm,
                                  "i_limit_max":iM, "i_limit_min":im})
 
+def set_green():
+    set_hsi(97, 46, 194, 42, 183, 106)
+
+def set_blue():
+    set_hsi(-107, -128, 255, 235, 255, 120)
+
+def set_orange():
+    set_hsi(17, 2, 255, 252, 246, 67)
+
+def set_red():
+    set_hsi(2, -14, 255, 160, 76, 45)
