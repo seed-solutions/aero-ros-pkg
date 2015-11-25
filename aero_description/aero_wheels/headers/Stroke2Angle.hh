@@ -115,9 +115,9 @@ namespace aero
 	-deg2Rad * (scale * can_r_hand * 8.475 + 50.0);
 
       meta = 0;
+      meta = crotch_angle;
       meta =
 	deg2Rad * LegInvTable(scale * can_up) + crotch_angle;
-      meta = crotch_angle;
     };
 
   }
