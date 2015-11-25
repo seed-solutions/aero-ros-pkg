@@ -68,10 +68,7 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   if (k1 < 0) gamma += M_PI;
   double phi = 0.0; // ankle angle, should be > 0
 
-  if (goal_position_x >= 0)
-    phi = xi + gamma - M_PI * 0.5;
-  else
-    phi = M_PI * 0.5 - xi + gamma;
+  phi = xi + gamma - M_PI * 0.5;
 
   if (phi < 0 || phi > theta || phi > M_PI * 0.5)
   {
