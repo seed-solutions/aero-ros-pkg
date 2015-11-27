@@ -9,8 +9,8 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_listener.h>
-#include <aero_startup/ObjectXYZHSI.h>
-#include <aero_startup/Time.h>
+#include <aero_startup/ObjectGoXYZHSI.h>
+#include <aero_startup/GoTime.h>
 #include <aero_startup/PointXYZHSI.h>
 
 /*
@@ -27,7 +27,11 @@
   uint8 i_cap
   int8 h
   uint8 s
-  uint8 i 
+  uint8 i
+  float32 go_x
+  float32 go_y
+  float32 until_x
+  float32 until_y
   ---
   int8 status
   float32 time
@@ -35,6 +39,9 @@
 
 /*
   @define srv 2
+  float32 go_x
+  float32 go_y
+  float32 go_theta
   float32 time
   ---
   int8 status
@@ -43,8 +50,6 @@
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::milliseconds milliseconds;
 
-static const int RUN_GAIN = 100000; // can be any large number
-static const float GO_AS_NEAR_TO = 0.7; // how close to get to object
 static const int GIVE_UP_TIME = 30000; // ms
 
 actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
@@ -78,8 +83,8 @@ void GoPos(float _x, float _y, float _theta)
 };
 
 //////////////////////////////////////////////////
-bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
-		 aero_startup::ObjectXYZHSI::Response &res)
+bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
+		 aero_startup::ObjectGoXYZHSI::Response &res)
 {
   // set precise to false
   aero_startup::PointXYZHSI srv;
@@ -108,7 +113,8 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
     return true;
   }
 
-  float diff_to_object;
+  float diff_to_object_x;
+  float diff_to_object_y;
   static tf::TransformListener tl;
   tf::StampedTransform base_to_object;
   ros::Time now = ros::Time::now();
@@ -118,7 +124,8 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
   try
   {
     tl.lookupTransform("leg_base_link", req.object, now, base_to_object);
-    diff_to_object = base_to_object.getOrigin().x();
+    diff_to_object_x = base_to_object.getOrigin().x();
+    diff_to_object_y = base_to_object.getOrigin().y();
   }
   catch (std::exception e)
   {
@@ -128,15 +135,15 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
   }
 
   // move robot forward
-  GoPos(RUN_GAIN, 0, 0);
-  float initial_diff = diff_to_object;
+  GoPos(req.go_x, req.go_y, 0);
+  float initial_diff = diff_to_object_x;
 
   ROS_WARN("Going for target : %f", initial_diff);
 
   Clock::time_point start = Clock::now();
 
   // stop when the robot is close enough to target object
-  while (diff_to_object > GO_AS_NEAR_TO)
+  while ((diff_to_object_x > req.until_x) || (diff_to_object_y > req.until_y))
   {
     now = ros::Time::now();
     tl.waitForTransform("leg_base_link", req.object, now, ros::Duration(2.0));
@@ -144,7 +151,8 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
     try
     {
       tl.lookupTransform("leg_base_link", req.object, now, base_to_object);
-      diff_to_object = base_to_object.getOrigin().x();    
+      diff_to_object_x = base_to_object.getOrigin().x();
+      diff_to_object_y = base_to_object.getOrigin().y();
     }
     catch (std::exception e)
     {
@@ -160,7 +168,7 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
     srv.request.z_cap = req.z_cap;
     srv.request.x = req.x;
     srv.request.y = req.y;
-    srv.request.z = req.z - (initial_diff - diff_to_object);
+    srv.request.z = req.z - (initial_diff - diff_to_object_x);
     srv.request.h_cap = req.h_cap;
     srv.request.s_cap = req.s_cap;
     srv.request.i_cap = req.i_cap;
@@ -215,7 +223,7 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
   srv.request.z_cap = req.z_cap;
   srv.request.x = req.x;
   srv.request.y = req.y;
-  srv.request.z = req.z - (initial_diff - diff_to_object);
+  srv.request.z = req.z - (initial_diff - diff_to_object_x);
   srv.request.h_cap = req.h_cap;
   srv.request.s_cap = req.s_cap;
   srv.request.i_cap = req.i_cap;
@@ -233,10 +241,10 @@ bool GoForTarget(aero_startup::ObjectXYZHSI::Request  &req,
 };
 
 //////////////////////////////////////////////////
-bool GoForTime(aero_startup::Time::Request  &req,
-	       aero_startup::Time::Response &res)
+bool GoForTime(aero_startup::GoTime::Request  &req,
+	       aero_startup::GoTime::Response &res)
 {
-  GoPos(RUN_GAIN, 0, 0);
+  GoPos(req.go_x, req.go_y, req.go_theta);
 
   usleep(req.time * 1000 * 1000);
 
