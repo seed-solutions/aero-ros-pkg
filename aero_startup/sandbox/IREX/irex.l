@@ -99,10 +99,10 @@
     (send res :status) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun go-for-target (hsi xyz)
+(defun go-for-target (hsi xyz xy ~xy)
   (let (req res
 	)
-    (setq req (instance aero_startup::ObjectXYZHSIRequest :init))
+    (setq req (instance aero_startup::ObjectGoXYZHSIRequest :init))
     (send req :object "object_l")
     (send req :x (car (elt xyz 0))) (send req :x_cap (cadr (elt xyz 0)))
     (send req :y (car (elt xyz 1))) (send req :y_cap (cadr (elt xyz 1)))
@@ -110,14 +110,21 @@
     (send req :h (car (elt hsi 1))) (send req :h_cap (cadr (elt hsi 1)))
     (send req :s (car (elt hsi 2))) (send req :s_cap (cadr (elt hsi 2)))
     (send req :i (car (elt hsi 3))) (send req :i_cap (cadr (elt hsi 3)))
+    (send req :go_x (elt xy 0)) ;; any large number if x movement
+    (send req :go_y (elt xy 1)) ;; any large number if y movement
+    (send req :until_x (elt ~xy 0)) ;; stop distance, large number for no limits
+    (send req :until_y (elt ~xy 1)) ;; stop distance, large number for no limits
     (setq res (ros::service-call "/go_run/target_object" req))
     (list (send res :status) (send res :time)) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun go-for-time (time)
+(defun go-for-time (x y theta time)
   (let (req res
 	)
-    (setq req (instance aero_startup::TimeRequest :init))
+    (setq req (instance aero_startup::GoTimeRequest :init))
+    (send req :go_x x)
+    (send req :go_y y)
+    (send req :go_theta theta)
     (send req :time time)
     (setq res (ros::service-call "/go_run/target_time" req))
     (send res :status) ))
@@ -171,13 +178,13 @@
 	   ) ;; failed finding actual object
 	  )
     ;; move base forward till robot is near object
-    (setq go-went (go-for-target color search-area))
+    (setq go-went (go-for-target color search-area '(100000 0) '(0.7 1000)))
     (send *timer* :start)
     (while (and (< (car go-went) -2)
 		(< (send *timer* :stop) 5))
       (if (< (car go-went) -3) (return nil)) ;; unusual run 
       (unix::usleep (* 1000 1000))
-      (setq go-went (go-for-target color search-area))
+      (setq go-went (go-for-target color search-area '(100000 0) '(0.7 1000)))
       ) ;; a retryable fail in getting object tf
     (cond ((< (car go-went) -1)
 	   (format t "failed moving toward object")
@@ -202,7 +209,7 @@
 	   ))
     (run-pose 2000)
     ;; move base backward to starting point
-    (go-for-time (cadr go-went))
+    (go-for-time -100000 0 0 (cadr go-went))
     ;; move base to face original station
     ;; place object
     (manip-pose 1000)
