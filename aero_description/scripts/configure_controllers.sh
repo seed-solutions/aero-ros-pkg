@@ -93,7 +93,6 @@ do
     if [[ "$check_for_srv" != "" ]]
     then
 	# create srv file
-	mkdir $(rospack find aero_startup)/srv
 	srv_name=$(grep "<aero_startup/" $copy_from_file | cut -d '/' -f2 | cut -d '.' -f1)
 	srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
 	awk "/@define srv/,/\*\//" $copy_from_file > $srv_file

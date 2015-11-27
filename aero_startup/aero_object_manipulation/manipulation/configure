@@ -19,7 +19,6 @@ sed -i "/};/d" /tmp/points_def_in_handc
 
 srv_output_name=$(echo "$configuration_file" | awk -F/ '{print $NF}' | cut -d '.' -f1)
 
-mkdir $(rospack find aero_description)/../aero_startup/srv
 srv_output_file="$(rospack find aero_description)/../aero_startup/srv/AeroReachControllerService${srv_output_name}.srv"
 cp /tmp/points_def_in_handc $srv_output_file
 sed -i "s/float/float32/g" $srv_output_file
