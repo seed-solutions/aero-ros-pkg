@@ -99,17 +99,11 @@
     (send res :status) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun go-for-target (hsi xyz xy ~xy)
+(defun go-for-target (xy ~xy)
   (let (req res
 	)
     (setq req (instance aero_startup::ObjectGoXYZHSIRequest :init))
     (send req :object "object_l")
-    (send req :x (car (elt xyz 0))) (send req :x_cap (cadr (elt xyz 0)))
-    (send req :y (car (elt xyz 1))) (send req :y_cap (cadr (elt xyz 1)))
-    (send req :z (car (elt xyz 2))) (send req :z_cap (cadr (elt xyz 2)))
-    (send req :h (car (elt hsi 1))) (send req :h_cap (cadr (elt hsi 1)))
-    (send req :s (car (elt hsi 2))) (send req :s_cap (cadr (elt hsi 2)))
-    (send req :i (car (elt hsi 3))) (send req :i_cap (cadr (elt hsi 3)))
     (send req :go_x (elt xy 0)) ;; any large number if x movement
     (send req :go_y (elt xy 1)) ;; any large number if y movement
     (send req :until_x (elt ~xy 0)) ;; stop distance, large number for no limits
@@ -132,7 +126,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun demo ()
   (let (color-tag color
-	search-area found-object search-flag
+	search-area found-object m search-flag
 	go-went
 	ik-err grasp-pose
 	)
@@ -160,16 +154,20 @@
 		search-flag) ;; object not found
       (setq search-area (list (list -1.0 1.0)
 			      (list -1.0 1.0)
-			      (list 0.0 (+ (cadr (elt search-area 2)) 1.0))
+			      (list 0.0 (+ (cadr (elt search-area 2)) 0.2))
 			      )) ;; expand search-area
       (setq found-object (find-object color search-area))
       ;; re-initiate *tl* so that it does not find ghost tfs
       (setf *tl* (instance ros::transform-listener :init))
       ;; maybe tf was bad timing
       (unix::usleep (* 1000 1000))
-      (if (not (eq (send *tl* :lookup-transform "leg_base_link" "object_l"
-			 (ros::time)) nil))
-	  (setq search-flag nil)
+      (setq m (send *tl* :lookup-transform "leg_base_link" "object_l" (ros::time)))
+      (if (not (eq m nil))
+	  (if (and (not (eps= (elt (send m :pos) 0) 0 0.1))
+		   (not (eps= (elt (send m :pos) 1) 0 0.1))
+		   (not (eps= (elt (send m :pos) 2) 0 0.1)))
+	      (setq search-flag nil)
+	    )
 	) ;; if the tf was published even once, then if would be t
       )
     (cond ((>= (cadr (elt search-area 2)) 5.0)
@@ -178,15 +176,8 @@
 	   ) ;; failed finding actual object
 	  )
     ;; move base forward till robot is near object
-    (setq go-went (go-for-target color search-area '(100000 0) '(0.7 1000)))
-    (send *timer* :start)
-    (while (and (< (car go-went) -2)
-		(< (send *timer* :stop) 5))
-      (if (< (car go-went) -3) (return nil)) ;; unusual run 
-      (unix::usleep (* 1000 1000))
-      (setq go-went (go-for-target color search-area '(100000 0) '(0.7 1000)))
-      ) ;; a retryable fail in getting object tf
-    (cond ((< (car go-went) -1)
+    (setq go-went (go-for-target '(100000 0) '(0.8 1000)))
+    (cond ((< (car go-went) 0)
 	   (format t "failed moving toward object")
 	   (return-from demo nil)
 	   ) ;; failed moving toward object

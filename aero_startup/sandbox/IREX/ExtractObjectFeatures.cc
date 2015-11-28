@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <chrono>
 #include "sensor_msgs/PointCloud2.h"
 #include <Eigen/Core>
 #include <Eigen/SVD>
@@ -11,6 +12,7 @@
 #include <pcl/features/normal_3d.h>
 #include <tf/transform_broadcaster.h>
 #include <aero_startup/PointXYZHSI.h>
+#include <aero_startup/AutoTrackReconfigure.h>
 
 /*
   @define srv 1
@@ -31,6 +33,29 @@
   int8 status
   bool prior_setting
 */
+
+/*
+  @define srv 2
+  float32 end_condition_x
+  float32 end_condition_y
+  float32 time_out
+  bool precise
+  bool precise_default
+  ---
+  int8 status
+  float32 complete_time
+*/
+
+namespace aero
+{
+  namespace status
+  {
+    const static int success = 1;
+    const static int warning = -1;
+    const static int aborted = -2;
+    const static int fatal = -4;
+  }
+};
 
 struct rgb
 {
@@ -53,6 +78,9 @@ struct xyz
   float z;
 };
 
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::milliseconds milliseconds;
+
 int status;
 
 hsi target_hsi_max;
@@ -60,7 +88,15 @@ hsi target_hsi_min;
 xyz space_min;
 xyz space_max;
 
-bool extract_position_only;
+Eigen::Vector3f target_center_camera;
+Eigen::Quaternionf target_pose_camera;
+Eigen::Vector3f target_center_world;
+Eigen::Quaternionf target_pose_world_l;
+Eigen::Quaternionf target_pose_world_r;
+int lost_count;
+tf::StampedTransform base_to_eye;
+
+static const int LOST_THRE = 30;
 
 // ros::Publisher pcl_pub;
 
@@ -112,6 +148,30 @@ bool ValidHSI(rgb _color)
 };
 
 //////////////////////////////////////////////////
+void BroadcastTf()
+{
+  static tf::TransformBroadcaster br;
+  tf::Transform transform;
+  transform.setOrigin(tf::Vector3(target_center_world[0],
+				  target_center_world[1],
+				  target_center_world[2]));
+  tf::Quaternion q_l(target_pose_world_l.x(),
+		     target_pose_world_l.y(),
+		     target_pose_world_l.z(),
+		     target_pose_world_l.w());
+  tf::Quaternion q_r(target_pose_world_r.x(),
+		     target_pose_world_r.y(),
+		     target_pose_world_r.z(),
+		     target_pose_world_r.w());
+  transform.setRotation(q_l);
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+					"leg_base_link", "object_l"));
+  transform.setRotation(q_r);
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+					"leg_base_link", "object_r"));
+};
+
+//////////////////////////////////////////////////
 bool Reconfigure(aero_startup::PointXYZHSI::Request  &req,
 		 aero_startup::PointXYZHSI::Response &res)
 {
@@ -127,10 +187,75 @@ bool Reconfigure(aero_startup::PointXYZHSI::Request  &req,
   space_min.y = req.y;
   space_max.z = req.z_cap;
   space_min.z = req.z;
-  res.prior_setting = extract_position_only;
-  extract_position_only = !req.precise;
   ros::spinOnce();
   res.status = status;
+  return true;
+};
+
+
+//////////////////////////////////////////////////
+bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
+			aero_startup::AutoTrackReconfigure::Response &res)
+{
+  ros::spinOnce();
+
+  if (status <= aero::status::aborted) // failed object detection
+  {
+    res.status = aero::status::aborted;
+    return true;
+  }
+
+  Eigen::Quaternionf base_to_eye_q =
+      Eigen::Quaternionf(base_to_eye.getRotation().w(),
+                         base_to_eye.getRotation().x(),
+                         base_to_eye.getRotation().y(),
+                         base_to_eye.getRotation().z());;
+
+  Eigen::Vector3f diff_to_object =
+      Eigen::Vector3f(base_to_eye.getOrigin().x(),
+                      base_to_eye.getOrigin().y(),
+                      base_to_eye.getOrigin().z()) +
+      base_to_eye_q * target_center_camera;
+
+  space_max.z = target_center_camera[2] + 0.1;
+  Eigen::Vector3f target_center_prior = target_center_camera;
+
+  Clock::time_point start = Clock::now();
+
+  while ((diff_to_object[0] > req.end_condition_x) ||
+	 (diff_to_object[1] > req.end_condition_y))
+  {
+    ros::spinOnce();
+
+    if (status <= aero::status::aborted) // failed object detection
+    {
+      res.status = aero::status::aborted;
+      return true;
+    }
+
+    diff_to_object =
+      Eigen::Vector3f(base_to_eye.getOrigin().x(),
+                      base_to_eye.getOrigin().y(),
+                      base_to_eye.getOrigin().z()) +
+      base_to_eye_q * target_center_camera;
+
+    space_max.z -= target_center_prior[2] - target_center_camera[2];
+    target_center_prior = target_center_camera;
+
+    Clock::time_point time_now = Clock::now();
+    if (std::chrono::duration_cast<milliseconds>(time_now - start).count()
+	> req.time_out) // time_out
+    {
+      res.status = aero::status::fatal;
+      return true;
+    }
+  }
+
+  Clock::time_point end = Clock::now();
+  res.complete_time =
+      std::chrono::duration_cast<milliseconds>(end - start).count() / 1000.0;
+
+  res.status = aero::status::success;
   return true;
 };
 
@@ -211,6 +336,32 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   cloud->points.resize(vertices_count);
   center = center * (1.0 / vertices_count);
 
+  if (vertices_count == 0) // object detection fail
+  {
+    ROS_ERROR("no points detected");
+    ++lost_count;
+
+    if (lost_count >= LOST_THRE) // Object does not exist
+    {
+      target_center_camera = Eigen::Vector3f(0, 0, 0);
+      target_center_world = Eigen::Vector3f(0, 0, 0);
+      target_pose_camera = Eigen::Quaternionf(1, 0, 0, 0);
+      target_pose_world_l = Eigen::Quaternionf(1, 0, 0, 0);
+      target_pose_world_r = Eigen::Quaternionf(1, 0, 0, 0);
+      status = aero::status::aborted;
+    }
+    else // Object might exist but was not found for this frame
+    {
+      status = aero::status::warning;
+    }
+
+    BroadcastTf();
+    return; // object detection failed
+  }
+
+  lost_count = 0;
+  target_center_camera = center;
+
   // Calculate Object Normal of each cloud point
 
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
@@ -223,30 +374,6 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
   ne.setRadiusSearch(0.01);
   ne.compute(*normals);
-
-  if (normals->points.size() == 0)
-  {
-    ROS_ERROR("no points detected");
-    status = 0;
-    return; // object detection failed
-  }
-
-  // Return only positions
-
-  if (extract_position_only)
-  {
-    static tf::TransformBroadcaster br;
-    tf::Transform transform;
-    transform.setOrigin(tf::Vector3(center[0], center[1], center[2]));
-    tf::Quaternion q(0, 0, 0, 1);
-    transform.setRotation(q);
-    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
-					  "ps4eye_frame", "object_l"));
-    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
-					  "ps4eye_frame", "object_r"));
-    status = 1;
-    return;
-  }
 
   // Calculate Object Normal (average of point normals)
 
@@ -264,10 +391,11 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 			      normals->points[i].normal_z);
   }
 
-  if (normal_count == 0)
+  if (normal_count == 0) // normal calculation fail
   {
     ROS_ERROR("no valid normals");
-    status = -4;
+    BroadcastTf();
+    status = aero::status::warning;
     return; // normals were not computed correctly
   }
 
@@ -279,7 +407,8 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   if (theta_normal != theta_normal) // check nan
   {
     ROS_ERROR("error occured while calculation normal");
-    status = -3;
+    BroadcastTf();
+    status = aero::status::warning;
     return;
   }
   if ((Eigen::Vector3f(1, 0, 0)).dot(normal) < 0) theta_normal = M_PI - theta_normal;
@@ -304,7 +433,8 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   if (theta_axis != theta_axis) // check nan
   {
     ROS_ERROR("error occured while calculating axis");
-    status = -2;
+    BroadcastTf();
+    status = aero::status::warning;
     return;
   }
   if ((Eigen::Vector3f(1, 0, 0)).dot(axis) < 0) theta_axis = M_PI - theta_axis;
@@ -326,11 +456,12 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   Eigen::Quaternionf transpose_z(cos(theta_z / 2), sin(theta_z / 2), 0, 0);
   Eigen::Quaternionf pose_q = axis_pose_q * transpose_z;
 
+  target_pose_camera = pose_q;
+
   // Transform Object Pose to Grasping Coordinates
 
   static tf::TransformListener tf_;
 
-  tf::StampedTransform base_to_eye;
   ros::Time now = ros::Time::now();
   tf_.waitForTransform("leg_base_link", "ps4eye_frame", now, ros::Duration(2.0));
 
@@ -343,7 +474,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 			 base_to_eye.getRotation().y(),
 			 base_to_eye.getRotation().z());
     Eigen::Quaternionf world_q = base_to_eye_q * pose_q;
-    Eigen::Vector3f world_center =
+    target_center_world =
       Eigen::Vector3f(base_to_eye.getOrigin().x(),
 		      base_to_eye.getOrigin().y(),
 		      base_to_eye.getOrigin().z()) + base_to_eye_q * center;
@@ -351,42 +482,24 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
     Eigen::Quaternionf grasp_q = // rotate on axis Y by M_PI/2
       world_q * Eigen::Quaternionf(0.707107, 0.0, 0.707107, 0.0);
     Eigen::Vector3f coordinate_sgn = grasp_q * Eigen::Vector3f(0, 0, 1);
-    Eigen::Quaternionf pose_q_l = grasp_q;
-    Eigen::Quaternionf pose_q_r = grasp_q;
+    target_pose_world_l = grasp_q;
+    target_pose_world_r = grasp_q;
     // reset coords to grasp-able direction if needed
     if (coordinate_sgn.dot(Eigen::Vector3f(-1, -1, 1)) <
 	coordinate_sgn.dot(Eigen::Vector3f(1, 1, -1)))
-      pose_q_l = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
+      target_pose_world_l = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
     if (coordinate_sgn.dot(Eigen::Vector3f(-1, 1, 1)) <
 	coordinate_sgn.dot(Eigen::Vector3f(1, -1, -1)))
-      pose_q_r = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
+      target_pose_world_r = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
 
-    // feature in left-hand grasp coords
-    static tf::TransformBroadcaster br_l;
-    tf::Transform transform_l;
-    transform_l.setOrigin(
-        tf::Vector3(world_center[0], world_center[1], world_center[2]));
-    tf::Quaternion q_l(pose_q_l.x(), pose_q_l.y(), pose_q_l.z(), pose_q_l.w());
-    transform_l.setRotation(q_l);
-    br_l.sendTransform(tf::StampedTransform(transform_l, ros::Time::now(),
-					    "leg_base_link", "object_l"));
-
-    // feature in right-hand grasp coords
-    static tf::TransformBroadcaster br_r;
-    tf::Transform transform_r;
-    transform_r.setOrigin(
-        tf::Vector3(world_center[0], world_center[1], world_center[2]));
-    tf::Quaternion q_r(pose_q_r.x(), pose_q_r.y(), pose_q_r.z(), pose_q_r.w());
-    transform_r.setRotation(q_r);
-    br_r.sendTransform(tf::StampedTransform(transform_r, ros::Time::now(),
-					    "leg_base_link", "object_r"));
-
-    status = 1;
+    BroadcastTf();
+    status = aero::status::success;
   }
   catch (std::exception e)
   {
     ROS_ERROR("failed tf listen");
-    status = -1;
+    BroadcastTf();
+    status = aero::status::warning;
   }
 
   // Export results (mainly for debug)
@@ -412,10 +525,12 @@ int main(int argc, char **argv)
   target_hsi_min = {0, 0, 0};
   space_min = {-0.3, -0.3, 0.0};
   space_max = {0.3, 0.3, 1.0};
-  extract_position_only = false;
+  lost_count = LOST_THRE;
 
   ros::ServiceServer service =
       nh.advertiseService("/extract_object_features/perception_area", Reconfigure);
+  ros::ServiceServer dynamic_service =
+      nh.advertiseService("/extract_object_features/dynamic_goal", DynamicReconfigure);
   ros::Subscriber sub = nh.subscribe("/stereo/points2", 1000,
 				     SubscribePoints);
 
