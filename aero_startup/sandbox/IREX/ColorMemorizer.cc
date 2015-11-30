@@ -39,7 +39,7 @@
 static const int NUM_OF_PALETTES = 8; // number of dominant colors to find
 static const int NUM_OF_LAYERS = 3; // log2 NUM_OF_PALETTES
 // number of colors in palette that should match the object color
-static const int VALID_MATCH = 1;
+static const int VALID_MATCH = 3;
 // only look for objects with more than this many points
 static const int MINIMUM_POINTS = 100;
 

@@ -15,9 +15,9 @@
 
 (defvar *manip-area* (list '(-0.3 0.3) '(-0.3 0.3) '(0.0 1.0)) ) ;; x y z
 (defvar *samples* (list (list "green" '(46 97) '(42 194) '(106 183)) ;; h s i
-			(list "orange" '(2 17) '(252 255) '(67 246))
-			(list "red" '(-14 2) '(160 255) '(45 76))
+			;; (list "red" '(1 11) '(250 255) '(86 146))
 			;; (list "blue" '(-128 -107) '(235 255) '(120 255))
+			;; (list "yellow" '(35 42) '(216 255) '(158 255))
 			(list "blue" '(-128 -107) '(35 110) '(120 255))
 			))
 
@@ -26,9 +26,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun start-pose (&optional (time 3000))
-  (send *aero* :reset-manip-pose)
-  (send *aero* :larm :elbow-p :joint-angle -130)
-  (send *aero* :rarm :elbow-p :joint-angle -130)
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
   (cond ((eq *real* t)
 	 (send *ri* :move-waist #f(0 0 0) :world)
 	 (unix::usleep (* 2200 1000))
@@ -38,15 +39,94 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun run-pose (&optional (time 3000))
-  (send *aero* :reset-manip-pose)
-  (send *aero* :head :neck-p :joint-angle 40)
-  (send *aero* :rarm :elbow-p :joint-angle -130)
+(defun run-pose (&optional (time 2000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun manip-pose (&optional (time 1000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 120.0 -30.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) 500)
+	 (unix::usleep (* 500 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 100.0 -80.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+         (send *ri* :angle-vector (send *aero* :angle-vector) time)
+         (unix::usleep (* time 1000))
+         ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun back-pose (&optional (time 2000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
   (cond ((eq *real* t)
 	 (send *ri* :move-waist #f(0 0 0) :world)
 	 (unix::usleep (* 2200 1000))
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun end-pose (&optional (time 1000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :move-waist #f(0 0 0) :world)
+	 (unix::usleep (* 2200 1000))
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 100.0 -80.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 120.0 -30.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) 500)
+	 (unix::usleep (* 500 1000))
 	 ))
   )
 
@@ -88,20 +168,6 @@
 	 ))
   (send *aero* :head :neck-p :joint-angle 0)
   (cond ((eq *real* t)
-	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
-	 (unix::usleep (* time 1000))
-	 ))
-  )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun manip-pose (&optional (time 5000) (waist -200))
-  (send *aero* :angle-vector
-	#f(0.0 -15.0 0.0 -130.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-	   0.0 15.0 0.0 -90.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-	   0.0 0.0 0.0 0.0 40.0 0.0))
-  (cond ((eq *real* t)
-	 (send *ri* :move-waist (float-vector 0 0 waist) :world)
-	 (unix::usleep (* 2200 1000))
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
 	 ))
@@ -199,7 +265,7 @@
 	   (unix::usleep (* 4000 1000))
 	   ))
     ;; ready for manipulation
-    (run-pose 1000)
+    (run-pose 500)
     ;; search for object
     (setq search-area *manip-area*)
     (setq found-object (find-object color search-area))
@@ -260,24 +326,30 @@
 		 )
 	   ))
     ;; manipulate at work station
-    (unix::usleep (* 3000 1000)) ;; for some reason manip-pose is not called
-    (manip-pose 2000)
+    (unix::usleep (* 3000 1000)) ;; for some reason move-waist is not called
+    (cond ((eq *real* t)
+	   (send *ri* :move-waist (float-vector 0 0 -200) :world)
+	   (unix::usleep (* 2200 1000))
+	   ))
     (find-object color *manip-area*)
     (unix::usleep (* 2000 1000)) ;; has to wait for stable configure
     ;; solve ik
     (setq ik-err (send *aero* :grasp-object :larm :torso t :revert-if-fail nil))
     (setq grasp-pose (send *aero* :angle-vector)) ;; save pose
+    (setq waist-z (elt (cadr ik-err) 2)) ;; save height
     (cond ((eq *real* t)
 	   (send *ri* :ungrasp :larm)
 	   (unix::usleep (* 1000 1000))
 	   (send *ri* :move-waist (cadr ik-err))
 	   (unix::usleep (* 1000 1000))
+	   (manip-pose 1000)
 	   (setq move-time 3000)
-	   (cond ((not (eq (send *aero* :larm :move-end-pos #f(-50 100 0)
+	   (send *aero* :angle-vector grasp-pose)
+	   (cond ((not (eq (send *aero* :larm :move-end-pos #f(-50 80 0)
 				 :local :rotation-axis nil :traslation-axis :z)
 			   nil))
-		  (send *ri* :angle-vector (send *aero* :angle-vector) 3000)
-		  (unix::usleep (* 3000 1000))
+		  (send *ri* :angle-vector (send *aero* :angle-vector) 2000)
+		  (unix::usleep (* 2000 1000))
 		  (send *aero* :angle-vector grasp-pose)
 		  (setq move-time 1000)
 		  ))
@@ -286,7 +358,7 @@
 	   (send *ri* :grasp :larm)
 	   (unix::usleep (* 1000 1000))
 	   ))
-    (run-pose 2000)
+    (back-pose 1000)
     ;; move back from sweet position
     (if (not (eq go-sweet nil))
 	(if (equal y-direction "go-left") ;; moved direction
@@ -302,16 +374,22 @@
 	   (unix::usleep (* 4000 1000))
 	   ))
     ;; place object
-    (unix::usleep (* 3000 1000)) ;; for some reason manip-pose is not called
-    (manip-pose 2000 -100)
-    (send *aero* :angle-vector grasp-pose)
+    (unix::usleep (* 3000 1000)) ;; for some reason move-waist is not called
     (cond ((eq *real* t)
-	   (send *ri* :angle-vector (send *aero* :angle-vector) 5000)
-	   (unix::usleep (* 5000 1000))
+	   (send *ri* :move-waist (v+ #f(0 0 -200) (cadr ik-err)) :world)
+	   (unix::usleep (* 2200 1000))
+	   ))
+    (send *aero* :angle-vector grasp-pose)
+    (send *aero* :head :neck-p :joint-angle 0)
+    (send *aero* :head :neck-r :joint-angle 0)
+    (send *aero* :head :neck-y :joint-angle 0)
+    (cond ((eq *real* t)
+	   (send *ri* :angle-vector (send *aero* :angle-vector) 3000)
+	   (unix::usleep (* 3000 1000))
 	   (send *ri* :ungrasp :larm)
 	   (unix::usleep (* 1000 1000))
 	   ))
-    (start-pose 5000)
+    (end-pose 1000)
     ))
 
 (aero-init)
