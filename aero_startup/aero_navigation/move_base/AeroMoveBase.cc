@@ -134,7 +134,8 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
       static_cast<int>(goal_.run_time * 0.5 / ros_rate_) * ros_rate_;
 
   int steps = goal_.warm_up_time / ros_rate_;
-  if (steps == 0) steps = 1;
+  if (steps == 0) steps = 1; // no warm up time
+  else goal_.run_time += goal_.warm_up_time; // 1 sec delay because of warm up
 
   for (unsigned int i = 0; i < wheel_data.velocities.size(); ++i)
   {
