@@ -178,7 +178,7 @@ bool Reconfigure(aero_startup::PointXYZHSI::Request  &req,
   target_hsi_max.h = req.h_cap;
   target_hsi_min.h = req.h;
   target_hsi_max.s = req.s_cap;
-  target_hsi_min.s = req.h;
+  target_hsi_min.s = req.s;
   target_hsi_max.i = req.i_cap;
   target_hsi_min.i = req.i;
   space_max.x = req.x_cap;
@@ -220,10 +220,47 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
   space_max.z = target_center_camera[2] + 0.1;
   Eigen::Vector3f target_center_prior = target_center_camera;
 
+  // handle y conditions
+  std::function<bool(float)> y_condition;
+  if (fabs(req.end_condition_y) > 999) // impossible goal, reject
+  {
+    y_condition = [=](float _ref){ return false; };
+  }
+  else
+  {
+    if (req.end_condition_y >= 0)
+      if (diff_to_object[1] > req.end_condition_y)
+	y_condition = [=](float _ref)
+	{
+	  if (_ref > req.end_condition_y) return true; return false;
+	};
+      else if (diff_to_object[1] < 0)
+	y_condition = [=](float _ref)
+	{
+	  if (_ref < 0) return true; return false;
+	};
+      else
+	y_condition = [=](float _ref){ return false; };
+    else
+      if (diff_to_object[1] < req.end_condition_y)
+	y_condition = [=](float _ref)
+	{
+	  if (_ref < req.end_condition_y) return true; return false;
+	};
+      else if (diff_to_object[1] > 0)
+	y_condition = [=](float _ref)
+	{
+	  if (_ref > 0) return true; return false;
+	};
+      else
+	y_condition = [=](float _ref){ return false; };
+  }
+
   Clock::time_point start = Clock::now();
 
   while ((diff_to_object[0] > req.end_condition_x) ||
-	 (diff_to_object[1] > req.end_condition_y))
+	 // (diff_to_object[1] > req.end_condition_y))
+	 y_condition(diff_to_object[1]))
   {
     ros::spinOnce();
 
@@ -357,6 +394,14 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 
     BroadcastTf();
     return; // object detection failed
+  }
+
+  // an object moving faster than 0.5 m/frame, it cannot be detected
+  // this is to cut outliers
+  if (lost_count == 0 && (center - target_center_camera).norm() > 0.5)
+  {
+    BroadcastTf();
+    return;
   }
 
   lost_count = 0;

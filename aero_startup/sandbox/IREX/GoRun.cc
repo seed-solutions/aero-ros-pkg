@@ -46,7 +46,7 @@ namespace aero
   }
 };
 
-static const int GIVE_UP_TIME = 30000; // ms
+static const int GIVE_UP_TIME = 20000; // ms
 
 actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
 ros::ServiceClient client;
@@ -82,7 +82,10 @@ void GoPos(float _x, float _y, float _theta)
 bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
 		 aero_startup::ObjectGoXYZHSI::Response &res)
 {
-  // move robot forward
+  // Note : target already in required area should not be called
+  // Check for target requirements should be done prior to service call
+
+  // move robot
   GoPos(req.go_x, req.go_y, 0);
 
   ROS_WARN("Going for target");
