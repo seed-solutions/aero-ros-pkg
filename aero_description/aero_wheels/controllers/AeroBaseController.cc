@@ -12,7 +12,9 @@ public: ~AeroMoveBaseImpl();
 
 public: wheels Translate(float _x, float _y);
 
-public: wheels Rotate(float _x, float _theta);
+public: wheels Rotate(float _theta);
+
+public: wheels Drift(float _x, float _theta);
 };
 
 //////////////////////////////////////////////////
@@ -33,9 +35,16 @@ wheels AeroMoveBase::Translate(float _x, float _y, float _theta)
   wheels wheel_data;
 
   if (fabs(_theta) < 0.0001) // if translate
+  {
     wheel_data = this->impl_->Translate(_x , _y);
+  }
   else // if has rotate
-    wheel_data = this->impl_->Rotate(_x, _theta);
+  {
+    if (fabs(_x) < 0.0001) // only rotate
+      wheel_data = this->impl_->Rotate(_theta);
+    else
+      wheel_data = this->impl_->Drift(_x, _theta);
+  }
 
   return wheel_data;
 }
@@ -55,12 +64,13 @@ pose AeroMoveBase::dX(std::vector<double> _vels, float _dt)
     0.25 * 0.5 *
     (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
 
-  static const float radius = 100.0;
+  static const float radius = 50.0;
   static const float max_velocity = 450.0;
   static const float Radius = 254.56;
 
-  return {Vx*radius*_dt, Vy*radius*_dt,
-      max_velocity * radius * _dt / (sqrt(2) * Radius)};
+  return {Vx * 2*M_PI * radius * _dt,
+      Vy * 2*M_PI * radius * _dt,
+      max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300)};
 }
 
 //////////////////////////////////////////////////
@@ -130,7 +140,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
     {lambda_vel1(_x, _y), lambda_vel2(_x, _y),
      lambda_vel2(_x, _y), lambda_vel1(_x ,_y)};
 
-  static const float radius = 100.0;
+  static const float radius = 50.0;
 
   // the wheel velocities are velocities[i]
   // the omni wheel direction is in the 45[deg] direction of the wheel
@@ -148,23 +158,50 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
   wheels wheel_data;
   wheel_data.velocities = // move forward positive to signal positive
     {velocities[0], -velocities[1], velocities[2], -velocities[3]};
-  wheel_data.time = sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * radius) * 60;
+  wheel_data.time =
+    sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
   // * 60 is rpm -> rps
 
   return wheel_data;
 }
 
 //////////////////////////////////////////////////
-wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _x, float _theta)
+wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
 {
   static const float max_velocity = 450.0;
-  static const float radius = 100.0;
+  static const float radius = 50.0;
+  static const float Radius = 254.56;
+
+  wheels wheel_data;
+
+  if (_theta >= 0)
+    wheel_data.velocities =
+      {-max_velocity, -max_velocity, -max_velocity, -max_velocity};
+  else
+    wheel_data.velocities =
+      {max_velocity, max_velocity, max_velocity, max_velocity};
+
+  wheel_data.time =
+    300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
+
+  return wheel_data;
+}
+
+//////////////////////////////////////////////////
+wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
+{
+  // Note : drift rotates at half the speed of Rotate
+
+  static const float max_velocity = 450.0;
+  static const float radius = 50.0;
   static const float Radius = 254.56;
 
   wheels wheel_data;
 
   float x = fabs(_x);
   float theta = fabs(_theta);
+  // moving forward and turning more than 90 degrees is not possible
+  if (theta > (M_PI * 0.5)) theta = M_PI * 0.5;
 
   // Time calculated from x movement is equal to
   // time calculated from theta movement.
@@ -172,9 +209,9 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _x, float _theta)
   // the x movement is the integral of V*cos(theta)dt.
   // Thus, time from x is expressed with sin(theta)/theta.
   // By using the two equations and eliminating v_theta,
-  // we time can be expressed as the following.
-  float time = 2 / max_velocity * theta *
-    (x / sin(theta) + 0.5 * sqrt(2) * Radius / radius * 60);
+  // time can be expressed as the following.
+  float time = theta * 600 / (M_PI * radius * max_velocity) *
+    (x / sin(theta) + sqrt(2) * Radius);
   if (time == 0)
   {
     ROS_ERROR("unexpected time = 0");
@@ -189,7 +226,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _x, float _theta)
   // the sided difference is equavalent to
   // +v_theta/2 on one side, and -v_theta/2 on the other.
   float v_theta =
-    2 * theta * sqrt(2) * Radius / (radius * time) * 60;
+    2 * theta * sqrt(2) * Radius / (radius * time * M_PI) * 300;
   // The actual command to send is V-v_theta,
   // v_turn_wheel is backward positive
   float v_turn_wheel = v_theta - max_velocity;

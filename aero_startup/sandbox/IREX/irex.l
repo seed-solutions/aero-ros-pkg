@@ -1,0 +1,397 @@
+#!/usr/bin/env roseus
+
+(ros::load-ros-manifest "aero_startup")
+(ros::roseus "irex_demo")
+
+(load "package://aeroeus/aero-interface.l")
+(load-controllers)
+(load "package://aeroeus/pre-release/inverse-kinematics-extension.l")
+
+(ros::wait-for-service "/extract_object_features/perception_area")
+(ros::wait-for-service "/color_memorizer/perception_area")
+(ros::wait-for-service "/color_memorizer/find_match")
+
+(defvar *timer* (instance mtimer :init))
+
+(defvar *manip-area* (list '(-0.3 0.3) '(-0.3 0.3) '(0.0 1.0)) ) ;; x y z
+(defvar *samples* (list (list "green" '(46 97) '(42 194) '(106 183)) ;; h s i
+			;; (list "red" '(1 11) '(250 255) '(86 146))
+			;; (list "blue" '(-128 -107) '(235 255) '(120 255))
+			;; (list "yellow" '(35 42) '(216 255) '(158 255))
+			(list "blue" '(-128 -107) '(35 110) '(120 255))
+			))
+
+(defvar *null-area* (list '(0.0 0.0) '(0.0 0.0) '(0.0 0.0)))
+(defvar *null-color* (list "null" '(0 0) '(0 0) '(0 0)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun start-pose (&optional (time 3000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :move-waist #f(0 0 0) :world)
+	 (unix::usleep (* 2200 1000))
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun run-pose (&optional (time 2000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun manip-pose (&optional (time 1000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 120.0 -30.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) 500)
+	 (unix::usleep (* 500 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 100.0 -80.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+         (send *ri* :angle-vector (send *aero* :angle-vector) time)
+         (unix::usleep (* time 1000))
+         ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun back-pose (&optional (time 2000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :move-waist #f(0 0 0) :world)
+	 (unix::usleep (* 2200 1000))
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun end-pose (&optional (time 1000))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :move-waist #f(0 0 0) :world)
+	 (unix::usleep (* 2200 1000))
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 20.0 100.0 -80.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 120.0 -30.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :angle-vector
+	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) 500)
+	 (unix::usleep (* 500 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun nod-no (&optional (time 500))
+  (send *aero* :head :neck-y :joint-angle -30)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :head :neck-y :joint-angle 30)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) (* time 2))
+	 (unix::usleep (* time 2000))
+	 ))
+  (send *aero* :head :neck-y :joint-angle 0)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun nod-yes (&optional (time 500))
+  (send *aero* :head :neck-p :joint-angle 40)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :head :neck-p :joint-angle 0)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :head :neck-p :joint-angle 40)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  (send *aero* :head :neck-p :joint-angle 0)
+  (cond ((eq *real* t)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
+	 (unix::usleep (* time 1000))
+	 ))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun set-object (&key (timeout 60))
+  (let (req res
+	(h_max_v nil) (h_min_v nil)
+	(s_max_v nil) (s_min_v nil)
+	(i_max_v nil) (i_min_v nil)
+	)
+    (setq req (instance aero_startup::PointHSIArrayRequest :init))
+    (send req :size (length *samples*))
+    (dolist (x *samples*)
+      (push (car (elt x 1)) h_min_v) (push (cadr (elt x 1)) h_max_v)
+      (push (car (elt x 2)) s_min_v) (push (cadr (elt x 2)) s_max_v)
+      (push (car (elt x 3)) i_min_v) (push (cadr (elt x 3)) i_max_v)
+      )
+    (nreverse h_min_v) (nreverse h_max_v)
+    (nreverse s_min_v) (nreverse s_max_v)
+    (nreverse i_min_v) (nreverse i_max_v)
+    (send req :h_cap_v h_max_v) (send req :h_v h_min_v)
+    (send req :s_cap_v s_max_v) (send req :s_v s_min_v)
+    (send req :i_cap_v i_max_v) (send req :i_v i_min_v)
+    (send req :time timeout)
+    (setq res (ros::service-call "/color_memorizer/find_match" req))
+    (send res :status) ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun find-object (hsi xyz &optional (precise t))
+  (let (req res
+	)
+    (setq req (instance aero_startup::PointXYZHSIRequest :init))
+    (send req :x (car (elt xyz 0))) (send req :x_cap (cadr (elt xyz 0)))
+    (send req :y (car (elt xyz 1))) (send req :y_cap (cadr (elt xyz 1)))
+    (send req :z (car (elt xyz 2))) (send req :z_cap (cadr (elt xyz 2)))
+    (send req :h (car (elt hsi 1))) (send req :h_cap (cadr (elt hsi 1)))
+    (send req :s (car (elt hsi 2))) (send req :s_cap (cadr (elt hsi 2)))
+    (send req :i (car (elt hsi 3))) (send req :i_cap (cadr (elt hsi 3)))
+    (send req :precise precise)
+    (setq res (ros::service-call "/extract_object_features/perception_area" req))
+    (send res :status) ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun go-for-target (xy ~xy)
+  (let (req res
+	)
+    (setq req (instance aero_startup::ObjectGoXYZHSIRequest :init))
+    (send req :object "object_l")
+    (send req :go_x (elt xy 0)) ;; any large number if x movement
+    (send req :go_y (elt xy 1)) ;; any large number if y movement
+    (send req :until_x (elt ~xy 0)) ;; stop distance, large number for no limits
+    (send req :until_y (elt ~xy 1)) ;; stop distance, large number for no limits
+    (setq res (ros::service-call "/go_run/target_object" req))
+    (list (send res :status) (send res :time)) ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun go-for-time (x y theta time)
+  (let (req res
+	)
+    (setq req (instance aero_startup::GoTimeRequest :init))
+    (send req :go_x x)
+    (send req :go_y y)
+    (send req :go_theta theta)
+    (send req :time time)
+    (setq res (ros::service-call "/go_run/target_time" req))
+    (send res :status) ))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun demo ()
+  (let (color-tag color
+	search-area found-object m search-flag
+	go-went (go-sweet nil) y-direction
+	ik-err grasp-pose
+	)
+    ;; initate demo
+    (start-pose 5000)
+    (find-object *null-color* *null-area*)
+    ;; set object to search
+    (setq color-tag (set-object :timeout 60))
+    (cond ((< color-tag 0)
+	   (format t "failed distinguishing object")
+	   (nod-no 500)
+	   (return-from demo nil)
+	   ) ;; failed distinguishing object
+	  )
+    (nod-yes 500)
+    (setq color (elt *samples* color-tag))
+    (format t "~A~%" (car color))
+    ;; move base to face work station
+    (cond ((eq *real* t)
+	   (send *ri* :go-pos 0 0 45)
+	   (unix::usleep (* 4000 1000))
+	   ))
+    ;; ready for manipulation
+    (run-pose 500)
+    ;; search for object
+    (setq search-area *manip-area*)
+    (setq found-object (find-object color search-area))
+    (setq search-flag t)
+    (while (and (< (cadr (elt search-area 2)) 5.0) ;; search area limit
+		(not (> found-object 0))
+		search-flag) ;; object not found
+      (setq search-area (list (list -1.0 1.0)
+			      (list -1.0 1.0)
+			      (list 0.0 (+ (cadr (elt search-area 2)) 0.2))
+			      )) ;; expand search-area
+      (setq found-object (find-object color search-area))
+      ;; re-initiate *tl* so that it does not find ghost tfs
+      (setf *tl* (instance ros::transform-listener :init))
+      ;; maybe tf was bad timing
+      (unix::usleep (* 1000 1000))
+      (setq m (send *tl* :lookup-transform "leg_base_link" "object_l" (ros::time)))
+      (if (not (eq m nil))
+	  (if (and (not (eps= (elt (send m :pos) 0) 0 0.1))
+		   (not (eps= (elt (send m :pos) 1) 0 0.1))
+		   (not (eps= (elt (send m :pos) 2) 0 0.1))
+		   (not (< (elt (send m :pos) 2) -500)) ;; stash floor
+		   (not (< (elt (send m :pos) 0) 1000)) ;; too close maybe noise
+		   )
+	      (setq search-flag nil)
+	    )
+	) ;; if the tf was published even once, then if would be t
+      )
+    (cond ((>= (cadr (elt search-area 2)) 5.0)
+	   (format t "failed finding actual object")
+	   (return-from demo (car color))
+	   ) ;; failed finding actual object
+	  )
+    ;; move base forward till robot is near object
+    (setq go-went (go-for-target '(100000 0) '(0.7 1000)))
+    (cond ((< (car go-went) 0)
+	   (format t "failed moving toward object")
+	   (return-from demo go-went)
+	   ) ;; failed moving toward object
+	  )
+    ;; get to sweet manip position
+    (setq m (send *tl* :lookup-transform "leg_base_link" "object_l" (ros::time)))
+    (cond ((or (< (elt (send m :pos) 1) 0)
+	       (> (elt (send m :pos) 1) 180))
+	   (cond ((< (elt (send m :pos) 1) 0) ;; object is on far right
+		  (setq y-direction "go-right")
+		  (setq go-sweet (go-for-target '(0 -1000) '(1000 0.35)))
+		  )
+		 ((> (elt (send m :pos) 1) 180) ;; object is on far left
+		  (setq y-direction "go-left")
+		  (setq go-sweet (go-for-target '(0 1000) '(1000 0.18)))
+		  )
+		 )
+	   (cond ((< (car go-sweet) 0)
+		  (format t "failed adjusting manip position")
+		  (return-from demo go-sweet)
+		  ) ;; failed adjusting position
+		 )
+	   ))
+    ;; manipulate at work station
+    (unix::usleep (* 3000 1000)) ;; for some reason move-waist is not called
+    (cond ((eq *real* t)
+	   (send *ri* :move-waist (float-vector 0 0 -200) :world)
+	   (unix::usleep (* 2200 1000))
+	   ))
+    (find-object color *manip-area*)
+    (unix::usleep (* 2000 1000)) ;; has to wait for stable configure
+    ;; solve ik
+    (setq ik-err (send *aero* :grasp-object :larm :torso t :revert-if-fail nil))
+    (setq grasp-pose (send *aero* :angle-vector)) ;; save pose
+    (setq waist-z (elt (cadr ik-err) 2)) ;; save height
+    (cond ((eq *real* t)
+	   (send *ri* :ungrasp :larm)
+	   (unix::usleep (* 1000 1000))
+	   (send *ri* :move-waist (cadr ik-err))
+	   (unix::usleep (* 1000 1000))
+	   (manip-pose 1000)
+	   (setq move-time 3000)
+	   (send *aero* :angle-vector grasp-pose)
+	   (cond ((not (eq (send *aero* :larm :move-end-pos #f(-50 80 0)
+				 :local :rotation-axis nil :traslation-axis :z)
+			   nil))
+		  (send *ri* :angle-vector (send *aero* :angle-vector) 2000)
+		  (unix::usleep (* 2000 1000))
+		  (send *aero* :angle-vector grasp-pose)
+		  (setq move-time 1000)
+		  ))
+	   (send *ri* :angle-vector (send *aero* :angle-vector) move-time)
+	   (unix::usleep (* move-time 1000))
+	   (send *ri* :grasp :larm)
+	   (unix::usleep (* 1000 1000))
+	   ))
+    (back-pose 1000)
+    ;; move back from sweet position
+    (if (not (eq go-sweet nil))
+	(if (equal y-direction "go-left") ;; moved direction
+	    (go-for-time 0 -1000 0 (cadr go-sweet))
+	  (go-for-time 0 1000 0 (cadr go-sweet))
+	  )
+      )
+    ;; move base backward to starting point
+    (go-for-time -100000 0 0 (cadr go-went))
+    ;; move base to face original station
+    (cond ((eq *real* t)
+	   (send *ri* :go-pos 0 0 -45)
+	   (unix::usleep (* 4000 1000))
+	   ))
+    ;; place object
+    (unix::usleep (* 3000 1000)) ;; for some reason move-waist is not called
+    (cond ((eq *real* t)
+	   (send *ri* :move-waist (v+ #f(0 0 -200) (cadr ik-err)) :world)
+	   (unix::usleep (* 2200 1000))
+	   ))
+    (send *aero* :angle-vector grasp-pose)
+    (send *aero* :head :neck-p :joint-angle 0)
+    (send *aero* :head :neck-r :joint-angle 0)
+    (send *aero* :head :neck-y :joint-angle 0)
+    (cond ((eq *real* t)
+	   (send *ri* :angle-vector (send *aero* :angle-vector) 3000)
+	   (unix::usleep (* 3000 1000))
+	   (send *ri* :ungrasp :larm)
+	   (unix::usleep (* 1000 1000))
+	   ))
+    (end-pose 1000)
+    ))
+
+(aero-init)
+(objects *aero*) ;; this has to be called or error occurs
+(setq *real* t)

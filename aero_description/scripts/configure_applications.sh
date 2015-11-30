@@ -146,24 +146,32 @@ do
 	check_for_srv=$(grep "@define srv" "${executable_path}/${source}")
 	if [[ "$check_for_srv" != "" ]]
 	then
+	    # check num of srvs
+	    num_of_srvs=$(grep "@define srv" "${executable_path}/${source}" | wc -l)
 	    # create srv file
-	    mkdir $(rospack find aero_startup)/srv
-	    srv_name=$(grep "<aero_startup/" $source | cut -d '/' -f2 | cut -d '.' -f1)
-	    srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
-	    awk "/@define srv/,/\*\//" $source > $srv_file
-	    delete_to_line=$(grep -n -m 1 "\*/" $srv_file | cut -d ':' -f1)
-	    sed -i "/@define/d" $srv_file
-	    sed -i "/\*\//d" $srv_file
-	    sed -i 's/^[ \t]*//' $srv_file
-	    # add srv generation to CMakeLists.txt
-	    check_if_exists=$(grep "${srv_name}.srv" $cmake_file)
-	    if [[ "$check_if_exists" == "" ]]
-	    then
-		sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
-		write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
-		write_to_line=$(($write_to_line + 3))
-		echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-	    fi
+	    for (( srv=1; srv<=${num_of_srvs}; srv++ ))
+	    do
+		srv_name=$(awk "/<aero_startup\//{i++}i==${srv}{print; exit}" "${executable_path}/${source}" | cut -d '/' -f2 | cut -d '.' -f1)
+		srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
+		if [[ "$num_of_srvs" -gt "1" ]]
+		then
+		    awk "/@define srv ${srv}/,/\*\//" "${executable_path}/${source}" > $srv_file
+		else
+		    awk "/@define srv/,/\*\//" "${executable_path}/${source}" > $srv_file
+		fi
+		sed -i "/@define/d" $srv_file
+		sed -i "/\*\//d" $srv_file
+		sed -i 's/^[ \t]*//' $srv_file
+		# add srv generation to CMakeLists.txt
+		check_if_exists=$(grep "${srv_name}.srv" $cmake_file)
+		if [[ "$check_if_exists" == "" ]]
+		then
+		    sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
+		    write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
+		    write_to_line=$(($write_to_line + 3))
+		    echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+		fi
+	    done
 	fi
     fi
 done < $input_file
