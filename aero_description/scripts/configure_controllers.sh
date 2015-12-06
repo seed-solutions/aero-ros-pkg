@@ -44,6 +44,36 @@ do
     then
         continue
     fi
+    if [[ $proto == "default" ]] # default controllers
+    then
+	# add aero_controller_node
+	write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
+	write_to_line=$(($write_to_line + 1))
+	echo "add_executable(aero_controller_node" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	dir="$(rospack find aero_description)/../aero_startup/aero_hardware_interface"
+	cc_files=$(find $dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}')
+	num_of_cc_files=$(find $dir -name "*.cc" | wc -l)
+	for (( num=1; num<=${num_of_cc_files}; num++ ))
+	do
+	    file=$(echo $cc_files | awk '{print $'$num'}')
+	    echo "${tab2}aero_hardware_interface/${file}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	    write_to_line=$(($write_to_line + 1))
+	done
+	echo "${tab2})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	echo "target_link_libraries(aero_controller_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	# add aero_joint_state_publisher
+	write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
+	write_to_line=$(($write_to_line + 1))
+	echo "add_executable(aero_joint_state_publisher" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	echo "target_link_libraries(aero_joint_state_publisher \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	echo "${tab2}aero_controller_manager/AeroJointStatePublisher.cc)" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	continue
+    fi
+
     executable_name=$(echo $header | awk '{print $2}')
     body=$(echo $line | cut -d ':' -f2)
     reference=$(echo $body | awk '{print $1}')

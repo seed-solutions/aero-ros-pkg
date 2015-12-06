@@ -4,22 +4,27 @@
 
 # modifies  : aero_startup/CMakeLists.txt
 
-robot=$1
-input_file="$(rospack find aero_description)/${robot}/applications.cfg"
-cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
-launch_file="$(rospack find aero_description)/../aero_startup/applications.launch"
+app=$1
+robot=$2
 
-# delete applications in launch
-
-delete_from_launch=$(grep -n -m 1 ">>> add applications" $launch_file | cut -d ':' -f1)
-delete_from_launch=$(($delete_from_launch + 1))
-delete_to_launch=$(grep -n -m 1 "<<< add applications" $launch_file | cut -d ':' -f1)
-
-if [[ $delete_to_launch -ne $delete_from_launch ]]
+if [[ $robot == "" ]]
 then
-    delete_to_launch=$(($delete_to_launch - 1))
-    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
+    input_file=$(find $(rospack find aero_description)/ -name "${app}.cfg")
+    if [[ $(find $(rospack find aero_description)/ -name "${app}.cfg" | wc -l) -ne 1 ]]
+    then
+	echo "aborting, robot not specified or file not found"
+	exit
+    fi
+else
+    input_file="$(rospack find aero_description)/${robot}/${app}.cfg"
 fi
+
+cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
+launch_file="$(rospack find aero_description)/../aero_startup/${app}.launch"
+
+# create launch
+
+echo -e "<launch>\n</launch>" > $launch_file
 
 # delete applications in CMakeLists.txt
 
@@ -65,7 +70,7 @@ do
 
     # add to launch
     tab6=$'      '
-    write_to_line=$delete_from_launch
+    write_to_line=2
     if [[ $executable_name == *".launch" ]]
     then
 	echo "${tab2}<include file=\"\$(find aero_startup)/${executable_dir}/launch/${executable_name}\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
@@ -96,7 +101,7 @@ do
 	for (( num=1; num<=${num_of_dependencies}; num++ ))
 	do
 	    target=$(echo $dependencies | awk '{print $'$num'}')
-	    libs="${libs}$(grep "${target}" $dependency_list | awk '{print $2}')"
+	    libs="${libs} $(grep "${target}" $dependency_list | awk '{print $2}')"
 	    if [[ $ifs == "" ]]
 	    then
 		ifs="FOUND_${target}"
@@ -139,7 +144,7 @@ do
 	if [[ $ifs != "" ]]
 	then
 	    write_to_line=$(($write_to_line + 1))
-	    echo "endif()" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	    echo "endif()\n" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	fi
 
 	# add srv files if required
