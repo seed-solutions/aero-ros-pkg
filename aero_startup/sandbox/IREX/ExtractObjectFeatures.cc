@@ -220,6 +220,8 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
   space_max.z = target_center_camera[2] + 0.1;
   Eigen::Vector3f target_center_prior = target_center_camera;
 
+  float diff_bef = 0;
+
   // handle y conditions
   std::function<bool(float)> y_condition;
   if (fabs(req.end_condition_y) > 999) // impossible goal, reject
@@ -228,32 +230,63 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
   }
   else
   {
+    ROS_WARN("initial diff %f", diff_to_object[1]);
+    diff_bef = diff_to_object[1];
+
     if (req.end_condition_y >= 0)
       if (diff_to_object[1] > req.end_condition_y)
-	y_condition = [=](float _ref)
+	y_condition = [&](float _ref)
 	{
-	  if (_ref > req.end_condition_y) return true; return false;
+	  if (fabs(_ref-diff_bef) > 0.1)
+	    ROS_WARN("1 : y>=0 diff>=0 %f", _ref);
+	  diff_bef = _ref;
+	  if (_ref > req.end_condition_y) // continue condition
+	  {
+	    return true;
+	  }
+	  return false; // escapes at false
 	};
       else if (diff_to_object[1] < 0)
-	y_condition = [=](float _ref)
+	y_condition = [&](float _ref)
 	{
-	  if (_ref < 0) return true; return false;
+	  if (fabs(_ref-diff_bef) > 0.1)
+	    ROS_WARN("2 : y>=0 diff<0 %f", _ref);
+	  diff_bef = _ref;
+	  if (_ref < 0.0) // continue condition
+	  {
+	    return true;
+	  }
+	  return false; // escapes at false
 	};
       else
-	y_condition = [=](float _ref){ return false; };
+	y_condition = [&](float _ref){ return false; };
     else
       if (diff_to_object[1] < req.end_condition_y)
-	y_condition = [=](float _ref)
+	y_condition = [&](float _ref)
 	{
-	  if (_ref < req.end_condition_y) return true; return false;
+	  if (fabs(_ref-diff_bef) > 0.1)
+	    ROS_WARN("3 : y<0 diff<=0 %f", _ref);
+	  diff_bef = _ref;
+	  if (_ref < req.end_condition_y) // continue condition
+	  {
+	    return true;
+	  }
+	  return false; // escapes at false
 	};
       else if (diff_to_object[1] > 0)
-	y_condition = [=](float _ref)
+	y_condition = [&](float _ref)
 	{
-	  if (_ref > 0) return true; return false;
+	  if (fabs(_ref-diff_bef) > 0.1)
+	    ROS_WARN("4 : y<0 diff>0 %f", _ref);
+	  diff_bef = _ref;
+	  if (_ref > 0) // continue condition
+	  {
+	    return true;
+	  }
+	  return false; // escapes at false
 	};
       else
-	y_condition = [=](float _ref){ return false; };
+	y_condition = [&](float _ref){ return false; };
   }
 
   Clock::time_point start = Clock::now();
@@ -266,7 +299,7 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
 
     if (status <= aero::status::aborted) // failed object detection
     {
-      res.status = aero::status::aborted;
+      res.status = aero::status::fatal;
       return true;
     }
 
@@ -284,6 +317,15 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
 	> req.time_out) // time_out
     {
       res.status = aero::status::fatal;
+      return true;
+    }
+
+    if (fabs(diff_to_object[1] - diff_bef) < 0.01 &&
+	req.end_condition_x > 999 && // okay with forward params
+	std::chrono::duration_cast<milliseconds>(time_now - start).count()
+	> 1000) // data recieving is late
+    {
+      res.status = aero::status::aborted;
       return true;
     }
   }
@@ -330,13 +372,13 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
   raw_center = raw_center * (1.0 / raw_vertices.size());
 
   // debug messages
-  ROS_INFO("found %d points", raw_vertices.size());
-  ROS_INFO("hsi : [%d ~ %d, %d ~ %d, %d ~ %d]",
-	   target_hsi_min.h, target_hsi_max.h, target_hsi_min.s, target_hsi_max.s,
-	   target_hsi_min.i, target_hsi_max.i);
-  ROS_INFO("xyz : [%f ~ %f, %f ~ %f, %f ~ %f]",
-	   space_min.x, space_max.x, space_min.y, space_max.y,
-	   space_min.z, space_max.z);
+  // ROS_INFO("found %d points", raw_vertices.size());
+  // ROS_INFO("hsi : [%d ~ %d, %d ~ %d, %d ~ %d]",
+  // 	   target_hsi_min.h, target_hsi_max.h, target_hsi_min.s, target_hsi_max.s,
+  // 	   target_hsi_min.i, target_hsi_max.i);
+  // ROS_INFO("xyz : [%f ~ %f, %f ~ %f, %f ~ %f]",
+  // 	   space_min.x, space_max.x, space_min.y, space_max.y,
+  // 	   space_min.z, space_max.z);
 
   Eigen::Vector3f raw_variance(0, 0, 0);
   std::vector<Eigen::Vector3f> raw_variances(raw_vertices.size());
@@ -375,7 +417,7 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 
   if (vertices_count == 0) // object detection fail
   {
-    ROS_ERROR("no points detected");
+    // ROS_ERROR("no points detected");
     ++lost_count;
 
     if (lost_count >= LOST_THRE) // Object does not exist

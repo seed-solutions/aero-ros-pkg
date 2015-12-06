@@ -11,7 +11,6 @@
 #include <aero_startup/ObjectGoXYZHSI.h>
 #include <aero_startup/GoTime.h>
 #include <aero_startup/AutoTrackReconfigure.h>
-#include <aero_startup/HeaderRequest.h>
 
 /*
   @define srv 1
@@ -46,7 +45,7 @@ namespace aero
   }
 };
 
-static const int GIVE_UP_TIME = 20000; // ms
+static const int GIVE_UP_TIME = 10000; // ms
 
 actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
 ros::ServiceClient client;
@@ -100,13 +99,27 @@ bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
 
   if (client.call(srv))
   {
-    if (srv.response.status < 0)
-    {
-      ROS_ERROR("failed go for target");
-      ac->cancelGoal();
-      res.status = srv.response.status;
-      return true;
-    }
+    while (srv.response.status < 0)
+      if (srv.response.status == aero::status::aborted)
+      {
+	ac->cancelGoal();
+	usleep(500 * 1000);
+	GoPos(req.go_x, req.go_y, 0);
+	if (!client.call(srv))
+	{
+	  ROS_ERROR("unexpected call fail to service");
+	  ac->cancelGoal();
+	  res.status = aero::status::fatal;
+	  return true;
+	}
+      }
+      else
+      {
+	ROS_ERROR("failed go for target");
+	ac->cancelGoal();
+	res.status = srv.response.status;
+	return true;
+      }
   }
   else
   {
