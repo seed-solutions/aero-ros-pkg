@@ -3,15 +3,15 @@
 # prerequisites : {my_robot}/headers/Stroke2Angle.hh
 # prerequisites : /tmp/aero_CAN_order < make_controller
 
-# generates : aero_startup/aero_common/Stroke2Angle.hh
-# generates : aero_startup/aero_common/Stroke2Angle.cc
+# generates : aero_startup/aero_hardware_interface/Stroke2Angle.hh
+# generates : aero_startup/aero_hardware_interface/Stroke2Angle.cc
 
 dir=$1
 
 input_file="$(rospack find aero_description)/${dir}/headers/Stroke2Angle.hh"
-output_file="$(rospack find aero_description)/../aero_startup/aero_common/Stroke2Angle.hh"
-output_source="$(rospack find aero_description)/../aero_startup/aero_common/Stroke2Angle.cc"
-template_file="$(rospack find aero_description)/../aero_startup/.templates/aero_common/Stroke2Angle.hh"
+output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Stroke2Angle.hh"
+output_source="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Stroke2Angle.cc"
+template_file="$(rospack find aero_description)/../aero_startup/.templates/aero_hardware_interface/Stroke2Angle.hh"
 
 replace_meta_in_output_file() {
     output_file=$1
@@ -196,7 +196,7 @@ sed -i "1,$((${total_tables} + 2))d" $output_file
 
 sed -i "1i\/*" $output_file
 sed -i "2i\ * This file auto-generated from script. Do not Edit!" $output_file
-sed -i "3i\ * Original : aero_startup/.templates/aero_common/Stroke2Angle.hh" $output_file
+sed -i "3i\ * Original : aero_startup/.templates/aero_hardware_interface/Stroke2Angle.hh" $output_file
 sed -i "4i\ * Original : aero_description/{my_robot}/headers/Stroke2Angle.hh" $output_file
 sed -i "5i\*/" $output_file
 
@@ -217,4 +217,4 @@ head -n $edit_start $output_file > /tmp/aero_modify_header_head
 cat /tmp/aero_modify_header_head > $output_file
 cat /tmp/aero_modify_header >> $output_file
 sed -i "/\/\/\/\/\/\//d" $output_file
-sed -i "/#include \"aero_common\/Stroke2Angle.hh\"/d" $output_file
+sed -i "/#include \"aero_hardware_interface\/Stroke2Angle.hh\"/d" $output_file

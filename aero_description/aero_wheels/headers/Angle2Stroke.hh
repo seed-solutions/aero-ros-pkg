@@ -14,7 +14,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdint.h>
-#include "aero_common/Angle2Stroke.hh"
+#include "aero_hardware_interface/Angle2Stroke.hh"
 
 namespace aero
 {

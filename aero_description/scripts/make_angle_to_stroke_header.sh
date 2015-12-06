@@ -4,17 +4,17 @@
 # prerequisites : /tmp/aero_ros_order_upper < create_urdf
 # prerequisites : /tmp/aero_ros_order_lower < create_urdf
 
-# generates : aero_startup/aero_common/Angle2Stroke.hh
-# generates : aero_startup/aero_common/Angle2Stroke.cc
+# generates : aero_startup/aero_hardware_interface/Angle2Stroke.hh
+# generates : aero_startup/aero_hardware_interface/Angle2Stroke.cc
 
 dir=$1
 upper_file=$2
 lower_file=$3
 
 input_file="$(rospack find aero_description)/${dir}/headers/Angle2Stroke.hh"
-output_file="$(rospack find aero_description)/../aero_startup/aero_common/Angle2Stroke.hh"
-output_source="$(rospack find aero_description)/../aero_startup/aero_common/Angle2Stroke.cc"
-template_file="$(rospack find aero_description)/../aero_startup/.templates/aero_common/Angle2Stroke.hh"
+output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Angle2Stroke.hh"
+output_source="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Angle2Stroke.cc"
+template_file="$(rospack find aero_description)/../aero_startup/.templates/aero_hardware_interface/Angle2Stroke.hh"
 
 replace_meta_in_output_file() {
     output_file=$1
@@ -228,9 +228,6 @@ create_rp_table_func_from_csv() {
 cp $input_file $output_file
 replace_meta_in_output_file $output_file
 
-cp $input_file $output_file
-replace_meta_in_output_file $output_file
-
 total_tables=$(grep -o '@define' $output_file | wc -l)
 for (( table_number=1; table_number<=${total_tables}; table_number++ ))
 do
@@ -256,7 +253,7 @@ sed -i "1,$((${total_tables} + 2))d" $output_file
 
 sed -i "1i\/*" $output_file
 sed -i "2i\ * This file auto-generated from script. Do not Edit!" $output_file
-sed -i "3i\ * Original : aero_startup/.templates/aero_common/Angle2Stroke.hh" $output_file
+sed -i "3i\ * Original : aero_startup/.templates/aero_hardware_interface/Angle2Stroke.hh" $output_file
 sed -i "4i\ * Original : aero_description/{my_robot}/headers/Angle2Stroke.hh" $output_file
 sed -i "5i\*/" $output_file
 
@@ -277,4 +274,4 @@ head -n $edit_start $output_file > /tmp/aero_modify_header_head
 cat /tmp/aero_modify_header_head > $output_file
 cat /tmp/aero_modify_header >> $output_file
 sed -i "/\/\/\/\/\/\//d" $output_file
-sed -i "/#include \"aero_common\/Angle2Stroke.hh\"/d" $output_file
+sed -i "/#include \"aero_hardware_interface\/Angle2Stroke.hh\"/d" $output_file
