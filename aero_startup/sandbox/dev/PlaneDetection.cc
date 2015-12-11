@@ -9,6 +9,67 @@
 #include <pcl/point_types.h>
 #include <tf/transform_broadcaster.h>
 #include "aero_object_manipulation/perception/class/PointCloudSensor.hh"
+#include "aero_common/types.h"
+
+#include <random>
+
+namespace aero
+{
+  struct box
+  {
+    xyz center;
+    xyz max_bound;
+    xyz min_bound;
+    float points;
+  };
+}
+
+namespace aero
+{
+  namespace common
+  {
+
+    class KmeansGapClustering
+    {
+    private: struct point { Eigen::Vector3f pos; int group; };
+
+    public: KmeansGapClustering();
+
+    public: ~KmeansGapClustering();
+
+    public: void ExtractClusters(std::vector<Eigen::Vector3f> _vertices);
+
+    public: aero::box GetLargestCluster();
+
+    protected: void InitiateClusterCenter(
+	std::vector<point> &_points,
+        std::vector<Eigen::Vector3f> &_initial_centers); // kmeans++
+
+    protected: void InitiateClusterCenter(
+	std::vector<point> &_points, int _num_of_clusters);
+
+    protected: float ClusterPoints(
+	std::vector<point> &_points,
+        std::vector<Eigen::Vector3f> &_initial_centers,
+	bool _append);
+
+    protected: float NearestCluster( // inline
+        point _point, std::vector<Eigen::Vector3f> _initial_centers,
+        bool _return_distance);
+
+    private: std::vector<point> points_;
+
+    private: std::vector<aero::box> cluster_list_;
+
+    private: int max_clusters_;
+
+    private: int num_of_reference_sets_;
+    };
+
+    typedef std::shared_ptr<KmeansGapClustering> KmeansGapClusteringPtr;
+
+  }
+}
 
 namespace aero
 {
@@ -31,6 +92,8 @@ namespace aero
     protected: float height_range_per_region_;
 
     protected: ros::Publisher pcl_pub_;
+
+    protected: aero::common::KmeansGapClusteringPtr kmeans_;
     };
 
     typedef std::shared_ptr<PlaneDetectedPointCloud> PlaneDetectedPointCloudPtr;
@@ -39,13 +102,350 @@ namespace aero
 }
 
 using namespace aero;
+using namespace common;
+
+//////////////////////////////////////////////////
+KmeansGapClustering::KmeansGapClustering()
+{
+  max_clusters_ = 10;
+  num_of_reference_sets_ = 10;
+}
+
+//////////////////////////////////////////////////
+KmeansGapClustering::~KmeansGapClustering()
+{
+}
+
+//////////////////////////////////////////////////
+void KmeansGapClustering::ExtractClusters(
+    std::vector<Eigen::Vector3f> _vertices)
+{
+  std::vector<point> points(_vertices.size());
+
+  // create points and bounding box
+  Eigen::Vector3f max = {-100000.0, -100000.0, -100000.0};
+  Eigen::Vector3f min = {100000.0, 100000.0, 100000.0};
+  for (unsigned int i = 0; i < _vertices.size(); ++i)
+  {
+    points[i].pos = _vertices[i];
+    points[i].group = 0;
+    if (_vertices[i].x() < min.x()) min[0] = _vertices[i].x();
+    else if (_vertices[i].x() > max.x()) max[0] = _vertices[i].x();
+    if (_vertices[i].y() < min.y()) min[1] = _vertices[i].y();
+    else if (_vertices[i].y() > max.y()) max[1] = _vertices[i].y();
+    if (_vertices[i].z() < min.z()) min[2] = _vertices[i].z();
+    else if (_vertices[i].z() > max.z()) max[2] = _vertices[i].z();
+  }
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<float> rand(0.0, 1.0);
+  int k = 1;
+  std::vector<Eigen::Vector3f> initial_centers;
+  initial_centers[0] =
+      points[static_cast<int>(rand(mt) * points.size())].pos;
+  std::uniform_real_distribution<float> x_range(min[0], max[0]);
+  std::uniform_real_distribution<float> y_range(min[1], max[1]);
+  std::uniform_real_distribution<float> z_range(min[2], max[2]);
+
+  // calculate first gap (1 cluster)
+  Eigen::Vector3f center = {0.0, 0.0, 0.0};
+  for (unsigned int i = 0; i < points.size(); ++i)
+    center += points[i].pos;
+  center /= points.size();
+  float Wk = 0.0;
+  for (unsigned int i = 0; i < points.size(); ++i)
+    Wk += std::pow((points[i].pos - center).norm(), 2) /
+        2 * points.size();
+  Wk = log(Wk);
+  // create monte carlo reference sets
+  float Wkb = 0.0;
+  float sk = 0.0;
+  std::vector<float> Wkb_sets(num_of_reference_sets_, 0.0);
+  for (unsigned int i = 0; i < num_of_reference_sets_; ++i)
+  {
+    std::vector<Eigen::Vector3f> set;
+    set.reserve(points.size());
+    for (unsigned int j = 0; j < points.size(); ++j)
+      set.push_back({x_range(mt), y_range(mt), z_range(mt)});
+    Eigen::Vector3f center = {0.0, 0.0, 0.0};
+    for (unsigned int i = 0; i < points.size(); ++i)
+      center += points[i].pos;
+    center /= points.size();
+    for (unsigned int i = 0; i < points.size(); ++i)
+      Wkb_sets[i] += std::pow((points[i].pos - center).norm(), 2) /
+        2 * points.size();
+    Wkb += Wkb_sets[i];
+    sk += std::pow(Wkb - Wkb_sets[i], 2) / num_of_reference_sets_;
+  }
+  Wkb /= num_of_reference_sets_;
+  sk = sqrt(sk * (1 + 1/num_of_reference_sets_));
+  float gap_k = Wkb - Wk;
+
+  // calculate gap for more than 1 clusters
+  bool gap_is_statisfied = false;
+  while (!gap_is_statisfied && k < max_clusters_)
+  {
+    points_.clear();
+    points_.resize(_vertices.size());
+    points_.assign(points.begin(), points.end());
+
+    ++k;
+    initial_centers.resize(k); // expand number of clusters to k clusters
+    // segmentate points with k-means
+    float Wk = ClusterPoints(points, initial_centers, true);
+
+    // create monte carlo reference sets
+    float Wkb = 0.0;
+    float sk = 0.0;
+    std::vector<float> Wkb_sets(num_of_reference_sets_, 0.0);
+    for (unsigned int i = 0; i < num_of_reference_sets_; ++i)
+    {
+      std::vector<point> set;
+      set.reserve(points.size());
+      for (unsigned int j = 0; j < points.size(); ++j)
+	set.push_back({{x_range(mt), y_range(mt), z_range(mt)}, 0});
+      set.resize(points.size());
+      std::vector<Eigen::Vector3f> null(k); // size is used in Cluster points
+      Wkb_sets[i] = ClusterPoints(set, null, false);
+      Wkb += Wkb_sets[i];
+      sk += std::pow(Wkb - Wkb_sets[i], 2) / num_of_reference_sets_;
+    }
+    Wkb /= num_of_reference_sets_;
+    sk = sqrt(sk * (1 + 1/num_of_reference_sets_));
+    float gap_k_1 = Wkb - Wk;
+
+    if (gap_k > gap_k_1 - sk) gap_is_statisfied = true;
+    else gap_k = gap_k_1;
+  }
+
+  --k; // the number of clusters is k - 1
+
+  // calculate bounding box of each cluster
+  std::vector<Eigen::Vector3f> center_of_cluster(k, {0.0, 0.0, 0.0});
+  std::vector<float> points_in_cluster(k, 0.0);
+  std::vector<Eigen::Vector3f> max_point_value(k, max);
+  std::vector<Eigen::Vector3f> min_point_value(k, min);
+  for (unsigned int i = 0; i < points_.size(); ++i)
+  {
+    int id = points_[i].group;
+    center_of_cluster[id] += points_[i].pos;
+    ++points_in_cluster[id];
+    if (points_[i].pos.x() < min_point_value[id].x())
+        min_point_value[id][0] = points_[i].pos.x();
+    else if (points_[i].pos.x() > max_point_value[id].x())
+        max_point_value[id][0] = points_[i].pos.x();
+    if (points_[i].pos.y() < min_point_value[id].y())
+        min_point_value[id][1] = points_[i].pos.y();
+    else if (points_[i].pos.y() > max_point_value[id].y())
+        max_point_value[id][1] = points_[i].pos.y();
+    if (points_[i].pos.z() < min_point_value[id].z())
+        min_point_value[id][2] = points_[i].pos.z();
+    else if (points_[i].pos.z() > max_point_value[id].z())
+        max_point_value[id][2] = points_[i].pos.z();
+  }
+
+  // add bounding box data to cluster_list_
+  cluster_list_.clear();
+  cluster_list_.resize(k);
+  for (unsigned int i = 0; i < k; ++i)
+  {
+    Eigen::Vector3f center = center_of_cluster[i] / points_in_cluster[i];
+    cluster_list_[i].center = {center.x(), center.y(), center.z()};
+    cluster_list_[i].max_bound =
+      {max_point_value[i].x(), max_point_value[i].y(), max_point_value[i].z()};
+    cluster_list_[i].min_bound =
+      {min_point_value[i].x(), min_point_value[i].y(), min_point_value[i].z()};
+    cluster_list_[i].points = points_in_cluster[i];
+  }
+}
+
+//////////////////////////////////////////////////
+aero::box KmeansGapClustering::GetLargestCluster()
+{
+  int max_id = 0;
+  int largest_cluster = 0;
+  for (unsigned int i = 0; i < cluster_list_.size(); ++i)
+    if (cluster_list_[i].points > largest_cluster)
+    {
+      max_id = i;
+      largest_cluster = cluster_list_[i].points;
+    }
+
+  return cluster_list_[max_id];
+}
+
+//////////////////////////////////////////////////
+float KmeansGapClustering::NearestCluster( // inline
+    point _p, std::vector<Eigen::Vector3f> _initial_centers,
+    bool _return_distance)
+{
+  int nearest_cluster_id;
+  float min_distance = 10000000000.0;
+
+  for (unsigned int i = 0; i < _initial_centers.size(); ++i)
+  {
+    Eigen::Vector3f diff = _p.pos - _initial_centers[i];
+    float distance = diff.dot(diff); // sum of squares
+    if (distance < min_distance)
+    {
+      min_distance = distance;
+      nearest_cluster_id = i;
+    }
+  }
+
+  if (_return_distance) return min_distance;
+  else return static_cast<float>(nearest_cluster_id);
+}
+
+//////////////////////////////////////////////////
+void KmeansGapClustering::InitiateClusterCenter(
+    std::vector<point> &_points, int _num_of_clusters)
+{
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<float> rand(0.0, 1.0);
+  std::vector<Eigen::Vector3f> cluster_centers(_num_of_clusters);
+
+  cluster_centers[0] =
+      _points[static_cast<int>(rand(mt) * _points.size())].pos;
+
+  for (unsigned int i = 1; i < _num_of_clusters; ++i)
+  {
+    float seed = 0.0;
+    std::vector<float> distance_to_nearest_cluster(_points.size());
+    std::vector<Eigen::Vector3f> current_initial_centers;
+    current_initial_centers.assign(cluster_centers.begin(),
+				   cluster_centers.begin() + i);
+
+    // get the distances to nearest cluster for each point
+    for (unsigned int j = 0; j < _points.size(); ++j)
+    {
+      distance_to_nearest_cluster[j] =
+          this->NearestCluster(_points[j], current_initial_centers, true);
+      seed += distance_to_nearest_cluster[j];
+    }
+
+    // set a random center from sum of all distances
+    seed *= rand(mt);
+    for (unsigned int j = 0; _points.size(); ++j)
+    {
+      seed -= distance_to_nearest_cluster[j];
+      if (seed > 0) continue;
+      cluster_centers[i] = _points[j].pos;
+      break;
+    }
+  }
+
+  for (unsigned int j = 0; _points.size(); ++j)
+    _points[j].group =
+        this->NearestCluster(_points[j], cluster_centers, false);
+}
+
+//////////////////////////////////////////////////
+void KmeansGapClustering::InitiateClusterCenter(
+    std::vector<point> &_points,
+    std::vector<Eigen::Vector3f> &_initial_centers)
+{
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<float> rand(0.0, 1.0);
+
+  float seed = 0.0;
+  std::vector<float> distance_to_nearest_cluster(_points.size());
+  std::vector<Eigen::Vector3f> current_initial_centers;
+  current_initial_centers.assign(_initial_centers.begin(),
+				 _initial_centers.end() - 1);
+
+  // get the distances to nearest cluster for each point
+  for (unsigned int j = 0; j < _points.size(); ++j)
+  {
+    distance_to_nearest_cluster[j] =
+        this->NearestCluster(_points[j], current_initial_centers, true);
+    seed += distance_to_nearest_cluster[j];
+  }
+
+  // set a random center from sum of all distances
+  seed *= rand(mt);
+  for (unsigned int j = 0; _points.size(); ++j)
+  {
+    seed -= distance_to_nearest_cluster[j];
+    if (seed > 0) continue;
+    _initial_centers[_initial_centers.size() - 1] = _points[j].pos;
+    break;
+  }
+
+  for (unsigned int j = 0; _points.size(); ++j)
+    _points[j].group =
+        this->NearestCluster(_points[j], _initial_centers, false);
+}
+
+//////////////////////////////////////////////////
+float KmeansGapClustering::ClusterPoints(
+    std::vector<point> &_points,
+    std::vector<Eigen::Vector3f> &_initial_centers,
+    bool _append)
+{
+  if (_append)
+    this->InitiateClusterCenter(_points, _initial_centers);
+  else
+    this->InitiateClusterCenter(_points, _initial_centers.size());
+
+  int changes = _points.size();
+  while (changes > _points.size() * 0.005) // until 99.5% of points are stable
+  {
+    std::vector<Eigen::Vector3f> new_centers(
+        _initial_centers.size(), {0.0, 0.0, 0.0});
+    std::vector<int> num_of_points(_initial_centers.size(), 0);
+
+    for (unsigned int i = 0; i < _points.size(); ++i)
+    {
+      new_centers[_points[i].group] += _points[i].pos;
+      ++num_of_points[_points[i].group];
+    }
+
+    for (unsigned int i = 0; i < new_centers.size(); ++i)
+      new_centers[i] /= num_of_points[i];
+
+    for (unsigned int i = 0; i < _points.size(); ++i)
+    {
+      int nearest_cluster_id =
+	  this->NearestCluster(_points[i], new_centers, false);
+      if (nearest_cluster_id == _points[i].group) continue;
+      ++changes;
+      _points[i].group = nearest_cluster_id;
+    }
+  }
+
+  // calculate center of each cluster
+  std::vector<Eigen::Vector3f> centers(
+      _initial_centers.size(), {0.0, 0.0, 0.0});
+  std::vector<int> num_of_points(_initial_centers.size(), 0);
+
+  for (unsigned int i = 0; i < _points.size(); ++i)
+  {
+    centers[_points[i].group] += _points[i].pos;
+    ++num_of_points[_points[i].group];
+  }
+  for (unsigned int i = 0; i < _initial_centers.size(); ++i)
+    centers[i] /= num_of_points[_points[i].group];
+
+  // calculate Wk
+  float Wk = 0.0;
+  for (unsigned int i = 0; i < _points.size(); ++i)
+    Wk += std::pow((_points[i].pos - centers[_points[i].group]).norm(), 2) /
+        2 * num_of_points[_points[i].group];
+
+  return log(Wk);
+}
+
 using namespace perception;
 
 //////////////////////////////////////////////////
 PlaneDetectedPointCloud::PlaneDetectedPointCloud(ros::NodeHandle _nh)
     : PointCloudSensor(_nh)
 {
-  height_range_per_region_ = 0.05;
+  height_range_per_region_ = 0.03;
 
   desk_plane_norm_ =
       Eigen::Quaternionf(1, 0, 0, 0) * Eigen::Vector3f(0, 0, 1);
@@ -59,6 +459,8 @@ PlaneDetectedPointCloud::PlaneDetectedPointCloud(ros::NodeHandle _nh)
 
   pcl_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
       "/visualized_object_pcl", 100);
+
+  kmeans_.reset(new aero::common::KmeansGapClustering());
 }
 
 //////////////////////////////////////////////////
@@ -188,16 +590,90 @@ void PlaneDetectedPointCloud::SubscribePoints(
     plane_points.assign(vertices_block[max_index].begin(),
 			vertices_block[max_index].end());
 
+  // get the size of plane
+
+  // cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
+  // cloud_->points.reserve(plane_points.size());
+
+  Eigen::Vector3f plane_center(0, 0, 0);
+  for (unsigned int j = 0; j < plane_points.size(); ++j)
+  {
+    plane_center += plane_points[j];
+    // cloud_->points.push_back(pcl::PointXYZ(plane_points[j].x(),
+    // 					   plane_points[j].y(),
+    // 					   plane_points[j].z()));
+  }
+  plane_center = plane_center * (1.0 / plane_points.size());
+
+  Eigen::Vector3f plane_variance(0, 0, 0);
+  for (unsigned int j = 0; j < plane_points.size(); ++j)
+  {
+    Eigen::Vector3f variance = Eigen::Vector3f(
+	(plane_points[j].x() - plane_center.x()) *
+            (plane_points[j].x() - plane_center.x()),
+        (plane_points[j].y() - plane_center.y()) *
+            (plane_points[j].y() - plane_center.y()),
+        (plane_points[j].z() - plane_center.z()) *
+            (plane_points[j].z() - plane_center.z()));
+    plane_variance += variance;
+  }
+  plane_variance = plane_variance * (4.0 / plane_points.size()); // cut 5%
+
+  // get the points on plane
+
+  vertices_.clear();
+  vertices_.reserve(raw->points.size());
+  if (max_points_when_shifted > max_points)
+    for (unsigned int i = // objects higher than 5 cm
+	   (max_index_when_shifted + 1 + 0.05 / height_range_per_region_);
+	 i < vertices_shifted.size(); ++i)
+      for (unsigned int j = 0; j < vertices_shifted[i].size(); ++j)
+      {
+	if ((vertices_shifted[i][j].x() - plane_center.x()) *
+	      (vertices_shifted[i][j].x() - plane_center.x()) <
+	    plane_variance.x() &&
+	    // (vertices_shifted[i][j].y() - plane_center.y()) *
+	    //   (vertices_shifted[i][j].y() - plane_center.y()) <
+	    // plane_variance.y() &&
+	    (vertices_shifted[i][j].z() - plane_center.z()) *
+	      (vertices_shifted[i][j].z() - plane_center.z()) <
+	    plane_variance.z())
+	  vertices_.push_back(vertices_shifted[i][j]);
+      }
+  else
+    for (unsigned int i = // objects higher than 5 cm
+	   (max_index + 1 + 0.05 / height_range_per_region_);
+	 i < vertices_block.size(); ++i)
+      for (unsigned int j = 0; j < vertices_block[i].size(); ++j)
+      {
+	if ((vertices_block[i][j].x() - plane_center.x()) *
+	      (vertices_block[i][j].x() - plane_center.x()) <
+	    plane_variance.x() &&
+	    // (vertices_block[i][j].y() - plane_center.y()) *
+	    //   (vertices_block[i][j].y() - plane_center.y()) <
+	    // plane_variance.y() &&
+	    (vertices_block[i][j].z() - plane_center.z()) *
+	      (vertices_block[i][j].z() - plane_center.z()) <
+	    plane_variance.z())
+	  vertices_.push_back(vertices_block[i][j]);
+      }
+  vertices_.resize(vertices_.size());
+
+  // kmeans++ gap clustrering
+
+  kmeans_->ExtractClusters(vertices_);
+  kmeans_->GetLargestCluster();
+
   // now we have the points on the plane
 
   cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
   cloud_->points.reserve(plane_points.size());
 
-  for (unsigned int i = 0; i < plane_points.size(); ++i)
+  for (unsigned int i = 0; i < vertices_.size(); ++i)
   {
-    cloud_->points.push_back(pcl::PointXYZ(plane_points[i].x(),
-					   plane_points[i].y(),
-					   plane_points[i].z()));
+    cloud_->points.push_back(pcl::PointXYZ(vertices_[i].x(),
+					   vertices_[i].y(),
+					   vertices_[i].z()));
   }
 
   pcl::PCLPointCloud2 pcl_out;
