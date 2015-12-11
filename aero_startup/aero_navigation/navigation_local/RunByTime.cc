@@ -4,7 +4,7 @@
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "extract_and_run");
+  ros::init(argc, argv, "run_by_time");
   ros::NodeHandle nh;
 
   aero::navigation::RunByTimePtr time_runner(
