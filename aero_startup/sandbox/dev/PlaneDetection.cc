@@ -41,12 +41,14 @@ namespace aero
 
     public: aero::box GetLargestCluster();
 
+    // append will reuse prior calculated initial_centers
+    protected: void InitiateClusterCenterAppend(
+	std::vector<point> &_points,
+        std::vector<Eigen::Vector3f> &_initial_centers);
+
     protected: void InitiateClusterCenter(
 	std::vector<point> &_points,
         std::vector<Eigen::Vector3f> &_initial_centers); // kmeans++
-
-    protected: void InitiateClusterCenter(
-	std::vector<point> &_points, int _num_of_clusters);
 
     protected: float ClusterPoints(
 	std::vector<point> &_points,
@@ -141,7 +143,7 @@ void KmeansGapClustering::ExtractClusters(
   std::mt19937 mt(rd());
   std::uniform_real_distribution<float> rand(0.0, 1.0);
   int k = 1;
-  std::vector<Eigen::Vector3f> initial_centers;
+  std::vector<Eigen::Vector3f> initial_centers(1);
   initial_centers[0] =
       points[static_cast<int>(rand(mt) * points.size())].pos;
   std::uniform_real_distribution<float> x_range(min[0], max[0]);
@@ -155,32 +157,30 @@ void KmeansGapClustering::ExtractClusters(
   center /= points.size();
   float Wk = 0.0;
   for (unsigned int i = 0; i < points.size(); ++i)
-    Wk += std::pow((points[i].pos - center).norm(), 2) /
-        2 * points.size();
+    Wk += std::pow((points[i].pos - center).norm(), 2);
   Wk = log(Wk);
   // create monte carlo reference sets
   float Wkb = 0.0;
-  float sk = 0.0;
-  std::vector<float> Wkb_sets(num_of_reference_sets_, 0.0);
   for (unsigned int i = 0; i < num_of_reference_sets_; ++i)
   {
     std::vector<Eigen::Vector3f> set;
     set.reserve(points.size());
-    for (unsigned int j = 0; j < points.size(); ++j)
-      set.push_back({x_range(mt), y_range(mt), z_range(mt)});
     Eigen::Vector3f center = {0.0, 0.0, 0.0};
-    for (unsigned int i = 0; i < points.size(); ++i)
-      center += points[i].pos;
-    center /= points.size();
-    for (unsigned int i = 0; i < points.size(); ++i)
-      Wkb_sets[i] += std::pow((points[i].pos - center).norm(), 2) /
-        2 * points.size();
-    Wkb += Wkb_sets[i];
-    sk += std::pow(Wkb - Wkb_sets[i], 2) / num_of_reference_sets_;
+    for (unsigned int j = 0; j < points.size(); ++j)
+    {
+      set.push_back({x_range(mt), y_range(mt), z_range(mt)});
+      center += set[j];
+    }
+    center /= set.size();
+    float Wkb_i = 0.0;
+    for (unsigned int j = 0; j < set.size(); ++j)
+      Wkb_i += std::pow((set[j] - center).norm(), 2);
+    Wkb += log(Wkb_i);
   }
   Wkb /= num_of_reference_sets_;
-  sk = sqrt(sk * (1 + 1/num_of_reference_sets_));
   float gap_k = Wkb - Wk;
+
+  ROS_INFO("k = 1 : Wk is %f, Wkb is %f, gap_k is %f", Wk, Wkb, gap_k);
 
   // calculate gap for more than 1 clusters
   bool gap_is_statisfied = false;
@@ -206,16 +206,20 @@ void KmeansGapClustering::ExtractClusters(
       for (unsigned int j = 0; j < points.size(); ++j)
 	set.push_back({{x_range(mt), y_range(mt), z_range(mt)}, 0});
       set.resize(points.size());
-      std::vector<Eigen::Vector3f> null(k); // size is used in Cluster points
+      std::vector<Eigen::Vector3f> null(k); // filled in with ClusterPoints
       Wkb_sets[i] = ClusterPoints(set, null, false);
       Wkb += Wkb_sets[i];
-      sk += std::pow(Wkb - Wkb_sets[i], 2) / num_of_reference_sets_;
     }
     Wkb /= num_of_reference_sets_;
-    sk = sqrt(sk * (1 + 1/num_of_reference_sets_));
+    for (unsigned int i = 0; i < num_of_reference_sets_; ++i)
+      sk += std::pow(Wkb_sets[i] - Wkb, 2);
+    sk = sqrt(sk * (1 + 1/num_of_reference_sets_) / num_of_reference_sets_);
     float gap_k_1 = Wkb - Wk;
 
-    if (gap_k > gap_k_1 - sk) gap_is_statisfied = true;
+    ROS_INFO("k = %d : Wk is %f, Wkb is %f, sk is %f, gap_k is %f",
+	     k, Wk, Wkb, sk, gap_k_1);
+
+    if (gap_k >= gap_k_1 - sk) gap_is_statisfied = true;
     else gap_k = gap_k_1;
   }
 
@@ -300,23 +304,23 @@ float KmeansGapClustering::NearestCluster( // inline
 
 //////////////////////////////////////////////////
 void KmeansGapClustering::InitiateClusterCenter(
-    std::vector<point> &_points, int _num_of_clusters)
+    std::vector<point> &_points,
+    std::vector<Eigen::Vector3f> &_initial_centers)
 {
   std::random_device rd;
   std::mt19937 mt(rd());
   std::uniform_real_distribution<float> rand(0.0, 1.0);
-  std::vector<Eigen::Vector3f> cluster_centers(_num_of_clusters);
 
-  cluster_centers[0] =
+  _initial_centers[0] =
       _points[static_cast<int>(rand(mt) * _points.size())].pos;
 
-  for (unsigned int i = 1; i < _num_of_clusters; ++i)
+  for (unsigned int i = 1; i < _initial_centers.size(); ++i)
   {
     float seed = 0.0;
     std::vector<float> distance_to_nearest_cluster(_points.size());
     std::vector<Eigen::Vector3f> current_initial_centers;
-    current_initial_centers.assign(cluster_centers.begin(),
-				   cluster_centers.begin() + i);
+    current_initial_centers.assign(_initial_centers.begin(),
+				   _initial_centers.begin() + i);
 
     // get the distances to nearest cluster for each point
     for (unsigned int j = 0; j < _points.size(); ++j)
@@ -332,18 +336,18 @@ void KmeansGapClustering::InitiateClusterCenter(
     {
       seed -= distance_to_nearest_cluster[j];
       if (seed > 0) continue;
-      cluster_centers[i] = _points[j].pos;
+      _initial_centers[i] = _points[j].pos;
       break;
     }
   }
 
-  for (unsigned int j = 0; _points.size(); ++j)
+  for (unsigned int j = 0; j < _points.size(); ++j)
     _points[j].group =
-        this->NearestCluster(_points[j], cluster_centers, false);
+        this->NearestCluster(_points[j], _initial_centers, false);
 }
 
 //////////////////////////////////////////////////
-void KmeansGapClustering::InitiateClusterCenter(
+void KmeansGapClustering::InitiateClusterCenterAppend(
     std::vector<point> &_points,
     std::vector<Eigen::Vector3f> &_initial_centers)
 {
@@ -375,7 +379,7 @@ void KmeansGapClustering::InitiateClusterCenter(
     break;
   }
 
-  for (unsigned int j = 0; _points.size(); ++j)
+  for (unsigned int j = 0; j < _points.size(); ++j)
     _points[j].group =
         this->NearestCluster(_points[j], _initial_centers, false);
 }
@@ -387,16 +391,16 @@ float KmeansGapClustering::ClusterPoints(
     bool _append)
 {
   if (_append)
-    this->InitiateClusterCenter(_points, _initial_centers);
+    this->InitiateClusterCenterAppend(_points, _initial_centers);
   else
-    this->InitiateClusterCenter(_points, _initial_centers.size());
+    this->InitiateClusterCenter(_points, _initial_centers);
 
   int changes = _points.size();
   while (changes > _points.size() * 0.005) // until 99.5% of points are stable
   {
     std::vector<Eigen::Vector3f> new_centers(
         _initial_centers.size(), {0.0, 0.0, 0.0});
-    std::vector<int> num_of_points(_initial_centers.size(), 0);
+    std::vector<int> num_of_points(new_centers.size(), 0);
 
     for (unsigned int i = 0; i < _points.size(); ++i)
     {
@@ -407,6 +411,7 @@ float KmeansGapClustering::ClusterPoints(
     for (unsigned int i = 0; i < new_centers.size(); ++i)
       new_centers[i] /= num_of_points[i];
 
+    changes = 0;
     for (unsigned int i = 0; i < _points.size(); ++i)
     {
       int nearest_cluster_id =
@@ -415,26 +420,27 @@ float KmeansGapClustering::ClusterPoints(
       ++changes;
       _points[i].group = nearest_cluster_id;
     }
+
+    // ROS_INFO("%d out of %d are unstable", changes, _points.size());
   }
 
   // calculate center of each cluster
   std::vector<Eigen::Vector3f> centers(
       _initial_centers.size(), {0.0, 0.0, 0.0});
-  std::vector<int> num_of_points(_initial_centers.size(), 0);
+  std::vector<int> num_of_points(centers.size(), 0);
 
   for (unsigned int i = 0; i < _points.size(); ++i)
   {
     centers[_points[i].group] += _points[i].pos;
     ++num_of_points[_points[i].group];
   }
-  for (unsigned int i = 0; i < _initial_centers.size(); ++i)
-    centers[i] /= num_of_points[_points[i].group];
+  for (unsigned int i = 0; i < centers.size(); ++i)
+    centers[i] /= num_of_points[i];
 
   // calculate Wk
   float Wk = 0.0;
   for (unsigned int i = 0; i < _points.size(); ++i)
-    Wk += std::pow((_points[i].pos - centers[_points[i].group]).norm(), 2) /
-        2 * num_of_points[_points[i].group];
+    Wk += std::pow((_points[i].pos - centers[_points[i].group]).norm(), 2);
 
   return log(Wk);
 }
@@ -662,7 +668,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
   // kmeans++ gap clustrering
 
   kmeans_->ExtractClusters(vertices_);
-  kmeans_->GetLargestCluster();
+  // kmeans_->GetLargestCluster();
 
   // now we have the points on the plane
 
