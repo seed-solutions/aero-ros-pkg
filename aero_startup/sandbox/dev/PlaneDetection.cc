@@ -59,9 +59,21 @@ namespace aero
         point _point, std::vector<Eigen::Vector3f> _initial_centers,
         bool _return_distance);
 
+    protected: bool IsNoise(Eigen::Vector3f _p); // inline
+
     private: std::vector<point> points_;
 
     private: std::vector<aero::box> cluster_list_;
+
+    private: std::vector<aero::box> noises_;
+
+    private: aero::xyz field_range_max_;
+
+    private: aero::xyz field_range_min_;
+
+    private: int num_points_in_field_;
+
+    private: int scene_narrowed_n_times_;
 
     private: int max_clusters_;
 
@@ -109,6 +121,11 @@ using namespace common;
 //////////////////////////////////////////////////
 KmeansGapClustering::KmeansGapClustering()
 {
+  field_range_max_ = {-100000.0, -100000.0, -100000.0};
+  field_range_min_ = {100000.0, 100000.0, 100000.0};
+  num_points_in_field_ = 0;
+  scene_narrowed_n_times_ = 0;
+
   max_clusters_ = 10;
   num_of_reference_sets_ = 10;
 }
@@ -119,18 +136,37 @@ KmeansGapClustering::~KmeansGapClustering()
 }
 
 //////////////////////////////////////////////////
+bool KmeansGapClustering::IsNoise(Eigen::Vector3f _p) // inline
+{
+  for (unsigned int i = 0; i < noises_.size(); ++i)
+    if (_p.x() < noises_[i].max_bound.x &&
+	_p.x() > noises_[i].min_bound.x &&
+	_p.y() < noises_[i].max_bound.y &&
+	_p.y() > noises_[i].min_bound.y &&
+	_p.z() < noises_[i].max_bound.z &&
+	_p.z() > noises_[i].min_bound.z)
+      return true;
+
+  return false;
+}
+
+//////////////////////////////////////////////////
 void KmeansGapClustering::ExtractClusters(
     std::vector<Eigen::Vector3f> _vertices)
 {
-  std::vector<point> points(_vertices.size());
+  ROS_INFO("clusters : %d, noises : %d", cluster_list_.size(), noises_.size());
+
+  std::vector<point> points;
+  points.reserve(_vertices.size());
 
   // create points and bounding box
   Eigen::Vector3f max = {-100000.0, -100000.0, -100000.0};
   Eigen::Vector3f min = {100000.0, 100000.0, 100000.0};
   for (unsigned int i = 0; i < _vertices.size(); ++i)
   {
-    points[i].pos = _vertices[i];
-    points[i].group = 0;
+    // reject noise points
+    if (this->IsNoise(_vertices[i])) continue;
+    points.push_back({_vertices[i], 0});
     if (_vertices[i].x() < min.x()) min[0] = _vertices[i].x();
     else if (_vertices[i].x() > max.x()) max[0] = _vertices[i].x();
     if (_vertices[i].y() < min.y()) min[1] = _vertices[i].y();
@@ -138,6 +174,67 @@ void KmeansGapClustering::ExtractClusters(
     if (_vertices[i].z() < min.z()) min[2] = _vertices[i].z();
     else if (_vertices[i].z() > max.z()) max[2] = _vertices[i].z();
   }
+  points.resize(points.size());
+
+
+  ROS_INFO("field_max : %f %f %f -> %f %f %f",
+	   field_range_max_.x, field_range_max_.y, field_range_max_.z,
+	   max.x(), max.y(), max.z());
+  if (fabs(max.x() - field_range_max_.x) >= 0.2)
+    ROS_WARN("qualifies max.x");
+  if (fabs(max.y() - field_range_max_.y) >= 0.1)
+    ROS_WARN("qualifies max.y");
+  if (fabs(max.z() - field_range_max_.z) >= 0.1)
+    ROS_WARN("qualifies max.z");
+
+  ROS_INFO("field_min : %f %f %f -> %f %f %f",
+	   field_range_min_.x, field_range_min_.y, field_range_min_.z,
+	   min.x(), min.y(), min.z());
+  if (fabs(min.x() - field_range_min_.x) >= 0.2)
+    ROS_WARN("qualifies min.x");
+  if (fabs(min.y() - field_range_min_.y) >= 0.1)
+    ROS_WARN("qualifies min.x");
+  if (fabs(min.z() - field_range_min_.z) >= 0.1)
+    ROS_WARN("qualifies min.x");
+
+  ROS_INFO("points : %d -> %d", num_points_in_field_, points.size());
+  if (abs(static_cast<int>(points.size() - num_points_in_field_)) >= 300)
+    ROS_WARN("qualifies points");
+
+  // if not much of a change in scene, don't calculate
+  if (fabs(max.x() - field_range_max_.x) < 0.2 && // ps4eye is bad at x
+      fabs(min.x() - field_range_min_.x) < 0.2 && // ps4eye is bad at x
+      fabs(max.y() - field_range_max_.y) < 0.1 &&
+      fabs(min.y() - field_range_min_.y) < 0.1 &&
+      fabs(max.z() - field_range_max_.z) < 0.1 &&
+      fabs(min.z() - field_range_min_.z) < 0.1 &&
+      abs(static_cast<int>(points.size() - num_points_in_field_)) < 300)
+    return;
+
+  // if scene was enlarged by more than 15cm, clear noises
+  // when the scene was shrinken, that could mean noises were eliminated
+  // in that case, we want to keep the current noise information
+  if ((max.x() - field_range_max_.x) > 0.3 || // ps4eye is bad at x
+      (min.x() - field_range_min_.x) < -0.3 || // ps4eye is bad at x
+      (max.y() - field_range_max_.y) > 0.15 ||
+      (min.y() - field_range_min_.y) < -0.15 ||
+      (max.z() - field_range_max_.z) > 0.15 ||
+      (min.z() - field_range_min_.z) < -0.15)
+  {
+    if (static_cast<int>(points.size() - num_points_in_field_) > 500)
+      noises_.clear();
+  }
+  else // spacial shrink case
+  {
+    ++scene_narrowed_n_times_;
+    // information might have been lost for a moment
+    if (scene_narrowed_n_times_ < 5) return;
+    scene_narrowed_n_times_ = 0;
+  }
+
+  field_range_max_ = {max.x(), max.y(), max.z()};
+  field_range_min_ = {min.x(), min.y(), min.z()};
+  num_points_in_field_ = points.size();
 
   std::random_device rd;
   std::mt19937 mt(rd());
@@ -228,8 +325,8 @@ void KmeansGapClustering::ExtractClusters(
   // calculate bounding box of each cluster
   std::vector<Eigen::Vector3f> center_of_cluster(k, {0.0, 0.0, 0.0});
   std::vector<float> points_in_cluster(k, 0.0);
-  std::vector<Eigen::Vector3f> max_point_value(k, max);
-  std::vector<Eigen::Vector3f> min_point_value(k, min);
+  std::vector<Eigen::Vector3f> max_point_value(k, min);
+  std::vector<Eigen::Vector3f> min_point_value(k, max);
   for (unsigned int i = 0; i < points_.size(); ++i)
   {
     int id = points_[i].group;
@@ -249,19 +346,39 @@ void KmeansGapClustering::ExtractClusters(
         max_point_value[id][2] = points_[i].pos.z();
   }
 
-  // add bounding box data to cluster_list_
-  cluster_list_.clear();
-  cluster_list_.resize(k);
+  // add bounding box data to cluster_list_ or noises_
+  std::vector<aero::box> cluster_candidates;
+  std::vector<aero::box> noise_candidates;
+  cluster_candidates.reserve(k);
+  noise_candidates.reserve(k);
   for (unsigned int i = 0; i < k; ++i)
   {
     Eigen::Vector3f center = center_of_cluster[i] / points_in_cluster[i];
-    cluster_list_[i].center = {center.x(), center.y(), center.z()};
-    cluster_list_[i].max_bound =
+
+    aero::box cluster_i;
+    cluster_i.center = {center.x(), center.y(), center.z()};
+    cluster_i.max_bound =
       {max_point_value[i].x(), max_point_value[i].y(), max_point_value[i].z()};
-    cluster_list_[i].min_bound =
+    cluster_i.min_bound =
       {min_point_value[i].x(), min_point_value[i].y(), min_point_value[i].z()};
-    cluster_list_[i].points = points_in_cluster[i];
+    cluster_i.points = points_in_cluster[i];
+
+    if ((max_point_value[i] - min_point_value[i]).norm() < 0.05 ||
+	points_in_cluster[i] < 500)
+      noise_candidates.push_back(cluster_i); // we can always add new noises
+    else
+      cluster_candidates.push_back(cluster_i);
   }
+  cluster_candidates.resize(cluster_candidates.size());
+  noise_candidates.resize(noise_candidates.size());
+  if (noise_candidates.size() > cluster_candidates.size()) // bad clustering
+    return;
+
+  cluster_list_.clear();
+  cluster_list_.reserve(k);
+  cluster_list_.assign(cluster_candidates.begin(), cluster_candidates.end());
+  for (unsigned int i = 0; i < noise_candidates.size(); ++i)
+    noises_.push_back(noise_candidates[i]);
 }
 
 //////////////////////////////////////////////////
