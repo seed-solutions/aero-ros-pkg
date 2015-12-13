@@ -74,7 +74,7 @@ void XYZHSIPointCloud::SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr&
 	 (raw_vertices[i][2] - raw_center[2]) * (raw_vertices[i][2] - raw_center[2]));
     raw_variance += raw_variances[i];
   }
-  raw_variance = raw_variance * (9.0 / raw_vertices.size()); // cutting 5% of points
+  raw_variance = raw_variance * (4.0 / raw_vertices.size()); // cutting 5% of points
 
   cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
   cloud_->points.reserve(raw_vertices.size());
@@ -93,7 +93,6 @@ void XYZHSIPointCloud::SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr&
       vertices_.push_back(raw_vertices[i]);
       rgb_.push_back(raw_rgbs[i]);
       center_ += raw_vertices[i];
-
       cloud_->points.push_back(pcl::PointXYZ(raw_vertices[i][0],
 					     raw_vertices[i][1], raw_vertices[i][2]));
       ++vertices_count;
