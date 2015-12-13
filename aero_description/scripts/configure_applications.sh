@@ -40,6 +40,41 @@ fi
 
 tab2=$'  '
 
+create_srv_file() {
+    lookup_file=$1
+
+    check_for_srv=$(grep "@define srv" $1)
+    if [[ "$check_for_srv" != "" ]]
+    then
+	# check num of srvs
+	num_of_srvs=$(grep "@define srv" $1 | wc -l)
+	# create srv file
+	for (( srv=1; srv<=${num_of_srvs}; srv++ ))
+	do
+	    srv_name=$(awk "/<aero_startup\//{i++}i==${srv}{print; exit}" $1 | cut -d '/' -f2 | cut -d '.' -f1)
+	    srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
+	    if [[ "$num_of_srvs" -gt "1" ]]
+	    then
+		awk "/@define srv ${srv}/,/\*\//" $1 > $srv_file
+	    else
+		awk "/@define srv/,/\*\//" $1 > $srv_file
+	    fi
+	    sed -i "/@define/d" $srv_file
+	    sed -i "/\*\//d" $srv_file
+	    sed -i 's/^[ \t]*//' $srv_file
+	    # add srv generation to CMakeLists.txt
+	    check_if_exists=$(grep "${srv_name}.srv" $cmake_file)
+	    if [[ "$check_if_exists" == "" ]]
+	    then
+		sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
+		write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
+		write_to_line=$(($write_to_line + 3))
+		echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	    fi
+	done
+    fi
+}
+
 while read line
 do
     header=$(echo $line | cut -d: -f1)
@@ -55,6 +90,7 @@ do
     executable_path="$(rospack find aero_description)/../aero_startup/${executable_dir}"
     # rename source depending on camel letters
     find_source=$(find ${executable_path} -name "${source}*")
+    has_same_name_class_object=$(find ${executable_path} -name "${source}*" | grep "class")
     if [[ $find_source == "" ]]
     then
 	num_of_words=$(echo $source | awk -F_ '{print NF}')
@@ -65,6 +101,12 @@ do
 	    file_name="${file_name}${word^}"
 	done
 	find_source=$(find ${executable_path} -name "${file_name}*")
+	has_same_name_class_object=$(find ${executable_path} -name "${file_name}*" | grep "/class/")
+    fi
+    # if class object with same name as executable exists
+    if [[ $has_same_name_class_object != "" ]]
+    then
+	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v "/class/") 
     fi
     source=$(echo "${find_source}" | awk -F/ '{print $NF}')
 
@@ -95,6 +137,8 @@ do
 	# add executable to CMakeLists.txt
 	libs=''
 	ifs=''
+
+	# dependecy check
 	dependencies=$(echo $line | cut -d: -f3)
 	num_of_dependencies=$(echo $dependencies | awk '{print NF}')
 	dependency_list="$(rospack find aero_description)/../aero_startup/.dependencies"
@@ -111,7 +155,6 @@ do
 	done
 	write_to_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
 	write_to_line=$(($write_to_line + 1))
-
 	tab=''
 	if [[ $ifs != "" ]]
 	then
@@ -119,10 +162,15 @@ do
 	    echo "if(${ifs})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	    write_to_line=$(($write_to_line + 1))
 	fi
+
+	# add_executable
 	echo "${tab}add_executable(${executable_name}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	write_to_line=$(($write_to_line + 1))
 	includes_main=$(find $executable_dir -name Main.cc 2>/dev/null)
-	if [[ $includes_main != "" ]]
+	include_class_objects=$(grep "/class/" $find_source)
+	class_files=""
+	num_of_class_files=""
+	if [[ $includes_main != "" ]] # if executable is Main.cc
 	then
 	    cc_files=$(find $copy_to_dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}')
 	    num_of_cc_files=$(find $copy_to_dir -name "*.cc" | wc -l)
@@ -134,10 +182,24 @@ do
 	    done
 	    echo "${tab}${tab2})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	    write_to_line=$(($write_to_line + 1))
+	elif [[ $include_class_objects != "" ]] # if relies on class objects
+	then
+	    class_files=$(grep "#include \"aero_" $find_source | grep "/class/" | awk '{print $2}' | cut -d\" -f2)
+	    num_of_class_files=$(grep "#include \"aero_" $find_source | grep "class" | wc -l)
+	    for (( num=1; num<=${num_of_class_files}; num++ ))
+	    do
+		file=$(echo $class_files | awk '{print $'$num'}' | sed "s/.hh/.cc/g")
+		echo "${tab}${tab2}${file}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+		write_to_line=$(($write_to_line + 1))
+	    done
+	    echo "${tab}${tab2}${executable_dir}/${source})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	    write_to_line=$(($write_to_line + 1))
 	else
 	    echo "${tab}${tab2}${executable_dir}/${source})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	    write_to_line=$(($write_to_line + 1))
 	fi
+
+	# target link
 	echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	write_to_line=$(($write_to_line + 1))
 	echo "${tab}${tab2}${libs})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
@@ -145,37 +207,19 @@ do
 	then
 	    write_to_line=$(($write_to_line + 1))
 	    echo "endif()\n" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	else
+	    write_to_line=$(($write_to_line + 1))
+	    echo "" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	fi
 
 	# add srv files if required
-	check_for_srv=$(grep "@define srv" "${executable_path}/${source}")
-	if [[ "$check_for_srv" != "" ]]
+	create_srv_file "${executable_path}/${source}"
+	if [[ $class_files != "" ]]
 	then
-	    # check num of srvs
-	    num_of_srvs=$(grep "@define srv" "${executable_path}/${source}" | wc -l)
-	    # create srv file
-	    for (( srv=1; srv<=${num_of_srvs}; srv++ ))
+	    for (( num=1; num<=${num_of_class_files}; num++ ))
 	    do
-		srv_name=$(awk "/<aero_startup\//{i++}i==${srv}{print; exit}" "${executable_path}/${source}" | cut -d '/' -f2 | cut -d '.' -f1)
-		srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
-		if [[ "$num_of_srvs" -gt "1" ]]
-		then
-		    awk "/@define srv ${srv}/,/\*\//" "${executable_path}/${source}" > $srv_file
-		else
-		    awk "/@define srv/,/\*\//" "${executable_path}/${source}" > $srv_file
-		fi
-		sed -i "/@define/d" $srv_file
-		sed -i "/\*\//d" $srv_file
-		sed -i 's/^[ \t]*//' $srv_file
-		# add srv generation to CMakeLists.txt
-		check_if_exists=$(grep "${srv_name}.srv" $cmake_file)
-		if [[ "$check_if_exists" == "" ]]
-		then
-		    sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
-		    write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
-		    write_to_line=$(($write_to_line + 3))
-		    echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-		fi
+		file=$(echo $class_files | awk '{print $'$num'}')
+		create_srv_file "$(rospack find aero_description)/../aero_startup/${file}"
 	    done
 	fi
     fi
