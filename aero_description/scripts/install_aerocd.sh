@@ -12,6 +12,7 @@ function aerocd() {
         return
     fi
     file=\$(find \$(rospack find aero_startup)/ -name \"\$1*\" | sed 's:/[^/]*\$::' | sort -u)
+    num=\$(find \$(rospack find aero_startup)/ -name \"\$1*\" | sed 's:/[^/]*\$::' | sort -u | wc -l)
     if [[ \"\$num\" -gt \"1\" ]]
     then
         if [[ \$2 == \"\" ]]
