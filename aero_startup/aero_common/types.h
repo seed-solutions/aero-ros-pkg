@@ -23,6 +23,14 @@ namespace aero
     float y;
     float z;
   };
+
+  struct box
+  {
+    xyz center;
+    xyz max_bound;
+    xyz min_bound;
+    float points;
+  };
 }
 
 #endif
