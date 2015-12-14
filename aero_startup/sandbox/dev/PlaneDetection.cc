@@ -15,17 +15,6 @@
 
 namespace aero
 {
-  struct box
-  {
-    xyz center;
-    xyz max_bound;
-    xyz min_bound;
-    float points;
-  };
-}
-
-namespace aero
-{
   namespace common
   {
 
@@ -98,6 +87,8 @@ namespace aero
 
     protected: void SubscribePoints(
 	const sensor_msgs::PointCloud2::ConstPtr& _msg);
+
+    public: std::vector<Eigen::Vector3f> GetObjectVertices(aero::box _region);
 
     protected: ros::Subscriber point_cloud_listener_;
 
@@ -393,6 +384,9 @@ aero::box KmeansGapClustering::GetLargestCluster()
       largest_cluster = cluster_list_[i].points;
     }
 
+  if (cluster_list_.size() == 0)
+    return {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, 0};
+
   return cluster_list_[max_id];
 }
 
@@ -592,6 +586,26 @@ PlaneDetectedPointCloud::~PlaneDetectedPointCloud()
 }
 
 //////////////////////////////////////////////////
+std::vector<Eigen::Vector3f> PlaneDetectedPointCloud::GetObjectVertices(
+    aero::box _region)
+{
+  std::vector<Eigen::Vector3f> object;
+  object.reserve(vertices_.size());
+
+  for (unsigned int i = 0; i < vertices_.size(); ++i)
+    if (vertices_[i].x() < _region.max_bound.x &&
+	vertices_[i].x() > _region.min_bound.x &&
+	vertices_[i].y() < _region.max_bound.y &&
+	vertices_[i].y() > _region.min_bound.y &&
+	vertices_[i].z() < _region.max_bound.z &&
+	vertices_[i].z() > _region.min_bound.z)
+      object.push_back(vertices_[i]);
+
+  object.resize(object.size());
+  return object;
+}
+
+//////////////////////////////////////////////////
 void PlaneDetectedPointCloud::SubscribePoints(
     const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
@@ -785,7 +799,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
   // kmeans++ gap clustrering
 
   kmeans_->ExtractClusters(vertices_);
-  // kmeans_->GetLargestCluster();
+  GetObjectVertices(kmeans_->GetLargestCluster());
 
   // now we have the points on the plane
 
