@@ -35,7 +35,7 @@ void ClusteredCloud::Subscribe(
   clouds_.reserve(num_of_clusters);
 
   int data_idx = 0;
-  for (unsigned int i = 1; i < num_of_clusters; ++i)
+  for (unsigned int i = 1; i <= num_of_clusters; ++i)
   {
     int points_in_cluster = _points->layout.dim[i].size;
     std::vector<Eigen::Vector3f> points;
