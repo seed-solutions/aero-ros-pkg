@@ -75,12 +75,24 @@ create_srv_file() {
     fi
 }
 
+executable_name=""
 while read line
 do
     header=$(echo $line | cut -d: -f1)
     proto=$(echo $header | awk '{print $1}')
     if [[ $proto == "#" ]] # comment out
     then
+	continue
+    elif [[ $proto == "remap" ]]
+    then
+	from=$(echo $line | awk '{print $2}')
+	to=$(echo $line | awk '{print $4}')
+	write_to_line=$(grep -n -m 1 "type=\"${executable_name}\" output=\"screen\"/>" $launch_file | cut -d: -f1)
+	write_to_line=$(($write_to_line + 1))
+	sed -i "s@type=\"${executable_name}\" output=\"screen\"/>@type=\"${executable_name}\" output=\"screen\">@" $launch_file
+	echo "${tab2}${tab2}<remap from=\"${from}\" to=\"${to}\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+	write_to_line=$(($write_to_line + 1))
+	echo "${tab2}</node>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
 	continue
     fi
     executable_name=$(echo $header | awk '{print $2}')
