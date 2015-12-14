@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include "sensor_msgs/PointCloud2.h"
+#include "std_msgs/Float32MultiArray.h"
 #include <Eigen/Core>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_types.h>
@@ -30,6 +31,8 @@ namespace aero
     protected: bool Reconfigure(aero_startup::PointXYZHSI::Request &_req,
 				aero_startup::PointXYZHSI::Response &_res);
 
+    public: bool GetTiming();
+
     public: Eigen::Vector3f GetCenter();
 
     public: std::vector<Eigen::Vector3f> GetVertices();
@@ -45,6 +48,8 @@ namespace aero
     public: void SetHSIMax(aero::hsi _value);
 
     public: void SetHSIMin(aero::hsi _value);
+
+    protected: bool timing_;
 
     protected: Eigen::Vector3f center_;
 
@@ -65,6 +70,8 @@ namespace aero
     protected: ros::NodeHandle nh_;
 
     protected: ros::ServiceServer filter_service_;
+
+    protected: ros::Publisher points_publisher_;
     };
 
     typedef std::shared_ptr<PointCloudSensor> PointCloudSensorPtr;

@@ -2,7 +2,7 @@
 #define _AERO_PERCEPTION_OBJECT_FEATURES_H_
 
 #include <ros/ros.h>
-#include "sensor_msgs/PointCloud2.h"
+#include "std_msgs/Float32MultiArray.h"
 #include <Eigen/Core>
 #include <Eigen/SVD>
 #include <pcl_conversions/pcl_conversions.h>
@@ -26,13 +26,17 @@ namespace aero
     {
     public: ObjectFeatures();
 
+    public: explicit ObjectFeatures(ros::NodeHandle _nh);
+
     public: ~ObjectFeatures();
 
     public: void ExtractObjectFeatures(
-	Eigen::Vector3f _center, std::vector<Eigen::Vector3f> _vertices,
-	pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud);
+	std::vector<Eigen::Vector3f> _vertices);
 
-    private: void BroadcastTf();
+    protected: void Subscribe(
+        const std_msgs::Float32MultiArray::ConstPtr& _points);
+
+    protected: void BroadcastTf();
 
     public: int GetStatus();
 
@@ -57,6 +61,12 @@ namespace aero
     protected: int lost_count_;
 
     protected: static const int lost_threshold_ = 30;
+
+    protected: ros::NodeHandle nh_;
+
+    protected: ros::Subscriber subscriber_;
+
+    protected: int target_;
     };
 
     typedef std::shared_ptr<ObjectFeatures> ObjectFeaturesPtr;

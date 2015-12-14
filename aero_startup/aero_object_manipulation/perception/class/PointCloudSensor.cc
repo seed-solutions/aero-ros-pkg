@@ -9,6 +9,9 @@ PointCloudSensor::PointCloudSensor(ros::NodeHandle _nh) : nh_(_nh)
   filter_service_ =
       nh_.advertiseService("/point_cloud/perception_area",
 			   &PointCloudSensor::Reconfigure, this);
+  points_publisher_ =
+      nh_.advertise<std_msgs::Float32MultiArray>("/point_cloud/points", 1000);
+  timing_ = false;
 }
 
 //////////////////////////////////////////////////
@@ -34,6 +37,12 @@ bool PointCloudSensor::Reconfigure(aero_startup::PointXYZHSI::Request  &_req,
   space_min_.z = _req.z;
   _res.status = 1;
   return true;
+}
+
+//////////////////////////////////////////////////
+bool PointCloudSensor::GetTiming()
+{
+  return timing_;
 }
 
 //////////////////////////////////////////////////
