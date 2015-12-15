@@ -209,9 +209,9 @@ void ClusteredCloud::PublishLargestCluster()
     for (unsigned int j = 0; j < clouds_[max_id].size(); ++j)
     {
       int point_idx = j * dim.stride;
-      p_msg.data[point_idx + j] = clouds_[max_id][j].x();
-      p_msg.data[point_idx + j + 1] = clouds_[max_id][j].y();
-      p_msg.data[point_idx + j + 2] = clouds_[max_id][j].z();
+      p_msg.data[point_idx] = clouds_[max_id][j].x();
+      p_msg.data[point_idx + 1] = clouds_[max_id][j].y();
+      p_msg.data[point_idx + 2] = clouds_[max_id][j].z();
     }
   }
 
