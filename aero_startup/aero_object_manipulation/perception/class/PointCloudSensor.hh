@@ -12,7 +12,9 @@
 #include <pcl_ros/transforms.h>
 #include <pcl/point_types.h>
 #include <aero_startup/PointXYZHSI.h>
+#include <aero_startup/ProcessSleep.h>
 #include "aero_common/types.h"
+#include "aero_common/status.h"
 
 namespace aero
 {
@@ -30,6 +32,9 @@ namespace aero
 
     protected: bool Reconfigure(aero_startup::PointXYZHSI::Request &_req,
 				aero_startup::PointXYZHSI::Response &_res);
+
+    public: bool ProcessSleep(aero_startup::ProcessSleep::Request &_req,
+			      aero_startup::ProcessSleep::Response &_res);
 
     public: bool GetTiming();
 
@@ -51,6 +56,8 @@ namespace aero
 
     protected: bool timing_;
 
+    protected: bool sleep_;
+
     protected: Eigen::Vector3f center_;
 
     protected: std::vector<Eigen::Vector3f> vertices_;
@@ -71,6 +78,8 @@ namespace aero
 
     protected: ros::ServiceServer filter_service_;
 
+    protected: ros::ServiceServer sleep_service_;
+
     protected: ros::Publisher points_publisher_;
     };
 
@@ -82,7 +91,7 @@ namespace aero
 #endif
 
 /*
-  @define srv
+  @define srv 1
   float32 x_cap
   float32 y_cap
   float32 z_cap
@@ -99,4 +108,12 @@ namespace aero
   ---
   int8 status
   bool prior_setting
+*/
+
+/*
+  @define srv 2
+  int8 sleep
+  string message
+  ---
+  int8 status
 */

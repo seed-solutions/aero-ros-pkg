@@ -40,6 +40,19 @@ bool PointCloudSensor::Reconfigure(aero_startup::PointXYZHSI::Request  &_req,
 }
 
 //////////////////////////////////////////////////
+bool PointCloudSensor::ProcessSleep(aero_startup::ProcessSleep::Request  &_req,
+				    aero_startup::ProcessSleep::Response &_res)
+{
+  ROS_WARN("in sensor : %d", _req.sleep);
+
+  sleep_ = _req.sleep;
+  if (sleep_) ROS_WARN("sleeping sensor process");
+  else ROS_WARN("activating sensor process");
+  _res.status = aero::status::success;
+  return true;
+}
+
+//////////////////////////////////////////////////
 bool PointCloudSensor::GetTiming()
 {
   return timing_;

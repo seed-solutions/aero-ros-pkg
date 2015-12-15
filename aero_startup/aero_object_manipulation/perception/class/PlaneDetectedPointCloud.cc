@@ -18,9 +18,14 @@ PlaneDetectedPointCloud::PlaneDetectedPointCloud(ros::NodeHandle _nh)
   point_cloud_listener_ =
       nh_.subscribe("/stereo/points2", 1000,
 		    &PlaneDetectedPointCloud::SubscribePoints, this);
+  sleep_service_ =
+      nh_.advertiseService("/plane_detection/sleep",
+			   &PointCloudSensor::ProcessSleep,
+			   dynamic_cast<PointCloudSensor*>(this));
 
   pcl_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
       "/visualized_object_pcl", 100);
+  sleep_ = false;
 }
 
 //////////////////////////////////////////////////
@@ -32,6 +37,8 @@ PlaneDetectedPointCloud::~PlaneDetectedPointCloud()
 void PlaneDetectedPointCloud::SubscribePoints(
     const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
+  if (sleep_) return;
+
   Eigen::Vector3f manipulation_space_max(
       space_max_.x, space_max_.y, space_max_.z);
   Eigen::Vector3f manipulation_space_min(
