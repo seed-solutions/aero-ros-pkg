@@ -1,4 +1,5 @@
 *~
+*.pyc
 aero_startup/aero_controller_manager/AeroJointStatePublisher.cc
 aero_startup/aero_controller_manager/AeroTorsoController.cc
 aero_startup/aero_controller_manager/AeroHandController.cc
