@@ -4,21 +4,29 @@ using namespace aero;
 using namespace perception;
 
 //////////////////////////////////////////////////
-ObjectFeatures::ObjectFeatures()
-{
-  status_ = 0;
-  lost_count_ = lost_threshold_;
-}
-
-//////////////////////////////////////////////////
 ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh) : nh_(_nh)
 {
   status_ = 0;
   lost_count_ = lost_threshold_;
   target_ = 1;
 
+  base_to_eye_.position.x = 0;
+  base_to_eye_.position.y = 0;
+  base_to_eye_.position.z = 0;
+  base_to_eye_.orientation.x = 1;
+  base_to_eye_.orientation.y = 0;
+  base_to_eye_.orientation.z = 0;
+  base_to_eye_.orientation.w = 0;
+
   subscriber_ = nh_.subscribe("/point_cloud/points", 100,
 			      &ObjectFeatures::Subscribe, this);
+  camera_pseudo_tf_subscriber_ =
+      nh_.subscribe("/matrix/base_to_eye", 100,
+		    &ObjectFeatures::SubscribeCameraPseudoTf, this);
+  pose_publisher_left_ =
+      nh_.advertise<geometry_msgs::Pose>("/object/left_pose", 1000);
+  pose_publisher_right_ =
+      nh_.advertise<geometry_msgs::Pose>("/object/right_pose", 1000);
 }
 
 //////////////////////////////////////////////////
@@ -177,47 +185,32 @@ void ObjectFeatures::ExtractObjectFeatures(
 
   // Transform Object Pose to Grasping Coordinates
 
-  static tf::TransformListener tl;
-
-  ros::Time now = ros::Time::now();
-  tl.waitForTransform("leg_base_link", "ps4eye_frame", now, ros::Duration(2.0));
-
-  try
-  {
-    tl.lookupTransform("leg_base_link", "ps4eye_frame", now, base_to_eye_);
-    Eigen::Quaternionf base_to_eye_q =
-      Eigen::Quaternionf(base_to_eye_.getRotation().w(),
-			 base_to_eye_.getRotation().x(),
-			 base_to_eye_.getRotation().y(),
-			 base_to_eye_.getRotation().z());
-    Eigen::Quaternionf world_q = base_to_eye_q * pose_q;
-    target_center_world_ =
-      Eigen::Vector3f(base_to_eye_.getOrigin().x(),
-		      base_to_eye_.getOrigin().y(),
-		      base_to_eye_.getOrigin().z()) + base_to_eye_q * center;
-    // X : axis, Z : normal -> X : normal , Z : axis
-    Eigen::Quaternionf grasp_q = // rotate on axis Y by M_PI/2
+  Eigen::Quaternionf base_to_eye_q =
+      Eigen::Quaternionf(base_to_eye_.orientation.x,
+			 base_to_eye_.orientation.y,
+			 base_to_eye_.orientation.z,
+			 base_to_eye_.orientation.w);
+  Eigen::Quaternionf world_q = base_to_eye_q * pose_q;
+  target_center_world_ =
+      Eigen::Vector3f(base_to_eye_.position.x,
+		      base_to_eye_.position.y,
+		      base_to_eye_.position.z) + base_to_eye_q * center;
+  // X : axis, Z : normal -> X : normal , Z : axis
+  Eigen::Quaternionf grasp_q = // rotate on axis Y by M_PI/2
       world_q * Eigen::Quaternionf(0.707107, 0.0, 0.707107, 0.0);
-    Eigen::Vector3f coordinate_sgn = grasp_q * Eigen::Vector3f(0, 0, 1);
-    target_pose_world_left_ = grasp_q;
-    target_pose_world_right_ = grasp_q;
-    // reset coords to grasp-able direction if needed
-    if (coordinate_sgn.dot(Eigen::Vector3f(-1, -1, 1)) <
-	coordinate_sgn.dot(Eigen::Vector3f(1, 1, -1)))
-      target_pose_world_left_ = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
-    if (coordinate_sgn.dot(Eigen::Vector3f(-1, 1, 1)) <
-	coordinate_sgn.dot(Eigen::Vector3f(1, -1, -1)))
-      target_pose_world_right_ = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
+  Eigen::Vector3f coordinate_sgn = grasp_q * Eigen::Vector3f(0, 0, 1);
+  target_pose_world_left_ = grasp_q;
+  target_pose_world_right_ = grasp_q;
+  // reset coords to grasp-able direction if needed
+  if (coordinate_sgn.dot(Eigen::Vector3f(-1, -1, 1)) <
+      coordinate_sgn.dot(Eigen::Vector3f(1, 1, -1)))
+    target_pose_world_left_ = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
+  if (coordinate_sgn.dot(Eigen::Vector3f(-1, 1, 1)) <
+      coordinate_sgn.dot(Eigen::Vector3f(1, -1, -1)))
+    target_pose_world_right_ = grasp_q * Eigen::Quaternionf(0.0, 1.0, 0.0, 0.0);
 
-    this->BroadcastTf();
-    status_ = aero::status::success;
-  }
-  catch (std::exception e)
-  {
-    ROS_ERROR("failed tf listen");
-    this->BroadcastTf();
-    status_ = aero::status::warning;
-  }
+  this->BroadcastTf();
+  status_ = aero::status::success;
 
   // Export results (mainly for debug)
 
@@ -255,6 +248,20 @@ void ObjectFeatures::Subscribe(
   }
 
   this->ExtractObjectFeatures(vertices);
+  this->BroadcastPose();
+}
+
+//////////////////////////////////////////////////
+void ObjectFeatures::SubscribeCameraPseudoTf(
+    const geometry_msgs::Pose::ConstPtr& _pose)
+{
+  base_to_eye_.position.x = _pose->position.x;
+  base_to_eye_.position.y = _pose->position.y;
+  base_to_eye_.position.z = _pose->position.z;
+  base_to_eye_.orientation.x = _pose->orientation.x;
+  base_to_eye_.orientation.y = _pose->orientation.y;
+  base_to_eye_.orientation.z = _pose->orientation.z;
+  base_to_eye_.orientation.w = _pose->orientation.w;
 }
 
 //////////////////////////////////////////////////
@@ -282,13 +289,41 @@ void ObjectFeatures::BroadcastTf()
 }
 
 //////////////////////////////////////////////////
+void ObjectFeatures::BroadcastPose()
+{
+  geometry_msgs::Point position;
+  position.x = target_center_world_[0];
+  position.y = target_center_world_[1];
+  position.z = target_center_world_[2];
+  geometry_msgs::Quaternion orientation_l;
+  orientation_l.x = target_pose_world_left_.w();
+  orientation_l.y = target_pose_world_left_.x();
+  orientation_l.z = target_pose_world_left_.y();
+  orientation_l.w = target_pose_world_left_.z();
+  geometry_msgs::Quaternion orientation_r;
+  orientation_r.x = target_pose_world_left_.w();
+  orientation_r.y = target_pose_world_left_.x();
+  orientation_r.z = target_pose_world_left_.y();
+  orientation_r.w = target_pose_world_left_.z();
+  geometry_msgs::Pose pose_l;
+  pose_l.position = position;
+  pose_l.orientation = orientation_l;
+  geometry_msgs::Pose pose_r;
+  pose_r.position = position;
+  pose_r.orientation = orientation_r;
+
+  pose_publisher_left_.publish(pose_l);
+  pose_publisher_right_.publish(pose_r);
+}
+
+//////////////////////////////////////////////////
 int ObjectFeatures::GetStatus()
 {
   return status_;
 }
 
 //////////////////////////////////////////////////
-tf::StampedTransform ObjectFeatures::GetBaseToEye()
+geometry_msgs::Pose ObjectFeatures::GetBaseToEye()
 {
   return base_to_eye_;
 }

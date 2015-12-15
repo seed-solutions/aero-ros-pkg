@@ -50,28 +50,22 @@ void PlaneDetectedPointCloud::SubscribePoints(
     height_range_total / height_range_per_region_ + 1;
   float lowest_height_level = -height_range_total;
 
-  static tf::TransformListener tl;
-  tf::StampedTransform base_to_eye;
   Eigen::Quaternionf base_to_eye_q;
-  ros::Time now = ros::Time::now();
-  tl.waitForTransform("leg_base_link", "ps4eye_frame",
-		      now, ros::Duration(2.0));
 
-  try
+  // check if pseudo tf is ready
+  if (fabs(base_to_eye_.position.x) < 0.001 &&
+      fabs(base_to_eye_.position.y) < 0.001 &&
+      fabs(base_to_eye_.position.z) < 0.001) // camera = base_link not expected
   {
-    tl.lookupTransform("leg_base_link", "ps4eye_frame", now, base_to_eye);
-  }
-  catch (std::exception e)
-  {
-    ROS_ERROR("failed tf listen");
+    ROS_ERROR("invalid pseudo camera tf");
     return;
   }
 
   base_to_eye_q =
-    Eigen::Quaternionf(base_to_eye.getRotation().w(),
-		       base_to_eye.getRotation().x(),
-		       base_to_eye.getRotation().y(),
-		       base_to_eye.getRotation().z());
+    Eigen::Quaternionf(base_to_eye_.orientation.x,
+		       base_to_eye_.orientation.y,
+		       base_to_eye_.orientation.z,
+		       base_to_eye_.orientation.w);
   desk_plane_norm_ =
     base_to_eye_q.inverse() * Eigen::Vector3f(0, 0, -1);
 

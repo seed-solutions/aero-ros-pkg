@@ -6,17 +6,41 @@ using namespace perception;
 //////////////////////////////////////////////////
 PointCloudSensor::PointCloudSensor(ros::NodeHandle _nh) : nh_(_nh)
 {
+  base_to_eye_.position.x = 0;
+  base_to_eye_.position.y = 0;
+  base_to_eye_.position.z = 0;
+  base_to_eye_.orientation.x = 1;
+  base_to_eye_.orientation.y = 0;
+  base_to_eye_.orientation.z = 0;
+  base_to_eye_.orientation.w = 0;
+
   filter_service_ =
       nh_.advertiseService("/point_cloud/perception_area",
 			   &PointCloudSensor::Reconfigure, this);
   points_publisher_ =
       nh_.advertise<std_msgs::Float32MultiArray>("/point_cloud/points", 1000);
+  camera_pseudo_tf_subscriber_ =
+      nh_.subscribe("/matrix/base_to_eye", 100,
+		    &PointCloudSensor::SubscribeCameraPseudoTf, this);
   timing_ = false;
 }
 
 //////////////////////////////////////////////////
 PointCloudSensor::~PointCloudSensor()
 {
+}
+
+//////////////////////////////////////////////////
+void PointCloudSensor::SubscribeCameraPseudoTf(
+    const geometry_msgs::Pose::ConstPtr& _pose)
+{
+  base_to_eye_.position.x = _pose->position.x;
+  base_to_eye_.position.y = _pose->position.y;
+  base_to_eye_.position.z = _pose->position.z;
+  base_to_eye_.orientation.x = _pose->orientation.x;
+  base_to_eye_.orientation.y = _pose->orientation.y;
+  base_to_eye_.orientation.z = _pose->orientation.z;
+  base_to_eye_.orientation.w = _pose->orientation.w;
 }
 
 //////////////////////////////////////////////////

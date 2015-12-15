@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include "std_msgs/Float32MultiArray.h"
+#include "geometry_msgs/Pose.h"
 #include <Eigen/Core>
 #include <Eigen/SVD>
 #include <pcl_conversions/pcl_conversions.h>
@@ -24,8 +25,6 @@ namespace aero
 
     class ObjectFeatures
     {
-    public: ObjectFeatures();
-
     public: explicit ObjectFeatures(ros::NodeHandle _nh);
 
     public: ~ObjectFeatures();
@@ -36,11 +35,16 @@ namespace aero
     protected: void Subscribe(
         const std_msgs::Float32MultiArray::ConstPtr& _points);
 
+    protected: void SubscribeCameraPseudoTf(
+        const geometry_msgs::Pose::ConstPtr& _pose);
+
     protected: void BroadcastTf();
+
+    protected: void BroadcastPose();
 
     public: int GetStatus();
 
-    public: tf::StampedTransform GetBaseToEye();
+    public: geometry_msgs::Pose GetBaseToEye();
 
     public: Eigen::Vector3f GetTargetCenterCamera();
 
@@ -56,7 +60,7 @@ namespace aero
 
     protected: Eigen::Quaternionf target_pose_world_right_;
 
-    protected: tf::StampedTransform base_to_eye_;
+    protected: geometry_msgs::Pose base_to_eye_;
 
     protected: int lost_count_;
 
@@ -64,7 +68,13 @@ namespace aero
 
     protected: ros::NodeHandle nh_;
 
+    protected: ros::Publisher pose_publisher_left_;
+
+    protected: ros::Publisher pose_publisher_right_;
+
     protected: ros::Subscriber subscriber_;
+
+    protected: ros::Subscriber camera_pseudo_tf_subscriber_;
 
     protected: int target_;
     };
