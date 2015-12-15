@@ -90,15 +90,16 @@ void KmeansGapClustering::ExtractClusters(
   if (abs(static_cast<int>(points.size() - num_points_in_field_)) >= 300)
     ROS_WARN("qualifies points");
 
-  // if not much of a change in scene, don't calculate
-  if (fabs(max.x() - field_range_max_.x) < 0.2 && // ps4eye is bad at x
-      fabs(min.x() - field_range_min_.x) < 0.2 && // ps4eye is bad at x
-      fabs(max.y() - field_range_max_.y) < 0.1 &&
-      fabs(min.y() - field_range_min_.y) < 0.1 &&
-      fabs(max.z() - field_range_max_.z) < 0.1 &&
-      fabs(min.z() - field_range_min_.z) < 0.1 &&
-      abs(static_cast<int>(points.size() - num_points_in_field_)) < 300)
-    return;
+  if (cluster_list_.size() > 0) // keep calculating if no clusters are found
+    // if not much of a change in scene, don't calculate
+    if (fabs(max.x() - field_range_max_.x) < 0.2 && // ps4eye is bad at x
+	fabs(min.x() - field_range_min_.x) < 0.2 && // ps4eye is bad at x
+	fabs(max.y() - field_range_max_.y) < 0.1 &&
+	fabs(min.y() - field_range_min_.y) < 0.1 &&
+	fabs(max.z() - field_range_max_.z) < 0.1 &&
+	fabs(min.z() - field_range_min_.z) < 0.1 &&
+	abs(static_cast<int>(points.size() - num_points_in_field_)) < 300)
+      return;
 
   // if scene was enlarged by more than 15cm, clear noises
   // when the scene was shrinken, that could mean noises were eliminated
