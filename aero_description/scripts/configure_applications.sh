@@ -76,6 +76,7 @@ create_srv_file() {
 }
 
 executable_name=""
+node_args=0
 while read line
 do
     header=$(echo $line | cut -d: -f1)
@@ -87,14 +88,21 @@ do
     then
 	from=$(echo $line | awk '{print $2}')
 	to=$(echo $line | awk '{print $4}')
-	write_to_line=$(grep -n -m 1 "type=\"${executable_name}\" output=\"screen\"/>" $launch_file | cut -d: -f1)
-	write_to_line=$(($write_to_line + 1))
 	sed -i "s@type=\"${executable_name}\" output=\"screen\"/>@type=\"${executable_name}\" output=\"screen\">@" $launch_file
-	echo "${tab2}${tab2}<remap from=\"${from}\" to=\"${to}\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+	write_to_line=$(grep -n -m 1 "type=\"${executable_name}\" output=\"screen\">" $launch_file | cut -d: -f1)
 	write_to_line=$(($write_to_line + 1))
-	echo "${tab2}</node>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+	echo "${tab2}${tab2}<remap from=\"${from}\" to=\"${to}\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+	node_args=$(($node_args + 1))
+	node_end_line=$(($write_to_line + $node_args))
+	has_node_end=$(sed -n "${node_end_line}p" $launch_file | grep "</node>")
+	if [[ $has_node_end == "" ]]
+	then
+	    write_to_line=$(($write_to_line + 1))
+	    echo "${tab2}</node>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
+	fi
 	continue
     fi
+    node_args=0
     executable_name=$(echo $header | awk '{print $2}')
     body=$(echo $line | cut -d: -f2)
     executable_dir=$(echo $body | awk '{print $1}')
