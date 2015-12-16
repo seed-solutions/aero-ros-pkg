@@ -39,6 +39,15 @@ void PlaneDetectedPointCloud::SubscribePoints(
 {
   if (sleep_) return;
 
+  // check if pseudo tf is ready
+  if (fabs(base_to_eye_.position.x) < 0.001 &&
+      fabs(base_to_eye_.position.y) < 0.001 &&
+      fabs(base_to_eye_.position.z) < 0.001) // camera = base_link not expected
+  {
+    ROS_ERROR("invalid pseudo camera tf");
+    return;
+  }
+
   Eigen::Vector3f manipulation_space_max(
       space_max_.x, space_max_.y, space_max_.z);
   Eigen::Vector3f manipulation_space_min(
@@ -50,18 +59,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
     height_range_total / height_range_per_region_ + 1;
   float lowest_height_level = -height_range_total;
 
-  Eigen::Quaternionf base_to_eye_q;
-
-  // check if pseudo tf is ready
-  if (fabs(base_to_eye_.position.x) < 0.001 &&
-      fabs(base_to_eye_.position.y) < 0.001 &&
-      fabs(base_to_eye_.position.z) < 0.001) // camera = base_link not expected
-  {
-    ROS_ERROR("invalid pseudo camera tf");
-    return;
-  }
-
-  base_to_eye_q =
+  Eigen::Quaternionf base_to_eye_q =
     Eigen::Quaternionf(base_to_eye_.orientation.x,
 		       base_to_eye_.orientation.y,
 		       base_to_eye_.orientation.z,

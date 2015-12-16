@@ -7,7 +7,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   aero::common::ClusteredCloudPtr objects(
       new aero::common::ClusteredCloud(nh));
-  objects->SetPublishStyle([=](){ objects->PublishAllClusters(); });
+  objects->SetPublishStyle([=](){ objects->PublishLargestCluster(); });
 
   ros::Rate r(30);
 
