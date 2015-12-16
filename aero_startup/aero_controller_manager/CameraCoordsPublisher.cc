@@ -37,7 +37,7 @@ void RobotStates(
   static tf::TransformListener tl;
   ros::Time now = ros::Time::now();
   tl.waitForTransform("leg_base_link", "ps4eye_frame",
-		      now, ros::Duration(1.0));
+		      now, ros::Duration(2.0));
   try
   {
     tf::StampedTransform st;
