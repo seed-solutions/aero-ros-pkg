@@ -15,4 +15,6 @@ aero_startup/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc
 aero_startup/aero_object_manipulation/manipulation/AeroReachControllerLarm.cc
 aero_startup/aero_object_manipulation/manipulation/AeroReachControllerTorsoLarm.cc
 aero_startup/aero_object_manipulation/manipulation/launch/
+aero_startup/aero_kinect/windows/KinectSimpleSkeletonServer/packages/
+aero_startup/aero_kinect/windows/KinectSimpleSkeletonServer/KinectSimpleSkeletonServer/obj/
 aeroeus/demo/
