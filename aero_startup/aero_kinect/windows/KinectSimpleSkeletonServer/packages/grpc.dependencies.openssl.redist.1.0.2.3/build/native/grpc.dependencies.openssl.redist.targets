@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="grpc_dependencies_openssl_redist_init;grpc_dependencies_openssl_redist_init_2">
+  <PropertyGroup Label="Default initializers for properties">
+    <Linkage-grpc_dependencies_openssl_redist Condition="'$(Linkage-grpc_dependencies_openssl_redist)' == ''">dynamic</Linkage-grpc_dependencies_openssl_redist>
+    <CallingConvention-grpc_dependencies_openssl_redist Condition="'$(CallingConvention-grpc_dependencies_openssl_redist)' == ''">cdecl</CallingConvention-grpc_dependencies_openssl_redist>
+  </PropertyGroup>
+  <Target Name="grpc_dependencies_openssl_redist_init">
+    <grpc_dependencies_openssl_redist_Contains Text="Linkage-dynamic" Library="grpc_dependencies_openssl_redist" Value="dynamic" Condition="'$(Linkage-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="Linkage-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="Linkage-static" Library="grpc_dependencies_openssl_redist" Value="static" Condition="'$(Linkage-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="Linkage-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="Linkage-ltcg" Library="grpc_dependencies_openssl_redist" Value="ltcg" Condition="'$(Linkage-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="Linkage-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="Linkage-sxs" Library="grpc_dependencies_openssl_redist" Value="sxs" Condition="'$(Linkage-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="Linkage-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="CallingConvention-cdecl" Library="grpc_dependencies_openssl_redist" Value="cdecl" Condition="'$(CallingConvention-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="CallingConvention-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="CallingConvention-stdcall" Library="grpc_dependencies_openssl_redist" Value="stdcall" Condition="'$(CallingConvention-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="CallingConvention-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="CallingConvention-fastcall" Library="grpc_dependencies_openssl_redist" Value="fastcall" Condition="'$(CallingConvention-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="CallingConvention-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="CallingConvention-thiscall" Library="grpc_dependencies_openssl_redist" Value="thiscall" Condition="'$(CallingConvention-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="CallingConvention-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+    <grpc_dependencies_openssl_redist_Contains Text="CallingConvention-clrcall" Library="grpc_dependencies_openssl_redist" Value="clrcall" Condition="'$(CallingConvention-grpc_dependencies_openssl_redist)'==''">
+      <Output TaskParameter="Result" PropertyName="CallingConvention-grpc_dependencies_openssl_redist" />
+    </grpc_dependencies_openssl_redist_Contains>
+  </Target>
+  <Target Name="grpc_dependencies_openssl_redist_init_2">
+    <SetEnv Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Release\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Release\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\x64\Release\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Release\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Debug\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Debug\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\x64\Debug\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+    <SetEnv Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" Name="PATH" Prefix="true" Value="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Debug\dynamic">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="PATH" />
+    </SetEnv>
+  </Target>
+  <ItemGroup Label="v100 and Win32 and Release and dynamic" Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'">
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Release\dynamic\libeay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Release\dynamic\ssleay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup Label="v120 and Win32 and Release and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'">
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Release\dynamic\libeay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Release\dynamic\ssleay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup Label="v120 and x64 and Release and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'">
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Release\dynamic\libeay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Release\dynamic\ssleay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup Label="v100 and Win32 and Debug and dynamic" Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'">
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Debug\dynamic\libeay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Debug\dynamic\ssleay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup Label="v120 and Win32 and Debug and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'">
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Debug\dynamic\libeay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Debug\dynamic\ssleay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup Label="v120 and x64 and Debug and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'">
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Debug\dynamic\libeay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Debug\dynamic\ssleay32.dll" Condition="(('$(AppContainerApplication.ToLower())' == 'true')) OR (('$(TargetPlatformIdentifier.ToLower())' == 'windows phone' And '$(TargetPlatformVersion)' == '8.0'))">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)\default-propertiesui.xml" />
+  </ItemGroup>
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild" AfterTargets="AfterBuild" />
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild_v100_and_Win32_and_Release_and_dynamic" Label="v100 and Win32 and Release and dynamic" Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" AfterTargets="grpc_dependencies_openssl_redist_AfterBuild">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Release\dynamic\libeay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Release\dynamic\ssleay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild_v120_and_Win32_and_Release_and_dynamic" Label="v120 and Win32 and Release and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" AfterTargets="grpc_dependencies_openssl_redist_AfterBuild">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Release\dynamic\libeay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Release\dynamic\ssleay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild_v120_and_x64_and_Release_and_dynamic" Label="v120 and x64 and Release and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) == -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" AfterTargets="grpc_dependencies_openssl_redist_AfterBuild">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Release\dynamic\libeay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Release\dynamic\ssleay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild_v100_and_Win32_and_Debug_and_dynamic" Label="v100 and Win32 and Debug and dynamic" Condition="'$(PlatformToolset.ToLower())' == 'v100' And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" AfterTargets="grpc_dependencies_openssl_redist_AfterBuild">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Debug\dynamic\libeay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v100\Win32\Debug\dynamic\ssleay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild_v120_and_Win32_and_Debug_and_dynamic" Label="v120 and Win32 and Debug and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'win32' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" AfterTargets="grpc_dependencies_openssl_redist_AfterBuild">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Debug\dynamic\libeay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\Win32\Debug\dynamic\ssleay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="grpc_dependencies_openssl_redist_AfterBuild_v120_and_x64_and_Debug_and_dynamic" Label="v120 and x64 and Debug and dynamic" Condition="( $(PlatformToolset.ToLower().IndexOf('v120')) &gt; -1 Or '$(PlatformToolset.ToLower())' == 'windowskernelmodedriver8.0' Or '$(PlatformToolset.ToLower())' == 'windowsapplicationfordrivers8.0' Or '$(PlatformToolset.ToLower())' == 'windowsusermodedriver8.0' ) And '$(Platform.ToLower())' == 'x64' And ( $(Configuration.ToLower().IndexOf('debug')) &gt; -1 ) And '$(Linkage-grpc_dependencies_openssl_redist.ToLower())' == 'dynamic'" AfterTargets="grpc_dependencies_openssl_redist_AfterBuild">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Debug\dynamic\libeay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../..//build/native/bin/v120\x64\Debug\dynamic\ssleay32.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <UsingTask TaskName="grpc_dependencies_openssl_redist_Contains" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" TaskFactory="CodeTaskFactory">
+    <ParameterGroup>
+      <Text Output="false" ParameterType="System.String" />
+      <Library Output="false" Required="true" ParameterType="System.String" />
+      <Value Output="false" Required="true" ParameterType="System.String" />
+      <Result Output="true" ParameterType="System.String" />
+    </ParameterGroup>
+    <Task>
+      <Code>Result = ((Text ?? "").Split(';').Contains(Library) ) ? Value : String.Empty;</Code>
+    </Task>
+  </UsingTask>
+</Project>
