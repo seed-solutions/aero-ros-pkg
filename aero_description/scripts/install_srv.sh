@@ -3,7 +3,7 @@
 srv_dir="$(rospack find aero_description)/../aero_startup/srv"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 
-ls_srv=$(ls $srv_dir)
+ls_srv=$(ls $srv_dir | tr '\n' ' ')
 num_of_srvs=$(ls $srv_dir | wc -l)
 tab2=$'  '
 

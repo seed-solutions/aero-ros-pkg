@@ -52,7 +52,7 @@ do
 	echo "add_executable(aero_controller_node" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	write_to_line=$(($write_to_line + 1))
 	dir="$(rospack find aero_description)/../aero_startup/aero_hardware_interface"
-	cc_files=$(find $dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}')
+	cc_files=$(find $dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
 	num_of_cc_files=$(find $dir -name "*.cc" | wc -l)
 	for (( num=1; num<=${num_of_cc_files}; num++ ))
 	do
@@ -102,7 +102,7 @@ do
     includes_main=$(find $copy_to_dir -name Main.cc 2>/dev/null)
     if [[ $includes_main != "" ]]
     then
-	cc_files=$(find $copy_to_dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}')
+	cc_files=$(find $copy_to_dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
 	num_of_cc_files=$(find $copy_to_dir -name "*.cc" | wc -l)
 	for (( num=1; num<=${num_of_cc_files}; num++ ))
 	do
