@@ -12,7 +12,6 @@ XYZHSIPointCloud::XYZHSIPointCloud(ros::NodeHandle _nh) : PointCloudSensor(_nh)
   space_max_ = {0.3, 0.3, 1.0};
   point_cloud_listener_ = nh_.subscribe("/stereo/points2", 1000,
 					&XYZHSIPointCloud::SubscribePoints, this);
-  // pcl_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/visualized_object_pcl", 100);
 }
 
 //////////////////////////////////////////////////
@@ -21,11 +20,13 @@ XYZHSIPointCloud::~XYZHSIPointCloud()
 }
 
 //////////////////////////////////////////////////
-void XYZHSIPointCloud::SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
+void XYZHSIPointCloud::SubscribePoints(
+    const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
   pcl::PCLPointCloud2 pcl;
   pcl_conversions::toPCL(*_msg, pcl);
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr raw(new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr raw(
+      new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::fromPCLPointCloud2(pcl, *raw);
 
   Eigen::Vector3f raw_center(0, 0, 0);
@@ -56,13 +57,14 @@ void XYZHSIPointCloud::SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr&
   raw_rgbs.resize(raw_rgbs.size());
   raw_center = raw_center * (1.0 / raw_vertices.size());
 
-  // ROS_INFO("found %d points", raw_vertices.size());
-  // ROS_INFO("hsi : [%d ~ %d, %d ~ %d, %d ~ %d]",
-  // 	   target_hsi_min.h, target_hsi_max.h, target_hsi_min.s, target_hsi_max.s,
-  // 	   target_hsi_min.i, target_hsi_max.i);
-  // ROS_INFO("xyz : [%f ~ %f, %f ~ %f, %f ~ %f]",
-  // 	   space_min.x, space_max.x, space_min.y, space_max.y,
-  // 	   space_min.z, space_max.z);
+  ROS_INFO("found %d points", raw_vertices.size());
+  ROS_INFO("hsi : [%d ~ %d, %d ~ %d, %d ~ %d]",
+           target_hsi_min_.h, target_hsi_max_.h,
+           target_hsi_min_.s, target_hsi_max_.s,
+           target_hsi_min_.i, target_hsi_max_.i);
+  ROS_INFO("xyz : [%f ~ %f, %f ~ %f, %f ~ %f]",
+           space_min_.x, space_max_.x, space_min_.y, space_max_.y,
+           space_min_.z, space_max_.z);
 
   Eigen::Vector3f raw_variance(0, 0, 0);
   std::vector<Eigen::Vector3f> raw_variances(raw_vertices.size());
@@ -74,10 +76,10 @@ void XYZHSIPointCloud::SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr&
 	 (raw_vertices[i][2] - raw_center[2]) * (raw_vertices[i][2] - raw_center[2]));
     raw_variance += raw_variances[i];
   }
-  raw_variance = raw_variance * (4.0 / raw_vertices.size()); // cutting 5% of points
+  raw_variance = raw_variance * (4.0 / raw_vertices.size()); // cutting 5%
 
-  cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
-  cloud_->points.reserve(raw_vertices.size());
+  // cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
+  // cloud_->points.reserve(raw_vertices.size());
 
   int vertices_count = 0;
   center_ = Eigen::Vector3f(0, 0, 0);
@@ -93,15 +95,37 @@ void XYZHSIPointCloud::SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr&
       vertices_.push_back(raw_vertices[i]);
       rgb_.push_back(raw_rgbs[i]);
       center_ += raw_vertices[i];
-      cloud_->points.push_back(pcl::PointXYZ(raw_vertices[i][0],
-					     raw_vertices[i][1], raw_vertices[i][2]));
+      // cloud_->points.push_back(pcl::PointXYZ(raw_vertices[i][0],
+      // 					     raw_vertices[i][1], raw_vertices[i][2]));
       ++vertices_count;
     }
 
   vertices_.resize(vertices_count);
   rgb_.resize(vertices_count);
-  cloud_->points.resize(vertices_count);
+  // cloud_->points.resize(vertices_count);
   center_ = center_ * (1.0 / vertices_count);
+
+  std_msgs::Float32MultiArray p_msg;
+  std_msgs::MultiArrayLayout layout;
+  std_msgs::MultiArrayDimension dim_head;
+  dim_head.label = "info";
+  dim_head.size = 0; // is not used
+  dim_head.stride = 1; // number of blocks
+  layout.dim.push_back(dim_head);
+  std_msgs::MultiArrayDimension dim;
+  dim.label = "block1";
+  dim.size = vertices_.size(); // number of points
+  dim.stride = 3; // number of data for each point
+  layout.dim.push_back(dim);
+  p_msg.layout = layout;
+  p_msg.data.reserve(dim.stride * dim.size);
+  for (unsigned int i = 0; i < vertices_.size(); ++i)
+  {
+    p_msg.data.push_back(vertices_[i].x());
+    p_msg.data.push_back(vertices_[i].y());
+    p_msg.data.push_back(vertices_[i].z());
+  }
+  points_publisher_.publish(p_msg);
 }
 
 //////////////////////////////////////////////////
