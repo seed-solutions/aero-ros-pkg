@@ -1,5 +1,16 @@
 #!/bin/bash
 
+executable_name=$1
+executable_file=''
+num_of_words=$(echo $executable_name | awk -F_ '{print NF}')
+for (( num=1; num<=$num_of_words; num++ ))
+do
+    word=$(echo $executable_name | awk -F_ '{print $'$num'}')
+    executable_file="${executable_file}${word^}"
+done
+
+executable_path="$(rospack find aero_description)/../aero_startup/aero_kinect/linux/$(echo $executable_file | cut -d. -f1)"
+executable_dir="aero_kinect/linux/$(echo $executable_file | cut -d. -f1)"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 
 # installation :
@@ -15,26 +26,44 @@ cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 # message(STATUS "grpc library : " ${GRPC_LIBRARY})
 # message(STATUS "grpc++ library : " ${GRPC++_LIBRARY})
 # message(STATUS "gpr library : " ${GPR_LIBRARY})
-# add_executable(kinect_client sandbox/IREX/KinectClient.cc
-#   sandbox/IREX/body_skeleton.pb.cc sandbox/IREX/body_skeleton.grpc.pb.cc)
-# target_link_libraries(kinect_client
-#   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
-#   ${GRPC++_LIBRARY} ${GRPC_LIBRARY} ${GPR_LIBRARY}
-#   ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} dl)
 # end installation
 
-awk "/# installation :/,/# end installation/" $(rospack find aero_description)/../aero_startup/sandbox/IREX/.install > /tmp/install_sandbox_irex
-sed -i "/# installation :/d" /tmp/install_sandbox_irex
-sed -i "/# end installation/d" /tmp/install_sandbox_irex
-sed -i "s/# //g" /tmp/install_sandbox_irex
-
+protobuf_defined=$(grep "find_package(Protobuf REQUIRED)" $cmake_file)
 tab2=$'  '
+
+if [[ $protobuf_defined == "" ]]
+then
+    awk "/# installation :/,/# end installation/" $(rospack find aero_description)/../aero_startup/aero_kinect/linux/.install > /tmp/install_grpc
+    sed -i "/# installation :/d" /tmp/install_grpc
+    sed -i "/# end installation/d" /tmp/install_grpc
+    sed -i "s/# //g" /tmp/install_grpc
+
+    write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
+
+    IFS=''
+    while read line
+    do
+	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+    done < /tmp/install_grpc
+fi
+
 write_to_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
 write_to_line=$(($write_to_line + 1))
-
-IFS=''
-while read line
+echo "add_executable(${executable_name}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+num_of_cc_files=$(find $executable_path -name "*.cc" | wc -l)
+for (( num=1; num<=${num_of_cc_files}; num++ ))
 do
-    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    # file=$(find $executable_path -name "*.cc" | awk -F/ '{print $NF}' | sed -n "${num}p")
+    file=$(find $executable_path -name "*.cc" | awk -F/ '{print $NF}' | tr '\n' ' ' | awk '{print $'$num'}')
+    echo "${tab2}${executable_dir}/${file}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     write_to_line=$(($write_to_line + 1))
-done < /tmp/install_sandbox_irex
+done
+echo "${tab2})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+echo "target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+libs="\${GRPC++_LIBRARY} \${GRPC_LIBRARY} \${GPR_LIBRARY} \${PROTOBUF_LIBRARY} \${CMAKE_THREAD_LIBS_INIT} dl"
+echo "${tab2}${libs})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
