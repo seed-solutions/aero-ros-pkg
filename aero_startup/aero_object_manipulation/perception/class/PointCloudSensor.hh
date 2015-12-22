@@ -91,7 +91,11 @@ namespace aero
     protected: ros::Subscriber camera_pseudo_tf_subscriber_;
     };
 
+#ifdef CXX11_SUPPORTED
     typedef std::shared_ptr<PointCloudSensor> PointCloudSensorPtr;
+#else
+    typedef boost::shared_ptr<PointCloudSensor> PointCloudSensorPtr;
+#endif
 
   }
 }

@@ -109,23 +109,23 @@ std::vector<aero::rgb> PointCloudSensor::GetRGB()
 //////////////////////////////////////////////////
 void PointCloudSensor::SetSpaceMax(aero::xyz _value)
 {
-  space_max_ = {_value.x, _value.y, _value.z};
+  space_max_ = _value;
 }
 
 //////////////////////////////////////////////////
 void PointCloudSensor::SetSpaceMin(aero::xyz _value)
 {
-  space_min_ = {_value.x, _value.y, _value.z};
+  space_min_ = _value;
 }
 
 //////////////////////////////////////////////////
 void PointCloudSensor::SetHSIMax(aero::hsi _value)
 {
-  target_hsi_max_ = {_value.h, _value.s, _value.i};
+  target_hsi_max_ = _value;
 }
 
 //////////////////////////////////////////////////
 void PointCloudSensor::SetHSIMin(aero::hsi _value)
 {
-  target_hsi_min_ = {_value.h, _value.s, _value.i};
+  target_hsi_min_ = _value;
 }
