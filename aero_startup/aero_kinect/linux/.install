@@ -1,0 +1,69 @@
+#!/bin/bash
+
+executable_name=$1
+executable_file=''
+num_of_words=$(echo $executable_name | awk -F_ '{print NF}')
+for (( num=1; num<=$num_of_words; num++ ))
+do
+    word=$(echo $executable_name | awk -F_ '{print $'$num'}')
+    executable_file="${executable_file}${word^}"
+done
+
+executable_path="$(rospack find aero_description)/../aero_startup/aero_kinect/linux/$(echo $executable_file | cut -d. -f1)"
+executable_dir="aero_kinect/linux/$(echo $executable_file | cut -d. -f1)"
+cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
+
+# installation :
+# find_package(Protobuf REQUIRED)
+# include_directories(${PROTOBUF_INCLUDE_DIRS})
+# find_package(Threads)
+# find_library(PROTOBUF_LIBRARY protobuf /usr/local/lib)
+# find_library(GRPC_LIBRARY grpc /usr/local/lib)
+# find_library(GRPC++_LIBRARY grpc++_unsecure /usr/local/lib)
+# find_library(GPR_LIBRARY gpr /usr/local/lib)
+# message(STATUS "protobuf : " ${PROTOBUF_INCLUDE_DIRS})
+# message(STATUS "protobuf library : " ${PROTOBUF_LIBRARY})
+# message(STATUS "grpc library : " ${GRPC_LIBRARY})
+# message(STATUS "grpc++ library : " ${GRPC++_LIBRARY})
+# message(STATUS "gpr library : " ${GPR_LIBRARY})
+# end installation
+
+protobuf_defined=$(grep "find_package(Protobuf REQUIRED)" $cmake_file)
+tab2=$'  '
+
+if [[ $protobuf_defined == "" ]]
+then
+    awk "/# installation :/,/# end installation/" $(rospack find aero_description)/../aero_startup/aero_kinect/linux/.install > /tmp/install_grpc
+    sed -i "/# installation :/d" /tmp/install_grpc
+    sed -i "/# end installation/d" /tmp/install_grpc
+    sed -i "s/# //g" /tmp/install_grpc
+
+    write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
+
+    IFS=''
+    while read line
+    do
+	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+    done < /tmp/install_grpc
+fi
+
+write_to_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
+write_to_line=$(($write_to_line + 1))
+echo "add_executable(${executable_name}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+num_of_cc_files=$(find $executable_path -name "*.cc" | wc -l)
+for (( num=1; num<=${num_of_cc_files}; num++ ))
+do
+    # file=$(find $executable_path -name "*.cc" | awk -F/ '{print $NF}' | sed -n "${num}p")
+    file=$(find $executable_path -name "*.cc" | awk -F/ '{print $NF}' | tr '\n' ' ' | awk '{print $'$num'}')
+    echo "${tab2}${executable_dir}/${file}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+done
+echo "${tab2})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+echo "target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+libs="\${GRPC++_LIBRARY} \${GRPC_LIBRARY} \${GPR_LIBRARY} \${PROTOBUF_LIBRARY} \${CMAKE_THREAD_LIBS_INIT} dl"
+echo "${tab2}${libs})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file

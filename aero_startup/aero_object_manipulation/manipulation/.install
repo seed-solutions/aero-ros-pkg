@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# run configure from applications.cfg
+
+cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
+
+tab2=$'  '
+write_to_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
+write_to_line=$(($write_to_line + 1))
+echo "if(FOUND_LIBSVM)" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+echo "${tab2}# auto-add executables from aero_object_manipulation/manipulation/configure" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+write_to_line=$(($write_to_line + 1))
+echo "endif()" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+
+search_dir="$(rospack find aero_description)/../aero_startup/aero_object_manipulation/manipulation/"
+
+# for e in "${@:1}"
+array=( $1 )
+for e in "${array[@]}"
+do
+    file_exists=$(find $search_dir -name "AeroReachController$e.cc")
+    if [[ $file_exists == "" ]]
+    then
+	cd $search_dir
+	if [[ $e == "Larm" ]]
+	then
+	    ./configure Larm ../calibration/Simple.hh data/larm_learned_x data/larm_learned_y data/larm_learned_z
+	elif [[ $e == "TorsoLarm" ]]
+	then
+	    ./configure TorsoLarm ../calibration/Complex.hh data/torso_larm_learned_x data/torso_larm_learned_y data/torso_larm_learned_z data/torso_larm_learned_wp data/torso_larm_learned_wy
+	fi
+    else
+	lowered_filename=$(echo $e | awk '{print tolower($1)}')
+	write_to_line=$(grep -n -m 1 "auto-add executables from aero_object_manipulation/manipulation/configure" $cmake_file | cut -d ':' -f1)
+	write_to_line=$(($write_to_line + 1))
+	echo "${tab2}add_executable(aero_reach_controller_${lowered_filename}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	echo "${tab2}${tab2}aero_object_manipulation/manipulation/AeroReachController${e}.cc" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	# libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+	libsvmcpp_dir=$(locate svm.cpp | grep libsvm/svm.cpp | grep -v "\.o")
+	echo "${tab2}${tab2}${libsvmcpp_dir})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+	write_to_line=$(($write_to_line + 1))
+	echo "${tab2}target_link_libraries(aero_reach_controller_${lowered_filename} \${catkin_LIBRARIES})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    fi
+done

@@ -1,0 +1,6 @@
+float32 go_x
+float32 go_y
+float32 go_theta
+float32 time
+---
+int8 status

@@ -1,0 +1,21 @@
+<!-- -*- mode: xml -*- -->
+<launch>
+  <include file="$(find jsk_pcl_ros)/launch/hsi_color_filter.launch">
+    <arg name="INPUT" value="/stereo/points2"/>
+    <arg name="DEFAULT_NAMESPACE" value="/stereo/hsi_color_filter/"/>
+    <arg name="h_max" value="-94"/>
+    <arg name="h_min" value="-128"/>
+    <arg name="s_max" value="255"/>
+    <arg name="s_min" value="61"/>
+    <arg name="i_max" value="255"/>
+    <arg name="i_min" value="0"/>
+    <rosparam>
+      /stereo/hsi_color_filter/euclidean_clustering/min_size: 50
+      /stereo/hsi_color_filter/euclidean_clustering/max_size: 200
+    </rosparam>
+  </include>
+
+  <!--sample recognition code-->
+  <node name="simple_recognition" pkg="aero_startup"
+  	type="simple_recognition.py" output="screen" />
+</launch>

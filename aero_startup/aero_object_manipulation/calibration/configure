@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# prerequisites : {my_configuration_file}.hh
+
+# generates : aero_startup/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc
+# generates : aero_startup/aero_object_manipulation/calibration/CMakeLists.txt
+
+configuration_file=$1
+
+# create CMakeLists.txt
+
+input_cmake="$(rospack find aero_startup)/.templates/aero_object_manipulation/calibration/CMakeLists.txt"
+output_cmake="$(rospack find aero_startup)/aero_object_manipulation/calibration/CMakeLists.txt"
+# libsvmcpp_dir=$(find / -name svm.cpp 2>/dev/null | grep libsvm/svm.cpp)
+libsvmcpp_dir=$(locate svm.cpp 2>/dev/null | grep libsvm/svm.cpp | grep -v "\.o")
+
+if [[ "$libsvmcpp_dir" = "" ]]
+then
+    echo "aborting, expected file not found"
+    exit
+fi
+
+cp $input_cmake $output_cmake
+
+sed -i "s@libsvm/svm.cpp@${libsvmcpp_dir}@" $output_cmake
+
+# create AeroCreateHandCalibration.cc
+
+input_file="$(rospack find aero_startup)/.templates/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc"
+output_file="$(rospack find aero_startup)/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc"
+# libsvm_dir=$(find / -name svm.h 2>/dev/null | grep libsvm/svm.h)
+libsvm_dir=$(locate svm.h 2>/dev/null | grep libsvm/svm.h)
+
+cp $input_file $output_file
+
+sed -i "s@libsvm/svm.h@${libsvm_dir}@" $output_file
+
+write_to_line=$(grep -n -m 1 "#include <algorithm>" $output_file | cut -d  ':' -f1)
+write_to_line=$(($write_to_line + 1))
+
+echo -e "#include \"${configuration_file}\"" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+
+awk "/struct points/,/};/" $configuration_file > /tmp/points_def_in_handc
+sed -i "/struct points/d" /tmp/points_def_in_handc
+sed -i "/{/d" /tmp/points_def_in_handc
+sed -i "/};/d" /tmp/points_def_in_handc
+
+tab4=$'    '
+body=''
+testbody=''
+readbody="${tab4}read_line"
+
+index=0
+varid=1
+while read line
+do
+    varname=$(echo "${line}" | awk '{print $2}' | cut -d ';' -f1)
+    body="${body}${tab4}dat[i * nodes + ${index}].index = ${varid};\n"
+    body="${body}${tab4}dat[i * nodes + ${index}].value = _data_learn[i].${varname};\n"
+    testbody="${testbody}${tab4}testdat[${index}].index = ${varid};\n"
+    testbody="${testbody}${tab4}testdat[${index}].value = _data_test[i].${varname};\n"
+    readbody="${readbody} >> tmp.${varname}"
+    index=$(($index + 1))
+    varid=$(($varid + 1))
+done </tmp/points_def_in_handc
+body="${body}${tab4}dat[i * nodes + ${index}].index = -1;\n"
+testbody="${testbody}${tab4}testdat[${index}].index = -1;\n"
+readbody="${readbody};\n"
+
+echo -e "${body}" > /tmp/tmp_in_handc
+
+added_lines=0
+grep -n "implement here dat" $output_file | cut -d ':' -f1 | while read num ; do
+    write_to_line=$(($num + $added_lines))
+    write_to_line=$(($write_to_line + 1))
+    IFS=''
+    while read line
+    do
+	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+	write_to_line=$(($write_to_line + 1))
+	added_lines=$(($added_lines + 1))
+    done < /tmp/tmp_in_handc
+done
+
+echo -e "${testbody}" > /tmp/tmp_in_handc
+
+write_to_line=$(grep -n -m 1 "implement here test_dat" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+awk "/@define NORMALIZE_DATA/,/\*\//" $configuration_file > /tmp/tmp_in_handc
+sed -i "/@define/d" /tmp/tmp_in_handc
+sed -i "/*\//d" /tmp/tmp_in_handc
+
+write_to_line=$(grep -n -m 1 "implement here read_line" $output_file | cut -d ':' -f1)
+write_to_line=$((write_to_line + 1))
+echo "${readbody}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+write_to_line=$((write_to_line + 1))
+
+tab2=$'  '
+IFS=''
+while read line
+do
+    echo "${tab2}${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/tmp_in_handc
+
+sed -i "3i\ * This file auto-generated from configure. Do not Edit!" $output_file
+sed -i "4i\ * Original : aero_startup/.templates/aero_object_manipulation/calibration/AeroCreateHandCalibration.cc" $output_file
+sed -i "5i\ * Depend : aero_startup/aero_object_manipulation/calibration/{my_configuration_file}.hh" $output_file

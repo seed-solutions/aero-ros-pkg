@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_package = "ex.grpc";
+option objc_class_prefix = "RTG";
+
+package bodyskeleton;
+
+service BodySkeleton {
+  rpc GetUsers(User) returns (User) {}
+  rpc GetSkeleton(User) returns (stream Joint) {}
+}
+
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Orientation {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float w = 4;
+}
+
+message Joint {
+  string name = 1;
+  string parent = 2;
+  Position position = 3;
+  Orientation orientation = 4;
+}
+
+message User {
+  int32 id = 1;
+}

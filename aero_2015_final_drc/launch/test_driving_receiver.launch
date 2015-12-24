@@ -1,8 +1,0 @@
-<!-- Launch at seed/W541 (OCS) -->
-<launch>
-  <!-- receiver @ OCS /-->
-  <include file="$(find aero_vision_network_tools)/launch/aero_receiver.launch"/>
-
-  <!-- ps4eye 3-D reconstruction @ OCS -->
-  <include file="$(find aero_sensors)/launch/start_ps4eye_proc_ocs.launch"/>
-</launch>

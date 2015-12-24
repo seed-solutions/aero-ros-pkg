@@ -1,4 +1,0 @@
-#!/bin/bash
-sudo cp `rospack find hrpsys_aero_bridge`/udev/90-aero.rules /etc/udev/rules.d/
-sudo service udev reload
-sudo service udev restart
