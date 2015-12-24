@@ -15,7 +15,9 @@ echo "endif()" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 
 search_dir="$(rospack find aero_description)/../aero_startup/aero_object_manipulation/manipulation/"
 
-for e in "${@:1}"
+# for e in "${@:1}"
+array=( $1 )
+for e in "${array[@]}"
 do
     file_exists=$(find $search_dir -name "AeroReachController$e.cc")
     if [[ $file_exists == "" ]]

@@ -12,9 +12,9 @@
 #include "aero_hardware_interface/Constants.hh"
 #include "aero_hardware_interface/AeroControllers.hh"
 
-#include "aero_common/AngleJointNames.hh"
-#include "aero_common/Stroke2Angle.hh"
-#include "aero_common/Angle2Stroke.hh"
+#include "aero_hardware_interface/AngleJointNames.hh"
+#include "aero_hardware_interface/Stroke2Angle.hh"
+#include "aero_hardware_interface/Angle2Stroke.hh"
 
 #include <ros/ros.h>
 #include <trajectory_msgs/JointTrajectory.h>

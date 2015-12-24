@@ -39,19 +39,6 @@ then
     sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
 fi
 
-# delete applications from applications.launch
-
-launch_file="$(rospack find aero_description)/../aero_startup/applications.launch"
-delete_from_launch=$(grep -n -m 1 ">>> add applications" $launch_file | cut -d ':' -f1)
-delete_from_launch=$(($delete_from_launch + 1))
-delete_to_launch=$(grep -n -m 1 "<<< add applications" $launch_file | cut -d ':' -f1)
-
-if [[ $delete_to_launch -ne $delete_from_launch ]]
-then
-    delete_to_launch=$(($delete_to_launch - 1))
-    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
-fi
-
 # delete srv
 
 num_of_srvs=$(grep ".srv" $cmake_file | wc -l)

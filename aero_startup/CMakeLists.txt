@@ -3,18 +3,6 @@ project(aero_startup)
 
 # Dependencies
 
-# c++11/c++0x
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c+11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
-  message(FATAL "c++11 required but not supported")
-endif()
-
 # catkin ROS
 find_package(catkin REQUIRED COMPONENTS
   roscpp tf std_msgs sensor_msgs
@@ -34,17 +22,8 @@ else()
   include_directories(include ${Boost_INCLUDE_DIRS})
 endif()
 
-# eigen
-find_package(Eigen3 REQUIRED)
-if(NOT EIGEN3_INCLUDE_DIR)
-  message(WARNING "Eigen3 not found, disabled")
-else()
-  include_directories(${EIGEN3_INCLUDE_DIR})
-  set(FOUND_Eigen 1)
-endif()
-
 # pcl
-find_package(PCL 1.3 REQUIRED)
+find_package(PCL 1.7 REQUIRED)
 if(NOT PCL_INCLUDE_DIRS)
   message(WARNING "PCL not found, disabled")
 else()
@@ -52,6 +31,15 @@ else()
   link_directories(${PCL_LIBRARY_DIRS})
   add_definitions(${PCL_DEFINITIONS})
   set(FOUND_PCL 1)
+endif()
+
+# opencv
+find_package(OpenCV REQUIRED)
+if(NOT OpenCV_FOUND)
+  message(WARNING "opencv not found, disabled")
+else()
+  include_directories(${OpenCV_INCLUDE_DIRS})
+  set(FOUND_OpenCV 1)
 endif()
 
 # libsvm
@@ -90,22 +78,10 @@ catkin_package(
 include_directories(${aero_startup_SOURCE_DIR})
 
 
+# >>> add dependencies
+# <<< add dependencies
 
 # Executables
-
-add_executable(aero_controller_node
-  aero_common/Angle2Stroke.cc
-  aero_common/Stroke2Angle.cc
-  aero_common/AngleJointNames.cc
-  aero_hardware_interface/AeroControllers.cc
-  aero_hardware_interface/AeroControllerProto.cc
-  aero_hardware_interface/AeroControllerNode.cc
-  aero_hardware_interface/Main.cc)
-target_link_libraries(aero_controller_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-add_executable(aero_joint_state_publisher
-  aero_controller_manager/AeroJointStatePublisher.cc)
-target_link_libraries(aero_joint_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # >>> add controllers
 # <<< add controllers

@@ -5,8 +5,8 @@
 # prerequisites : /tmp/aero_ros_order_lower < create_urdf
 
 # generates : aero_startup/aero_hardware_interface/AeroControllers.cc
-# generates : aero_startup/aero_common/AngleJointNames.hh
-# generates : aero_startup/aero_common/AngleJointNames.cc
+# generates : aero_startup/aero_hardware_interface/AngleJointNames.hh
+# generates : aero_startup/aero_hardware_interface/AngleJointNames.cc
 # generates : aero_startup/aero_hardware_interface/Constants.hh
 
 dir=$1
@@ -17,11 +17,9 @@ output_header="$(rospack find aero_description)/../aero_startup/aero_hardware_in
 input_file="$(rospack find aero_description)/../aero_startup/.templates/aero_hardware_interface/AeroControllers.cc"
 output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/AeroControllers.cc"
 
-mkdir $(rospack find aero_description)/../aero_startup/aero_common
-
-read_include="$(rospack find aero_description)/../aero_startup/.templates/aero_common/AngleJointNames.hh"
-generate_include="$(rospack find aero_description)/../aero_startup/aero_common/AngleJointNames.hh"
-generate_source="$(rospack find aero_description)/../aero_startup/aero_common/AngleJointNames.cc"
+read_include="$(rospack find aero_description)/../aero_startup/.templates/aero_hardware_interface/AngleJointNames.hh"
+generate_include="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/AngleJointNames.hh"
+generate_source="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/AngleJointNames.cc"
 
 
 grep "CAN" $input_header | awk '{print tolower($4)}' > /tmp/aero_CAN_order
@@ -137,7 +135,7 @@ done < /tmp/aero_angle_joint_names_tmp_code_block
 
 sed -i "1i\/*" $generate_include
 sed -i "2i\ * This file auto-generated from script. Do not Edit!" $generate_include
-sed -i "3i\ * Original : aero_startup/.templates/aero_common/AngleJointNames.hh" $generate_include
+sed -i "3i\ * Original : aero_startup/.templates/aero_hardware_interface/AngleJointNames.hh" $generate_include
 sed -i "4i\ * Depend : aero_description/{my_robot}/{my_upper_file}.txt" $generate_include
 sed -i "5i\ * Depend : aero_description/{my_robot}/{my_lower_file}.txt" $generate_include
 sed -i "6i\*/" $generate_include

@@ -59,8 +59,9 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   if (get_state)
   {
     ROS_INFO(" create timer sub");
+	//shiigi 0.1 -> 0.01
     timer_ =
-        nh_.createTimer(ros::Duration(0.1),
+        nh_.createTimer(ros::Duration(0.01),
                             &AeroControllerNode::JointStateCallback, this);
   }
   else
@@ -202,7 +203,8 @@ void AeroControllerNode::JointTrajectoryCallback(
       lower_.set_position(lower_stroke_vector, time_msec);
     }
 
-    usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
+	//comment out shiigi
+    //usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
 }
 

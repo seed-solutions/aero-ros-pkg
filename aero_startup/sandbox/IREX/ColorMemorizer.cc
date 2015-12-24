@@ -39,7 +39,7 @@
 static const int NUM_OF_PALETTES = 8; // number of dominant colors to find
 static const int NUM_OF_LAYERS = 3; // log2 NUM_OF_PALETTES
 // number of colors in palette that should match the object color
-static const int VALID_MATCH = 3;
+static const int VALID_MATCH = 1;
 // only look for objects with more than this many points
 static const int MINIMUM_POINTS = 100;
 
@@ -225,7 +225,13 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
         (raw->points[i].z < space_max.z))
     {
       rgb tmp = {raw->points[i].r, raw->points[i].g, raw->points[i].b};
-      extracted.push_back(tmp);
+      // get rid of bad hue
+      float I_max = std::max({tmp.r, tmp.g, tmp.b});
+      float i_min = std::min({tmp.r, tmp.g, tmp.b});
+      hsi hsi_color;
+      if (I_max > 0) hsi_color.s = 255 * (1 - i_min / I_max);
+      else hsi_color.s = 0;
+      if (hsi_color.s >= 80) extracted.push_back(tmp);
     }
   extracted.resize(extracted.size());
 
@@ -324,8 +330,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "color_memorizer");
   ros::NodeHandle nh;
 
-  space_min = {-0.5, -0.5, -0.5};
-  space_max = {0.5, 0.5, 0.5};
+  space_min = {-0.5, -0.1, 0.0};
+  space_max = {0.5, 0.1, 0.5};
   idle = true;
   result = -1;
 
