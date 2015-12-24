@@ -1,4 +1,9 @@
-echo -e "
+aerocd_defined=$(grep "function aerocd()" $HOME/.bashrc)
+if [[ "$(echo $aerocd_defined)" != "" ]]
+then
+    echo "aerocd already defined in bash"
+else
+    echo -e "
 function aerocd() {
     if [[ \$1 == \"\" ]]
     then
@@ -24,3 +29,15 @@ function aerocd() {
     fi
     cd \$file
 }" >> $HOME/.bashrc
+fi
+
+aeromake_defined=$(grep "function aeromake()" $HOME/.bashrc)
+if [[ "$(echo $aeromake_defined)" != "" ]]
+then
+    echo "aeromake already defined in bash"
+else
+    echo -e "
+function aeromake() {
+    \$(rospack find aero_description)/scripts/configure_applications.sh \$1 \$2
+}" >> $HOME/.bashrc
+fi
