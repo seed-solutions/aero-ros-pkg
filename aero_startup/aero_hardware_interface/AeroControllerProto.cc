@@ -275,7 +275,7 @@ void AeroControllerProto::get_command(uint8_t _cmd,
 
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
   ser_.send_command(_cmd, 0, dat);
-  usleep(1000 * 30);  // wait
+  usleep(1000 * 20);  // wait
   get_data(_stroke_vector);
 }
 
@@ -292,9 +292,12 @@ void AeroControllerProto::set_position(
 
   ser_.send_command(CMD_MOVE_ABS, _time, dat);
 
+  usleep(0.02 * 1000 * 1000);
+  get_data(_stroke_vector);
+
   // MoveAbs returns current stroke
-  std::vector<uint8_t> dummy(RAW_DATA_LENGTH);
-  ser_.read(dummy);
+  //std::vector<uint8_t> dummy(RAW_DATA_LENGTH);
+  //ser_.read(dummy);
 }
 
 //////////////////////////////////////////////////
