@@ -5,6 +5,7 @@
 #include "std_msgs/Float32MultiArray.h"
 #include <Eigen/Core>
 #include "aero_common/types.h"
+#include "aero_common/time.h"
 
 namespace aero
 {

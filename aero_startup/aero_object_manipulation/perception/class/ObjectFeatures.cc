@@ -95,7 +95,8 @@ void ObjectFeatures::ExtractObjectFeatures(
   ne.setSearchMethod(tree);
 
   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-  ne.setRadiusSearch(0.01);
+  // ne.setRadiusSearch(0.01);
+  ne.setRadiusSearch(0.03);
   ne.compute(*normals);
 
   // Calculate Object Normal (average of point normals)
