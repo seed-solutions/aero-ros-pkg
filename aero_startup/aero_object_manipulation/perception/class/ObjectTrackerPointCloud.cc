@@ -11,13 +11,17 @@ ObjectTrackerPointCloud::ObjectTrackerPointCloud(ros::NodeHandle _nh)
   object_ = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, 0};
 
   point_cloud_listener_ =
-      nh_.subscribe("/stereo/points2", 1000,
+      nh_.subscribe("/stereo/points2", 1,
 		    &ObjectTrackerPointCloud::SubscribePoints, this);
   get_object_ = nh_.serviceClient<aero_startup::BoxFromXYZ>(
       "/point_cloud/get_object_from_center");
   sleep_service_ =
     nh_.advertiseService("/object_tracker/sleep",
 			 &ObjectTrackerPointCloud::ProcessSleep, this);
+
+  object_center_ = Eigen::Vector3f(0.0, 0.0, 0.0);
+  trim_color_min_ = {0, 0, 0};
+  trim_color_max_ = {0, 0, 0};
 
   sleep_ = true;
 }
@@ -31,6 +35,8 @@ ObjectTrackerPointCloud::~ObjectTrackerPointCloud()
 void ObjectTrackerPointCloud::SubscribePoints(
     const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
+  auto start = aero::time::now();
+
   if (sleep_) return;
 
   // check if pseudo tf is ready
@@ -42,134 +48,103 @@ void ObjectTrackerPointCloud::SubscribePoints(
     return;
   }
 
-  // rotate bounding box to box in world coords
+  pcl::PCLPointCloud2 pcl;
+  pcl_conversions::toPCL(*_msg, pcl);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr raw(
+      new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::fromPCLPointCloud2(pcl, *raw);
+  Eigen::Vector3f object_center(0.0, 0.0, 0.0);
+  int points_count = 0;
+
+  bool initial_subscribe_flag = false;
+
+  // object = base is not valid,
+  // when this is true, conditions are not initialized
+  if (fabs(object_center_.x()) < 0.001 &&
+      fabs(object_center_.y()) < 0.001 &&
+      fabs(object_center_.z()) < 0.001)
+  {
+    ROS_WARN("initializing tracking object data");
+    initial_subscribe_flag = true;
+    this->InitializeTrackingObjectData(raw);
+  }
+
+  // only add points that are in bounding box
+  for (unsigned int i = 0; i < raw->points.size(); ++i)
+  {
+    Eigen::Vector3f p(raw->points[i].x, raw->points[i].y, raw->points[i].z);
+    aero::rgb c = {raw->points[i].r, raw->points[i].g, raw->points[i].b};
+    if (this->BoundingConditions(p) &&
+	!aero::colors::compare(c, trim_color_min_, trim_color_max_))
+    {
+      object_center += p;
+      ++points_count;
+    }
+  }
+  object_center /= points_count;
+
+  if (points_count == 0)
+  {
+    ROS_WARN("no points detected in tracker");
+    return;
+  }
+
+  if (initial_subscribe_flag) // initial subscribe ends here
+  {
+    object_center_ = object_center;
+    return;
+  }
+
+  Eigen::Vector3f translation =
+      {object_center.x() - object_center_.x(),
+       object_center.y() - object_center_.y(),
+       object_center.z() - object_center_.z()};
+  object_center_ = object_center;
+
+  ROS_WARN("translation : %f %f %f",
+	   translation.x(), translation.y(), translation.z());
+
+  object_.max_bound =
+      {object_.max_bound.x + translation.x(),
+       object_.max_bound.y + translation.y(),
+       object_.max_bound.z + translation.z()};
+  object_.min_bound =
+      {object_.min_bound.x + translation.x(),
+       object_.min_bound.y + translation.y(),
+       object_.min_bound.z + translation.z()};
+  object_.center =
+      {object_.center.x + translation.x(),
+       object_.center.y + translation.y(),
+       object_.center.z + translation.z()};
+
+  this->BroadcastTf();
+
+  ROS_WARN("time : %f", aero::time::ms(aero::time::now() - start));
+}
+
+//////////////////////////////////////////////////
+void ObjectTrackerPointCloud::BroadcastTf()
+{
   Eigen::Quaternionf base_to_eye_q =
       Eigen::Quaternionf(base_to_eye_.orientation.x,
 			 base_to_eye_.orientation.y,
 			 base_to_eye_.orientation.z,
 			 base_to_eye_.orientation.w);
-  // set rotated bounding points
-  std::vector<Eigen::Vector3f> rotated_bounding_points =
-      {base_to_eye_q.inverse() *
-       Eigen::Vector3f((object_.max_bound.x - object_.center.x) * 0.8,
-		       (object_.max_bound.y - object_.center.y) * 0.8,
-		       (object_.max_bound.z - object_.center.z) * 0.8),
-       base_to_eye_q.inverse() *
-       Eigen::Vector3f((object_.min_bound.x - object_.center.x) * 0.8,
-		       (object_.min_bound.y - object_.center.y) * 0.8,
-		       (object_.min_bound.z - object_.center.z) * 0.8)};
-
-  // identify which points are max and which are min in world coords
-  int max_x_point_id = 0, min_x_point_id = 0;
-  int max_y_point_id = 0, min_y_point_id = 0;
-  int max_z_point_id = 0, min_z_point_id = 0;
-  for (unsigned int i = 0; i < rotated_bounding_points.size(); ++i)
-  {
-    Eigen::Vector3f bounding_point_world =
-        base_to_eye_q * rotated_bounding_points[i];
-    if (bounding_point_world.x() >= 0.0) max_x_point_id = i;
-    else if (bounding_point_world.x() <= 0.0) min_x_point_id = i;
-    if (bounding_point_world.y() >= 0.0) max_y_point_id = i;
-    else if (bounding_point_world.y() <= 0.0) min_y_point_id = i;
-    if (bounding_point_world.z() >= 0.0) max_z_point_id = i;
-    else if (bounding_point_world.z() <= 0.0) min_z_point_id = i;
-  }
-  // calculate plane norms in camera coord
-  Eigen::Vector3f plane_xp_norm =
-    base_to_eye_q.inverse() * Eigen::Vector3f(1, 0, 0);
-  Eigen::Vector3f plane_xm_norm =
-    base_to_eye_q.inverse() * Eigen::Vector3f(-1, 0, 0);
-  Eigen::Vector3f plane_yp_norm =
-    base_to_eye_q.inverse() * Eigen::Vector3f(0, 1, 0);
-  Eigen::Vector3f plane_ym_norm =
-    base_to_eye_q.inverse() * Eigen::Vector3f(0, -1, 0);
-  Eigen::Vector3f plane_zp_norm =
-    base_to_eye_q.inverse() * Eigen::Vector3f(0, 0, 1);
-  Eigen::Vector3f plane_zm_norm =
-    base_to_eye_q.inverse() * Eigen::Vector3f(0, 0, -1);
-
-  pcl::PCLPointCloud2 pcl;
-  pcl_conversions::toPCL(*_msg, pcl);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr raw(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::fromPCLPointCloud2(pcl, *raw);
-  std::vector<Eigen::Vector3f> object_points;
-  object_points.reserve(raw->points.size());
-  Eigen::Vector3f object_center(0.0, 0.0, 0.0);
-  Eigen::Vector3f c(object_.center.x, object_.center.y, object_.center.z);
-
-  // obly add points that are in world bounding plane
-  for (unsigned int i = 0; i < raw->points.size(); ++i)
-  {
-    Eigen::Vector3f p(raw->points[i].x, raw->points[i].y, raw->points[i].z);
-    if (plane_xp_norm.dot(p - c - rotated_bounding_points[max_x_point_id]) < 0 &&
-	plane_xm_norm.dot(p - c - rotated_bounding_points[min_x_point_id]) < 0 &&
-	plane_yp_norm.dot(p - c - rotated_bounding_points[max_y_point_id]) < 0 &&
-	plane_ym_norm.dot(p - c - rotated_bounding_points[min_y_point_id]) < 0 &&
-	plane_zp_norm.dot(p - c - rotated_bounding_points[max_z_point_id]) < 0 &&
-	plane_zm_norm.dot(p - c - rotated_bounding_points[min_z_point_id]) < 0)
-    {
-      object_points.push_back(p);
-      object_center += p;
-    }
-  }
-  object_points.resize(object_points.size());
-  object_center /= object_points.size();
-
-  if (object_points.size() == 0) return;
-
-  ROS_INFO("object in : %f %f %f",
-	   object_.center.x, object_.center.y, object_.center.z);
-
-  object_.max_bound =
-    {object_.max_bound.x + object_center.x() - object_.center.x,
-     object_.max_bound.y + object_center.y() - object_.center.y,
-     object_.max_bound.z + object_center.z() - object_.center.z};
-  object_.min_bound =
-    {object_.min_bound.x + object_center.x() - object_.center.x,
-     object_.min_bound.y + object_center.y() - object_.center.y,
-     object_.min_bound.z + object_center.z() - object_.center.z};
-  object_.center = {object_center.x(), object_center.y(), object_center.z()};
-
-  std::vector<Eigen::Vector3f> updated_points;
-  updated_points.reserve(raw->points.size());  
-  for (unsigned int i = 0; i < raw->points.size(); ++i)
-    if ((raw->points[i].x > object_.min_bound.x) &&
-	(raw->points[i].x < object_.max_bound.x) &&
-	(raw->points[i].y > object_.min_bound.y) &&
-	(raw->points[i].y < object_.max_bound.y) &&
-	(raw->points[i].z > object_.min_bound.z) &&
-	(raw->points[i].z < object_.max_bound.z))
-    {
-      Eigen::Vector3f p(raw->points[i].x, raw->points[i].y, raw->points[i].z);
-      updated_points.push_back(p);
-    }
-  updated_points.resize(updated_points.size());
-
-  object_.points = updated_points.size();
-
-  std_msgs::Float32MultiArray p_msg;
-  std_msgs::MultiArrayLayout layout;
-  std_msgs::MultiArrayDimension dim_head;
-  dim_head.label = "info";
-  dim_head.size = 0;
-  dim_head.stride = 1;
-  layout.dim.push_back(dim_head);
-  std_msgs::MultiArrayDimension dim;
-  dim.label = "block1";
-  dim.size = updated_points.size();
-  dim.stride = 3;
-  layout.dim.push_back(dim);
-  p_msg.data.resize(dim.size * dim.stride);
-  for (unsigned int j = 0; j < updated_points.size(); ++j)
-  {
-    int point_idx = j * dim.stride;
-    p_msg.data[point_idx] = updated_points[j].x();
-    p_msg.data[point_idx + 1] = updated_points[j].y();
-    p_msg.data[point_idx + 2] = updated_points[j].z();
-  }
-
-  p_msg.layout = layout;
-  points_publisher_.publish(p_msg);
+  Eigen::Vector3f object_world_pos =
+      base_to_eye_q *
+      Eigen::Vector3f(object_.center.x, object_.center.y, object_.center.z) +
+      Eigen::Vector3f(base_to_eye_.position.x,
+		      base_to_eye_.position.y,
+		      base_to_eye_.position.z);
+  static tf::TransformBroadcaster br;
+  tf::Transform transform;
+  transform.setOrigin(tf::Vector3(object_world_pos.x(),
+                                  object_world_pos.y(),
+                                  object_world_pos.z()));
+  tf::Quaternion q(0, 0, 0, 1);
+  transform.setRotation(q);
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+                                        "leg_base_link", "object_track"));
 }
 
 //////////////////////////////////////////////////
@@ -227,10 +202,192 @@ bool ObjectTrackerPointCloud::ProcessSleep(
 	 {srv.response.max_x, srv.response.max_y, srv.response.max_z},
 	 {srv.response.min_x, srv.response.min_y, srv.response.min_z},
 	 srv.response.points};
+    object_center_ = Eigen::Vector3f(0.0, 0.0, 0.0);
     ROS_WARN("activating object tracking");
   }
   else ROS_WARN("sleeping object tracking");
 
   _res.status = aero::status::success;
   return true;
+}
+
+//////////////////////////////////////////////////
+void ObjectTrackerPointCloud::InitializeTrackingObjectData(
+    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& _raw)
+{
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<float> rand_y(
+      object_.min_bound.y, object_.max_bound.y);
+
+  // create random sample outliers to get boundary points
+  std::vector<aero::xyz> random_x_outliers(10);
+  int middle_idx_b = static_cast<int>(random_x_outliers.size() * 0.5);
+  for (unsigned int i = 0; i < middle_idx_b; ++i)
+    random_x_outliers[i] = {object_.max_bound.x + 1.0, rand_y(mt), 0.0};
+  for (unsigned int i = middle_idx_b; i < random_x_outliers.size(); ++i)
+    random_x_outliers[i] = {object_.max_bound.x - 1.0, rand_y(mt), 0.0};
+
+  // initialize boundary and center points
+  std::vector<int> boundary_points_id(random_x_outliers.size(), 0);
+  std::vector<float> to_bound_minimal_distances(random_x_outliers.size(),
+						100000);
+  std::vector<int> center_points_id(10, 0);
+  int middle_idx_c = static_cast<int>(center_points_id.size() * 0.5);
+  std::vector<float> to_center_minimal_distances(center_points_id.size(),
+						 100000);
+
+  for (unsigned int i = 0; i < _raw->points.size(); ++i)
+  {
+    Eigen::Vector3f p(_raw->points[i].x, _raw->points[i].y, _raw->points[i].z);
+    if (!this->BoundingConditions(p)) continue;
+
+    // check if p is a most-likely boundary point
+    for (unsigned int j = 0; j < random_x_outliers.size(); ++j)
+    {
+      float b_distance = std::pow(p.x() - random_x_outliers[j].x, 2) +
+	  std::pow(p.y() - random_x_outliers[j].y, 2);
+      if (b_distance < to_bound_minimal_distances[j])
+      {
+	boundary_points_id[j] = i;
+	to_bound_minimal_distances[j] = b_distance;
+      }
+    }
+
+    // check if p is a most-likely center point
+    float c_distance = std::pow(p.x() - object_.center.x, 2) +
+        std::pow(p.y() - object_.center.y, 2) +
+        std::pow(p.z() - object_.center.z, 2);
+    for (unsigned int j = 0; j < center_points_id.size(); ++j)
+      if (c_distance <= to_center_minimal_distances[j])
+      {
+	for (unsigned int k = center_points_id.size() - 1; k > j; --k)
+	{
+	  to_center_minimal_distances[k] = to_center_minimal_distances[k - 1];
+	  center_points_id[k] = center_points_id[k - 1];
+	}
+	to_center_minimal_distances[j] = c_distance;
+	center_points_id[j] = i;
+	break;
+      }
+  }
+
+  aero::rgb color_white = {255, 255, 255};
+  aero::lab white = aero::colors::rgb2lab(color_white);
+
+  // create boundary Set
+  std::vector<aero::rgb_dist> boundary_points(random_x_outliers.size());
+  for (unsigned int i = 0; i < random_x_outliers.size(); ++i)
+  {
+    int idx = boundary_points_id[i];
+    aero::rgb c =
+        {_raw->points[idx].r, _raw->points[idx].g, _raw->points[idx].b};
+    boundary_points[i].color = c;
+    boundary_points[i].dist =
+        aero::colors::distance(aero::colors::rgb2lab(c), white);
+  }
+
+  // create center Set
+  std::vector<aero::rgb_dist> center_points(center_points_id.size());
+  for (unsigned int i = 0; i < center_points_id.size(); ++i)
+  {
+    int idx = center_points_id[i];
+    aero::rgb c =
+        {_raw->points[idx].r, _raw->points[idx].g, _raw->points[idx].b};
+    center_points[i].color = c;
+    center_points[i].dist =
+        aero::colors::distance(aero::colors::rgb2lab(c), white);
+  }
+
+  // sort each Set by color distance to white
+  std::sort(boundary_points.begin(), boundary_points.end());
+  std::sort(center_points.begin(), center_points.end());
+
+  // get main color of each set (sorted median)
+  aero::rgb center_color = center_points[middle_idx_c].color;
+  aero::lab center_lab = aero::colors::rgb2lab(center_color);
+  aero::hsi center_hsi = aero::colors::rgb2hsi(center_color);
+  aero::hsi center_hsi_min =
+      {center_hsi.h - 20, center_hsi.s - 50, center_hsi.i - 50};
+  aero::hsi center_hsi_max =
+      {center_hsi.h + 20, center_hsi.s + 50, center_hsi.i + 50};
+  aero::rgb boundary_color = boundary_points[middle_idx_b].color;
+  aero::lab boundary_lab = aero::colors::rgb2lab(boundary_color);
+  aero::hsi boundary_hsi = aero::colors::rgb2hsi(boundary_color);
+  aero::hsi boundary_hsi_min =
+      {boundary_hsi.h - 20, boundary_hsi.s - 50, boundary_hsi.i - 50};
+  aero::hsi boundary_hsi_max =
+      {boundary_hsi.h + 20, boundary_hsi.s + 50, boundary_hsi.i + 50};
+
+  // re-create boundary Set according to main color
+  std::vector<aero::rgb_dist> boundary_points_re;
+  boundary_points_re.reserve(boundary_points.size());
+  for (unsigned int i = 0; i < boundary_points.size(); ++i)
+    if (aero::colors::compare(
+            boundary_points[i].color, boundary_hsi_min, boundary_hsi_max))
+    {
+      aero::rgb_dist p;
+      p.color = boundary_points[i].color;
+      p.dist =
+	  aero::colors::distance(aero::colors::rgb2lab(p.color), boundary_lab);
+      boundary_points_re.push_back(p);
+    }
+  boundary_points_re.resize(boundary_points_re.size());
+
+  // re-create center Set according to main color
+  std::vector<aero::rgb_dist> center_points_re;
+  center_points_re.reserve(center_points.size());
+  for (unsigned int i = 0; i < center_points.size(); ++i)
+    if (aero::colors::compare(
+            center_points[i].color, center_hsi_min, center_hsi_max))
+    {
+      aero::rgb_dist p;
+      p.color = center_points[i].color;
+      p.dist =
+	  aero::colors::distance(aero::colors::rgb2lab(p.color), center_lab);
+      center_points_re.push_back(p);
+    }
+  center_points_re.resize(center_points_re.size());
+
+  // sort each Set by color distance to main color
+  std::sort(boundary_points_re.begin(), boundary_points_re.end());
+  std::sort(center_points_re.begin(), center_points_re.end());
+
+  int b = boundary_points_re.size() - 1;
+  int c = center_points_re.size() - 1;
+
+  std::function<void()> reset_bounds = [&]()
+  {
+    aero::hsi limit = aero::colors::rgb2hsi(boundary_points_re[b].color);
+    limit = {abs(limit.h - boundary_hsi.h) + 2,
+	     abs(limit.s - boundary_hsi.s) + 5,
+	     abs(limit.i - boundary_hsi.i) + 5};
+    trim_color_min_ = {boundary_hsi.h - limit.h,
+		       // boundary_hsi.s - limit.s,
+		       // boundary_hsi.i - limit.i};
+		       0, // don't care saturation
+		       0}; // don't care intensity
+    trim_color_max_ = {boundary_hsi.h + limit.h,
+		       // boundary_hsi.s + limit.s,
+		       // boundary_hsi.i + limit.i};
+		       255, // don't care saturation
+		       255}; // don't care intensity
+  };
+
+  // reset boundary hsi so that at least half of center points are not included
+  reset_bounds();
+  while (b >= 0)
+  {
+    if (!aero::colors::compare(
+            center_points_re[c].color, trim_color_min_, trim_color_max_))
+      break;
+
+    --b; // shrink boundary
+    if (c > middle_idx_c) --c; // try excluding far colored center points
+    reset_bounds();
+  }
+
+  ROS_WARN("bound colors are : %d %d %d ~ %d %d %d",
+	   trim_color_min_.h, trim_color_min_.s, trim_color_min_.i,
+	   trim_color_max_.h, trim_color_max_.s, trim_color_max_.i);
 }

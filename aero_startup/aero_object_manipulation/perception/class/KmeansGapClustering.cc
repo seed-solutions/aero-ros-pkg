@@ -28,7 +28,7 @@ KmeansGapClustering::KmeansGapClustering(ros::NodeHandle _nh) : nh_(_nh)
 
   cluster_publisher_ =
       nh_.advertise<std_msgs::Float32MultiArray>("/kmeans/clusters", 1000);
-  subscriber_ = nh_.subscribe("/point_cloud/points", 100,
+  subscriber_ = nh_.subscribe("/point_cloud/points", 1,
 			      &KmeansGapClustering::Subscribe, this);
   points_publisher_ = nh_.advertise<std_msgs::Float32MultiArray>(
       "/point_cloud/objects", 1000);
@@ -87,7 +87,8 @@ void KmeansGapClustering::ExtractClusters(
     ROS_WARN("qualifies min.x");
 
   ROS_INFO("points : %d -> %d", num_points_in_field_, points.size());
-  if (abs(static_cast<int>(points.size() - num_points_in_field_)) >= 300)
+  // if (abs(static_cast<int>(points.size() - num_points_in_field_)) >= 300)
+  if (abs(static_cast<int>(points.size() - num_points_in_field_)) >= 100)
     ROS_WARN("qualifies points");
 
   if (cluster_list_.size() > 0) // keep calculating if no clusters are found
@@ -98,7 +99,8 @@ void KmeansGapClustering::ExtractClusters(
 	fabs(min.y() - field_range_min_.y) < 0.1 &&
 	fabs(max.z() - field_range_max_.z) < 0.1 &&
 	fabs(min.z() - field_range_min_.z) < 0.1 &&
-	abs(static_cast<int>(points.size() - num_points_in_field_)) < 300)
+	// abs(static_cast<int>(points.size() - num_points_in_field_)) < 300)
+	abs(static_cast<int>(points.size() - num_points_in_field_)) < 100)
       return;
 
   // if scene was enlarged by more than 15cm, clear noises
@@ -111,7 +113,8 @@ void KmeansGapClustering::ExtractClusters(
       (max.z() - field_range_max_.z) > 0.15 ||
       (min.z() - field_range_min_.z) < -0.15)
   {
-    if (static_cast<int>(points.size() - num_points_in_field_) > 500)
+    // if (static_cast<int>(points.size() - num_points_in_field_) > 500)
+    if (static_cast<int>(points.size() - num_points_in_field_) > 90)
       noises_.clear();
   }
   else // spacial shrink case
@@ -171,8 +174,13 @@ void KmeansGapClustering::ExtractClusters(
 
   // calculate gap for more than 1 clusters
   bool gap_is_statisfied = false;
+  // auto process_time_start = aero::time::now();
   while (!gap_is_statisfied && k < max_clusters_)
   {
+    // auto process_time =
+    //     aero::time::ms(aero::time::now() - process_time_start);
+    // if (process_time > 3000) return; // abort process longer than 3 sec
+
     points_.clear();
     points_.resize(_vertices.size());
     points_.assign(points.begin(), points.end());
@@ -254,7 +262,8 @@ void KmeansGapClustering::ExtractClusters(
     cluster_i.points = points_in_cluster[i];
 
     if ((max_point_value[i] - min_point_value[i]).norm() < 0.05 ||
-	points_in_cluster[i] < 500)
+	// points_in_cluster[i] < 500)
+	points_in_cluster[i] < 90)
       noise_candidates.push_back(cluster_i); // we can always add new noises
     else
       cluster_candidates.push_back(cluster_i);

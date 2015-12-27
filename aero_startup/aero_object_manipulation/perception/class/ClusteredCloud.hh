@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include <aero_startup/BoxFromXYZ.h>
 #include "aero_common/types.h"
+#include "aero_common/time.h"
 
 namespace aero
 {
@@ -46,6 +47,10 @@ namespace aero
 
     // @brief : function to set when subscribe is reactivated
     protected: std::function<void()> default_func_;
+
+    protected: bool process_sleep_;
+
+    protected: std::chrono::high_resolution_clock::time_point sleep_start_;
 
     protected: ros::NodeHandle nh_;
 

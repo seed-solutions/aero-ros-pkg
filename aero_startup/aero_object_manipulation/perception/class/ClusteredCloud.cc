@@ -19,6 +19,7 @@ ClusteredCloud::ClusteredCloud(ros::NodeHandle _nh) : nh_(_nh)
     nh_.advertiseService("/cluster_cloud/get_object_from_center",
 			 &ClusteredCloud::CallClusterFromCenter, this);
 
+  process_sleep_ = false;
   this->publish_func_ = [=](){ this->PublishAllClusters(); };
   this->default_func_ = this->publish_func_;
 }
@@ -38,6 +39,13 @@ void ClusteredCloud::Spin()
 void ClusteredCloud::Subscribe(
     const std_msgs::Float32MultiArray::ConstPtr& _points)
 {
+  if (process_sleep_)
+  {
+    auto sleeped_time = aero::time::ms(aero::time::now() - sleep_start_);
+    if (sleeped_time > 10000) process_sleep_ = false;
+    else return; // this handles late arrived kmeans points after process kill
+  }
+
   clouds_.clear();
   int num_of_clusters = _points->layout.dim[0].stride;
   clouds_.reserve(num_of_clusters);
@@ -67,6 +75,8 @@ void ClusteredCloud::Subscribe(
 void ClusteredCloud::SubscribeClusters(
     const std_msgs::Float32MultiArray::ConstPtr& _clusters)
 {
+  if (process_sleep_) return;
+
   clusters_.clear();
   int num_of_clusters = _clusters->layout.dim[1].size;
   clusters_.reserve(num_of_clusters);
@@ -113,7 +123,11 @@ bool ClusteredCloud::CallClusterFromCenter(
     return false;
 
   if (_req.kill_spin)
+  {
     this->publish_func_ = [=](){ this->PublishStop(); };
+    process_sleep_ = true;
+    sleep_start_ = aero::time::now();
+  }
 
   _res.c_x = clusters_[nearest_cluster_id].center.x;
   _res.c_y = clusters_[nearest_cluster_id].center.y;
