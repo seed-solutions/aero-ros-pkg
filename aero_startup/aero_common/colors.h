@@ -5,6 +5,18 @@
 
 namespace aero
 {
+
+  struct rgb_dist
+  {
+    rgb color;
+    float dist;
+
+    bool operator < (const rgb_dist& _p) const
+    {
+      return (dist < _p.dist);
+    };
+  };
+
   namespace colors
   {
 
