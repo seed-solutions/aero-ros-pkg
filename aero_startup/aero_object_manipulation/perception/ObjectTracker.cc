@@ -10,7 +10,7 @@ int main(int argc, char **argv)
   aero::perception::ObjectTrackerPointCloudPtr sensor(
       new aero::perception::ObjectTrackerPointCloud(nh));
 
-  ros::Rate r(10);
+  ros::Rate r(30);
 
   while(ros::ok())
   {
