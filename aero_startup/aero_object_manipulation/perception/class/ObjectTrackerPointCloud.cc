@@ -54,6 +54,8 @@ void ObjectTrackerPointCloud::SubscribePoints(
       new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::fromPCLPointCloud2(pcl, *raw);
   Eigen::Vector3f object_center(0.0, 0.0, 0.0);
+  std::vector<aero::xyz> points;
+  points.reserve(raw->points.size());
   int points_count = 0;
 
   bool initial_subscribe_flag = false;
@@ -78,10 +80,12 @@ void ObjectTrackerPointCloud::SubscribePoints(
 	!aero::colors::compare(c, trim_color_min_, trim_color_max_))
     {
       object_center += p;
+      points.push_back({p.x(), p.y(), p.z()});
       ++points_count;
     }
   }
   object_center /= points_count;
+  points.resize(points_count);
 
   if (points_count == 0)
   {
@@ -117,34 +121,31 @@ void ObjectTrackerPointCloud::SubscribePoints(
        object_.center.y + translation.y(),
        object_.center.z + translation.z()};
 
-  this->BroadcastTf();
+  std_msgs::Float32MultiArray p_msg;
+  std_msgs::MultiArrayLayout layout;
+  std_msgs::MultiArrayDimension dim_head;
+  dim_head.label = "info";
+  dim_head.size = 0;
+  dim_head.stride = 1;
+  layout.dim.push_back(dim_head);
+  std_msgs::MultiArrayDimension dim;
+  dim.label = "block1";
+  dim.size = points.size();
+  dim.stride = 3;
+  layout.dim.push_back(dim);
+  p_msg.data.resize(dim.size * dim.stride);
+  for (unsigned int j = 0; j < points.size(); ++j)
+  {
+    int point_idx = j * dim.stride;
+    p_msg.data[point_idx] = points[j].x;
+    p_msg.data[point_idx + 1] = points[j].y;
+    p_msg.data[point_idx + 2] = points[j].z;
+  }
+
+  p_msg.layout = layout;
+  points_publisher_.publish(p_msg);
 
   ROS_WARN("time : %f", aero::time::ms(aero::time::now() - start));
-}
-
-//////////////////////////////////////////////////
-void ObjectTrackerPointCloud::BroadcastTf()
-{
-  Eigen::Quaternionf base_to_eye_q =
-      Eigen::Quaternionf(base_to_eye_.orientation.x,
-			 base_to_eye_.orientation.y,
-			 base_to_eye_.orientation.z,
-			 base_to_eye_.orientation.w);
-  Eigen::Vector3f object_world_pos =
-      base_to_eye_q *
-      Eigen::Vector3f(object_.center.x, object_.center.y, object_.center.z) +
-      Eigen::Vector3f(base_to_eye_.position.x,
-		      base_to_eye_.position.y,
-		      base_to_eye_.position.z);
-  static tf::TransformBroadcaster br;
-  tf::Transform transform;
-  transform.setOrigin(tf::Vector3(object_world_pos.x(),
-                                  object_world_pos.y(),
-                                  object_world_pos.z()));
-  tf::Quaternion q(0, 0, 0, 1);
-  transform.setRotation(q);
-  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
-                                        "leg_base_link", "object_track"));
 }
 
 //////////////////////////////////////////////////
@@ -272,8 +273,7 @@ void ObjectTrackerPointCloud::InitializeTrackingObjectData(
       }
   }
 
-  aero::rgb color_white = {255, 255, 255};
-  aero::lab white = aero::colors::rgb2lab(color_white);
+  aero::lab white = {100, 0.005, -0.01};
 
   // create boundary Set
   std::vector<aero::rgb_dist> boundary_points(random_x_outliers.size());
