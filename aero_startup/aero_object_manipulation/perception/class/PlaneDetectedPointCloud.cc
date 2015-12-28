@@ -12,7 +12,7 @@ PlaneDetectedPointCloud::PlaneDetectedPointCloud(ros::NodeHandle _nh)
   desk_plane_norm_ =
       Eigen::Quaternionf(1, 0, 0, 0) * Eigen::Vector3f(0, 0, 1);
 
-  space_min_ = {-0.5, -0.5, 0.8};
+  space_min_ = {-0.5, -1.0, 0.8};
   space_max_ = {0.5, 1.0, 5.0};
 
   point_cloud_listener_ =
@@ -69,11 +69,12 @@ void PlaneDetectedPointCloud::SubscribePoints(
 
   pcl::PCLPointCloud2 pcl;
   pcl_conversions::toPCL(*_msg, pcl);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr raw(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr raw(
+      new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::fromPCLPointCloud2(pcl, *raw);
 
-  std::vector<std::vector<Eigen::Vector3f> > vertices_block(num_of_regions);
-  std::vector<std::vector<Eigen::Vector3f> > vertices_shifted(num_of_regions);
+  std::vector<std::vector<aero::point> > vertices_block(num_of_regions);
+  std::vector<std::vector<aero::point> > vertices_shifted(num_of_regions);
   std::vector<int> elements_in_block(num_of_regions, 0);
 
   for (unsigned int i = 0; i < raw->points.size(); ++i)
@@ -95,9 +96,9 @@ void PlaneDetectedPointCloud::SubscribePoints(
 	      ((manipulation_space_min - point).dot(desk_plane_norm_) -
 	       lowest_height_level) / height_range_per_region_ - 0.5);
       if (index_shifted < 0) index_shifted = 0;
-      Eigen::Vector3f tmp = manipulation_space_min - point;
-      vertices_block[index].push_back(point);
-      vertices_shifted[index_shifted].push_back(point);
+      aero::point p = {static_cast<int>(i), point.x(), point.y(), point.z()};
+      vertices_block[index].push_back(p);
+      vertices_shifted[index_shifted].push_back(p);
     }
 
   // find table (continuous non-zero area)
@@ -141,7 +142,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
 
   // get the better region cut
 
-  std::vector<Eigen::Vector3f> plane_points;
+  std::vector<aero::point> plane_points;
   if (max_points_when_shifted > max_points)
     plane_points.assign(vertices_shifted[max_index_when_shifted].begin(),
 			vertices_shifted[max_index_when_shifted].end());
@@ -157,10 +158,12 @@ void PlaneDetectedPointCloud::SubscribePoints(
   Eigen::Vector3f plane_center(0, 0, 0);
   for (unsigned int j = 0; j < plane_points.size(); ++j)
   {
-    plane_center += plane_points[j];
-    // cloud_->points.push_back(pcl::PointXYZ(plane_points[j].x(),
-    // 					   plane_points[j].y(),
-    // 					   plane_points[j].z()));
+    plane_center += Eigen::Vector3f(plane_points[j].x,
+				    plane_points[j].y,
+				    plane_points[j].z);
+    // cloud_->points.push_back(pcl::PointXYZ(plane_points[j].x,
+    // 					   plane_points[j].y,
+    // 					   plane_points[j].z));
   }
   plane_center = plane_center * (1.0 / plane_points.size());
 
@@ -168,53 +171,115 @@ void PlaneDetectedPointCloud::SubscribePoints(
   for (unsigned int j = 0; j < plane_points.size(); ++j)
   {
     Eigen::Vector3f variance = Eigen::Vector3f(
-	(plane_points[j].x() - plane_center.x()) *
-            (plane_points[j].x() - plane_center.x()),
-        (plane_points[j].y() - plane_center.y()) *
-            (plane_points[j].y() - plane_center.y()),
-        (plane_points[j].z() - plane_center.z()) *
-            (plane_points[j].z() - plane_center.z()));
+	(plane_points[j].x - plane_center.x()) *
+            (plane_points[j].x - plane_center.x()),
+        (plane_points[j].y - plane_center.y()) *
+            (plane_points[j].y - plane_center.y()),
+        (plane_points[j].z - plane_center.z()) *
+            (plane_points[j].z - plane_center.z()));
     plane_variance += variance;
   }
   plane_variance = plane_variance * (4.0 / plane_points.size()); // cut 5%
+
+  // get plane color
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int> rand(0, plane_points.size());
+  int num_of_samples;
+  if (plane_points.size() < 50) num_of_samples = plane_points.size();
+  else num_of_samples = 50; // use only 50 points if plane is big
+  std::vector<aero::rgb_dist> sample_points(num_of_samples);
+
+  aero::lab white = {100, 0.005, -0.01};
+
+  for (unsigned int j = 0; j < num_of_samples; ++j)
+  {
+    int idx = plane_points[rand(mt)].id;
+    aero::rgb c = {raw->points[j].r, raw->points[j].g, raw->points[j].b};
+    sample_points[j].color = c;
+    sample_points[j].dist =
+        aero::colors::distance(aero::colors::rgb2lab(c), white);
+  }
+
+  std::sort(sample_points.begin(), sample_points.end());
+  aero::hsi main_color =
+      aero::colors::rgb2hsi(sample_points[num_of_samples * 0.5].color);
+  aero::lab main_lab =
+      aero::colors::rgb2lab(sample_points[num_of_samples * 0.5].color);
+  aero::hsi edge_color1 = aero::colors::rgb2hsi(sample_points[0].color);
+  aero::hsi edge_color2 =
+      aero::colors::rgb2hsi(sample_points[num_of_samples - 1].color);
+  // table color minimum hsi bound
+  aero::hsi color_min =
+      {std::min({main_color.h, edge_color1.h, edge_color2.h}) - 5,
+       std::min({main_color.s, edge_color1.s, edge_color2.s}) - 20,
+       std::min({main_color.i, edge_color1.i, edge_color2.i}) - 20};
+  // table color maximum hsi bound
+  aero::hsi color_max =
+      {std::max({main_color.h, edge_color1.h, edge_color2.h}) + 5,
+       std::max({main_color.s, edge_color1.s, edge_color2.s}) + 20,
+       std::max({main_color.i, edge_color1.i, edge_color2.i}) + 20};
+
+  // ROS_WARN("color range %d %d %d ~ %d %d %d",
+  // 	   color_min.h, color_min.s, color_min.i,
+  // 	   color_max.h, color_max.s, color_max.i);
 
   // get the points on plane
 
   vertices_.clear();
   vertices_.reserve(raw->points.size());
   if (max_points_when_shifted > max_points)
-    for (unsigned int i = // objects higher than 5 cm
-	   (max_index_when_shifted + 1 + 0.05 / height_range_per_region_);
+    for (unsigned int i = // objects higher than 0 cm
+	   (max_index_when_shifted + 1 + 0.00 / height_range_per_region_);
 	 i < vertices_shifted.size(); ++i)
       for (unsigned int j = 0; j < vertices_shifted[i].size(); ++j)
       {
-	if ((vertices_shifted[i][j].x() - plane_center.x()) *
-	      (vertices_shifted[i][j].x() - plane_center.x()) <
+	if ((vertices_shifted[i][j].x - plane_center.x()) *
+	      (vertices_shifted[i][j].x - plane_center.x()) <
 	    plane_variance.x() &&
-	    // (vertices_shifted[i][j].y() - plane_center.y()) *
-	    //   (vertices_shifted[i][j].y() - plane_center.y()) <
+	    // (vertices_shifted[i][j].y - plane_center.y()) *
+	    //   (vertices_shifted[i][j].y - plane_center.y()) <
 	    // plane_variance.y() &&
-	    (vertices_shifted[i][j].z() - plane_center.z()) *
-	      (vertices_shifted[i][j].z() - plane_center.z()) <
+	    (vertices_shifted[i][j].z - plane_center.z()) *
+	      (vertices_shifted[i][j].z - plane_center.z()) <
 	    plane_variance.z())
-	  vertices_.push_back(vertices_shifted[i][j]);
+	 {
+	   aero::rgb c = {raw->points[vertices_shifted[i][j].id].r,
+			  raw->points[vertices_shifted[i][j].id].g,
+			  raw->points[vertices_shifted[i][j].id].b};
+	   if (!aero::colors::compare(c, color_min, color_max))
+	     // not a noise from plane
+	     vertices_.push_back(Eigen::Vector3f(vertices_shifted[i][j].x,
+						 vertices_shifted[i][j].y,
+						 vertices_shifted[i][j].z));
+	 }
       }
   else
-    for (unsigned int i = // objects higher than 5 cm
-	   (max_index + 1 + 0.05 / height_range_per_region_);
+    for (unsigned int i = // objects higher than 0 cm
+	   (max_index + 1 + 0.00 / height_range_per_region_);
 	 i < vertices_block.size(); ++i)
       for (unsigned int j = 0; j < vertices_block[i].size(); ++j)
       {
-	if ((vertices_block[i][j].x() - plane_center.x()) *
-	      (vertices_block[i][j].x() - plane_center.x()) <
+	if ((vertices_block[i][j].x - plane_center.x()) *
+	      (vertices_block[i][j].x - plane_center.x()) <
 	    plane_variance.x() &&
-	    // (vertices_block[i][j].y() - plane_center.y()) *
-	    //   (vertices_block[i][j].y() - plane_center.y()) <
+	    // (vertices_block[i][j].y - plane_center.y()) *
+	    //   (vertices_block[i][j].y - plane_center.y()) <
 	    // plane_variance.y() &&
-	    (vertices_block[i][j].z() - plane_center.z()) *
-	      (vertices_block[i][j].z() - plane_center.z()) <
+	    (vertices_block[i][j].z - plane_center.z()) *
+	      (vertices_block[i][j].z - plane_center.z()) <
 	    plane_variance.z())
-	  vertices_.push_back(vertices_block[i][j]);
+	{
+	   aero::rgb c = {raw->points[vertices_block[i][j].id].r,
+			  raw->points[vertices_block[i][j].id].g,
+			  raw->points[vertices_block[i][j].id].b};
+	   if (!aero::colors::compare(c, color_min, color_max))
+	     // not a noise from plane
+	     vertices_.push_back(Eigen::Vector3f(vertices_block[i][j].x,
+						 vertices_block[i][j].y,
+						 vertices_block[i][j].z));
+	}
       }
   vertices_.resize(vertices_.size());
 
@@ -245,7 +310,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
   // now we have the points on the plane
 
   cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
-  cloud_->points.reserve(plane_points.size());
+  cloud_->points.reserve(vertices_.size());
 
   for (unsigned int i = 0; i < vertices_.size(); ++i)
   {

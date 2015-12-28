@@ -12,6 +12,7 @@
 #include <pcl/point_types.h>
 #include "aero_object_manipulation/perception/class/PointCloudSensor.hh"
 #include "aero_common/types.h"
+#include "aero_common/colors.h"
 
 #include <random>
 
