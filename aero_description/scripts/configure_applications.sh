@@ -100,8 +100,8 @@ find_source_code() {
     source_name=$2
 
     # rename source depending on camel letters
-    find_source=$(find ${executable_path} -name "${source_name}*" | grep -v ".hh")
-    has_same_name_class_object=$(find ${executable_path} -name "${source_name}*" | grep "class")
+    find_source=$(find ${executable_path} -name "${source_name}*" | grep -v "~" | grep -v ".hh")
+    has_same_name_class_object=$(find ${executable_path} -name "${source_name}*" | grep "class" | grep -v "~")
     if [[ $find_source == "" ]]
     then
 	num_of_words=$(echo $source_name | awk -F_ '{print NF}')
@@ -111,13 +111,13 @@ find_source_code() {
 	    word=$(echo $source_name | awk -F_ '{print $'$num'}')
 	    file_name="${file_name}${word^}"
 	done
-	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh")
-	has_same_name_class_object=$(find ${executable_path} -name "${file_name}*" | grep "/class/")
+	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh" | grep -v "~")
+	has_same_name_class_object=$(find ${executable_path} -name "${file_name}*" | grep "/class/" | grep -v "~")
     fi
     # if class object with same name as executable exists
     if [[ $has_same_name_class_object != "" ]]
     then
-	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh" | grep -v "/class/") 
+	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh" | grep -v "/class/" | grep -v "~") 
     fi
     echo -e $find_source
 }
@@ -246,7 +246,7 @@ then
     echo "building non-c++11 files"
     where_i_was=$(pwd)
     cd $(rospack find aero_description)
-    catkin b aero_startup
+    catkin b aero_startup --verbose
 fi
 
 # delete non-c++11 builds
@@ -356,5 +356,5 @@ done < $input_file
 
 echo "building c++11 files"
 cd $(rospack find aero_description)
-catkin b aero_startup
+catkin b aero_startup --verbose
 cd $where_i_was
