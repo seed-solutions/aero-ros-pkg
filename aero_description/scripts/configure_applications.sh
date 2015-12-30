@@ -202,7 +202,12 @@ parse_line() {
     fi
 
     # target link
-    echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    if [[ $(echo $header | awk '{print $1}') == "!" ]]
+    then
+	echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES} libboost_random.so libboost_chrono.so" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    else
+	echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    fi
     write_to_line=$(($write_to_line + 1))
     echo "${tab}${tab2}${libs})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     if [[ $ifs != "" ]]
@@ -236,6 +241,10 @@ do
     proto=$(echo $header | awk '{print $1}')
     if [[ $proto == "!" ]] # non-c++11 build
     then
+	write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+	write_to_line=$(($write_to_line + 1))
+	boost_links=$(locate boost_chrono | grep ".so" | tr '\n' ' ' | awk '{print $1}' | sed 's|\(.*\)/.*|\1|')
+	echo "link_directories(${boost_links})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	parse_line "$line"
 	non_cpp_build="true"
     fi
@@ -250,6 +259,16 @@ then
 fi
 
 # delete non-c++11 builds
+
+delete_from_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+delete_from_line=$(($delete_from_line + 1))
+delete_to_line=$(grep -n -m 1 "<<< add dependencies" $cmake_file | cut -d ':' -f1)
+
+if [[ $delete_to_line -ne $delete_from_line ]]
+then
+    delete_to_line=$(($delete_to_line - 1))
+    sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
+fi
 
 delete_from_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
 delete_from_line=$(($delete_from_line + 1))
