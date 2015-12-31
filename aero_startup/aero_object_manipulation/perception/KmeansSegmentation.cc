@@ -8,7 +8,15 @@ int main(int argc, char **argv)
   aero::common::KmeansGapClusteringPtr kmeans(
       new aero::common::KmeansGapClustering(nh));
 
-  ros::spin();
+  // ros::spin();
+
+  ros::Rate r(1);
+
+  while (ros::ok())
+  {
+    ros::spinOnce();
+    r.sleep();
+  }
 
   return 0;
 }
