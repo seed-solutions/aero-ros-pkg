@@ -31,8 +31,8 @@ void RunByVision::Subscribe(const geometry_msgs::Pose::ConstPtr& _object)
 }
 
 //////////////////////////////////////////////////
-bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
-			      aero_startup::ObjectGoXYZHSI::Response &_res)
+bool RunByVision::GoForTarget(aero_startup::TimeFromGoXY::Request  &_req,
+			      aero_startup::TimeFromGoXY::Response &_res)
 {
   // RunByVision expects that target object is identified prior to call
 

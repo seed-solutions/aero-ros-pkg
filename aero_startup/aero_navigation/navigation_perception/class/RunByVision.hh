@@ -7,7 +7,7 @@
 #include "aero_common/types.h"
 #include "aero_common/status.h"
 #include "aero_common/time.h"
-#include <aero_startup/ObjectGoXYZHSI.h>
+#include <aero_startup/TimeFromGoXY.h>
 #include <aero_startup/ProcessSleep.h>
 
 namespace aero
@@ -23,8 +23,8 @@ namespace aero
 
     private: void Subscribe(const geometry_msgs::Pose::ConstPtr& _object);
 
-    private: bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request &_req,
-			      aero_startup::ObjectGoXYZHSI::Response &_res);
+    private: bool GoForTarget(aero_startup::TimeFromGoXY::Request &_req,
+			      aero_startup::TimeFromGoXY::Response &_res);
 
     private: ros::ServiceServer goal_service_;
 
