@@ -22,10 +22,13 @@ namespace aero
 
     public: ~KmeansGapClustering();
 
-    public: void ExtractClusters(std::vector<Eigen::Vector3f> _vertices);
+    public: void ExtractClusters(
+	const std::vector<Eigen::Vector3f> &_vertices,
+	Eigen::Vector2f _plane_center, Eigen::Vector2f _plane_size);
 
     public: std::vector<Eigen::Vector3f> GetClusterVertices(
-        std::vector<Eigen::Vector3f> _vertices, aero::box _region);
+        const std::vector<Eigen::Vector3f> &_vertices,
+	const aero::box &_region);
 
     protected: void Subscribe(
         const std_msgs::Float32MultiArray::ConstPtr& _points);
@@ -45,7 +48,7 @@ namespace aero
 	bool _append);
 
     protected: inline float NearestCluster(
-        point _point, std::vector<Eigen::Vector3f> _initial_centers,
+        point _point, const std::vector<Eigen::Vector3f> &_initial_centers,
         bool _return_distance)
       {
 	int nearest_cluster_id;
@@ -66,33 +69,13 @@ namespace aero
 	else return static_cast<float>(nearest_cluster_id);
       };
 
-    protected: inline bool IsNoise(Eigen::Vector3f _p)
-      {
-	for (unsigned int i = 0; i < noises_.size(); ++i)
-	  if (_p.x() < noises_[i].max_bound.x &&
-	      _p.x() > noises_[i].min_bound.x &&
-	      _p.y() < noises_[i].max_bound.y &&
-	      _p.y() > noises_[i].min_bound.y &&
-	      _p.z() < noises_[i].max_bound.z &&
-	      _p.z() > noises_[i].min_bound.z)
-	    return true;
-
-	return false;
-      };
-
     private: std::vector<point> points_;
 
     private: std::vector<aero::box> cluster_list_;
 
     private: std::vector<aero::box> noises_;
 
-    private: aero::xyz field_range_max_;
-
-    private: aero::xyz field_range_min_;
-
     private: int num_points_in_field_;
-
-    private: int scene_narrowed_n_times_;
 
     private: int max_clusters_;
 
