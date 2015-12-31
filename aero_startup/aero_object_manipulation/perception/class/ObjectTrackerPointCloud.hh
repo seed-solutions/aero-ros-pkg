@@ -11,6 +11,7 @@
 #include <pcl_ros/transforms.h>
 #include <pcl/point_types.h>
 #include <aero_startup/BoxFromXYZ.h>
+#include <aero_startup/ReturnRGB.h>
 #include "aero_object_manipulation/perception/class/PointCloudSensor.hh"
 #include "aero_common/types.h"
 #include "aero_common/status.h"
@@ -57,11 +58,13 @@ namespace aero
 
     protected: ros::ServiceClient get_object_;
 
+    protected: ros::ServiceClient get_plane_color_;
+
     protected: Eigen::Vector3f object_center_;
 
-    protected: aero::hsi trim_color_min_;
+    protected: aero::lab plane_color_;
 
-    protected: aero::hsi trim_color_max_;
+    protected: aero::lab object_color_;
     };
 
     typedef std::shared_ptr<ObjectTrackerPointCloud> ObjectTrackerPointCloudPtr;

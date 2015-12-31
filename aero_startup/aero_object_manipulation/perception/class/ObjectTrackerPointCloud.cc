@@ -15,13 +15,13 @@ ObjectTrackerPointCloud::ObjectTrackerPointCloud(ros::NodeHandle _nh)
 		    &ObjectTrackerPointCloud::SubscribePoints, this);
   get_object_ = nh_.serviceClient<aero_startup::BoxFromXYZ>(
       "/point_cloud/get_object_from_center");
+  get_plane_color_ = nh_.serviceClient<aero_startup::ReturnRGB>(
+      "/plane_detection/get_plane_color");
   sleep_service_ =
     nh_.advertiseService("/object_tracker/sleep",
 			 &ObjectTrackerPointCloud::ProcessSleep, this);
 
   object_center_ = Eigen::Vector3f(0.0, 0.0, 0.0);
-  trim_color_min_ = {0, 0, 0};
-  trim_color_max_ = {0, 0, 0};
 
   sleep_ = true;
 }
@@ -75,10 +75,18 @@ void ObjectTrackerPointCloud::SubscribePoints(
   for (unsigned int i = 0; i < raw->points.size(); ++i)
   {
     Eigen::Vector3f p(raw->points[i].x, raw->points[i].y, raw->points[i].z);
+    if (!this->BoundingConditions(p)) continue;
+
     aero::rgb c = {raw->points[i].r, raw->points[i].g, raw->points[i].b};
-    if (this->BoundingConditions(p) &&
-	!aero::colors::compare(c, trim_color_min_, trim_color_max_))
+    float dist1 =
+        aero::colors::distance(object_color_, aero::colors::rgb2lab(c));
+    float dist2 =
+        aero::colors::distance(plane_color_, aero::colors::rgb2lab(c));
+    if (dist2 - dist1 > 5.0)
     {
+      // ROS_INFO("color is %d %d %d", c.r, c.g, c.b);
+      // ROS_INFO("dist to object %f", dist1);
+      // ROS_INFO("dist to plane %f", dist2);
       object_center += p;
       points.push_back({p.x(), p.y(), p.z()});
       ++points_count;
@@ -145,7 +153,7 @@ void ObjectTrackerPointCloud::SubscribePoints(
   p_msg.layout = layout;
   points_publisher_.publish(p_msg);
 
-  ROS_WARN("time : %f", aero::time::ms(aero::time::now() - start));
+  ROS_WARN("track time : %f", aero::time::ms(aero::time::now() - start));
 }
 
 //////////////////////////////////////////////////
@@ -190,10 +198,19 @@ bool ObjectTrackerPointCloud::ProcessSleep(
       srv.request.z = request_in_camera_pos.z();
     }
     srv.request.kill_spin = true;
-    // set object
+    // get object
     if (!get_object_.call(srv))
     {
-      ROS_ERROR("unexpected call fail to service");
+      ROS_ERROR("unexpected call fail to service get object");
+      _res.status = aero::status::fatal;
+      sleep_ = true;
+      return true;
+    }
+    // get plane color
+    aero_startup::ReturnRGB srv2;
+    if (!get_plane_color_.call(srv2))
+    {
+      ROS_ERROR("unexpected call fail to service get plane color");
       _res.status = aero::status::fatal;
       sleep_ = true;
       return true;
@@ -204,6 +221,9 @@ bool ObjectTrackerPointCloud::ProcessSleep(
 	 {srv.response.min_x, srv.response.min_y, srv.response.min_z},
 	 srv.response.points};
     object_center_ = Eigen::Vector3f(0.0, 0.0, 0.0);
+    aero::rgb plane_rgb =
+        {srv2.response.r, srv2.response.g, srv2.response.b};
+    plane_color_ = aero::colors::rgb2lab(plane_rgb);
     ROS_WARN("activating object tracking");
   }
   else ROS_WARN("sleeping object tracking");
@@ -216,23 +236,6 @@ bool ObjectTrackerPointCloud::ProcessSleep(
 void ObjectTrackerPointCloud::InitializeTrackingObjectData(
     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& _raw)
 {
-  std::random_device rd;
-  std::mt19937 mt(rd());
-  std::uniform_real_distribution<float> rand_y(
-      object_.min_bound.y, object_.max_bound.y);
-
-  // create random sample outliers to get boundary points
-  std::vector<aero::xyz> random_x_outliers(10);
-  int middle_idx_b = static_cast<int>(random_x_outliers.size() * 0.5);
-  for (unsigned int i = 0; i < middle_idx_b; ++i)
-    random_x_outliers[i] = {object_.max_bound.x + 1.0, rand_y(mt), 0.0};
-  for (unsigned int i = middle_idx_b; i < random_x_outliers.size(); ++i)
-    random_x_outliers[i] = {object_.max_bound.x - 1.0, rand_y(mt), 0.0};
-
-  // initialize boundary and center points
-  std::vector<int> boundary_points_id(random_x_outliers.size(), 0);
-  std::vector<float> to_bound_minimal_distances(random_x_outliers.size(),
-						100000);
   std::vector<int> center_points_id(10, 0);
   int middle_idx_c = static_cast<int>(center_points_id.size() * 0.5);
   std::vector<float> to_center_minimal_distances(center_points_id.size(),
@@ -242,18 +245,6 @@ void ObjectTrackerPointCloud::InitializeTrackingObjectData(
   {
     Eigen::Vector3f p(_raw->points[i].x, _raw->points[i].y, _raw->points[i].z);
     if (!this->BoundingConditions(p)) continue;
-
-    // check if p is a most-likely boundary point
-    for (unsigned int j = 0; j < random_x_outliers.size(); ++j)
-    {
-      float b_distance = std::pow(p.x() - random_x_outliers[j].x, 2) +
-	  std::pow(p.y() - random_x_outliers[j].y, 2);
-      if (b_distance < to_bound_minimal_distances[j])
-      {
-	boundary_points_id[j] = i;
-	to_bound_minimal_distances[j] = b_distance;
-      }
-    }
 
     // check if p is a most-likely center point
     float c_distance = std::pow(p.x() - object_.center.x, 2) +
@@ -275,119 +266,39 @@ void ObjectTrackerPointCloud::InitializeTrackingObjectData(
 
   aero::lab white = {100, 0.005, -0.01};
 
-  // create boundary Set
-  std::vector<aero::rgb_dist> boundary_points(random_x_outliers.size());
-  for (unsigned int i = 0; i < random_x_outliers.size(); ++i)
-  {
-    int idx = boundary_points_id[i];
-    aero::rgb c =
-        {_raw->points[idx].r, _raw->points[idx].g, _raw->points[idx].b};
-    boundary_points[i].color = c;
-    boundary_points[i].dist =
-        aero::colors::distance(aero::colors::rgb2lab(c), white);
-  }
-
   // create center Set
-  std::vector<aero::rgb_dist> center_points(center_points_id.size());
+  std::vector<std::vector<rgb_dist> > grouped_samples(11);
   for (unsigned int i = 0; i < center_points_id.size(); ++i)
   {
     int idx = center_points_id[i];
     aero::rgb c =
         {_raw->points[idx].r, _raw->points[idx].g, _raw->points[idx].b};
-    center_points[i].color = c;
-    center_points[i].dist =
+    float distance =
         aero::colors::distance(aero::colors::rgb2lab(c), white);
+    aero::rgb_dist p = {c, distance};
+    grouped_samples[static_cast<int>(distance / 10)].push_back(p);
   }
 
-  // sort each Set by color distance to white
-  std::sort(boundary_points.begin(), boundary_points.end());
-  std::sort(center_points.begin(), center_points.end());
-
-  // get main color of each set (sorted median)
-  aero::rgb center_color = center_points[middle_idx_c].color;
-  aero::lab center_lab = aero::colors::rgb2lab(center_color);
-  aero::hsi center_hsi = aero::colors::rgb2hsi(center_color);
-  aero::hsi center_hsi_min =
-      {center_hsi.h - 20, center_hsi.s - 50, center_hsi.i - 50};
-  aero::hsi center_hsi_max =
-      {center_hsi.h + 20, center_hsi.s + 50, center_hsi.i + 50};
-  aero::rgb boundary_color = boundary_points[middle_idx_b].color;
-  aero::lab boundary_lab = aero::colors::rgb2lab(boundary_color);
-  aero::hsi boundary_hsi = aero::colors::rgb2hsi(boundary_color);
-  aero::hsi boundary_hsi_min =
-      {boundary_hsi.h - 20, boundary_hsi.s - 50, boundary_hsi.i - 50};
-  aero::hsi boundary_hsi_max =
-      {boundary_hsi.h + 20, boundary_hsi.s + 50, boundary_hsi.i + 50};
-
-  // re-create boundary Set according to main color
-  std::vector<aero::rgb_dist> boundary_points_re;
-  boundary_points_re.reserve(boundary_points.size());
-  for (unsigned int i = 0; i < boundary_points.size(); ++i)
-    if (aero::colors::compare(
-            boundary_points[i].color, boundary_hsi_min, boundary_hsi_max))
+  int largest_group = 0;
+  int largest_group_size = 0;
+  for (unsigned int i = 0; i < 11; ++i)
+    if (grouped_samples[i].size() > largest_group_size)
     {
-      aero::rgb_dist p;
-      p.color = boundary_points[i].color;
-      p.dist =
-	  aero::colors::distance(aero::colors::rgb2lab(p.color), boundary_lab);
-      boundary_points_re.push_back(p);
+      largest_group = i;
+      largest_group_size = grouped_samples[i].size();
     }
-  boundary_points_re.resize(boundary_points_re.size());
 
-  // re-create center Set according to main color
-  std::vector<aero::rgb_dist> center_points_re;
-  center_points_re.reserve(center_points.size());
-  for (unsigned int i = 0; i < center_points.size(); ++i)
-    if (aero::colors::compare(
-            center_points[i].color, center_hsi_min, center_hsi_max))
-    {
-      aero::rgb_dist p;
-      p.color = center_points[i].color;
-      p.dist =
-	  aero::colors::distance(aero::colors::rgb2lab(p.color), center_lab);
-      center_points_re.push_back(p);
-    }
-  center_points_re.resize(center_points_re.size());
+  std::sort(grouped_samples[largest_group].begin(),
+	    grouped_samples[largest_group].end());
+  aero::hsi center_color =
+      aero::colors::rgb2hsi(
+          grouped_samples[largest_group][largest_group_size * 0.5].color);
+  object_color_ =
+      aero::colors::rgb2lab(
+          grouped_samples[largest_group][largest_group_size * 0.5].color);
 
-  // sort each Set by color distance to main color
-  std::sort(boundary_points_re.begin(), boundary_points_re.end());
-  std::sort(center_points_re.begin(), center_points_re.end());
-
-  int b = boundary_points_re.size() - 1;
-  int c = center_points_re.size() - 1;
-
-  std::function<void()> reset_bounds = [&]()
-  {
-    aero::hsi limit = aero::colors::rgb2hsi(boundary_points_re[b].color);
-    limit = {abs(limit.h - boundary_hsi.h) + 2,
-	     abs(limit.s - boundary_hsi.s) + 5,
-	     abs(limit.i - boundary_hsi.i) + 5};
-    trim_color_min_ = {boundary_hsi.h - limit.h,
-		       // boundary_hsi.s - limit.s,
-		       // boundary_hsi.i - limit.i};
-		       0, // don't care saturation
-		       0}; // don't care intensity
-    trim_color_max_ = {boundary_hsi.h + limit.h,
-		       // boundary_hsi.s + limit.s,
-		       // boundary_hsi.i + limit.i};
-		       255, // don't care saturation
-		       255}; // don't care intensity
-  };
-
-  // reset boundary hsi so that at least half of center points are not included
-  reset_bounds();
-  while (b >= 0)
-  {
-    if (!aero::colors::compare(
-            center_points_re[c].color, trim_color_min_, trim_color_max_))
-      break;
-
-    --b; // shrink boundary
-    if (c > middle_idx_c) --c; // try excluding far colored center points
-    reset_bounds();
-  }
-
-  ROS_WARN("bound colors are : %d %d %d ~ %d %d %d",
-	   trim_color_min_.h, trim_color_min_.s, trim_color_min_.i,
-	   trim_color_max_.h, trim_color_max_.s, trim_color_max_.i);
+  ROS_INFO("object color %f %f %f",
+	   object_color_.l, object_color_.a, object_color_.b);
+  ROS_INFO("plane color %f %f %f",
+  	   plane_color_.l, plane_color_.a, plane_color_.b);
 }
