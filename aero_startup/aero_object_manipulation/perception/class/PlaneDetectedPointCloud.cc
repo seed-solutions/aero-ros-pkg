@@ -179,8 +179,8 @@ void PlaneDetectedPointCloud::SubscribePoints(
   boost::random::uniform_int_distribution<> rand(0, plane_points.size());
 #endif
   int num_of_samples;
-  if (plane_points.size() < 200) num_of_samples = plane_points.size();
-  else num_of_samples = 200; // use only 200 points if plane is big
+  if (plane_points.size() < 400) num_of_samples = plane_points.size();
+  else num_of_samples = 400; // use only 400 points if plane is big
   std::vector<aero::rgb_dist> sample_points(num_of_samples);
   std::vector<aero::lab> sample_labs(num_of_samples);
   std::vector<std::vector<rgb_dist> > grouped_samples(21);
@@ -289,9 +289,6 @@ void PlaneDetectedPointCloud::SubscribePoints(
 	if ((vertices_shifted[i][j].x - plane_center.x()) *
 	      (vertices_shifted[i][j].x - plane_center.x()) <
 	    plane_variance.x() &&
-	    // (vertices_shifted[i][j].y - plane_center.y()) *
-	    //   (vertices_shifted[i][j].y - plane_center.y()) <
-	    // plane_variance.y() &&
 	    (vertices_shifted[i][j].z - plane_center.z()) *
 	      (vertices_shifted[i][j].z - plane_center.z()) <
 	    plane_variance.z())
@@ -315,9 +312,6 @@ void PlaneDetectedPointCloud::SubscribePoints(
 	if ((vertices_block[i][j].x - plane_center.x()) *
 	      (vertices_block[i][j].x - plane_center.x()) <
 	    plane_variance.x() &&
-	    // (vertices_block[i][j].y - plane_center.y()) *
-	    //   (vertices_block[i][j].y - plane_center.y()) <
-	    // plane_variance.y() &&
 	    (vertices_block[i][j].z - plane_center.z()) *
 	      (vertices_block[i][j].z - plane_center.z()) <
 	    plane_variance.z())
@@ -362,7 +356,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
   std_msgs::MultiArrayLayout layout;
   std_msgs::MultiArrayDimension dim_head;
   dim_head.label = "info";
-  dim_head.size = 0; // is not used
+  dim_head.size = 4; // number of data in head
   dim_head.stride = 1; // number of blocks
   layout.dim.push_back(dim_head);
   std_msgs::MultiArrayDimension dim;
@@ -371,7 +365,11 @@ void PlaneDetectedPointCloud::SubscribePoints(
   dim.stride = 3; // number of data for each point
   layout.dim.push_back(dim);
   p_msg.layout = layout;
-  p_msg.data.reserve(dim.stride * dim.size);
+  p_msg.data.reserve(dim.stride * dim.size + dim_head.size);
+  p_msg.data.push_back(plane_center.x());
+  p_msg.data.push_back(plane_center.z());
+  p_msg.data.push_back(plane_variance.x());
+  p_msg.data.push_back(plane_variance.z());
   for (unsigned int i = 0; i < vertices_.size(); ++i)
   {
     p_msg.data.push_back(vertices_[i].x());
@@ -390,7 +388,7 @@ void PlaneDetectedPointCloud::SubscribePoints(
   msg.header.stamp = ros::Time(0); // get possible recent
   pcl_pub_.publish(msg);
 
-  ROS_WARN("detect time : %f", aero::time::ms(aero::time::now() - start));
+  // ROS_WARN("detect time : %f", aero::time::ms(aero::time::now() - start));
 }
 
 //////////////////////////////////////////////////
