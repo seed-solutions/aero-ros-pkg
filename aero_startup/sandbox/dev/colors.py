@@ -48,10 +48,10 @@ def distance(_color1, _color2):
     C = (c2 + c1) * 0.5
     dC = c2 - c1
     
-    if _color1['a'] < 0.000001:
-        _color1['a'] = 0.000001
-    if _color2['a'] < 0.000001:
-        _color2['a'] = 0.000001
+    if fabs(a1) < 0.000001:
+        a1 = 0.000001
+    if fbas(a2) < 0.000001:
+        a2 = 0.000001
     h1 = atan2(_color1['b'], a1)
     if h1 < 0:
         h1 += 2 * pi

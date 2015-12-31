@@ -4,8 +4,7 @@
 #include <ros/ros.h>
 #include "sensor_msgs/PointCloud2.h"
 #include "std_msgs/Float32MultiArray.h"
-#include "geometry_msgs/Pose.h"
-#include <Eigen/Core>
+#include "aero_object_manipulation/perception/class/Base.hh"
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_types.h>
 #include <pcl/PCLPointCloud2.h>
@@ -22,7 +21,7 @@ namespace aero
   namespace perception
   {
 
-    class PointCloudSensor
+    class PointCloudSensor : public aero::common::Base
     {
     public: explicit PointCloudSensor(ros::NodeHandle _nh);
 
@@ -30,9 +29,6 @@ namespace aero
 
     protected: virtual void SubscribePoints(
         const sensor_msgs::PointCloud2::ConstPtr& _msg) = 0;
-
-    protected: void SubscribeCameraPseudoTf(
-        const geometry_msgs::Pose::ConstPtr& _pose);
 
     protected: bool Reconfigure(aero_startup::PointXYZHSI::Request &_req,
 				aero_startup::PointXYZHSI::Response &_res);
@@ -78,17 +74,11 @@ namespace aero
 
     protected: aero::hsi target_hsi_min_;
 
-    protected: geometry_msgs::Pose base_to_eye_;
-
-    protected: ros::NodeHandle nh_;
-
     protected: ros::ServiceServer filter_service_;
 
     protected: ros::ServiceServer sleep_service_;
 
     protected: ros::Publisher points_publisher_;
-
-    protected: ros::Subscriber camera_pseudo_tf_subscriber_;
     };
 
 #ifdef CXX11_SUPPORTED

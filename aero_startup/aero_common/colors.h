@@ -1,10 +1,25 @@
 #ifndef _AERO_COMMON_COLORS_
 #define _AERO_COMMON_COLORS_
 
+#include <cstdlib>
+#include <cmath>
+#include <algorithm>
 #include "aero_common/types.h"
 
 namespace aero
 {
+
+  struct rgb_dist
+  {
+    rgb color;
+    float dist;
+
+    bool operator < (const rgb_dist& _p) const
+    {
+      return (dist < _p.dist);
+    };
+  };
+
   namespace colors
   {
 
@@ -14,11 +29,19 @@ namespace aero
       aero::hsi hsi_color;
 
       // I
+#ifdef CXX11_SUPPORTED
       float I_max = std::max({_color.r, _color.g, _color.b});
+#else
+      float I_max = std::max(std::max(_color.r, _color.g), _color.b);
+#endif
       hsi_color.i = I_max;
 
       // S
+#ifdef CXX11_SUPPORTED
       float i_min = std::min({_color.r, _color.g, _color.b});
+#else
+      float i_min = std::min(std::min(_color.r, _color.g), _color.b);
+#endif
       if (I_max > 0) hsi_color.s = 255 * (1 - i_min / I_max);
       else hsi_color.s = 0;
 
@@ -60,34 +83,68 @@ namespace aero
       adapt.y = 1.0;
       adapt.z = 1.088969;
 
+#ifdef CXX11_SUPPORTED
       std::function<float(float)> g = [=](float _v)
       {
 	_v = _v * 0.003922;
 	if (_v <= 0.04045) return _v * 0.07739938;
 	else return std::pow((_v + 0.055) / 1.055, 2.4);
       };
+#else
+      struct g
+      {
+	static float func(float _v)
+	{
+	  _v = _v * 0.003922;
+	  if (_v <= 0.04045) return _v * 0.07739938;
+	  else return std::pow((_v + 0.055) / 1.055, 2.4);
+	};
+      };
+#endif
 
-      aero::rgb rgb;
-      rgb.r = g(_color.r);
-      rgb.g = g(_color.g);
-      rgb.b = g(_color.b);
+      aero::xyz rgb; // xyz for floats
+#ifdef CXX11_SUPPORTED
+      rgb.x = g(_color.r);
+      rgb.y = g(_color.g);
+      rgb.z = g(_color.b);
+#else
+      rgb.x = g::func(_color.r);
+      rgb.y = g::func(_color.g);
+      rgb.z = g::func(_color.b);
+#endif
 
       aero::xyz xyz;
-      xyz.x = 0.412424 * rgb.r + 0.357579 * rgb.g + 0.180464 * rgb.b;
-      xyz.y = 0.212656 * rgb.r + 0.715158 * rgb.g + 0.0721856 * rgb.b;
-      xyz.z = 0.0193324 * rgb.r + 0.119193 * rgb.g + 0.950444 * rgb.b;
+      xyz.x = 0.412424 * rgb.x + 0.357579 * rgb.y + 0.180464 * rgb.z;
+      xyz.y = 0.212656 * rgb.x + 0.715158 * rgb.y + 0.0721856 * rgb.z;
+      xyz.z = 0.0193324 * rgb.x + 0.119193 * rgb.y + 0.950444 * rgb.z;
 
+#ifdef CXX11_SUPPORTED
       std::function<float(float)> f = [=](float _v)
       {
 	if (_v > 0.008856) return std::pow(_v, 0.333333);
 	else return _v * 7.787 + 0.137931;
       };
+#else
+      struct f
+      {
+	static float func(float _v)
+	{
+	  if (_v > 0.008856) return std::pow(_v, 0.333333);
+	  else return _v * 7.787 + 0.137931;
+	};
+      };
+#endif
 
       aero::lab lab;
+#ifdef CXX11_SUPPORTED
       lab.l = 116 * f(xyz.y / adapt.y) - 16;
       lab.a = 500 * (f(xyz.x / adapt.x) - f(xyz.y / adapt.y));
       lab.b = 200 * (f(xyz.y / adapt.y) - f(xyz.z / adapt.z));
-
+#else
+      lab.l = 116 * f::func(xyz.y / adapt.y) - 16;
+      lab.a = 500 * (f::func(xyz.x / adapt.x) - f::func(xyz.y / adapt.y));
+      lab.b = 200 * (f::func(xyz.y / adapt.y) - f::func(xyz.z / adapt.z));
+#endif
       return lab;
     };
 
@@ -108,8 +165,8 @@ namespace aero
       float C = (c2 + c1) * 0.5;
       float dC = c2 - c1;
 
-      if (a1 < 0.000001) a1 = 0.000001;
-      if (a2 < 0.000001) a2 = 0.000001;
+      if (fabs(a1) < 0.000001) a1 = 0.000001;
+      if (fabs(a2) < 0.000001) a2 = 0.000001;
       float h1 = atan2(_color1.b, a1);
       if (h1 < 0) h1 += 2 * M_PI;
       float h2 = atan2(_color2.b, a2);
@@ -144,12 +201,20 @@ namespace aero
     {
       aero::hsi hsi_color;
 
+#ifdef CXX11_SUPPORTED
       float I_max = std::max({_color.r, _color.g, _color.b});
+#else
+      float I_max = std::max(std::max(_color.r, _color.g), _color.b);
+#endif
       hsi_color.i = I_max;
       if (hsi_color.i < _hsi_min.i || hsi_color.i > _hsi_max.i)
 	return false;
 
+#ifdef CXX11_SUPPORTED
       float i_min = std::min({_color.r, _color.g, _color.b});
+#else
+      float i_min = std::min(std::min(_color.r, _color.g), _color.b);
+#endif
       if (I_max > 0) hsi_color.s = 255 * (1 - i_min / I_max);
       else hsi_color.s = 0;
       if (hsi_color.s < _hsi_min.s || hsi_color.s > _hsi_max.s)

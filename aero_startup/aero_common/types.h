@@ -31,6 +31,14 @@ namespace aero
     float z;
   };
 
+  struct point
+  {
+    int id;
+    float x;
+    float y;
+    float z;
+  };
+
   struct box
   {
     xyz center;

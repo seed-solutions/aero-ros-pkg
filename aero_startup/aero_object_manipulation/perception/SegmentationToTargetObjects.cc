@@ -1,3 +1,4 @@
+#include "aero_object_manipulation/perception/class/Base.hh"
 #include "aero_object_manipulation/perception/class/ClusteredCloud.hh"
 
 //////////////////////////////////////////////////
