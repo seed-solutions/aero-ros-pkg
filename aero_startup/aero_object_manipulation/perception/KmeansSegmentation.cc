@@ -1,4 +1,5 @@
-#include "aero_object_manipulation/perception/class/KmeansGapClustering.hh"
+#include "aero_object_manipulation/perception/class/Base.hh"
+#include "aero_object_manipulation/perception/class/Kmeans2DGapClustering.hh"
 
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
