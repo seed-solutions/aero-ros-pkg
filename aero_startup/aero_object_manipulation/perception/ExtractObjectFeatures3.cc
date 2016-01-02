@@ -9,7 +9,13 @@ int main(int argc, char **argv)
   aero::perception::ObjectFeaturesPtr object(
       new aero::perception::ObjectFeatures(nh));
 
-  ros::spin();
+  ros::Rate r(30);
+
+  while (ros::ok())
+  {
+    ros::spinOnce();
+    r.sleep();
+  }
 
   return 0;
 }

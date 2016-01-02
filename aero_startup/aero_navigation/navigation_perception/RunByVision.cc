@@ -10,7 +10,13 @@ int main(int argc, char **argv)
   aero::navigation::RunByVisionPtr target_runner(
       new aero::navigation::RunByVision(nh));
 
-  ros::spin();
+  ros::Rate r(30);
+
+  while (ros::ok())
+  {
+    ros::spinOnce();
+    r.sleep();
+  }
 
   return 0;
 }
