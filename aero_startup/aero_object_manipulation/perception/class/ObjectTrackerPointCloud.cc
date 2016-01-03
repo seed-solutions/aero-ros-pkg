@@ -113,8 +113,8 @@ void ObjectTrackerPointCloud::SubscribePoints(
        object_center.z() - object_center_.z()};
   object_center_ = object_center;
 
-  ROS_WARN("translation : %f %f %f",
-	   translation.x(), translation.y(), translation.z());
+  // ROS_WARN("translation : %f %f %f",
+  // 	   translation.x(), translation.y(), translation.z());
 
   object_.max_bound =
       {object_.max_bound.x + translation.x(),
@@ -153,7 +153,7 @@ void ObjectTrackerPointCloud::SubscribePoints(
   p_msg.layout = layout;
   points_publisher_.publish(p_msg);
 
-  ROS_WARN("track time : %f", aero::time::ms(aero::time::now() - start));
+  // ROS_WARN("track time : %f", aero::time::ms(aero::time::now() - start));
 }
 
 //////////////////////////////////////////////////
@@ -166,16 +166,17 @@ bool ObjectTrackerPointCloud::ProcessSleep(
 
   if (!sleep_) // when triggered on
   {
-    aero_startup::BoxFromXYZ srv;
+    aero_startup::BoxFromXYZ srv_target;
     // parse message
     std::string wrt;
     std::istringstream iss(_req.message);
-    iss >> srv.request.x;
-    iss >> srv.request.y;
-    iss >> srv.request.z;
+    iss >> srv_target.request.x;
+    iss >> srv_target.request.y;
+    iss >> srv_target.request.z;
     iss >> wrt;
     ROS_INFO("looking for target : %f %f %f %s",
-	     srv.request.x, srv.request.y, srv.request.z, wrt.c_str());
+	     srv_target.request.x, srv_target.request.y,
+	     srv_target.request.z, wrt.c_str());
     if (wrt == "world") // target position given in world coordinates
     {
       // check if pseudo tf is ready
@@ -189,40 +190,53 @@ bool ObjectTrackerPointCloud::ProcessSleep(
 			     base_to_eye_.orientation.z,
 			     base_to_eye_.orientation.w);
       Eigen::Vector3f request_in_camera_pos =
-	  base_to_eye_q.inverse() * Eigen::Vector3f(srv.request.x,
-						    srv.request.y,
-						    srv.request.z);
+	  base_to_eye_q.inverse() * Eigen::Vector3f(srv_target.request.x,
+						    srv_target.request.y,
+						    srv_target.request.z);
       // only camera coords is accepted for request
-      srv.request.x = request_in_camera_pos.x();
-      srv.request.y = request_in_camera_pos.y();
-      srv.request.z = request_in_camera_pos.z();
+      srv_target.request.x = request_in_camera_pos.x();
+      srv_target.request.y = request_in_camera_pos.y();
+      srv_target.request.z = request_in_camera_pos.z();
     }
-    srv.request.kill_spin = true;
+    srv_target.request.kill_spin = true;
     // get object
-    if (!get_object_.call(srv))
+    auto call_start = aero::time::now();
+    while (!get_object_.call(srv_target))
     {
       ROS_ERROR("unexpected call fail to service get object");
       _res.status = aero::status::fatal;
-      sleep_ = true;
-      return true;
+      if (aero::time::ms(aero::time::now() - call_start) > 5000) // timeout
+      {
+	sleep_ = true;
+	return true;
+      }
+      usleep(100 * 1000);
     }
     // get plane color
-    aero_startup::ReturnRGB srv2;
-    if (!get_plane_color_.call(srv2))
+    aero_startup::ReturnRGB srv_plane;
+    call_start = aero::time::now();
+    while (!get_plane_color_.call(srv_plane))
     {
       ROS_ERROR("unexpected call fail to service get plane color");
       _res.status = aero::status::fatal;
-      sleep_ = true;
-      return true;
+      if (aero::time::ms(aero::time::now() - call_start) > 5000) // timeout
+      {
+	sleep_ = true;
+	return true;
+      }
+      usleep(100 * 1000);
     }
     object_ =
-        {{srv.response.c_x, srv.response.c_y, srv.response.c_z},
-	 {srv.response.max_x, srv.response.max_y, srv.response.max_z},
-	 {srv.response.min_x, srv.response.min_y, srv.response.min_z},
-	 srv.response.points};
+        {{srv_target.response.c_x, srv_target.response.c_y,
+	  srv_target.response.c_z},
+	 {srv_target.response.max_x, srv_target.response.max_y,
+	  srv_target.response.max_z},
+	 {srv_target.response.min_x, srv_target.response.min_y,
+	  srv_target.response.min_z},
+	 srv_target.response.points};
     object_center_ = Eigen::Vector3f(0.0, 0.0, 0.0);
     aero::rgb plane_rgb =
-        {srv2.response.r, srv2.response.g, srv2.response.b};
+        {srv_plane.response.r, srv_plane.response.g, srv_plane.response.b};
     plane_color_ = aero::colors::rgb2lab(plane_rgb);
     ROS_WARN("activating object tracking");
   }
