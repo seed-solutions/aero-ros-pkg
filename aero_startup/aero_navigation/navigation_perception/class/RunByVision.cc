@@ -9,7 +9,7 @@ RunByVision::RunByVision(ros::NodeHandle _nh) : Runner(_nh)
   goal_service_ =
       nh_.advertiseService("/run_by_vision/target_object",
 			   &RunByVision::GoForTarget, this);
-  object_subscriber_ = nh_.subscribe("/object/pose", 100,
+  object_subscriber_ = nh_.subscribe("/object/pose", 1,
 				     &RunByVision::Subscribe, this);
   recognition_mode_ = nh_.serviceClient<aero_startup::ProcessSleep>(
       "/plane_detection/sleep");
@@ -31,8 +31,8 @@ void RunByVision::Subscribe(const geometry_msgs::Pose::ConstPtr& _object)
 }
 
 //////////////////////////////////////////////////
-bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
-			      aero_startup::ObjectGoXYZHSI::Response &_res)
+bool RunByVision::GoForTarget(aero_startup::TimeFromGoXY::Request  &_req,
+			      aero_startup::TimeFromGoXY::Response &_res)
 {
   // RunByVision expects that target object is identified prior to call
 
@@ -49,9 +49,17 @@ bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
   // set recognition to tracking mode
   aero_startup::ProcessSleep srv;
   srv.request.sleep = 1;
-  if (!recognition_mode_.call(srv))
+  auto call_start = aero::time::now();
+  while (!recognition_mode_.call(srv))
   {
     ROS_WARN("call to recognition mode failed");
+    _res.status = aero::status::aborted;
+    if (aero::time::ms(aero::time::now() - call_start) > 5000) // timeout
+      return true;
+    usleep(100 * 1000);
+  }
+  if (srv.response.status < 0)
+  {
     _res.status = aero::status::aborted;
     return true;
   }
@@ -59,9 +67,17 @@ bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
   srv.request.message = std::to_string(object_.x) + " " +
 			std::to_string(object_.y) + " " +
 			std::to_string(object_.z) + "world";
-  if (!tracking_mode_.call(srv))
+  call_start = aero::time::now();
+  while (!tracking_mode_.call(srv))
   {
     ROS_WARN("call to tracking mode failed");
+    _res.status = aero::status::aborted;
+    if (aero::time::ms(aero::time::now() - call_start) > 5000) // timeout
+      return true;
+    usleep(100 * 1000);
+  }
+  if (srv.response.status < 0)
+  {
     _res.status = aero::status::aborted;
     return true;
   }
@@ -130,7 +146,7 @@ bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
 	fabs(object_.z) < 0.001) // failed object detection
     {
       ac_->cancelGoal();
-      _res.status = aero::status::aborted;
+      _res.status = aero::status::fatal;
       return true;
     }
 
@@ -141,6 +157,9 @@ bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
       _res.status = aero::status::fatal;
       return true;
     }
+
+    ROS_WARN("%f %f @ t = %f", object_.x, object_.y,
+	     aero::time::ms(time_now - start));
   }
 
   ac_->cancelGoal();
@@ -150,20 +169,27 @@ bool RunByVision::GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &_req,
   // set recognition back to recognition mode
   aero_startup::ProcessSleep vrs;
   vrs.request.sleep = 1;
-  if (!tracking_mode_.call(vrs))
+  call_start = aero::time::now();
+  while (!tracking_mode_.call(vrs))
   {
     ROS_WARN("call to tracking mode failed");
     _res.status = aero::status::warning;
-    return true;
+    if (aero::time::ms(aero::time::now() - call_start) > 5000) // timeout
+      return true;
+    usleep(100 * 1000);
   }
   vrs.request.sleep = 0;
+  call_start = aero::time::now();
   if (!recognition_mode_.call(vrs))
   {
     ROS_WARN("call to recognition mode failed");
     _res.status = aero::status::warning;
-    return true;
+    if (aero::time::ms(aero::time::now() - call_start) > 5000) // timeout
+      return true;
+    usleep(100 * 1000);
   }
 
   _res.status = aero::status::success;
+  ROS_INFO("run by vision finished okay");
   return true;
 }

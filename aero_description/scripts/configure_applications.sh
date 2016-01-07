@@ -100,8 +100,8 @@ find_source_code() {
     source_name=$2
 
     # rename source depending on camel letters
-    find_source=$(find ${executable_path} -name "${source_name}*" | grep -v ".hh")
-    has_same_name_class_object=$(find ${executable_path} -name "${source_name}*" | grep "class")
+    find_source=$(find ${executable_path} -name "${source_name}*" | grep -v "~" | grep -v ".hh")
+    has_same_name_class_object=$(find ${executable_path} -name "${source_name}*" | grep "class" | grep -v "~")
     if [[ $find_source == "" ]]
     then
 	num_of_words=$(echo $source_name | awk -F_ '{print NF}')
@@ -111,13 +111,13 @@ find_source_code() {
 	    word=$(echo $source_name | awk -F_ '{print $'$num'}')
 	    file_name="${file_name}${word^}"
 	done
-	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh")
-	has_same_name_class_object=$(find ${executable_path} -name "${file_name}*" | grep "/class/")
+	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh" | grep -v "~")
+	has_same_name_class_object=$(find ${executable_path} -name "${file_name}*" | grep "/class/" | grep -v "~")
     fi
     # if class object with same name as executable exists
     if [[ $has_same_name_class_object != "" ]]
     then
-	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh" | grep -v "/class/") 
+	find_source=$(find ${executable_path} -name "${file_name}*" | grep -v ".hh" | grep -v "/class/" | grep -v "~") 
     fi
     echo -e $find_source
 }
@@ -202,7 +202,12 @@ parse_line() {
     fi
 
     # target link
-    echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    if [[ $(echo $header | awk '{print $1}') == "!" ]]
+    then
+	echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES} libboost_random.so libboost_chrono.so" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    else
+	echo "${tab}target_link_libraries(${executable_name} \${catkin_LIBRARIES} \${Boost_LIBRARIES}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    fi
     write_to_line=$(($write_to_line + 1))
     echo "${tab}${tab2}${libs})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     if [[ $ifs != "" ]]
@@ -236,6 +241,10 @@ do
     proto=$(echo $header | awk '{print $1}')
     if [[ $proto == "!" ]] # non-c++11 build
     then
+	write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+	write_to_line=$(($write_to_line + 1))
+	boost_links=$(locate boost_chrono | grep ".so" | tr '\n' ' ' | awk '{print $1}' | sed 's|\(.*\)/.*|\1|')
+	echo "link_directories(${boost_links})" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 	parse_line "$line"
 	non_cpp_build="true"
     fi
@@ -246,10 +255,20 @@ then
     echo "building non-c++11 files"
     where_i_was=$(pwd)
     cd $(rospack find aero_description)
-    catkin b aero_startup
+    catkin b aero_startup --verbose
 fi
 
 # delete non-c++11 builds
+
+delete_from_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+delete_from_line=$(($delete_from_line + 1))
+delete_to_line=$(grep -n -m 1 "<<< add dependencies" $cmake_file | cut -d ':' -f1)
+
+if [[ $delete_to_line -ne $delete_from_line ]]
+then
+    delete_to_line=$(($delete_to_line - 1))
+    sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
+fi
 
 delete_from_line=$(grep -n -m 1 ">>> add applications" $cmake_file | cut -d ':' -f1)
 delete_from_line=$(($delete_from_line + 1))
@@ -356,5 +375,5 @@ done < $input_file
 
 echo "building c++11 files"
 cd $(rospack find aero_description)
-catkin b aero_startup
+catkin b aero_startup --verbose
 cd $where_i_was

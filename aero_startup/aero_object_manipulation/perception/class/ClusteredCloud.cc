@@ -4,23 +4,29 @@ using namespace aero;
 using namespace common;
 
 //////////////////////////////////////////////////
-ClusteredCloud::ClusteredCloud(ros::NodeHandle _nh) : nh_(_nh)
+ClusteredCloud::ClusteredCloud(ros::NodeHandle _nh) : Base(_nh)
 {
   point_publisher_ =
       nh_.advertise<std_msgs::Float32MultiArray>("/cluster_cloud/points", 1000);
 
-  points_subscriber_ = nh_.subscribe("/point_cloud/objects", 1000,
+  points_subscriber_ = nh_.subscribe("/point_cloud/objects", 1,
 				     &ClusteredCloud::Subscribe, this);
 
-  cluster_subscriber_ = nh_.subscribe("/kmeans/clusters", 1000,
+  cluster_subscriber_ = nh_.subscribe("/kmeans/clusters", 1,
 				      &ClusteredCloud::SubscribeClusters, this);
 
   return_cluster_from_center_ =
     nh_.advertiseService("/cluster_cloud/get_object_from_center",
 			 &ClusteredCloud::CallClusterFromCenter, this);
 
+  process_sleep_ = false;
   this->publish_func_ = [=](){ this->PublishAllClusters(); };
   this->default_func_ = this->publish_func_;
+
+  // below for debug
+
+  marker_pub_ =
+      nh_.advertise<visualization_msgs::Marker>("/cluster_marker", 100);
 }
 
 //////////////////////////////////////////////////
@@ -32,12 +38,60 @@ ClusteredCloud::~ClusteredCloud()
 void ClusteredCloud::Spin()
 {
   this->publish_func_();
+
+  // for debug
+  for (unsigned int i = 0; i < clusters_.size(); ++i)
+  {
+    Eigen::Quaternionf base_to_eye(base_to_eye_.orientation.x,
+				   base_to_eye_.orientation.y,
+				   base_to_eye_.orientation.z,
+				   base_to_eye_.orientation.w);
+    Eigen::Vector3f cluster_center_world =
+        base_to_eye * Eigen::Vector3f(clusters_[i].center.x,
+				      clusters_[i].center.y,
+				      clusters_[i].center.z) +
+        Eigen::Vector3f(base_to_eye_.position.x,
+			base_to_eye_.position.y,
+			base_to_eye_.position.z);
+
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "leg_base_link";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "cluster " + std::to_string(i);
+    marker.id = i;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = cluster_center_world.x();
+    marker.pose.position.y = cluster_center_world.y();
+    marker.pose.position.z = cluster_center_world.z();
+    marker.pose.orientation.x = 0;
+    marker.pose.orientation.y = 1;
+    marker.pose.orientation.z = 0;
+    marker.pose.orientation.w = 0;
+    marker.scale.x = 0.001 * clusters_[i].points;
+    marker.scale.y = 0.01;
+    marker.scale.z = 0.01;
+    marker.color.r = 1.0f;
+    marker.color.g = 0.0f;
+    marker.color.b = 0.0f;
+    marker.color.a = 1.0f;
+    marker.lifetime = ros::Duration(0.033);
+    marker_pub_.publish(marker);
+  }
+
 }
 
 //////////////////////////////////////////////////
 void ClusteredCloud::Subscribe(
     const std_msgs::Float32MultiArray::ConstPtr& _points)
 {
+  if (process_sleep_)
+  {
+    auto sleeped_time = aero::time::ms(aero::time::now() - sleep_start_);
+    if (sleeped_time > 10000) process_sleep_ = false;
+    else return; // this handles late arrived kmeans points after process kill
+  }
+
   clouds_.clear();
   int num_of_clusters = _points->layout.dim[0].stride;
   clouds_.reserve(num_of_clusters);
@@ -67,6 +121,8 @@ void ClusteredCloud::Subscribe(
 void ClusteredCloud::SubscribeClusters(
     const std_msgs::Float32MultiArray::ConstPtr& _clusters)
 {
+  if (process_sleep_) return;
+
   clusters_.clear();
   int num_of_clusters = _clusters->layout.dim[1].size;
   clusters_.reserve(num_of_clusters);
@@ -87,6 +143,7 @@ void ClusteredCloud::SubscribeClusters(
       {center, max_bound, min_bound, _clusters->data[data_idx + 9]};
     clusters_.push_back(cluster);
   }
+
 }
 
 //////////////////////////////////////////////////
@@ -113,7 +170,11 @@ bool ClusteredCloud::CallClusterFromCenter(
     return false;
 
   if (_req.kill_spin)
+  {
     this->publish_func_ = [=](){ this->PublishStop(); };
+    process_sleep_ = true;
+    sleep_start_ = aero::time::now();
+  }
 
   _res.c_x = clusters_[nearest_cluster_id].center.x;
   _res.c_y = clusters_[nearest_cluster_id].center.y;

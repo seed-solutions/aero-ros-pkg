@@ -83,10 +83,16 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
     return true;
   }
 
+  float time_scale =
+      (std::pow(x_now - goal_position_x, 2) +
+       std::pow(z_now - goal_position_z, 2)) / 10000.0;
+  time_scale = std::max(time_scale, static_cast<float>(1.0));
+
   trajectory_msgs::JointTrajectory msg;
   msg.joint_names = {"hip_joint", "knee_joint"};
   msg.points.resize(1);
   msg.points[0].positions = {theta-phi, theta};
+  msg.points[0].time_from_start = ros::Duration(1.0 * time_scale);
 
   pub.publish(msg);
 

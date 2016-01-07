@@ -17,8 +17,23 @@ namespace aero
     int i;
   };
 
+  struct lab
+  {
+    float l;
+    float a;
+    float b;
+  };
+
   struct xyz
   {
+    float x;
+    float y;
+    float z;
+  };
+
+  struct point
+  {
+    int id;
     float x;
     float y;
     float z;

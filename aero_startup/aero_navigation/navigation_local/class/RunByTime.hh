@@ -4,7 +4,7 @@
 #include "aero_navigation/navigation_local/class/Runner.hh"
 #include "aero_common/status.h"
 #include "aero_common/time.h"
-#include <aero_startup/GoTime.h>
+#include <aero_startup/PointGoTime.h>
 
 namespace aero
 {
@@ -17,8 +17,8 @@ namespace aero
 
     public: ~RunByTime();
 
-    private: bool GoForTime(aero_startup::GoTime::Request  &_req,
-			    aero_startup::GoTime::Response &_res);
+    private: bool GoForTime(aero_startup::PointGoTime::Request  &_req,
+			    aero_startup::PointGoTime::Response &_res);
 
     private: ros::ServiceServer goal_service_;
     };

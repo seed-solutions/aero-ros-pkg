@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 #include "std_msgs/Float32MultiArray.h"
-#include <Eigen/Core>
+#include "aero_object_manipulation/perception/class/Base.hh"
 #include "aero_common/types.h"
 #include "aero_common/time.h"
 
@@ -12,11 +12,10 @@ namespace aero
   namespace common
   {
 
-    class KmeansGapClustering
+    class KmeansGapClustering : public Base
     {
-    private: struct point { Eigen::Vector3f pos; int group; };
-
-    public: KmeansGapClustering();
+    private: struct point
+	{ Eigen::Vector2f pos; int group; Eigen::Vector3f vertex; };
 
     public: explicit KmeansGapClustering(ros::NodeHandle _nh);
 
@@ -36,19 +35,19 @@ namespace aero
     // append will reuse prior calculated initial_centers
     protected: void InitiateClusterCenterAppend(
 	std::vector<point> &_points,
-        std::vector<Eigen::Vector3f> &_initial_centers);
+        std::vector<Eigen::Vector2f> &_initial_centers);
 
     protected: void InitiateClusterCenter(
 	std::vector<point> &_points,
-        std::vector<Eigen::Vector3f> &_initial_centers); // kmeans++
+        std::vector<Eigen::Vector2f> &_initial_centers); // kmeans++
 
     protected: float ClusterPoints(
 	std::vector<point> &_points,
-        std::vector<Eigen::Vector3f> &_initial_centers,
+        std::vector<Eigen::Vector2f> &_initial_centers,
 	bool _append);
 
     protected: inline float NearestCluster(
-        point _point, const std::vector<Eigen::Vector3f> &_initial_centers,
+        point _point, const std::vector<Eigen::Vector2f> &_initial_centers,
         bool _return_distance)
       {
 	int nearest_cluster_id;
@@ -56,7 +55,7 @@ namespace aero
 
 	for (unsigned int i = 0; i < _initial_centers.size(); ++i)
 	{
-	  Eigen::Vector3f diff = _point.pos - _initial_centers[i];
+	  Eigen::Vector2f diff = _point.pos - _initial_centers[i];
 	  float distance = diff.dot(diff); // sum of squares
 	  if (distance < min_distance)
 	  {
@@ -73,15 +72,15 @@ namespace aero
 
     private: std::vector<aero::box> cluster_list_;
 
-    private: std::vector<aero::box> noises_;
-
     private: int num_points_in_field_;
 
     private: int max_clusters_;
 
     private: int num_of_reference_sets_;
 
-    private: ros::NodeHandle nh_;
+    private: int dim1;
+
+    private: int dim2;
 
     private: ros::Publisher cluster_publisher_;
 

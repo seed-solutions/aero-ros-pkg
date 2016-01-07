@@ -7,6 +7,8 @@
   @define srv
   string hand
   string command
+  float32 thre_fail
+  float32 thre_warn
   ---
   string status
 */
@@ -43,7 +45,7 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     }
     msg.points[0].time_from_start = ros::Duration(0.5);
     pub.publish(msg);
-    usleep(static_cast<int32_t>(1.0 * 1000 * 1000));
+    usleep(static_cast<int32_t>(2.0 * 1000 * 1000));
     ros::spinOnce();
     std::string status_msg = "grasp success";
     if (req.hand == "both")
@@ -56,14 +58,16 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
       msg.joint_names = {"l_thumb_joint"};
       msg.points[0].positions.resize(1);
       msg.points[0].positions[0] = std::max(theta[0]+0.1, 50.0*M_PI/180);
-      if (theta[0] > 0.8) status_msg = "grasp failed";
+      if (theta[0] < req.thre_warn) status_msg = "grasp bad";
+      if (theta[0] > req.thre_fail) status_msg = "grasp failed";
     }
     else if (req.hand == "right")
     {
       msg.joint_names = {"r_thumb_joint"};
       msg.points[0].positions.resize(1);
       msg.points[0].positions[0] = std::min(theta[1]-0.1, -50.0*M_PI/180);
-      if (theta[1] < -0.8) status_msg = "grasp failed";
+      if (theta[1] > -req.thre_warn) status_msg = "grasp bad";
+      if (theta[1] < -req.thre_fail) status_msg = "grasp failed";
     }
     msg.points[0].time_from_start = ros::Duration(0.1);
     pub.publish(msg);

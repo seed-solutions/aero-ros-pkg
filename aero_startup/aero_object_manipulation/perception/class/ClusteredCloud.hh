@@ -3,16 +3,18 @@
 
 #include <ros/ros.h>
 #include "std_msgs/Float32MultiArray.h"
-#include <Eigen/Core>
 #include <aero_startup/BoxFromXYZ.h>
+#include "aero_object_manipulation/perception/class/Base.hh"
 #include "aero_common/types.h"
+#include "aero_common/time.h"
+#include "visualization_msgs/Marker.h"
 
 namespace aero
 {
   namespace common
   {
 
-    class ClusteredCloud
+    class ClusteredCloud : public Base
     {
     public: explicit ClusteredCloud(ros::NodeHandle _nh);
 
@@ -47,7 +49,9 @@ namespace aero
     // @brief : function to set when subscribe is reactivated
     protected: std::function<void()> default_func_;
 
-    protected: ros::NodeHandle nh_;
+    protected: bool process_sleep_;
+
+    protected: std::chrono::high_resolution_clock::time_point sleep_start_;
 
     protected: ros::Publisher point_publisher_;
 
@@ -56,6 +60,10 @@ namespace aero
     protected: ros::Subscriber cluster_subscriber_;
 
     protected: ros::ServiceServer return_cluster_from_center_;
+
+    // below for debug
+
+    protected: ros::Publisher marker_pub_;
     };
 
     typedef std::shared_ptr<ClusteredCloud> ClusteredCloudPtr;

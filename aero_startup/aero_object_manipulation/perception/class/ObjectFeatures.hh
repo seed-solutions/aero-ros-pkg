@@ -3,8 +3,7 @@
 
 #include <ros/ros.h>
 #include "std_msgs/Float32MultiArray.h"
-#include "geometry_msgs/Pose.h"
-#include <Eigen/Core>
+#include "aero_object_manipulation/perception/class/Base.hh"
 #include <Eigen/SVD>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_types.h>
@@ -23,7 +22,7 @@ namespace aero
   namespace perception
   {
 
-    class ObjectFeatures
+    class ObjectFeatures : public aero::common::Base
     {
     public: explicit ObjectFeatures(ros::NodeHandle _nh);
 
@@ -34,9 +33,6 @@ namespace aero
 
     protected: void Subscribe(
         const std_msgs::Float32MultiArray::ConstPtr& _points);
-
-    protected: void SubscribeCameraPseudoTf(
-        const geometry_msgs::Pose::ConstPtr& _pose);
 
     protected: void BroadcastTf();
 
@@ -60,21 +56,15 @@ namespace aero
 
     protected: Eigen::Quaternionf target_pose_world_right_;
 
-    protected: geometry_msgs::Pose base_to_eye_;
-
     protected: int lost_count_;
 
     protected: static const int lost_threshold_ = 30;
-
-    protected: ros::NodeHandle nh_;
 
     protected: ros::Publisher pose_publisher_left_;
 
     protected: ros::Publisher pose_publisher_right_;
 
     protected: ros::Subscriber subscriber_;
-
-    protected: ros::Subscriber camera_pseudo_tf_subscriber_;
 
     protected: int target_;
     };
