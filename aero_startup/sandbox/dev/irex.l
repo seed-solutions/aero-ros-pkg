@@ -47,7 +47,7 @@
 	     0.0 -13.9145 0.0 0.0 -137.416 0.0 0.0 0.0 50.0 0.0 0.0 0.0
 	     0.0 0.0 0.0 0.0 40.0 0.0))
     (cond ((eq *real* t)
-	   (send *ri* :move-waist #f(0 0 z) :world)
+	   (send *ri* :move-waist (float-vector 0 0 z) :world)
 	   (unix::usleep (* 1000 1000))
 	   (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	   (unix::usleep (* (floor time) 1000))
@@ -55,7 +55,7 @@
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun object-grasp-test-once (x y &optional (f 0.8) (w -0.3))
+(defun object-grasp-test-once (x y &optional (f 0.4) (w -0.3))
   (let (ik-err grasp-pose move-time waist-pose)
     (setq ik-err (send *aero* :grasp-object :larm :torso t
 		       :revert-if-fail nil :offset-x x :offset-z y))
@@ -66,7 +66,8 @@
 	   (setq waist-pose (send *ri* :move-waist (cadr ik-err))) 
 	   (if (or (equal (subseq waist-pose 0 3) "nan")
 		   (equal (subseq waist-pose 0 7) "invalid"))
-	       (return-from object-grasp-test-once (list nil (cadr ik-err)))
+	       (return-from object-grasp-test-once
+			    (list nil (car ik-err) (cadr ik-err)))
 	     )
 	   (unix::usleep (* 1000 1000))
 	   (setq move-time 3000)
@@ -86,11 +87,13 @@
 	   (send *ri* :angle-vector (send *aero* :angle-vector) move-time)
 	   (unix::usleep (* move-time 1000))
 	   (setq grasp-status (send *ri* :grasp :larm :tfail f :twarn w))
-	   (unix::usleep (* 1000 1000))
+	   ;; (unix::usleep (* 1000 1000))
 	   ))
     (list (if (or (equal grasp-status "grasp failed")
 		  (equal grasp-status "grasp bad")) nil t)
-	  (cadr ik-err))
+	  (car ik-err)
+	  (cadr ik-err)
+	  )
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -106,40 +109,53 @@
     (send res :status) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun run (arm ~x ~z &key (dt 0.5) (dz -50.0))
-  (let ((x (elt (send (send *ri* :tf arm) :pos) 0))
-	(z 0.0)
+(defun refind-target (arm)
+  (let (status)
+    (setq status -1)
+    (while (< status 0)
+      (setq status (set-to-recog-mode))
+      (unix::usleep (* 100 1000))
+      )
+    (unix::usleep (* 3000 1000))
+    (setq status -1)
+    (while (< status 0)
+      (setq status (send (send *ri* :tf arm) :pos))
+      (setq status (set-to-track-mode (format nil "~A ~A ~A world"
+					      (elt status 0)
+					      (elt status 1)
+					      (elt status 2)) ))
+      (unix::usleep (* 100 1000))
+      )
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (defun run (arm ~x ~z &key (dt 0.5) (dz -50.0))
+(defun run (arm ~z &key (dz -50.0))
+  (let ((z 0.0)
 	(+x 0.0)
 	(+z 0.0)
 	test-result
 	(test-results nil)
 	(status -1)
 	)
-    (dotimes (i ~x)
+    (refind-target arm)
+    ;; (dotimes (i ~x)
       (dotimes (j ~z)
 	;; reset pose
-	(send *ri* :move-waist (float-vector 0 0 z) :world)
-	(def-pose)
-	(setq status -1)
-	(while (< status 0)
-	  (setq status (set-to-recog-mode))
-	  (unix::usleep (* 100 1000))
-	  )
-	(unix::usleep (* 3000 1000))
-	(setq status -1)
-	(while (< status 0)
-	  (setq status (send (send *ri* :tf arm) :pos))
-	  (setq status (set-to-track-mode (format nil "~A ~A ~A world"
-						  (elt status 0)
-						  (elt status 1)
-						  (elt status 2)) ))
-	  (unix::usleep (* 100 1000))
-	  )
+	(def-pose z)
+	;; refind target if target is lost
+	(unix::usleep (* 1000 1000))
+	(if (eq (send *ri* :tf arm) nil) (refind-target arm))
 	(setq +z 100.0) ;; maximum prior offset
 	(if (> (+ z +z) 0) (setq +z 0.0)) ;; offset cannot exceed +0.0
 	(setq test-result (object-grasp-test-once 0.0 +z)) ;; try grasp
+	;; save result
+	(setq test-result (append test-result
+				  (list +x z +z)
+				  (list (send *ri* :tf arm))))
+	(push test-result test-results)
 	(cond ((eq (car test-result) nil) ;; when grasp fails
-	       (def-pose) ;; reset pose
+	       (def-pose z) ;; reset pose
 	       (block get-magic-number
 		      (while 1 ;; escapes when grasp succeeds or z becomes too low
 			;; reset waist position to z
@@ -167,31 +183,48 @@
 			  (setq +x 0.0)
 			  (dotimes (jj jj-times) ;; try for all x-range
 			    ;; reset pose
-			    (send *ri* :move-waist (float-vector 0 0 z) :world)
-			    (def-pose)
+			    (def-pose z)
+			    ;; refind target if target is lost
+			    (unix::usleep (* 1000 1000))
+			    (if (eq (send *ri* :tf arm) nil) (refind-target arm))
 			    ;; try grasp
 			    (setq test-result (object-grasp-test-once +x +z))
+			    ;; save result
+			    (setq test-result (append test-result
+						      (list +x z +z)
+						      (list (send *ri* :tf arm))))
+			    (push test-result test-results)
 			    (if (eq (car test-result) t) ;; grasp succeeds
 				(return-from get-magic-number)
 			      )
 			    (setq +x (+ +x 10.0)) ;; try next x
 			    )) ;; let
-			(def-pose)
+			(def-pose z)
 			) ;; while
 		      ) ;; block
 	       ))
-	(setq test-result (append (list (send *ri* :tf arm))
-				  test-result
-				  (list +x +z)))
-	(push test-result test-results)
 	(setq z (+ z dz)) ;; next z position
 	) ;; dotimes j
       (def-pose)
-      (go-for-time -100 0 0 dt) ;; move a little bit far from current position
-      (setq x (elt (send (send *ri* :tf arm) :pos) 0))
-      (setq z 0.0) ;; reset z
-      ) ;; dotimes i
+      ;; (go-for-time -100 0 0 dt) ;; move a little bit far from current position
+      ;; (setq z 0.0) ;; reset z
+      ;; ) ;; dotimes i
     test-results))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun save (name data)
+  (let (i)
+    (with-open-file (str (concatenate string name "_raw.txt") :direction :output
+			 :if-exists :supersede)
+		    (setq i 0)
+		    (dolist (x data)
+		      (format str "data ~A:~%  result: ~A~%  goal: ~A~%  diff: ~A~%  off-x: ~A~%  off-z0: ~A~%  off-z1: ~A~%  end: ~A~%"
+			      i (elt x 0) (elt x 1) (elt x 2)
+			      (elt x 3) (elt x 4) (elt x 5) (elt x 6))
+		      (incf i)
+		      )
+		    )
+    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun ready? (direction)
