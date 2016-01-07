@@ -222,6 +222,12 @@ void KmeansGapClustering::Subscribe(
     return;
   }
 
+  if (_points->layout.dim[1].size < 10)
+  {
+    ROS_ERROR("number of points too small! aborting");
+    return;
+  }
+
   Eigen::Vector2f plane_center(_points->data[0], _points->data[1]);
   Eigen::Vector2f plane_size(sqrt(_points->data[2]),
 			     sqrt(_points->data[3]));
