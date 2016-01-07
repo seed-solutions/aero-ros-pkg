@@ -98,6 +98,19 @@ void ObjectTrackerPointCloud::SubscribePoints(
   if (points_count == 0)
   {
     ROS_WARN("no points detected in tracker");
+
+    // publish no detected state
+    std_msgs::Float32MultiArray p_msg;
+    std_msgs::MultiArrayLayout layout;
+    std_msgs::MultiArrayDimension dim_head;
+    dim_head.label = "info";
+    dim_head.size = 0;
+    dim_head.stride = 0; // no target
+    layout.dim.push_back(dim_head);
+    p_msg.data.resize(0);
+    p_msg.layout = layout;
+    points_publisher_.publish(p_msg);
+
     return;
   }
 
