@@ -13,11 +13,11 @@ PlaneDetectedPointCloud::PlaneDetectedPointCloud(ros::NodeHandle _nh)
       Eigen::Quaternionf(1, 0, 0, 0) * Eigen::Vector3f(0, 0, 1);
 
   space_min_.x = -0.5;
-  space_min_.y = -1.0;
-  space_min_.z = 0.8;
+  space_min_.y = -2.0;
+  space_min_.z = 0.2;
 
   space_max_.x = 0.5;
-  space_max_.y = 1.0;
+  space_max_.y = 2.0;
   space_max_.z = 5.0;
 
   plane_color_.r = 0;
