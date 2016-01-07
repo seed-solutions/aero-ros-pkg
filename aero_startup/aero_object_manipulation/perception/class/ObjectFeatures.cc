@@ -9,7 +9,7 @@ ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh)
 {
   status_ = 0;
   lost_count_ = lost_threshold_;
-  target_ = 1;
+  target_ = 1; // must be larger than 0
 
   subscriber_ = nh_.subscribe("/point_cloud/points", 100,
 			      &ObjectFeatures::Subscribe, this);
