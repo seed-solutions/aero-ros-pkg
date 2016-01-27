@@ -468,7 +468,7 @@
 (defun go-for-target (xy ~xy &optional (time_out 5000))
   (let (req res
 	)
-    (setq req (instance aero_startup::ObjectGoXYZHSIRequest :init))
+    (setq req (instance aero_startup::TimeFromGoXYRequest :init))
     (send req :object "object_l")
     (send req :go_x (elt xy 0)) ;; any large number if x movement
     (send req :go_y (elt xy 1)) ;; any large number if y movement
@@ -725,3 +725,35 @@
 	   ) ;; failed finding actual object
 	  )
     ))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+(defun demo2 ()
+  (def-pose)
+  (refind-target :larm)
+  (go-for-target #f(100 0) #f(1.0 1000))
+  (setq ik-err (send *aero* :grasp-object :larm :torso t :revert-if-fail nil :offset-z 50))
+  (setq grasp-pose (send *aero* :angle-vector))
+  (setq waist-z (elt (cadr ik-err) 2))
+  (send *ri* :ungrasp :larm)
+  (unix::usleep (* 1000 1000))
+  (send *ri* :move-waist (cadr ik-err))
+  (unix::usleep (* 1000 1000))
+  (send *aero* :angle-vector grasp-pose)
+  (cond ((not (eq (send *aero* :larm :move-end-pos #f(-50 80 0)
+                        :local :rotation-axis nil :traslation-axis :z) nil))
+         (send *ri* :angle-vector (send *aero* :angle-vector) 2000)
+         (unix::usleep (* 2000 1000))
+         (send *aero* :angle-vector grasp-pose)
+         (setq move-time 1000)
+         ))
+  (send *ri* :angle-vector grasp-pose)
+  (unix::usleep (* move-time 1000))
+  (setq grasp-status (send *ri* :grasp :larm))
+  (unix::usleep (* 1000 1000))
+  (cond ((equal grasp-status "grasp failed")
+         (end-pose 500)
+         (sorry 1000)
+         ))
+  (def-pose 3000)
+  )
