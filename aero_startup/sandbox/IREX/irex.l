@@ -7,7 +7,8 @@
 (load-controllers)
 (load "package://aeroeus/pre-release/inverse-kinematics-extension.l")
 
-(ros::wait-for-service "/extract_object_features/perception_area")
+;; (ros::wait-for-service "/extract_object_features/perception_area")
+(ros::wait-for-service "/point_cloud/perception_area")
 (ros::wait-for-service "/color_memorizer/perception_area")
 (ros::wait-for-service "/color_memorizer/find_match")
 
@@ -226,8 +227,10 @@
     (nreverse s_min_v) (nreverse s_max_v)
     (nreverse i_min_v) (nreverse i_max_v)
     (send req :h_cap_v h_max_v) (send req :h_v h_min_v)
-    (send req :s_cap_v s_max_v) (send req :s_v s_min_v)
-    (send req :i_cap_v i_max_v) (send req :i_v i_min_v)
+    (send req :s_cap_v (coerce s_max_v string))
+    (send req :s_v (coerce s_min_v string))
+    (send req :i_cap_v (coerce i_max_v string))
+    (send req :i_v (coerce i_min_v string))
     (send req :time timeout)
     (setq res (ros::service-call "/color_memorizer/find_match" req))
     (send res :status) ))
@@ -244,7 +247,8 @@
     (send req :s (car (elt hsi 2))) (send req :s_cap (cadr (elt hsi 2)))
     (send req :i (car (elt hsi 3))) (send req :i_cap (cadr (elt hsi 3)))
     (send req :precise precise)
-    (setq res (ros::service-call "/extract_object_features/perception_area" req))
+    ;; (setq res (ros::service-call "/extract_object_features/perception_area" req))
+    (setq res (ros::service-call "/point_cloud/perception_area" req))
     (send res :status) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
