@@ -193,6 +193,7 @@
 
 
 (defun ojigi ()
+  (start-pose)
   (sorry 2000)
   (start-pose))
 
@@ -273,6 +274,8 @@
   (send *aero* :reset-manip-pose)
   (send *ri* :angle-vector (send *aero* :angle-vector) 1500)
   (unix::usleep (* 1500 1000))
+
+  ;; (start-pose)
   )
 
 (aero-init)
@@ -280,3 +283,29 @@
 (setq *real* t)
 
 
+(defun usage ()
+  (format t ";; (start-pose)~%")
+  (format t ";; (ojigi)~%")
+  (format t ";; (appear)~%"))
+(usage)
+
+
+(defun pose-until-key
+  (&optional (sleep-time (* 60 1000 1000)))
+  (let (sleep-cnt sleep-tick)
+    ;; (start-pose)
+    (setq sleep-cnt 0
+	  sleep-tick (* 1000 1000))
+    (do-until-key
+     (unix:usleep sleep-tick)
+     (setq sleep-cnt (+ sleep-cnt sleep-tick))
+     (format t ";; sleep ~a / ~a~%" sleep-cnt sleep-time)
+
+     (when (> sleep-cnt sleep-time)
+       (ojigi)
+       (appear)
+       (setq sleep-cnt 0)
+       )
+     )
+    )
+  )
