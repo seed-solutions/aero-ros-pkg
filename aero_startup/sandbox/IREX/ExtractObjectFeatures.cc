@@ -194,6 +194,10 @@ bool Reconfigure(aero_startup::PointXYZHSI::Request  &req,
 
 
 //////////////////////////////////////////////////
+/// @brief for visual feedback navigation
+/// @param req.end_condition_x end_condition_x
+/// @param req.end_condition_y end_condition_y, if it is more than 999, y will be ignored
+/// @param req.time_out wait [s] for time out
 bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
 			aero_startup::AutoTrackReconfigure::Response &res)
 {
@@ -211,6 +215,7 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
                          base_to_eye.getRotation().y(),
                          base_to_eye.getRotation().z());;
 
+  // target_center_camera is updated in SubscribePoints
   Eigen::Vector3f diff_to_object =
       Eigen::Vector3f(base_to_eye.getOrigin().x(),
                       base_to_eye.getOrigin().y(),
@@ -339,6 +344,8 @@ bool DynamicReconfigure(aero_startup::AutoTrackReconfigure::Request  &req,
 };
 
 //////////////////////////////////////////////////
+/// @brief subscribing point cloud
+/// @param _msg point cloud from camera
 void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
   // Analyze points
