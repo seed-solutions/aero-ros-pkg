@@ -2,6 +2,9 @@
 ;; @brief base navigation functions for IREX demo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; @brief call /go_run/target_object
+;; @param xy (go_x go_y)
+;; @param ~xy (until_x until_y)
 (defun go-for-target (xy ~xy)
   (let (req res
 	)
@@ -15,6 +18,11 @@
     (list (send res :status) (send res :time)) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; @brief call /go_run/target_time
+;; @param x x
+;; @param y y
+;; @param theta theta
+;; @param time time
 (defun go-for-time (x y theta time)
   (let (req res
 	)

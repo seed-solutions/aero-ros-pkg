@@ -2,6 +2,7 @@
 ;; @brief recognition functions for IREX demo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; @brief call /color_memorizer/find_match
 (defun set-object (&key (timeout 60))
   (let (req res
 	(h_max_v nil) (h_min_v nil)
@@ -28,6 +29,9 @@
     (send res :status) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; @brief call /point_cloud/perception_area
+;; @param hsi ((h s i) (h_cap s_cap i_cap))
+;; @param xyz ((x y z) (x_cap y_cap z_cap))
 (defun find-object (hsi xyz &optional (precise t))
   (let (req res
 	)
@@ -45,6 +49,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; @brief call "str" service
+;; @param xyz ((x y z) (x_cap y_cap z_cap))
+;; @param str service name
 (defun reconfigure (xyz str)
   (let (req res
         )
