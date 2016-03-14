@@ -5,7 +5,8 @@
 
 (load "package://aeroeus/aero-interface.l")
 (load-controllers)
-(load "package://aeroeus/pre-release/inverse-kinematics-extension.l")
+;; (load "package://aeroeus/pre-release/inverse-kinematics-extension.l")
+(load "inverse-kinematics-extension.l")
 
 (ros::wait-for-service "/extract_object_features/perception_area")
 (ros::wait-for-service "/color_memorizer/perception_area")
@@ -30,6 +31,7 @@
 (defun init-irex-demo ()
   ;; initate demo
   (start-pose 5000)
+  (setf *tl* (instance ros::transform-listener :init))
   (find-object *null-color* *null-area*)
   )
 
@@ -46,6 +48,15 @@
     (elt *samples* color-tag)
     ))
 
+(defun stand-to-work-station (color)
+  (let (search-area)
+    ;; ready for manipulation
+    (run-pose 500)
+
+    ;; search for object
+    (setq search-area *manip-area*)
+    (find-object color search-area)))
+
 (defun move-to-work-station (color)
   (let (search-area found-object search-flag m)
     ;; move base to face work station
@@ -53,12 +64,8 @@
       (send *ri* :go-pos 0 0 110)
       (unix::usleep (* 8000 1000))
       )
-    ;; ready for manipulation
-    (run-pose 500)
 
-    ;; search for object
-    (setq search-area *manip-area*)
-    (setq found-object (find-object color search-area))
+    (setq found-object (stand-to-work-station color))
     (setq search-flag t)
     (while (and (< (cadr (elt search-area 2)) 5.0) ;; search area limit
                 (not (> found-object 0))
@@ -209,43 +216,61 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun demo ()
+(defun demo (&key (move nil) (adjust nil))
   (let (color-tag color
                   search-area found-object m search-flag
                   go-went (go-sweet nil) y-direction
                   ik-err grasp-pose grasp-status
                   )
     ;; initate demo
+    (format t ";; move to initial position...~%")
     (init-irex-demo)
 
     ;; set object to search
-    (setq color (set-object-to-search)
-    (format t "~A~%" (car color))
+    (format t ";; set target from photo, please let me see...~%")
+    (setq color (set-object-to-search))
+    (format t ";; found: ~A~%" (car color))
 
     ;; move base to work station
-    (setq go-went (move-to-work-station color))
-    (unless go-went (return-from demo nil))
+    (if move
+        (progn
+          (format t ";; move base to work station...~%")
+          (setq go-went (move-to-work-station color))
+          (unless go-went (return-from demo nil)))
+      (progn
+        (format t ";; stand to work station...~%")
+        (stand-to-work-station color))
+      )
 
     ;; get to sweet manip position
-    (setq res (move-to-sweet-spot))
-    (unless res (return-from demo nil))
-    (setq y-direction (car res)
-          go-sweet (cadr res))
+    (when adjust
+      (format t ";; move to sweet spot...~%")
+      (setq res (move-to-sweet-spot))
+      (unless res
+        (return-from demo nil))
+      (setq y-direction (car res)
+            go-sweet (cadr res)))
 
     ;; manipulate at work station
+    (format t ";; pick up...~%")
     (setq res (manipulate-at-work-station color))
     (setq ik-err (elt res 0)
-	  grasp-pose (elt res 1)
-	  grasp-status (elt res 2))
+          grasp-pose (elt res 1)
+          grasp-status (elt res 2))
 
     ;; move back from sweet position
-    (move-back-from-sweet-spot y-direction go-sweet)
+    (when adjust
+      (format t ";; move back from sweet spot...~%")
+      (move-back-from-sweet-spot y-direction go-sweet))
 
     ;; move base to starting point
-    (move-to-original-station go-went)
+    (when move
+      (format t ";; move base to original station...~%")
+      (move-to-original-station go-went))
 
     ;; grasp failed
     (when (equal grasp-status "grasp failed")
+      (format t ";; sorry, I could not grasp!~%")
       (end-pose 500)
       (sorry 1000)
       (start-pose 3000)
@@ -253,6 +278,7 @@
       )
 
     ;; place object
+    (format t ";; place object...~%")
     (place-object ik-err grasp-pose)
     ))
 

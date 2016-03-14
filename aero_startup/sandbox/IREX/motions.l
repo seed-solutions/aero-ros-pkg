@@ -16,6 +16,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :move-waist #f(0 0 0) :world)
 	 (unix::usleep (* 2200 1000))
@@ -34,26 +35,31 @@
 		   0.0 20.0 0.0 0.0 40.0 0.0))
 	)
     (send *aero* :angle-vector a-pose)
+    (send *irtviewer* :draw-objects)
     (cond ((eq *real* t)
 	   (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	   (unix::usleep (* time 1000))
 	   ))
     (send *aero* :angle-vector b-pose)
+    (send *irtviewer* :draw-objects)
     (cond ((eq *real* t)
 	   (send *ri* :angle-vector (send *aero* :angle-vector) (* time 0.5))
 	   (unix::usleep (* time 500))
 	   ))
     (send *aero* :angle-vector a-pose)
+    (send *irtviewer* :draw-objects)
     (cond ((eq *real* t)
 	   (send *ri* :angle-vector (send *aero* :angle-vector) (* time 0.5))
 	   (unix::usleep (* time 500))
 	   ))
     (send *aero* :angle-vector b-pose)
+    (send *irtviewer* :draw-objects)
     (cond ((eq *real* t)
 	   (send *ri* :angle-vector (send *aero* :angle-vector) (* time 0.5))
 	   (unix::usleep (* time 500))
 	   ))
     (send *aero* :angle-vector a-pose)
+    (send *irtviewer* :draw-objects)
     (cond ((eq *real* t)
 	   (send *ri* :angle-vector (send *aero* :angle-vector) (* time 0.5))
 	   (unix::usleep (* time 500))
@@ -66,6 +72,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
@@ -78,6 +85,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 120.0 -30.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) 500)
 	 (unix::usleep (* 500 1000))
@@ -86,6 +94,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 20.0 100.0 -80.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
@@ -94,6 +103,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
          (send *ri* :angle-vector (send *aero* :angle-vector) time)
          (unix::usleep (* time 1000))
@@ -106,6 +116,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 40.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :move-waist #f(0 0 0) :world)
 	 (unix::usleep (* 2200 1000))
@@ -120,6 +131,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 20.0 0.0 -100.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :move-waist #f(0 0 0) :world)
 	 (unix::usleep (* 2200 1000))
@@ -130,6 +142,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 20.0 100.0 -80.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
@@ -138,6 +151,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 120.0 -30.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
@@ -146,6 +160,7 @@
 	#f(0.0 -2.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 -10.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 	   0.0 0.0 0.0 0.0 0.0 0.0))
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) 500)
 	 (unix::usleep (* 500 1000))
@@ -155,16 +170,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun nod-no (&optional (time 500))
   (send *aero* :head :neck-y :joint-angle -30)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
 	 ))
   (send *aero* :head :neck-y :joint-angle 30)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) (* time 2))
 	 (unix::usleep (* time 2000))
 	 ))
   (send *aero* :head :neck-y :joint-angle 0)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
@@ -174,21 +192,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun nod-yes (&optional (time 500))
   (send *aero* :head :neck-p :joint-angle 40)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
 	 ))
   (send *aero* :head :neck-p :joint-angle 0)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
 	 ))
   (send *aero* :head :neck-p :joint-angle 40)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))
 	 ))
   (send *aero* :head :neck-p :joint-angle 0)
+  (send *irtviewer* :draw-objects)
   (cond ((eq *real* t)
 	 (send *ri* :angle-vector (send *aero* :angle-vector) time)
 	 (unix::usleep (* time 1000))

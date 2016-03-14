@@ -43,8 +43,8 @@
     (send req :s (car (elt hsi 2))) (send req :s_cap (cadr (elt hsi 2)))
     (send req :i (car (elt hsi 3))) (send req :i_cap (cadr (elt hsi 3)))
     (send req :precise precise)
-    ;; (setq res (ros::service-call "/extract_object_features/perception_area" req))
-    (setq res (ros::service-call "/point_cloud/perception_area" req))
+    (setq res (ros::service-call "/extract_object_features/perception_area" req))
+    ;; (setq res (ros::service-call "/point_cloud/perception_area" req))
     (send res :status) ))
 
 
