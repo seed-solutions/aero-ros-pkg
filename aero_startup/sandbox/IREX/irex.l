@@ -7,6 +7,7 @@
 (load-controllers)
 ;; (load "package://aeroeus/pre-release/inverse-kinematics-extension.l")
 (load "inverse-kinematics-extension.l")
+(load "package://aero_teleop/euslisp/vi-teleop.l")
 
 (ros::wait-for-service "/extract_object_features/perception_area")
 (ros::wait-for-service "/color_memorizer/perception_area")
@@ -56,6 +57,19 @@
     ;; search for object
     (setq search-area *manip-area*)
     (find-object color search-area)))
+
+;; rotation only
+(defun rotate-to-work-station (color)
+  (when *real*
+    (send *ri* :go-pos 0 0 55)
+    (unix::usleep (* 5000 1000))
+    )
+  (stand-to-work-station color))
+(defun rotate-to-original-station ()
+  (when *real*
+    (send *ri* :go-pos 0 0 -55)
+    (unix::usleep (* 5000 1000))
+    ))
 
 (defun move-to-work-station (color)
   (let (search-area found-object search-flag m)
@@ -212,7 +226,8 @@
     (send *ri* :ungrasp :larm)
     (unix::usleep (* 1000 1000))
     )
-  (end-pose 1000)
+  ;; (end-pose 1000)
+  (end-pose2 1000)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -239,7 +254,9 @@
           (unless go-went (return-from demo nil)))
       (progn
         (format t ";; stand to work station...~%")
-        (stand-to-work-station color))
+        ;; (stand-to-work-station color)
+        (rotate-to-work-station color)
+        )
       )
 
     ;; get to sweet manip position
@@ -264,14 +281,21 @@
       (move-back-from-sweet-spot y-direction go-sweet))
 
     ;; move base to starting point
-    (when move
-      (format t ";; move base to original station...~%")
-      (move-to-original-station go-went))
+    (if move
+        (progn
+          (format t ";; move base to original station...~%")
+          (move-to-original-station go-went))
+      (progn
+        (format t ";; stand to original station...~%")
+        (rotate-to-original-station)
+        )
+      )
 
     ;; grasp failed
     (when (equal grasp-status "grasp failed")
       (format t ";; sorry, I could not grasp!~%")
-      (end-pose 500)
+      ;; (end-pose 500)
+      (end-pose2 500)
       (sorry 1000)
       (start-pose 3000)
       (return-from demo nil)
