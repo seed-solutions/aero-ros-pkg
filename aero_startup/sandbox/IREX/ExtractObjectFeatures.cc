@@ -98,7 +98,7 @@ tf::StampedTransform base_to_eye;
 
 static const int LOST_THRE = 30;
 
-// ros::Publisher pcl_pub;
+ros::Publisher pcl_pub;
 
 //////////////////////////////////////////////////
 bool ValidHSI(rgb _color)
@@ -598,13 +598,13 @@ void SubscribePoints(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 
   // Export results (mainly for debug)
 
-  // pcl::PCLPointCloud2 pcl_out;
-  // sensor_msgs::PointCloud2 msg;
-  // pcl::toPCLPointCloud2(*cloud, pcl_out);
-  // pcl_conversions::fromPCL(pcl_out, msg);
-  // msg.header.frame_id = "ps4eye_frame";
-  // msg.header.stamp = ros::Time(0); // get possible recent
-  // pcl_pub.publish(msg);
+  pcl::PCLPointCloud2 pcl_out;
+  sensor_msgs::PointCloud2 msg;
+  pcl::toPCLPointCloud2(*cloud, pcl_out);
+  pcl_conversions::fromPCL(pcl_out, msg);
+  msg.header.frame_id = "ps4eye_frame";
+  msg.header.stamp = ros::Time(0); // get possible recent
+  pcl_pub.publish(msg);
 };
 
 
@@ -628,7 +628,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub = nh.subscribe("/stereo/points2", 1000,
 				     SubscribePoints);
 
-  // pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/visualized_object_pcl", 100);
+  pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/visualized_object_pcl", 100);
 
   ros::spin();
 
