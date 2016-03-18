@@ -51,6 +51,10 @@ actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
 ros::ServiceClient client;
 
 //////////////////////////////////////////////////
+/// @brief go pos
+/// @param _x translation x [m]
+/// @param _y translation y [m]
+/// @param _theta rotation theta [Degree]
 void GoPos(float _x, float _y, float _theta)
 {
   geometry_msgs::Point p;
@@ -78,6 +82,12 @@ void GoPos(float _x, float _y, float _theta)
 };
 
 //////////////////////////////////////////////////
+/// @brief go for target object
+/// @param req.go_x x[m]
+/// @param req.go_y y[m]
+/// @param req.until_x x[m]
+/// @param req.until_y y[m]
+/// @param res result
 bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
 		 aero_startup::ObjectGoXYZHSI::Response &res)
 {
@@ -89,7 +99,7 @@ bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
 
   ROS_WARN("Going for target");
 
-  // call dynamic_reconfigure
+  // call dynamic_reconfigure of extract_object_feature
   aero_startup::AutoTrackReconfigure srv;
   srv.request.end_condition_x = req.until_x;
   srv.request.end_condition_y = req.until_y;
@@ -99,7 +109,7 @@ bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
 
   if (client.call(srv))
   {
-    while (srv.response.status < 0)
+    while (srv.response.status < 0)  // do until success
       if (srv.response.status == aero::status::aborted)
       {
 	ac->cancelGoal();
@@ -139,13 +149,21 @@ bool GoForTarget(aero_startup::ObjectGoXYZHSI::Request  &req,
 };
 
 //////////////////////////////////////////////////
+/// @brief go until time
+/// @param req.go_x x[m]
+/// @param req.go_y y[m]
+/// @param req.go_theta theta[Degree]
+/// @param req.time time[sec]
+/// @param res response
 bool GoForTime(aero_startup::GoTime::Request  &req,
 	       aero_startup::GoTime::Response &res)
 {
+  // send GoPos with go_x, go_y, go_theta
   GoPos(req.go_x, req.go_y, req.go_theta);
 
   usleep(req.time * 1000 * 1000);
 
+  // after time[sec], cancel running 
   ac->cancelGoal();
   res.status = aero::status::success;
 

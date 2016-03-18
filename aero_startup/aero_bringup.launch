@@ -5,10 +5,10 @@
 
   <!--robot tfs-->
   <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"/>
-
-  <!-- >>> add controllers -->
-  <!-- <<< add controllers -->
+  <include file="$(find aero_startup)/generated_controllers.launch"/>
 
   <!--ps4eye sensor-->
   <include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
+  <node pkg="topic_tools" type="throttle" name="ps4eye_throttle"
+        args="messages /stereo/points2 2.0" />
 </launch>

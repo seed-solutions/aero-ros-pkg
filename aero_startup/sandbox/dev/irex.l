@@ -468,7 +468,7 @@
 (defun go-for-target (xy ~xy &optional (time_out 5000))
   (let (req res
 	)
-    (setq req (instance aero_startup::ObjectGoXYZHSIRequest :init))
+    (setq req (instance aero_startup::TimeFromGoXYRequest :init))
     (send req :object "object_l")
     (send req :go_x (elt xy 0)) ;; any large number if x movement
     (send req :go_y (elt xy 1)) ;; any large number if y movement
@@ -725,3 +725,61 @@
 	   ) ;; failed finding actual object
 	  )
     ))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+(defun demo2 (&key (move-x 0.7) (offset-z 50) (offset-y 0.0) (offset-x 20.0))
+  (def-pose)
+  (refind-target :larm)
+  (go-for-target #f(100 0) (float-vector move-x 1000))
+  (setq ik-err (send *aero* :grasp-object :larm :torso t :revert-if-fail nil
+		     :offset-z offset-z))
+  (print ik-err)
+
+  (setq ik-err-x (elt (cadr ik-err) 0)
+	ik-err-y (elt (cadr ik-err) 1)
+	ik-err-z (elt (cadr ik-err) 2))
+  (setq move-waist-x ik-err-x
+	move-waist-y ik-err-y
+	move-waist-z ik-err-z
+	;; move-hand-x 0.0
+	move-hand-x offset-x
+	move-hand-y (+ offset-y ik-err-y)
+	move-hand-z 0.0)
+
+  (when (> ik-err-z 0)
+    (setq move-waist-z (- ik-err-z)
+	  move-hand-z (* ik-err-z 2.0)))
+  (setq move-waist-vec (float-vector move-waist-x move-waist-y move-waist-z)
+	move-hand-vec (float-vector move-hand-x move-hand-y move-hand-z))
+  (send *aero* :larm :move-end-pos move-hand-vec :world :rotation-axis nil)
+
+  (setq grasp-pose (send *aero* :angle-vector))
+  (send *ri* :ungrasp :larm)
+  (unix::usleep (* 1000 1000))
+  (send *ri* :move-waist move-waist-vec)
+  (unix::usleep (* 1000 1000))
+  (send *aero* :angle-vector grasp-pose)
+  (cond ((not (eq (send *aero* :larm :move-end-pos #f(-50 80 0)
+                        :local :rotation-axis nil :traslation-axis :z) nil))
+         (send *ri* :angle-vector (send *aero* :angle-vector) 2000)
+         (unix::usleep (* 2000 1000))
+         (send *aero* :angle-vector grasp-pose)
+         (setq move-time 1000)
+         ))
+  (send *ri* :angle-vector grasp-pose)
+  (unix::usleep (* move-time 1000))
+  (setq grasp-status (send *ri* :grasp :larm))
+  (unix::usleep (* 1000 1000))
+  (cond ((equal grasp-status "grasp failed")
+         (end-pose 500)
+         (sorry 1000)
+	 (def-pose 3000)
+         )
+	(t
+	 (send *aero* :reset-manip-pose)
+	 (send *ri* :angle-vector (send *aero* :angle-vector) 3000)
+	 (nod-yes)
+	 )
+	)
+  )
