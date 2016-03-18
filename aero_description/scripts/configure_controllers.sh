@@ -8,7 +8,25 @@
 robot=$1
 input_file="$(rospack find aero_description)/${robot}/controllers.cfg"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
-launch_file="$(rospack find aero_description)/../aero_startup/aero_bringup.launch"
+# launch_file="$(rospack find aero_description)/../aero_startup/aero_bringup.launch"
+launch_file="$(rospack find aero_description)/../aero_startup/generated_controllers.launch"
+
+# create CMakeLists.txt if it does not exist
+
+if [[ $(find $(rospack find aero_description)/../aero_startup -name "CMakeLists.txt" | grep aero_startup/CMakeLists.txt) == "" ]]
+then
+    cp $(rospack find aero_description)/../aero_startup/.templates/CMakeLists.template $cmake_file
+fi
+
+# create generated_controllers.launch if it does not exist
+
+if [[ $(find $(rospack find aero_description)/../aero_startup -name "generated_controllers.launch") == "" ]]
+then
+    body="<launch>\n  <!"
+    body="$body-- >>> add controllers -->\n  <!"
+    body="$body-- <<< add controllers -->\n</launch>"
+    echo -e $body > $(rospack find aero_description)/../aero_startup/generated_controllers.launch
+fi
 
 # delete controllers in launch
 

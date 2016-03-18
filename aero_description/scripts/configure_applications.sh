@@ -30,6 +30,13 @@ fi
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 launch_file="$(rospack find aero_description)/../aero_startup/${app}.launch"
 
+# create CMakeLists.txt if it does not exist
+
+if [[ $(find $(rospack find aero_description)/../aero_startup -name "CMakeLists.txt" | grep aero_startup/CMakeLists.txt) == "" ]]
+then
+    cp $(rospack find aero_description)/../aero_startup/.templates/CMakeLists.template $cmake_file
+fi
+
 # create launch
 
 echo -e "<launch>\n</launch>" > $launch_file
