@@ -18,6 +18,7 @@ namespace aero
   namespace navigation
   {
 
+  /// @brief wheel velocities and goal time
     struct wheels
     {
       std::vector<float> velocities;
@@ -25,6 +26,7 @@ namespace aero
       float time;
     };
 
+  /// @brief 2D pose
     struct pose
     {
       float x;
@@ -56,20 +58,42 @@ namespace aero
       bool wheel_on;
     };
 
+  /// @brief Base class of base movement
+  ///
+  /// This class provides prototype of move base functions for
+  /// vehicle-type base.
+  /// Implementations of each hardwares must locate under
+  /// aero_description/{hardware_type}.
+  /// aero_description/aero_wheels/controllers/AeroBaseControllers.cc
+  /// is sample of implementation.
     class AeroMoveBase
     {
     public: explicit AeroMoveBase(const ros::NodeHandle& _nh);
 
     public: ~AeroMoveBase();
 
+      /// @brief ABSTRACT function, initialize wheel properties.
+      ///
+      /// This function depends on hardware construction and
+      /// MUST be implemented in subclass.
     private: void Init();
 
     private: void MoveBase(const ros::TimerEvent& _event);
 
     private: bool MoveBaseOnce();
 
+      /// @brief ABSTRACT function,
+      /// returns command for each wheels from x, y, theta.
+      ///
+      /// This function depends on hardware construction and
+      /// MUST be implemented in subclass.
     private: wheels Translate(float _x, float _y, float _theta);
 
+      /// @brief ABSTRACT function,
+      /// returns position from wheel velocities and dt
+      ///
+      /// This function depends on hardware construction and
+      /// MUST be implemented in subclass.
     private: pose dX(std::vector<double> _vels, float _dt);
 
     private: void SetSimpleGoal(
