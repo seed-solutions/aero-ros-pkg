@@ -24,14 +24,24 @@ namespace aero
   namespace controller
   {
 
+  /// @brief SEED controller via USB/RS485
     class SEED485Controller
     {
+      /// @brief constructor
+      /// @param _port USB port file name
+      /// @param _id CAN bus ID
     public: SEED485Controller(const std::string& _port, uint8_t _id);
 
+      /// @brief destructor
     public: ~SEED485Controller();
 
+      /// @brief read from SEED controller
     public: void read(std::vector<uint8_t>& _read_data);
 
+      /// @brief send command to SEED controller
+      /// @param _cmd Command ID
+      /// @param _time Destination time
+      /// @param _send_data data buffer
     public: void send_command(uint8_t _cmd, uint16_t _time,
 			      std::vector<uint8_t>& _send_data);
 
@@ -49,6 +59,8 @@ namespace aero
     /// @param _dat data buffer, MUST be RAW_DATA_LENGTH bytes.
     private: void set_check_sum(std::vector<uint8_t>& _dat);
 
+      /// @brief send raw data to SEED controller
+      /// @param _send_data raw data buffer
     private: void send_data(std::vector<uint8_t>& _send_data);
 
     private: io_service io_;
@@ -63,10 +75,16 @@ namespace aero
     };
 
 
+  /// @brief super class of body controller,
+  /// has SEED485Controller and some SEED command fucntions.
     class AeroControllerProto
     {
+      /// @brief constructor
+      /// @param _port USB port file name
+      /// @param _id CAN bus ID
     public: AeroControllerProto(const std::string& _port, uint8_t _id);
 
+      /// @brief destructor
     public: ~AeroControllerProto();
 
     /// @brief servo on command
@@ -134,6 +152,7 @@ namespace aero
     protected: void set_command(uint8_t _cmd,
 				std::vector<int16_t>& _stroke_vector);
 
+      /// @brief flush buffer
     public: void flush();
 
     /// @brief decode short(int16_t) from byte(uint8_t)
