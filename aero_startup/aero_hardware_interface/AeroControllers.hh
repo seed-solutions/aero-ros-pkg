@@ -23,13 +23,23 @@ namespace aero
   namespace controller
   {
 
+  /// @brief Upper body controller
+  ///
+  /// The most part of this class is defined in AeroControllerProto,
+  /// please reffer it.
     class AeroUpperController : public AeroControllerProto
     {
+      /// @brief constructor
+      /// @param _port USB port file name
     public: AeroUpperController(const std::string& _port);
 
+      /// @brief destructor
     public: ~AeroUpperController();
     };
 
+  /// @brief Lower body controller
+  ///
+  /// This class has some functions related to wheel control
     class AeroLowerController : public AeroControllerProto
     {
     public: AeroLowerController(const std::string& _port);
