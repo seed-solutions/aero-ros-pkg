@@ -4,6 +4,8 @@ using namespace aero;
 using namespace navigation;
 
 //////////////////////////////////////////////////
+/// @brief constructor
+/// @param _nh ROS Node Handle
 AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   nh_(_nh),
   as_(nh_, "move_base/goal", false)
@@ -36,6 +38,7 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
 }
 
 //////////////////////////////////////////////////
+/// @brief destructor
 AeroMoveBase::~AeroMoveBase()
 {
 }
@@ -120,6 +123,9 @@ bool AeroMoveBase::MoveBaseOnce()
 };
 
 //////////////////////////////////////////////////
+/// @brief set goal position and servo wheels
+///
+/// This function will call Translate() to determin wheel command.
 void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
 {
   wheels wheel_data = this->Translate(_x, _y, _theta);
@@ -161,6 +167,10 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
 }
 
 //////////////////////////////////////////////////
+/// @brief set goal position via action,
+/// this function is registered as GoalCallback of action server.
+///
+/// This function will call SetGoal().
 void AeroMoveBase::SetActionGoal()
 {
   geometry_msgs::PoseStamped goal = as_.acceptNewGoal()->target_pose;
@@ -172,6 +182,8 @@ void AeroMoveBase::SetActionGoal()
 }
 
 //////////////////////////////////////////////////
+/// @brief cancel move command and base will stop immediately,
+/// this function is registered as PreemptCallback of action server
 void AeroMoveBase::CancelGoal()
 {
   this->FinishMove();
@@ -193,6 +205,7 @@ void AeroMoveBase::SetSimpleGoal(
 }
 
 //////////////////////////////////////////////////
+/// @brief stop and servo off all wheels
 void AeroMoveBase::FinishMove()
 {
     // stop wheels
