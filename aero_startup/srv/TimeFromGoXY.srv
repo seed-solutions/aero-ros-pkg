@@ -1,9 +1,0 @@
-string object
-float32 go_x
-float32 go_y
-float32 until_x
-float32 until_y
-float32 time_out_ms
----
-int8 status
-float32 time

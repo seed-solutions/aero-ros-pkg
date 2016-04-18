@@ -1,4 +1,0 @@
-int8 sleep
-string message
----
-int8 status
