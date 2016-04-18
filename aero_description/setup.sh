@@ -26,18 +26,9 @@ printf "\nmaking Stroke2Angle.hh ... (takes about 10 sec)\n"
 
 ./scripts/make_stroke_to_angle_header.sh $dir
 
-# printf "\ninstall srvs ...\n"
+printf "\nconfigurating controllers ...\n"
 
-# ./scripts/install_srv.sh
-# catkin b aero_startup
-
-# printf "\nconfigurating applications ...\n"
-
-# ./scripts/configure_applications.sh applications $dir
-
-# printf "\nconfigurating controllers ...\n"
-
-# ./scripts/configure_controllers.sh $dir
-# catkin b aero_startup
+./scripts/configure_controllers.sh $dir
+catkin b aero_startup
 
 printf "\nfinished.\n"
