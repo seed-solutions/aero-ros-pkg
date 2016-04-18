@@ -22,36 +22,6 @@ else()
   include_directories(include ${Boost_INCLUDE_DIRS})
 endif()
 
-# pcl
-find_package(PCL 1.7 REQUIRED)
-if(NOT PCL_INCLUDE_DIRS)
-  message(WARNING "PCL not found, disabled")
-else()
-  include_directories(${PCL_INCLUDE_DIRS})
-  link_directories(${PCL_LIBRARY_DIRS})
-  add_definitions(${PCL_DEFINITIONS})
-  set(FOUND_PCL 1)
-endif()
-
-# opencv
-find_package(OpenCV REQUIRED)
-if(NOT OpenCV_FOUND)
-  message(WARNING "opencv not found, disabled")
-else()
-  include_directories(${OpenCV_INCLUDE_DIRS})
-  set(FOUND_OpenCV 1)
-endif()
-
-# libsvm
-set(FOUND_LIBSVM)
-if(FOUND_LIBSVM)
-  message(STATUS "found libsvm")
-else()
-  message(WARNING "libsvm not found, disabled")
-endif()
-
-
-
 # ROS setups
 
 set(GENERATE_SRV)
