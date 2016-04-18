@@ -1,4 +1,4 @@
-#include "aero_navigation/move_base/AeroMoveBase.hh"
+#include "aero_move_base/AeroMoveBase.hh"
 
 using namespace aero;
 using namespace navigation;

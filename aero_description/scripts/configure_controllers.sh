@@ -172,3 +172,32 @@ do
     echo "${tab2}${tab6}type=\"aero_${executable_name}_controller_node\" output=\"screen\"/>" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $launch_file
 
 done < $input_file
+
+
+# add c++ dependencies :
+# include(CheckCXXCompilerFlag)
+# CHECK_CXX_COMPILER_FLAG("-std=c+11" COMPILER_SUPPORTS_CXX11)
+# CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+# if(COMPILER_SUPPORTS_CXX11)
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#   add_definitions(-DCXX11_SUPPORTED)
+# elseif(COMPILER_SUPPORTS_CXX0X)
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#   add_definitions(-DCXX11_SUPPORTED)
+# else()
+#   message(FATAL "c++11 required but not supported")
+# endif()
+# end dep
+
+awk "/# add c\+\+ dependencies :/,/# end dep/" $(rospack find aero_description)/scripts/configure_controllers.sh > /tmp/cxx11dep
+sed -i "/# add c\+\+/d" /tmp/cxx11dep
+sed -i "/# end dep/d" /tmp/cxx11dep
+sed -i "s/# //g" /tmp/cxx11dep
+write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+write_to_line=$(($write_to_line + 1))
+IFS=''
+while read line
+do
+    echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    write_to_line=$(($write_to_line + 1))
+done < /tmp/cxx11dep

@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "aero_navigation/move_base/AeroMoveBase.hh"
+#include "aero_move_base/AeroMoveBase.hh"
 
 int main(int argc, char** argv)
 {
