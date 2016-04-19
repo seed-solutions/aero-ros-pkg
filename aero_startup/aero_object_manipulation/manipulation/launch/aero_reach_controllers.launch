@@ -1,0 +1,8 @@
+<launch>
+  <group ns="larm">
+    <node name="aero_reach_controller" pkg="aero_startup" type="aero_reach_controller_larm"/>
+  </group>
+  <group ns="torso_larm">
+    <node name="aero_reach_controller" pkg="aero_startup" type="aero_reach_controller_torsolarm"/>
+  </group>
+</launch>
