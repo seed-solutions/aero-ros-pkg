@@ -1,0 +1,73 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(aero_startup)
+
+# Dependencies
+
+# catkin ROS
+find_package(catkin REQUIRED COMPONENTS
+  roscpp tf std_msgs sensor_msgs
+  trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
+  move_base_msgs
+  message_generation
+)
+if(NOT catkin_LIBRARIES)
+  message(FATAL "catkin required but not supported")
+endif()
+
+# boost
+find_package(Boost REQUIRED COMPONENTS filesystem system signals thread)
+if(NOT Boost_INCLUDE_DIRS)
+  message(FATAL "boost required but not supported")
+else()
+  include_directories(include ${Boost_INCLUDE_DIRS})
+endif()
+
+# ROS setups
+
+set(GENERATE_SRV)
+if(GENERATE_SRV)
+  # auto-add services
+  add_service_files(
+    FILES
+  )
+  generate_messages(
+    DEPENDENCIES
+    std_msgs
+  )
+endif()
+
+catkin_package(
+  CATKIN_DEPENDS
+  roscpp tf std_msgs sensor_msgs
+  trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs move_base_msgs
+  DEPENDS
+  INCLUDE_DIRS
+  LIBRARIES aero_hardware_interface
+)
+
+include_directories(${aero_startup_SOURCE_DIR})
+
+# add c++ dependencies :
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c+11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  add_definitions(-DCXX11_SUPPORTED)
+elseif(COMPILER_SUPPORTS_CXX0X)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+  add_definitions(-DCXX11_SUPPORTED)
+else()
+  message(FATAL "c++11 required but not supported")
+endif()
+
+# >>> add dependencies
+# <<< add dependencies
+
+# Executables
+
+# >>> add controllers
+# <<< add controllers
+
+# >>> add applications
+# <<< add applications
