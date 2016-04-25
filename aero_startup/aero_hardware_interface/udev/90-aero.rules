@@ -1,0 +1,18 @@
+# aero controller
+#SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="A1011R7L",MODE="666",SYMLINK+="aero_upper"
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="AI02EBN0",MODE="666",SYMLINK+="aero_upper"
+#SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="A1011SEU",MODE="666",SYMLINK+="aero_lower"
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="A1011SI7",MODE="666",SYMLINK+="aero_lower"
+
+# futaba rs485 (dynamixel)
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="1115",ATTRS{idProduct}=="0008",MODE="666",SYMLINK+="tilt_motor"
+
+# hokuyo urg
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="15d1",ATTRS{idProduct}=="0000",MODE="666",SYMLINK+="hokuyo"
+
+# master device
+#SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="AH00RWZC",MODE="666",SYMLINK+="aero_master"
+#SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="A40081if",MODE="666",SYMLINK+="aero_master"
+SUBSYSTEMS=="usb",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTRS{serial}=="AI02EAC1",MODE="666",SYMLINK+="aero_master"
+
+
