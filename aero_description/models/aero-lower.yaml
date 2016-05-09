@@ -1,0 +1,64 @@
+##
+## - collada_joint_name : euslisp_joint_name (start with :)
+##
+
+rleg:
+  - RLEG_HIP_Y      : rleg-crotch-y
+  - RLEG_HIP_P      : rleg-crotch-p
+  - RLEG_KNEE       : rleg-knee-p
+rarm:
+  - RARM_SHOULDER_Y : rarm-shoulder-y
+  - RARM_SHOULDER_P : rarm-shoulder-p
+  - RARM_ELBOW      : rarm-elbow-p
+lleg:
+  - LLEG_HIP_Y      : lleg-crotch-y
+  - LLEG_HIP_P      : lleg-crotch-p
+  - LLEG_KNEE       : lleg-knee-p
+larm:
+  - LARM_SHOULDER_Y : larm-shoulder-y
+  - LARM_SHOULDER_P : larm-shoulder-p
+  - LARM_ELBOW      : larm-elbow-p
+torso:
+  - WAIST_Y      : torso-waist-y
+
+##
+## end-coords
+##
+larm-end-coords:
+  translate : [0.172721, 0, -0.29865]
+  rotate    : [0, 1,  0, 0]
+  parent    : LARM_LINK3
+rarm-end-coords:
+  translate : [0.172721, 0, -0.29865]
+  rotate    : [0, 1,  0, 0]
+  parent    : RARM_LINK3
+lleg-end-coords:
+  translate : [0.172721, 0, -0.29865]
+rleg-end-coords:
+  translate : [0.172721, 0, -0.29865]
+head-end-coords:
+  translate : [0.08, 0, 0.13]
+  rotate    : [0, 1, 0, 90]
+
+##
+## reset-pose
+##
+angle-vector:
+  reset-pose : [0.0, 0.0, 0.0, # rleg
+                0.0, 0.0, 0.0, # rarm
+                0.0, 0.0, 0.0, # lleg
+                0.0, 0.0, 0.0, # larm
+                0.0 # torso
+                ]
+  reset-manip-pose : [ 35.0, 0.0, 35.0, # rleg
+                      -35.0, 0.0, 35.0, # rarm
+                      -35.0, 0.0, 35.0, # lleg
+                       35.0, 0.0, 35.0, # larm
+                       0.0 # torso
+                      ]
+  reset-terrain-pose : [ 35.0, 40.0, 80.0, # rleg
+                        -35.0, 40.0, 80.0, # rarm
+                        -35.0, 40.0, 80.0, # lleg
+                         35.0, 40.0, 80.0, # larm
+                         0.0 # torso
+                        ]

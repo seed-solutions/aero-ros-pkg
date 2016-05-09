@@ -1,0 +1,1211 @@
+<?xml version="1.0"?>
+<robot name="AeroUpperRobot"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:gazebo="http://playerstage.sourceforge.net/gazebo/xmlschema/#gz"
+       xmlns:model="http://playerstage.sourceforge.net/gazebo/xmlschema/#model"
+       xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:body="http://playerstage.sourceforge.net/gazebo/xmlschema/#body"
+       xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
+       xmlns:joint="http://playerstage.sourceforge.net/gazebo/xmlschema/#joint"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:rendering="http://playerstage.sourceforge.net/gazebo/xmlschema/#rendering"
+       xmlns:renderable="http://playerstage.sourceforge.net/gazebo/xmlschema/#renderable"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics">
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="base_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="hip_sphere_link">
+    <visual>
+      <origin xyz="0.01175 0 0.0347" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.01175 0 0.0347" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.257" />
+      <origin xyz="0 0 0.042" rpy="0 -0 0"/>
+      <inertia ixx="0.0034" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.0017"/>
+    </inertial>
+  </link>
+  <gazebo reference="hip_sphere_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="hip_center">
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="hip_center">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="body_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="10.551" />
+      <origin xyz="0 0 0.22" rpy="0 -0 0"/>
+      <inertia ixx="0.13" ixy="0" ixz="0" iyy="0.12" iyz="0" izz="0.114"/>
+    </inertial>
+  </link>
+  <gazebo reference="body_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_shoulder_link">
+    <visual>
+      <origin xyz="-0.02 0.134 0.31" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="-0.02 0.134 0.31" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.242" />
+      <origin xyz="0 0.02 0" rpy="0 -0 0"/>
+      <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_shoulder_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_shoulder_center">
+    <visual>
+      <origin xyz="0 0.055 0.002" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.055 0.002" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.744" />
+      <origin xyz="0 0.01 0" rpy="0 -0 0"/>
+      <inertia ixx="0.000841" ixy="0" ixz="0" iyy="0.000835" iyz="0" izz="0.000304"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_shoulder_center">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_upperarm_link">
+    <visual>
+      <origin xyz="0 -0.012 -0.123" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.012 -0.123" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.574" />
+      <origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
+      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_upperarm_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_elbow_link">
+    <visual>
+      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.711" />
+      <origin xyz="0.0047 0 -0.0546" rpy="0 -0 0"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_elbow_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_forearm_link">
+    <visual>
+      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.132" />
+      <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
+      <inertia ixx="0.000276" ixy="0" ixz="0" iyy="0.000286" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_forearm_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_wrist_center">
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_wrist_center">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_hand_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.183" />
+      <origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
+      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_hand_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_thumb_link">
+    <visual>
+      <origin xyz="0 0.013 -0.1363" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.013 -0.1363" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_thumb_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_indexbase_link">
+    <visual>
+      <origin xyz="0 -0.02912 -0.0343" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.02912 -0.0343" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_indexbase_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_indexmid_link">
+    <visual>
+      <origin xyz="0 -0.02186 -0.0131" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.02186 -0.0131" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_indexmid_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="l_indexend_link">
+    <visual>
+      <origin xyz="0 -0.0224 -0.1" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.0224 -0.1" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="l_indexend_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="neck_link">
+    <visual>
+      <origin xyz="0 0 0.3585" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.3585" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.341" />
+      <origin xyz="0 0 0.0595" rpy="0 -0 0"/>
+      <inertia ixx="1.64186e-35" ixy="0" ixz="0" iyy="1.64186e-35" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="neck_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="head_base_link">
+    <visual>
+      <origin xyz="0.015 0 0.1025" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.015 0 0.1025" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="head_base_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="head_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.974" />
+      <origin xyz="0 0 0.038" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="head_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_shoulder_link">
+    <visual>
+      <origin xyz="-0.02 -0.134 0.312" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="-0.02 -0.134 0.312" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.242" />
+      <origin xyz="0 -0.02 0" rpy="0 -0 0"/>
+      <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_shoulder_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_shoulder_center">
+    <visual>
+      <origin xyz="0 -0.055 0.002" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.055 0.002" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.744" />
+      <origin xyz="0 -0.01 0" rpy="0 -0 0"/>
+      <inertia ixx="0.000841" ixy="0" ixz="0" iyy="0.000835" iyz="0" izz="0.000305"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_shoulder_center">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_upperarm_link">
+    <visual>
+      <origin xyz="0 0.012 -0.123" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.012 -0.123" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.574" />
+      <origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
+      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_upperarm_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_elbow_link">
+    <visual>
+      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.711" />
+      <origin xyz="0.0047 0 -0.0546" rpy="0 -0 0"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_elbow_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_forearm_link">
+    <visual>
+      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.132" />
+      <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
+      <inertia ixx="0.000276" ixy="0" ixz="0" iyy="0.000286" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_forearm_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_wrist_center">
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_wrist_center">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_hand_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.183" />
+      <origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
+      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_hand_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_thumb_link">
+    <visual>
+      <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_thumb_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_indexbase_link">
+    <visual>
+      <origin xyz="0 0.02912 -0.0343" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.02912 -0.0343" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_indexbase_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_indexmid_link">
+    <visual>
+      <origin xyz="0 0.02186 -0.0131" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.02186 -0.0131" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_indexmid_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="r_indexend_link">
+    <visual>
+      <origin xyz="0 0.0224 -0.1" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.0224 -0.1" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="r_indexend_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+<link name="leg_foreleg_link">
+<visual>
+<origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+<geometry>
+<mesh filename="package://aero_description/models/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
+</geometry>
+</visual>
+<collision>
+<origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+<geometry>
+<mesh filename="package://aero_description/models/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
+</geometry>
+</collision>
+<inertial>
+<mass value="2.06679" />
+<origin xyz="0.081713 0.000812 -0.146934" rpy="0 -0 0"/>
+<inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
+</inertial>
+</link>
+<gazebo reference="leg_foreleg_link">
+<mu1>0.9</mu1>
+<mu2>0.9</mu2>
+</gazebo>
+<link name="leg_thigh_link">
+<visual>
+<origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+<geometry>
+<mesh filename="package://aero_description/models/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
+</geometry>
+</visual>
+<collision>
+<origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+<geometry>
+<mesh filename="package://aero_description/models/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
+</geometry>
+</collision>
+<inertial>
+<mass value="2.62321" />
+<origin xyz="0.0587169 0 -0.135292" rpy="0 -0 0"/>
+<inertia ixx="0.0161595" ixy="-9.27234e-05" ixz="0.00262839" iyy="0.0166415" iyz="-0.00017447" izz="0.00477281"/>
+</inertial>
+</link>
+<gazebo reference="leg_thigh_link">
+<mu1>0.9</mu1>
+<mu2>0.9</mu2>
+</gazebo>
+<link name="leg_base_link">
+<visual>
+<origin xyz="0 0 0" rpy="0 -0 0"/>
+<geometry>
+<mesh filename="package://aero_description/models/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+</geometry>
+</visual>
+<collision>
+<origin xyz="0 0 0" rpy="0 -0 0"/>
+<geometry>
+<mesh filename="package://aero_description/models/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+</geometry>
+</collision>
+<inertial>
+<mass value="7.64604" />
+<origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
+<inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
+</inertial>
+</link>
+<gazebo reference="leg_base_link">
+<mu1>0.9</mu1>
+<mu2>0.9</mu2>
+</gazebo>
+  <joint name="waist_y_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="hip_sphere_link"/>
+    <origin xyz="0.01175 0 0.0347" rpy="0 -0 0 "/>
+    <axis   xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_y_joint_trans" >
+    <actuator name="waist_y_joint_motor" />
+    <joint name="waist_y_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="waist_y_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="waist_p_joint" type="revolute">
+    <parent link="hip_sphere_link"/>
+    <child  link="hip_center"/>
+    <origin xyz="0 0 0.11" rpy="0 -0 0 "/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_p_joint_trans" >
+    <actuator name="waist_p_joint_motor" />
+    <joint name="waist_p_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="waist_p_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="waist_r_joint" type="revolute">
+    <parent link="hip_center"/>
+    <child  link="body_link"/>
+    <origin xyz="0 0 0" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-0.122173" upper="0.122173" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_r_joint_trans" >
+    <actuator name="waist_r_joint_motor" />
+    <joint name="waist_r_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="waist_r_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_shoulder_p_joint" type="revolute">
+    <parent link="body_link"/>
+    <child  link="l_shoulder_link"/>
+    <origin xyz="-0.02 0.134 0.31" rpy="0 -0 0 "/>
+    <axis   xyz="0 0.984808 -0.173648"/>
+    <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_p_joint_trans" >
+    <actuator name="l_shoulder_p_joint_motor" />
+    <joint name="l_shoulder_p_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_shoulder_p_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_shoulder_r_joint" type="revolute">
+    <parent link="l_shoulder_link"/>
+    <child  link="l_shoulder_center"/>
+    <origin xyz="0 0.055 0.002" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_r_joint_trans" >
+    <actuator name="l_shoulder_r_joint_motor" />
+    <joint name="l_shoulder_r_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_shoulder_r_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_shoulder_y_joint" type="continuous">
+    <parent link="l_shoulder_center"/>
+    <child  link="l_upperarm_link"/>
+    <origin xyz="0 -0.012 -0.123" rpy="0 -0 0 "/>
+    <axis   xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_y_joint_trans" >
+    <actuator name="l_shoulder_y_joint_motor" />
+    <joint name="l_shoulder_y_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_shoulder_y_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_elbow_joint" type="revolute">
+    <parent link="l_upperarm_link"/>
+    <child  link="l_elbow_link"/>
+    <origin xyz="0 0 -0.17" rpy="0 -0 0 "/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_elbow_joint_trans" >
+    <actuator name="l_elbow_joint_motor" />
+    <joint name="l_elbow_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_elbow_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_wrist_y_joint" type="continuous">
+    <parent link="l_elbow_link"/>
+    <child  link="l_forearm_link"/>
+    <origin xyz="0 0 -0.121" rpy="0 -0 0 "/>
+    <axis   xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_y_joint_trans" >
+    <actuator name="l_wrist_y_joint_motor" />
+    <joint name="l_wrist_y_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_wrist_y_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_wrist_p_joint" type="revolute">
+    <parent link="l_forearm_link"/>
+    <child  link="l_wrist_center"/>
+    <origin xyz="0 0 -0.137" rpy="0 -0 0 "/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="-0.349066" upper="0.349066" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_p_joint_trans" >
+    <actuator name="l_wrist_p_joint_motor" />
+    <joint name="l_wrist_p_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_wrist_p_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_wrist_r_joint" type="revolute">
+    <parent link="l_wrist_center"/>
+    <child  link="l_hand_link"/>
+    <origin xyz="0 0 0" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-0.698132" upper="0.698132" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_r_joint_trans" >
+    <actuator name="l_wrist_r_joint_motor" />
+    <joint name="l_wrist_r_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_wrist_r_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_indexbase_joint" type="continuous">
+    <parent link="l_hand_link"/>
+    <child  link="l_thumb_link"/>
+    <origin xyz="0 0.013 -0.1363" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_indexbase_joint_trans" >
+    <actuator name="l_indexbase_joint_motor" />
+    <joint name="l_indexbase_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_indexbase_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_indexmid_joint" type="continuous">
+    <parent link="l_thumb_link"/>
+    <child  link="l_indexbase_link"/>
+    <origin xyz="0 -0.02912 -0.0343" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_indexmid_joint_trans" >
+    <actuator name="l_indexmid_joint_motor" />
+    <joint name="l_indexmid_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_indexmid_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_indexend_joint" type="continuous">
+    <parent link="l_indexbase_link"/>
+    <child  link="l_indexmid_link"/>
+    <origin xyz="0 -0.02186 -0.0131" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_indexend_joint_trans" >
+    <actuator name="l_indexend_joint_motor" />
+    <joint name="l_indexend_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_indexend_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="l_thumb_joint" type="continuous">
+    <parent link="l_hand_link"/>
+    <child  link="l_indexend_link"/>
+    <origin xyz="0 -0.0224 -0.1" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_thumb_joint_trans" >
+    <actuator name="l_thumb_joint_motor" />
+    <joint name="l_thumb_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="l_thumb_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="neck_y_joint" type="continuous">
+    <parent link="body_link"/>
+    <child  link="neck_link"/>
+    <origin xyz="0 0 0.3585" rpy="0 -0 0 "/>
+    <axis   xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_y_joint_trans" >
+    <actuator name="neck_y_joint_motor" />
+    <joint name="neck_y_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="neck_y_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="neck_p_joint" type="revolute">
+    <parent link="neck_link"/>
+    <child  link="head_base_link"/>
+    <origin xyz="0.015 0 0.1025" rpy="0 -0 0 "/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="0" upper="1.04667" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_p_joint_trans" >
+    <actuator name="neck_p_joint_motor" />
+    <joint name="neck_p_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="neck_p_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="neck_r_joint" type="revolute">
+    <parent link="head_base_link"/>
+    <child  link="head_link"/>
+    <origin xyz="0 0 0" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-0.122173" upper="0.122173" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_r_joint_trans" >
+    <actuator name="neck_r_joint_motor" />
+    <joint name="neck_r_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="neck_r_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_shoulder_p_joint" type="revolute">
+    <parent link="body_link"/>
+    <child  link="r_shoulder_link"/>
+    <origin xyz="-0.02 -0.134 0.312" rpy="0 -0 0 "/>
+    <axis   xyz="0 0.984808 0.173648"/>
+    <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_p_joint_trans" >
+    <actuator name="r_shoulder_p_joint_motor" />
+    <joint name="r_shoulder_p_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_shoulder_p_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_shoulder_r_joint" type="revolute">
+    <parent link="r_shoulder_link"/>
+    <child  link="r_shoulder_center"/>
+    <origin xyz="0 -0.055 0.002" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_r_joint_trans" >
+    <actuator name="r_shoulder_r_joint_motor" />
+    <joint name="r_shoulder_r_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_shoulder_r_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_shoulder_y_joint" type="continuous">
+    <parent link="r_shoulder_center"/>
+    <child  link="r_upperarm_link"/>
+    <origin xyz="0 0.012 -0.123" rpy="0 -0 0 "/>
+    <axis   xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_y_joint_trans" >
+    <actuator name="r_shoulder_y_joint_motor" />
+    <joint name="r_shoulder_y_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_shoulder_y_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_elbow_joint" type="revolute">
+    <parent link="r_upperarm_link"/>
+    <child  link="r_elbow_link"/>
+    <origin xyz="0 0 -0.17" rpy="0 -0 0 "/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_elbow_joint_trans" >
+    <actuator name="r_elbow_joint_motor" />
+    <joint name="r_elbow_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_elbow_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_wrist_y_joint" type="continuous">
+    <parent link="r_elbow_link"/>
+    <child  link="r_forearm_link"/>
+    <origin xyz="0 0 -0.121" rpy="0 -0 0 "/>
+    <axis   xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_y_joint_trans" >
+    <actuator name="r_wrist_y_joint_motor" />
+    <joint name="r_wrist_y_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_wrist_y_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_wrist_p_joint" type="revolute">
+    <parent link="r_forearm_link"/>
+    <child  link="r_wrist_center"/>
+    <origin xyz="0 0 -0.137" rpy="0 -0 0 "/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="-0.349066" upper="0.349066" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_p_joint_trans" >
+    <actuator name="r_wrist_p_joint_motor" />
+    <joint name="r_wrist_p_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_wrist_p_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_wrist_r_joint" type="revolute">
+    <parent link="r_wrist_center"/>
+    <child  link="r_hand_link"/>
+    <origin xyz="0 0 0" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-0.698132" upper="0.698132" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_r_joint_trans" >
+    <actuator name="r_wrist_r_joint_motor" />
+    <joint name="r_wrist_r_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_wrist_r_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_indexbase_joint" type="continuous">
+    <parent link="r_hand_link"/>
+    <child  link="r_thumb_link"/>
+    <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_indexbase_joint_trans" >
+    <actuator name="r_indexbase_joint_motor" />
+    <joint name="r_indexbase_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_indexbase_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_indexmid_joint" type="continuous">
+    <parent link="r_thumb_link"/>
+    <child  link="r_indexbase_link"/>
+    <origin xyz="0 0.02912 -0.0343" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_indexmid_joint_trans" >
+    <actuator name="r_indexmid_joint_motor" />
+    <joint name="r_indexmid_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_indexmid_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_indexend_joint" type="continuous">
+    <parent link="r_indexbase_link"/>
+    <child  link="r_indexmid_link"/>
+    <origin xyz="0 0.02186 -0.0131" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_indexend_joint_trans" >
+    <actuator name="r_indexend_joint_motor" />
+    <joint name="r_indexend_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_indexend_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="r_thumb_joint" type="continuous">
+    <parent link="r_hand_link"/>
+    <child  link="r_indexend_link"/>
+    <origin xyz="0 0.0224 -0.1" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_thumb_joint_trans" >
+    <actuator name="r_thumb_joint_motor" />
+    <joint name="r_thumb_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="r_thumb_joint">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+<joint name="upper_lower_connector" type="continuous">
+<parent link="base_link"/>
+<child  link="leg_base_link"/>
+<origin xyz="0 0 0" rpy="0 -0 0 "/>
+<axis   xyz="0 0 1"/>
+<limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+<dynamics damping="0.2" friction="0" />
+</joint>
+<transmission type="pr2_mechanism_model/SimpleTransmission" name="upper_lower_connector_trans" >
+<actuator name="upper_lower_connector_motor" />
+<joint name="upper_lower_connector" />
+<mechanicalReduction>1</mechanicalReduction>
+</transmission>
+<gazebo reference="upper_lower_connector">
+<cfmDamping>0.4</cfmDamping>
+</gazebo>
+<joint name="hip_joint" type="revolute">
+<parent link="leg_base_link"/>
+<child  link="leg_thigh_link"/>
+<origin xyz="0.01591 0.0 -0.05" rpy="0 -0 0 "/>
+<axis   xyz="0 -1 0"/>
+<limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
+<dynamics damping="0.2" friction="0" />
+</joint>
+<transmission type="pr2_mechanism_model/SimpleTransmission" name="hip_joint_trans" >
+<actuator name="hip_joint_motor" />
+<joint name="hip_joint" />
+<mechanicalReduction>1</mechanicalReduction>
+</transmission>
+<gazebo reference="hip_joint">
+<cfmDamping>0.4</cfmDamping>
+</gazebo>
+<joint name="knee_joint" type="revolute">
+<parent link="leg_thigh_link"/>
+<child  link="leg_foreleg_link"/>
+<origin xyz="0.0 0.0 -0.29009" rpy="0 -0 0 "/>
+<axis   xyz="0 1 0"/>
+<limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
+<dynamics damping="0.2" friction="0" />
+</joint>
+<transmission type="pr2_mechanism_model/SimpleTransmission" name="knee_joint_trans" >
+<actuator name="knee_joint_motor" />
+<joint name="knee_joint" />
+<mechanicalReduction>1</mechanicalReduction>
+</transmission>
+<gazebo reference="knee_joint">
+<cfmDamping>0.4</cfmDamping>
+</gazebo>
+</robot>
