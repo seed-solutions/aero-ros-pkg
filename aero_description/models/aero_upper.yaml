@@ -1,0 +1,68 @@
+##
+## - collada_joint_name : euslisp_joint_name (start with :)
+##
+
+rarm:
+  - RARM_SHOULDER_P : rarm-shoulder-p
+  - RARM_SHOULDER_R : rarm-shoulder-r
+  - RARM_SHOULDER_Y : rarm-shoulder-y
+  - RARM_ELBOW      : rarm-elbow-p
+  - RARM_WRIST_Y    : rarm-wrist-y
+  - RARM_WRIST_P    : rarm-wrist-p
+  - RARM_WRIST_R    : rarm-wrist-r
+  - RARM_THUMB_P    : rarm-t-1p
+  - RARM_INDEX_P1   : rarm-f-1p
+  - RARM_INDEX_P2   : rarm-f-2p
+  - RARM_INDEX_P3   : rarm-f-3p
+larm:
+  - LARM_SHOULDER_P : larm-shoulder-p
+  - LARM_SHOULDER_R : larm-shoulder-r
+  - LARM_SHOULDER_Y : larm-shoulder-y
+  - LARM_ELBOW      : larm-elbow-p
+  - LARM_WRIST_Y    : larm-wrist-y
+  - LARM_WRIST_P    : larm-wrist-p
+  - LARM_WRIST_R    : larm-wrist-r
+  - LARM_THUMB_P    : larm-t-1p
+  - LARM_INDEX_P1   : larm-f-1p
+  - LARM_INDEX_P2   : larm-f-2p
+  - LARM_INDEX_P3   : larm-f-3p
+torso:
+  - WAIST_Y      : torso-waist-y
+  - WAIST_P      : torso-waist-p
+  - WAIST_R      : torso-waist-r
+head:
+  - NECK_Y       : head-neck-y
+  - NECK_P       : head-neck-p
+  - NECK_R       : head-neck-r
+
+##
+## end-coords
+##
+larm-end-coords:
+  translate : [0, -0.025, -0.13] #[0, 0, -0.12]
+  rotate    : [0, 1,  0, 90]
+  parent    : LARM_LINK7
+rarm-end-coords:
+  translate : [0, 0.025, -0.13] #[0, 0, -0.12]
+  rotate    : [0, 1,  0, 90]
+  parent    : RARM_LINK7
+head-end-coords:
+  translate : [0.08, 0, 0.13]
+  rotate    : [0, 1, 0, 90]
+
+##
+## reset-pose
+##
+angle-vector:
+  reset-pose : [0.0, 0.0, 0.0,  -90.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, # rarm
+                0.0, 0.0, 0.0,  -90.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, # larm
+                0.0, 0.0, 0.0, # torso
+                0.0, 0.0, 0.0] # head
+  reset-manip-pose : [0.0, -15.0, 0.0,  -90.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, # rarm
+                      0.0,  15.0, 0.0,  -90.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, # larm
+                      0.0, 0.0, 0.0, # torso
+                      0.0, 0.0, 0.0] # head
+  reset-terrain-pose : [0.0, -15.0, 0.0,  -90.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, # rarm
+                        0.0,  15.0, 0.0,  -90.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, # larm
+                        0.0, 0.0, 0.0, # torso
+                        0.0, 0.0, 0.0] # head
