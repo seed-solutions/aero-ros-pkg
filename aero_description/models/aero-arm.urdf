@@ -1,0 +1,474 @@
+<?xml version="1.0"?>
+<robot name="AeroArmRobot">
+ <link name="base_link">
+    <inertial>
+      <origin xyz="0.0 0 0" rpy="0 0 0"/>
+      <mass value="2.24862"/>
+      <inertia ixx="0.00787462" ixy="1.86853e-06" ixz="0.000109278" iyy="0.00564958" iyz="4.77298e-06" izz="0.00724112"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_base.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Assy_Waist_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_base.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="Link1_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.153989"/>
+      <inertia ixx="7.20502e-05" ixy="-3.97093e-11" ixz="1.25067e-06" iyy="9.14657e-05" iyz="1.33728e-10" izz="7.99165e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0  0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_shoulder-y.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link1_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_shoulder-y.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_shoulder_y_joint" type="continuous">
+    <origin xyz="0.0 0 0.01" rpy="0 0 0"/>
+    <parent link="base_link"/>
+	<axis xyz="0.0 0.0 1.0"/>
+    <child link="Link1_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="head_base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/PS4eye.STL"/>
+      </geometry>
+      <material name="head_base_link_color">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/PS4eye.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Camera" type="fixed">
+    <origin xyz="0.067069 0 0.0235" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="head_base_link"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="Link2_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.571747"/>
+      <inertia ixx="0.00600119" ixy="-3.64499e-07" ixz="-0.000211137" iyy="0.00635549" iyz="-1.81458e-07" izz="0.000838023"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.1205" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_upper_arm.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link2_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.1205" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_upper_arm.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_shoulder_p_joint" type="continuous">
+    <origin xyz="0 0 0.1205" rpy="0 0 0"/>
+	<axis xyz="0.0 1.0 0.0"/>    
+	<parent link="Link1_1"/>
+    <child link="Link2_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="Link3_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.243133"/>
+      <inertia ixx="0.000350355" ixy="0.0" ixz="-2.93419e-05" iyy="0.000370775" iyz="0.0" izz="0.00014505"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.4205" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_elbow.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link3_1_color">
+        <color rgba="0 0 0.6 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.4205" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_elbow.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_elbow_joint" type="continuous">
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+	<axis xyz="0.0 1.0 0.0"/>
+    <parent link="Link2_1"/>
+    <child link="Link3_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="Link5_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.520191"/>
+      <inertia ixx="0.000719932" ixy="-1.77744e-08" ixz="1.34362e-06" iyy="0.000716013" iyz="-6.86778e-06" izz="0.000201071"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.4805" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_HA35.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link5_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.4805" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_HA35.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_elbow2_joint" type="continuous">
+    <origin xyz="0 0 0.06" rpy="0 0 0"/>
+    <axis xyz="0.0 -1.0 0.0"/>
+    <parent link="Link3_1"/>
+    <child link="Link5_1"/>
+    <dynamics damping="0.1"/>
+	<mimic joint="r_elbow_joint" multiplier="-1" offset="0" />
+  </joint>
+  <link name="Link6_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.148468"/>
+      <inertia ixx="0.000283315" ixy="1.0793e-07" ixz="-7.05555e-10" iyy="0.000294049" iyz="-6.32939e-09" izz="0.00010571"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.599" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_wrist-y.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link6_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.599" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_wrist-y.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_wrist_y_joint" type="continuous">
+    <origin xyz="0 0 0.1185" rpy="0 0 0"/>
+	<axis xyz="0.0 0.0 1.0"/>
+    <parent link="Link5_1"/>
+    <child link="Link6_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="Link7_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.0107199"/>
+      <inertia ixx="8.11556e-07" ixy="6.42641e-18" ixz="-2.3405e-12" iyy="7.1075e-07" iyz="0.0" izz="1.21394e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.7307" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_wrist-p.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link7_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.7307" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_wrist-p.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_wrist_p_joint" type="continuous">
+    <origin xyz="0 0 0.1317" rpy="0 0 0"/>
+	<axis xyz="1.0 0.0 0.0"/>
+    <parent link="Link6_1"/>
+    <child link="Link7_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="Link8_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.0243935"/>
+      <inertia ixx="4.82484e-06" ixy="0.0" ixz="7.12872e-18" iyy="6.88455e-06" iyz="3.68181e-07" izz="7.01069e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_wrist-r.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Link8_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_arm_meshes/SEED-ARM_wrist-r.stl"scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_wrist_r_joint" type="continuous">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+	<axis xyz="0.0 1.0 0.0"/>
+    <parent link="Link7_1"/>
+    <child link="Link8_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <link name="RARM_LINK7">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.183" />
+      <origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
+      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
+    </inertial>
+  </link>
+  <gazebo reference="RARM_LINK7">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="RARM_INDEX_LINK1">
+    <visual>
+      <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="RARM_INDEX_LINK1">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="RARM_INDEX_LINK2">
+    <visual>
+      <origin xyz="0 0.02912 -0.0343" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.02912 -0.0343" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="RARM_INDEX_LINK2">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="RARM_INDEX_LINK3">
+    <visual>
+      <origin xyz="0 0.02186 -0.0131" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.02186 -0.0131" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="RARM_INDEX_LINK3">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <link name="RARM_THUMB_LINK">
+    <visual>
+      <origin xyz="0 0.0224 -0.1" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.0224 -0.1" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="RARM_THUMB_LINK">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <joint name="Assembly_SH_1_Link8_1" type="fixed">
+    <origin xyz="0 0 -0.0224" rpy="0 3.14159 -1.570796"/>
+    <parent link="Link8_1"/>
+    <child link="RARM_LINK7"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  <joint name="RARM_INDEX_P1" type="continuous">
+    <parent link="RARM_LINK7"/>
+    <child  link="RARM_INDEX_LINK1"/>
+    <origin xyz="0 -0.013 -0.1358" rpy="0 0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="RARM_INDEX_P1_trans" >
+    <actuator name="RARM_INDEX_P1_motor" />
+    <joint name="RARM_INDEX_P1" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="RARM_INDEX_P1">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="RARM_INDEX_P2" type="continuous">
+    <parent link="RARM_INDEX_LINK1"/>
+    <child  link="RARM_INDEX_LINK2"/>
+    <origin xyz="0 0.02912 -0.0343" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="RARM_INDEX_P2_trans" >
+    <actuator name="RARM_INDEX_P2_motor" />
+    <joint name="RARM_INDEX_P2" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="RARM_INDEX_P2">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="RARM_INDEX_P3" type="continuous">
+    <parent link="RARM_INDEX_LINK2"/>
+    <child  link="RARM_INDEX_LINK3"/>
+    <origin xyz="0 0.02186 -0.0131" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="RARM_INDEX_P3_trans" >
+    <actuator name="RARM_INDEX_P3_motor" />
+    <joint name="RARM_INDEX_P3" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="RARM_INDEX_P3">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+  <joint name="RARM_THUMB_P" type="continuous">
+    <parent link="RARM_LINK7"/>
+    <child  link="RARM_THUMB_LINK"/>
+    <origin xyz="0 0.0224 -0.1" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="RARM_THUMB_P_trans" >
+    <actuator name="RARM_THUMB_P_motor" />
+    <joint name="RARM_THUMB_P" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="RARM_THUMB_P">
+    <cfmDamping>0.4</cfmDamping>
+  </gazebo>
+<!--
+  <link name="Link4_1">
+    <inertial>
+      <origin xyz="0 0.0291177467702 -1.67202693382e-07" rpy="0 0 0"/>
+      <mass value="0.0840688"/>
+      <inertia ixx="4.66787e-05" ixy="8.93526e-14" ixz="6.41682e-14" iyy="4.22398e-06" iyz="-9.09596e-07" izz="4.67441e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0.0582344969321 -2.52113077118e-07" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/koizumi_arm_meshes/matlab/koizumi_arm/link4_iam_8bce0ba7.STL"/>
+      </geometry>
+      <material name="Link4_1_color">
+        <color rgba="0.74902 0.74902 0.74902 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0.0582344969321 -2.52113077118e-07" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://aero_description/models/koizumi_arm_meshes/matlab/koizumi_arm/link4_iam_8bce0ba7.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Link4_1_Link2_1" type="continuous">
+    <origin xyz="0.00633982815859 0 -0.313594845029" rpy="-2.53560829497 0 -1.57079632679"/>
+    <axis xyz="1.0 4.4408920985e-16 -2.08166817117e-17"/>
+    <parent link="Link2_1"/>
+    <child link="Link4_1"/>
+    <dynamics damping="0.1"/>
+  </joint>
+-->
+</robot>
+
