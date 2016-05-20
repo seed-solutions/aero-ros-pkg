@@ -50,14 +50,14 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     std::string status_msg = "grasp success";
     if (req.hand == "both")
     {
-      msg.points[0].positions[0] = std::max(theta[0]+0.1, 50.0*M_PI/180);
-      msg.points[0].positions[1] = std::min(theta[1]-0.1, -50.0*M_PI/180);
+      msg.points[0].positions[0] = std::min(theta[0]+0.1, 50.0*M_PI/180);
+      msg.points[0].positions[1] = std::max(theta[1]-0.1, -50.0*M_PI/180);
     }
     else if (req.hand == "left")
     {
       msg.joint_names = {"l_thumb_joint"};
       msg.points[0].positions.resize(1);
-      msg.points[0].positions[0] = std::max(theta[0]+0.1, 50.0*M_PI/180);
+      msg.points[0].positions[0] = std::min(theta[0]+0.1, 50.0*M_PI/180);
       if (theta[0] < req.thre_warn) status_msg = "grasp bad";
       if (theta[0] > req.thre_fail) status_msg = "grasp failed";
     }
@@ -65,7 +65,7 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     {
       msg.joint_names = {"r_thumb_joint"};
       msg.points[0].positions.resize(1);
-      msg.points[0].positions[0] = std::min(theta[1]-0.1, -50.0*M_PI/180);
+      msg.points[0].positions[0] = std::max(theta[1]-0.1, -50.0*M_PI/180);
       if (theta[1] > -req.thre_warn) status_msg = "grasp bad";
       if (theta[1] < -req.thre_fail) status_msg = "grasp failed";
     }
