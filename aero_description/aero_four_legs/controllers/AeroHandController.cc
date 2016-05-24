@@ -9,6 +9,8 @@
   string command
   float32 thre_fail
   float32 thre_warn
+  float32 larm_angle
+  float32 rarm_angle
   ---
   string status
 */
@@ -97,6 +99,31 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     msg.points[0].time_from_start = ros::Duration(0.1);
     pub.publish(msg);
     res.status = "ungrasp success";
+  }
+  else if (req.command == "grasp-angle")
+  {
+    if (req.hand == "both")
+    {
+      msg.joint_names = {"l_thumb_joint", "r_thumb_joint"};
+      msg.points[0].positions.resize(2);
+      msg.points[0].positions[0] = req.larm_angle * M_PI / 180;
+      msg.points[0].positions[1] = req.rarm_angle * M_PI / 180;
+    }
+    else if (req.hand == "left")
+    {
+      msg.joint_names = {"l_thumb_joint"};
+      msg.points[0].positions.resize(1);
+      msg.points[0].positions[0] = req.larm_angle * M_PI / 180;
+    }
+    else if (req.hand == "right")
+    {
+      msg.joint_names = {"r_thumb_joint"};
+      msg.points[0].positions.resize(1);
+      msg.points[0].positions[0] = req.rarm_angle * M_PI / 180;
+    }
+    msg.points[0].time_from_start = ros::Duration(0.5);
+    pub.publish(msg);
+    res.status = "grasp-angle success";
   }
  
   return true;
