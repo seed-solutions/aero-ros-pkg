@@ -1,13 +1,13 @@
 /*
-  @define ShoulderPitchInvTable from shoulder-p offset 0
-  @define ShoulderRollInvTable from shoulder-r offset 0
-  @define ElbowPitchInvTable from elbow-p offset 20.183
-  @define WristPitchInvTable from wrist-p offset 0
-  @define WristRollInvTable from wrist-r offset 0
-  @define WaistPitchInvTable from waist-p offset 0
-  @define WaistRollInvTable from waist-r offset 0
-  @define NeckPitchInvTable from neck-p offset 0
-  @define NeckRollInvTable from neck-r offset 0
+  @define ShoulderPitchInvTable from aero_four_legs/shoulder-p offset 0
+  @define ShoulderRollInvTable from aero_four_legs/shoulder-r offset 0
+  @define ElbowPitchInvTable from aero_four_legs/elbow-p offset 20.183
+  @define WristPitchInvTable from aero_four_legs/wrist-p offset 0
+  @define WristRollInvTable from aero_four_legs/wrist-r offset 0
+  @define WaistPitchInvTable from aero_four_legs/waist-p offset 0
+  @define WaistRollInvTable from aero_four_legs/waist-r offset 0
+  @define NeckPitchInvTable from aero_four_legs/neck-p offset 0
+  @define NeckRollInvTable from aero_four_legs/neck-r offset 0
   @define LegInvTable from lamia offset 0
  */
 

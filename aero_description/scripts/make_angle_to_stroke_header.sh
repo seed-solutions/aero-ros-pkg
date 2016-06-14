@@ -47,10 +47,20 @@ create_table_func_from_csv() {
     function_name=$4
     template_file=$5
 
+    # parse joint_name
+    file=''
+    csv=$(echo "$joint_name" | awk -F/ '{print $2}')
+    if [[ $csv == '' ]]
+    then
+	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name}.csv"
+    else
+	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
+	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
+    fi
+
     # load csv
     table=()
     interval=()
-    file="$(rospack find aero_description)/models/${joint_name}.csv"
     j=0
     while read line
     do
@@ -113,10 +123,20 @@ create_rp_table_func_from_csv() {
     function_name=$4
     template_file=$6
 
+    # parse joint_name_a
+    file=''
+    csv=$(echo "$joint_name_a" | awk -F/ '{print $2}')
+    if [[ $csv == '' ]]
+    then
+	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name_a}.csv"
+    else
+	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
+	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
+    fi
+
     # load roll csv
     table_r=()
     interval_r=()
-    file="$(rospack find aero_description)/models/${joint_name_a}.csv"
     j=0
     while read line
     do
@@ -125,10 +145,20 @@ create_rp_table_func_from_csv() {
 	j=$(($j + 1))
     done < $file
 
+    # parse joint_name_b
+    file=''
+    csv=$(echo "$joint_name_b" | awk -F/ '{print $2}')
+    if [[ $csv == '' ]]
+    then
+	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name_b}.csv"
+    else
+	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
+	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
+    fi
+
     # load pitch csv
     table_p=()
     interval_p=()
-    file="$(rospack find aero_description)/models/${joint_name_b}.csv"
     j=0
     while read line
     do

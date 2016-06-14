@@ -1,10 +1,10 @@
 /*
-  @define ShoulderPitchTable from shoulder-p offset 0
-  @define ShoulderRollTable from shoulder-r offset 0
-  @define ElbowPitchTable from elbow-p offset 20.183
-  @define WristRollPitchTable from wrist-p wrist-r symmetric 1
-  @define WaistRollPitchTable from waist-r waist-p symmetric 0
-  @define NeckRollPitchTable from neck-r neck-p symmetric 0
+  @define ShoulderPitchTable from aero_four_legs/shoulder-p offset 0
+  @define ShoulderRollTable from aero_four_legs/shoulder-r offset 0
+  @define ElbowPitchTable from aero_four_legs/elbow-p offset 20.183
+  @define WristRollPitchTable from aero_four_legs/wrist-p aero_four_legs/wrist-r symmetric 1
+  @define WaistRollPitchTable from aero_four_legs/waist-r aero_four_legs/waist-p symmetric 0
+  @define NeckRollPitchTable from aero_four_legs/neck-r aero_four_legs/neck-p symmetric 0
   @define LegTable from lamia offset 0
  */
 
