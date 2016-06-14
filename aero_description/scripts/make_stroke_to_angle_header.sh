@@ -38,10 +38,20 @@ create_table_func_from_csv() {
     function_name=$4
     template_file=$5
 
+    # parse joint_name
+    file=''
+    csv=$(echo "$joint_name" | awk -F/ '{print $2}')
+    if [[ $csv == '' ]]
+    then
+	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name}.csv"
+    else
+	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
+	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
+    fi
+
     # load csv
     csv=()
     csv_interval=()
-    file="$(rospack find aero_description)/models/${joint_name}.csv"
     j=0
     while read line
     do

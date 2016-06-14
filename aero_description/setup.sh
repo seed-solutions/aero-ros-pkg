@@ -39,7 +39,11 @@ then
     exit 1
 fi
 
-printf "Creating urdf ...\n"
+printf "Setting up models directory ...\n"
+
+./scripts/setup_models_directory.sh $dir $upper_name $lower_name
+
+printf "\nCreating urdf ...\n"
 
 ./scripts/create_urdf.sh $dir $upper_name $lower_name
 
