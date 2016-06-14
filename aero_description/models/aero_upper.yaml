@@ -39,11 +39,11 @@ head:
 ## end-coords
 ##
 larm-end-coords:
-  translate : [0, -0.025, -0.13] #[0, 0, -0.12]
+  translate : [0, -0.0296, -0.1224] #[0, -0.025, -0.13] #[0, 0, -0.12]
   rotate    : [0, 1,  0, 90]
   parent    : LARM_LINK7
 rarm-end-coords:
-  translate : [0, 0.025, -0.13] #[0, 0, -0.12]
+  translate : [0, 0.0296, -0.1224] #[0, 0.025, -0.13] #[0, 0, -0.12]
   rotate    : [0, 1,  0, 90]
   parent    : RARM_LINK7
 head-end-coords:
