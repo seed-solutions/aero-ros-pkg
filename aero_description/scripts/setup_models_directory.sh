@@ -41,7 +41,9 @@ add_missings() {
 	    dir_exists=$(ls $(rospack find aero_description)/models | grep $dirname)
 	    if [[ $dir_exists == '' ]]
 	    then
+		printf "couldn't find model directory\n"
 		mkdir $(rospack find aero_description)/models/$dirname
+		printf "made directory: $(rospack find aero_description)/models/$dirname\n"
 	    fi
 	    # echo "getting $filename"
 	    cp $get $(rospack find aero_description)/models/$dirname/$filename
