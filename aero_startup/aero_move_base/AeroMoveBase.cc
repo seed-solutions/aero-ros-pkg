@@ -54,10 +54,10 @@ void AeroMoveBase::MoveBase(const ros::TimerEvent& _event)
     feedback.pose.position.x = states_.moved_distance.x;
     feedback.pose.position.y = states_.moved_distance.y;
     feedback.pose.position.z = 0.0;
-    feedback.pose.orientation.x = cos(states_.moved_distance.theta);
+    feedback.pose.orientation.x = sin(0.5 * states_.moved_distance.theta);
     feedback.pose.orientation.y = 0.0;
     feedback.pose.orientation.z = 0.0;
-    feedback.pose.orientation.w = sin(states_.moved_distance.theta);
+    feedback.pose.orientation.w = cos(0.5 * states_.moved_distance.theta);
     feedback_.base_position = feedback;
     as_.publishFeedback(feedback_);
   }
@@ -175,7 +175,7 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
 void AeroMoveBase::SetActionGoal()
 {
   geometry_msgs::PoseStamped goal = as_.acceptNewGoal()->target_pose;
-  float theta = acos(goal.pose.orientation.x) * 2;
+  float theta = acos(goal.pose.orientation.w) * 2;
   int sgn = 0;
   if (goal.pose.orientation.w < 0) sgn = -1;
   else if (goal.pose.orientation.w > 0) sgn = 1;
@@ -195,7 +195,7 @@ void AeroMoveBase::CancelGoal()
 void AeroMoveBase::SetSimpleGoal(
     const geometry_msgs::PoseStamped::ConstPtr& _msg)
 {
-  float theta = acos(_msg->pose.orientation.x) * 2;
+  float theta = acos(_msg->pose.orientation.w) * 2;
   int sgn = 0;
   if (_msg->pose.orientation.w < 0) sgn = -1;
   else if (_msg->pose.orientation.w > 0) sgn = 1;
