@@ -15,6 +15,10 @@ public: wheels Translate(float _x, float _y);
 public: wheels Rotate(float _theta);
 
 public: wheels Drift(float _x, float _theta);
+
+ private: static const float radius = 76.0;
+ private: static const float Radius = 297.4535;
+ private: static const float max_velocity = 450.0;  // rpm * 10
 };
 
 //////////////////////////////////////////////////
@@ -64,12 +68,6 @@ pose AeroMoveBase::dX(std::vector<double> _vels, float _dt)
       0.25 * 0.5 *
       (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
 
-  static const float max_velocity = 450.0;
-  //static const float max_velocity = 100.0;
-  static const float radius = 76.0;
-  static const float Radius = 297.4535;
-
-
   return {Vx * 2*M_PI * radius * _dt,
         Vy * 2*M_PI * radius * _dt,
         max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300)};
@@ -88,8 +86,6 @@ AeroMoveBase::AeroMoveBaseImpl::~AeroMoveBaseImpl()
 //////////////////////////////////////////////////
 wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
 {
-  static const float max_velocity = 450.0; // rpm * 10
-  //static const float max_velocity = 100.0;
   // front_left and rear_right
   std::function<float(float, float)> lambda_vel1 =
       [=](float x, float y)
@@ -142,8 +138,6 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
       {lambda_vel1(_x, _y), lambda_vel2(_x, _y),
        lambda_vel2(_x, _y), lambda_vel1(_x ,_y)};
 
-  static const float radius = 76.0;
-
   // the wheel velocities are velocities[i]
   // the omni wheel direction is in the 45[deg] direction of the wheel
   // therefore, the actual speed of the robot is velocities[i]/sqrt(2)
@@ -170,11 +164,6 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
 //////////////////////////////////////////////////
 wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
 {
-  static const float max_velocity = 450.0;
-  //static const float max_velocity = 100.0;
-  static const float radius = 76.0;
-  static const float Radius = 297.4535;
-
   wheels wheel_data;
 
   if (_theta >= 0)
@@ -194,12 +183,6 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
 wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
 {
   // Note : drift rotates at half the speed of Rotate
-
-  static const float max_velocity = 450.0;
-  //static const float max_velocity = 100.0;
-  static const float radius = 76.0;
-  static const float Radius = 297.4535;
-
 
   wheels wheel_data;
 
