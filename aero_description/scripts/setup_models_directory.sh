@@ -11,9 +11,7 @@ upper_file=$2
 lower_file=$3
 
 # check state of models directory
-models_dir_exists=$(ls $(rospack find aero_description) | grep models)
-
-if [[ $models_dir_exists == '' ]]
+if [[ ! -d $(rospack find aero_description)/models ]]
 then
     cp -r $(rospack find aero_description)/${dir}/models/urdf $(rospack find aero_description)/models
 else
@@ -34,18 +32,14 @@ add_missings() {
     do
 	filename=$(echo $meshes | awk '{print $'$(($mesh_number * 2))'}')
 	dirname=$(echo $meshes | awk '{print $'$(($mesh_number * 2 - 1))'}')
+	if [[ ! -d $(rospack find aero_description)/models/$dirname ]] #check whether dirname exists
+	then
+	    mkdir $(rospack find aero_description)/models/$dirname
+	fi
 	has=$(find $(rospack find aero_description)/models/$dirname -name $filename)
 	if [[ $has == '' ]]
 	then
 	    get=$(find $(rospack find aero_description)/ -name $filename | grep $dirname)
-	    dir_exists=$(ls $(rospack find aero_description)/models | grep $dirname)
-	    if [[ $dir_exists == '' ]]
-	    then
-		printf "couldn't find model directory\n"
-		mkdir $(rospack find aero_description)/models/$dirname
-		printf "made directory: $(rospack find aero_description)/models/$dirname\n"
-	    fi
-	    # echo "getting $filename"
 	    cp $get $(rospack find aero_description)/models/$dirname/$filename
 	fi
     done
