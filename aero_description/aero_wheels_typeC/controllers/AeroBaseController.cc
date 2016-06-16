@@ -26,7 +26,7 @@ void AeroMoveBase::Init()
 {
   impl_.reset(new AeroMoveBase::AeroMoveBaseImpl());
 
-  ros_rate_ = 0.2;
+  ros_rate_ = 0.1;
   num_of_wheels_ = 4;
   wheel_names_ =
     {"can_front_l_wheel", "can_front_r_wheel",
