@@ -3,6 +3,10 @@
 using namespace aero;
 using namespace navigation;
 
+static const float radius = 76.0;
+static const float Radius = 297.4535;
+static const float max_velocity = 450.0;  // rpm * 10
+
 //////////////////////////////////////////////////
 class AeroMoveBase::AeroMoveBaseImpl
 {
@@ -15,10 +19,6 @@ public: wheels Translate(float _x, float _y);
 public: wheels Rotate(float _theta);
 
 public: wheels Drift(float _x, float _theta);
-
- private: static const float radius = 76.0;
- private: static const float Radius = 297.4535;
- private: static const float max_velocity = 450.0;  // rpm * 10
 };
 
 //////////////////////////////////////////////////
