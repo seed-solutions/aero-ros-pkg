@@ -12,6 +12,9 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
 {
   this->Init();
 
+  warm_up_time_ = 1.0;
+  wait_for_servo_usec_ = 1000 * 300;
+
   goal_.wheel_dV.resize(num_of_wheels_);
   goal_.max_vel.resize(num_of_wheels_);
   states_.cur_vel.resize(num_of_wheels_);
@@ -132,9 +135,11 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
 
   // set goals
   goal_.run_time = wheel_data.time;
+  ROS_INFO(" wheel_data.time = %f", wheel_data.time);
 
-  goal_.warm_up_time = 1.0;
-  if (goal_.run_time < 2.0)  // if move within two seconds
+  goal_.warm_up_time = warm_up_time_;
+  // if move within 2 * warm_up_time seconds
+  if (goal_.run_time < (2.0 * warm_up_time_))
     goal_.warm_up_time =
         static_cast<float>(
             static_cast<int>(goal_.run_time * 0.5 / ros_rate_)
@@ -146,6 +151,9 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
   // or add warm_up_time sec delay because of warm up
   else goal_.run_time += goal_.warm_up_time;
 
+  ROS_INFO(" goal_.run_time = %f", goal_.run_time);
+  ROS_INFO(" goal_.warm_up_time = %f", goal_.warm_up_time);
+  ROS_INFO(" steps = %d", steps);
   for (unsigned int i = 0; i < wheel_data.velocities.size(); ++i)
   {
     goal_.wheel_dV[i] = wheel_data.velocities[i] / steps;
@@ -162,7 +170,7 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
   dat.data = true;
   servo_pub_.publish(dat);
 
-  usleep(1000 * 300);  // sleep until servo_on finished
+  usleep(wait_for_servo_usec_);  // sleep until servo_on finished
 
   states_.wheel_on = true;
 }
@@ -223,7 +231,7 @@ void AeroMoveBase::FinishMove()
   msg.points[0].time_from_start = ros::Duration(ros_rate_);
   wheel_pub_.publish(msg);
 
-  usleep(1000 * 300);  // sleep until wheel command finished
+  usleep(wait_for_servo_usec_);  // sleep until wheel command finished
 
   // wheel_off
   std_msgs::Bool dat;
