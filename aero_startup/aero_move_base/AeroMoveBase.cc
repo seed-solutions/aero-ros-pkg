@@ -177,8 +177,8 @@ void AeroMoveBase::SetActionGoal()
   geometry_msgs::PoseStamped goal = as_.acceptNewGoal()->target_pose;
   float theta = acos(goal.pose.orientation.w) * 2;
   int sgn = 0;
-  if (goal.pose.orientation.w < 0) sgn = -1;
-  else if (goal.pose.orientation.w > 0) sgn = 1;
+  if (goal.pose.orientation.x < 0) sgn = -1;
+  else if (goal.pose.orientation.x > 0) sgn = 1;
   this->SetGoal(goal.pose.position.x, goal.pose.position.y, sgn * theta);
 }
 
@@ -197,8 +197,10 @@ void AeroMoveBase::SetSimpleGoal(
 {
   float theta = acos(_msg->pose.orientation.w) * 2;
   int sgn = 0;
-  if (_msg->pose.orientation.w < 0) sgn = -1;
-  else if (_msg->pose.orientation.w > 0) sgn = 1;
+  if (_msg->pose.orientation.x < 0) sgn = -1;
+  else if (_msg->pose.orientation.x > 0) sgn = 1;
+
+  ROS_INFO("theta = %f, sgn = %d", theta, sgn);
   this->SetGoal(_msg->pose.position.x, _msg->pose.position.y, sgn * theta);
 
   while (this->MoveBaseOnce())
