@@ -173,8 +173,16 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
     wheel_data.velocities =
         {max_velocity, max_velocity, max_velocity, max_velocity};
 
-  wheel_data.time =
-      300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
+  float velocity_radian =
+    (max_velocity / 600.0) * 2.0 * M_PI;  // rpm -> rad/s
+  float wheel_travel =
+    2.0 * M_PI * radius * velocity_radian;
+  float turn_radius =
+    2.0 * M_PI * Radius * fabs(_theta);
+
+  // wheel_data.time =
+  //     300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
+  wheel_data.time = turn_radius / wheel_travel;
 
   return wheel_data;
 }
