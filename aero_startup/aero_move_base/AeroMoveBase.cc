@@ -200,6 +200,7 @@ void AeroMoveBase::SetSimpleGoal(
   if (_msg->pose.orientation.x < 0) sgn = -1;
   else if (_msg->pose.orientation.x > 0) sgn = 1;
 
+  ROS_INFO("x = %f, y = %f", _msg->pose.position.x, _msg->pose.position.y);
   ROS_INFO("theta = %f, sgn = %d", theta, sgn);
   this->SetGoal(_msg->pose.position.x, _msg->pose.position.y, sgn * theta);
 
