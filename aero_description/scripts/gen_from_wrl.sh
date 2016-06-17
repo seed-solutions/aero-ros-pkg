@@ -43,7 +43,7 @@ mkdir $models_dir
 cp $(rospack find aero_description)/$dir/models/wrl/*.wrl $models_dir/
 cp $(rospack find aero_description)/$dir/models/wrl/$file.yaml $models_dir/
 
-catkin b aero_description
+cd ${HOME}/ros/hydro; catkin_make --only-pkg-with-deps aero_description
 
 cp $backup_file $cmake_file
 if [[ -d $urdf_dir/${file}_meshes ]]
