@@ -516,7 +516,7 @@ DEF AeroUpperRobot Humanoid {
                       llimit [-1.5708]
                       ulimit [0.0]
                       # translation   -0.02 0.134 0.310
-                      translation   0 0.134 0.3049
+                      translation   -0.02 0.134 0.3049
                       children [
                         DEF LARM_LINK1 Segment {
                           centerOfMass 0 0.02 0 #-0.008 0.154 0.454
@@ -571,7 +571,7 @@ DEF AeroUpperRobot Humanoid {
 			      jointAxis 0 0 1 # added 20160320
                               jointId  21
                               # translation 0 -0.012 -0.123
-                              translation 0 0 -0.1255
+                              translation 0 -0.012 -0.1255
                               children [
                                 DEF LARM_LINK3 Segment {
                                   centerOfMass 0.005 0 -0.0654 #-0.005 0.177 0.272
@@ -837,7 +837,7 @@ DEF AeroUpperRobot Humanoid {
                       llimit [-1.5708]
                       ulimit [0.0]
                       # translation   -0.02 -0.134 0.312
-                      translation   0 -0.134 0.3049
+                      translation   -0.02 -0.134 0.3049
                       children [
                         DEF RARM_LINK1 Segment {
                           centerOfMass          0 -0.02 0
@@ -891,7 +891,7 @@ DEF AeroUpperRobot Humanoid {
 			      jointAxis 0 0 1 # added 20160320
                               jointId 8
                               # translation     0 0.012 -0.123
-                              translation     0 0 -0.1255
+                              translation     0 0.012 -0.1255
                               children [
                                 DEF RARM_LINK3 Segment {
                                   centerOfMass          0.005 0 -0.0654
