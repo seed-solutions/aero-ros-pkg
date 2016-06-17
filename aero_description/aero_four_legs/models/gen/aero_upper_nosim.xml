@@ -14,7 +14,7 @@
    <property name="connection" value="HGcontroller0.dqOut:AeroUpperRobot(Robot)0.dqRef"/>
    <property name="connection" value="HGcontroller0.ddqOut:AeroUpperRobot(Robot)0.ddqRef"/>
   </item>
-  <item class="com.generalrobotix.ui.item.GrxModelItem" name="aero_upper" url="/home/ssb/ros/indigo/src/aero-ros-pkg-prerelease/aero_description/aero_four_legs/models/gen/aero_upper.wrl">
+  <item class="com.generalrobotix.ui.item.GrxModelItem" name="aero_upper" url="/home/ssb/ros/indigo/src/aero-ros-pkg-prerelease/aero_description/models/aero_upper.wrl">
    <property name="rtcName" value="AeroUpperRobot(Robot)0"/>
    <property name="inport" value="qRef:JOINT_VALUE"/>
    <property name="inport" value="dqRef:JOINT_VELOCITY"/>
