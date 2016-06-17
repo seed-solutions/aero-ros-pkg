@@ -6,7 +6,6 @@ find_package(catkin REQUIRED)
 #   hrpsys_ros_bridge
 # )
 
-# compile_openhrp_model(${PROJECT_SOURCE_DIR}/models/aero-lower.wrl)
 # compile_openhrp_model(${PROJECT_SOURCE_DIR}/models/aero_upper.wrl)
 
 catkin_package()
