@@ -12,8 +12,8 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
 {
   this->Init();
 
-  warm_up_time_ = 1.0;
-  wait_for_servo_usec_ = 1000 * 300;
+  warm_up_time_ = 1.5;
+  wait_for_servo_usec_ = 1000 * 500;
 
   goal_.wheel_dV.resize(num_of_wheels_);
   goal_.max_vel.resize(num_of_wheels_);
@@ -136,6 +136,7 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
   // set goals
   goal_.run_time = wheel_data.time;
   ROS_INFO(" wheel_data.time = %f", wheel_data.time);
+  ROS_INFO(" wheel_data.velocities[0] = %f", wheel_data.velocities[0]);
 
   goal_.warm_up_time = warm_up_time_;
   // if move within 2 * warm_up_time seconds

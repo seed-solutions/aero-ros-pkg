@@ -5,7 +5,8 @@ using namespace navigation;
 
 static const float radius = 76.0;
 static const float Radius = 297.4535;
-static const float max_velocity = 450.0;  // rpm * 10
+// static const float max_velocity = 450.0;  // rpm * 10
+static const float max_velocity = 10.0;  // rpm * 10
 
 //////////////////////////////////////////////////
 class AeroMoveBase::AeroMoveBaseImpl
@@ -26,7 +27,7 @@ void AeroMoveBase::Init()
 {
   impl_.reset(new AeroMoveBase::AeroMoveBaseImpl());
 
-  ros_rate_ = 0.1;
+  ros_rate_ = 0.05;
   num_of_wheels_ = 4;
   wheel_names_ =
     {"can_front_l_wheel", "can_front_r_wheel",

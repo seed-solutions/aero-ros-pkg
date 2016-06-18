@@ -5,7 +5,7 @@
 
   <!--robot tfs-->
   <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"/>
-  <include file="$(find aero_startup)/generated_controllers.launch"/>
+  <!-- include file="$(find aero_startup)/generated_controllers.launch"/ -->
 
   <!--ps4eye sensor-->
   <include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
