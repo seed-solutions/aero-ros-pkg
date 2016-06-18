@@ -37,13 +37,13 @@
   </gazebo>
   <link name="WAIST_LINK1">
     <visual>
-      <origin xyz="0.01175 0 0.0347" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.0103" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0.01175 0 0.0347" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.0103" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -94,13 +94,13 @@
   </gazebo>
   <link name="LARM_LINK1">
     <visual>
-      <origin xyz="-0.02 0.134 0.31" rpy="0 -0 0"/>
+      <origin xyz="-0.02 0.1342 0.3049" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="-0.02 0.134 0.31" rpy="0 -0 0"/>
+      <origin xyz="-0.02 0.1342 0.3049" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -117,13 +117,13 @@
   </gazebo>
   <link name="LARM_LINK2">
     <visual>
-      <origin xyz="0 0.055 0.002" rpy="0 -0 0"/>
+      <origin xyz="0 0.0549 0.0023" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0.055 0.002" rpy="0 -0 0"/>
+      <origin xyz="0 0.0549 0.0023" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -140,13 +140,13 @@
   </gazebo>
   <link name="LARM_LINK3">
     <visual>
-      <origin xyz="0 -0.012 -0.123" rpy="0 -0 0"/>
+      <origin xyz="0 -0.012 -0.1255" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 -0.012 -0.123" rpy="0 -0 0"/>
+      <origin xyz="0 -0.012 -0.1255" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -163,13 +163,13 @@
   </gazebo>
   <link name="LARM_LINK4">
     <visual>
-      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <origin xyz="0.014 0 -0.171" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <origin xyz="0.014 0 -0.171" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -186,13 +186,13 @@
   </gazebo>
   <link name="LARM_LINK5">
     <visual>
-      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <origin xyz="-0.014 0 -0.1235" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <origin xyz="-0.014 0 -0.1235" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -243,13 +243,13 @@
   </gazebo>
   <link name="LARM_INDEX_LINK1">
     <visual>
-      <origin xyz="0 0.013 -0.1363" rpy="0 -0 0"/>
+      <origin xyz="0 0.001 -0.1363" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0.013 -0.1363" rpy="0 -0 0"/>
+      <origin xyz="0 0.001 -0.1363" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -312,13 +312,13 @@
   </gazebo>
   <link name="LARM_THUMB_LINK">
     <visual>
-      <origin xyz="0 -0.0224 -0.1" rpy="0 -0 0"/>
+      <origin xyz="0 -0.0344 -0.1" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 -0.0224 -0.1" rpy="0 -0 0"/>
+      <origin xyz="0 -0.0344 -0.1" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -335,13 +335,13 @@
   </gazebo>
   <link name="NECK_LINK1">
     <visual>
-      <origin xyz="0 0 0.3585" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.351" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 0.3585" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.351" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -358,13 +358,13 @@
   </gazebo>
   <link name="NECK_LINK2">
     <visual>
-      <origin xyz="0.015 0 0.1025" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.105" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0.015 0 0.1025" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.105" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -404,13 +404,13 @@
   </gazebo>
   <link name="RARM_LINK1">
     <visual>
-      <origin xyz="-0.02 -0.134 0.312" rpy="0 -0 0"/>
+      <origin xyz="-0.02 -0.134 0.3049" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="-0.02 -0.134 0.312" rpy="0 -0 0"/>
+      <origin xyz="-0.02 -0.134 0.3049" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -427,13 +427,13 @@
   </gazebo>
   <link name="RARM_LINK2">
     <visual>
-      <origin xyz="0 -0.055 0.002" rpy="0 -0 0"/>
+      <origin xyz="0 -0.0549 0.0023" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 -0.055 0.002" rpy="0 -0 0"/>
+      <origin xyz="0 -0.0549 0.0023" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -450,13 +450,13 @@
   </gazebo>
   <link name="RARM_LINK3">
     <visual>
-      <origin xyz="0 0.012 -0.123" rpy="0 -0 0"/>
+      <origin xyz="0 0.012 -0.1255" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0.012 -0.123" rpy="0 -0 0"/>
+      <origin xyz="0 0.012 -0.1255" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -473,13 +473,13 @@
   </gazebo>
   <link name="RARM_LINK4">
     <visual>
-      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <origin xyz="0.014 0 -0.171" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.17" rpy="0 -0 0"/>
+      <origin xyz="0.014 0 -0.171" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -496,13 +496,13 @@
   </gazebo>
   <link name="RARM_LINK5">
     <visual>
-      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <origin xyz="-0.014 0 -0.1235" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.121" rpy="0 -0 0"/>
+      <origin xyz="-0.014 0 -0.1235" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -553,13 +553,13 @@
   </gazebo>
   <link name="RARM_INDEX_LINK1">
     <visual>
-      <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0"/>
+      <origin xyz="0 -0.001 -0.1358" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0"/>
+      <origin xyz="0 -0.001 -0.1358" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -622,13 +622,13 @@
   </gazebo>
   <link name="RARM_THUMB_LINK">
     <visual>
-      <origin xyz="0 0.0224 -0.1" rpy="0 -0 0"/>
+      <origin xyz="0 0.0344 -0.1" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0.0224 -0.1" rpy="0 -0 0"/>
+      <origin xyz="0 0.0344 -0.1" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -646,7 +646,7 @@
   <joint name="WAIST_Y" type="continuous">
     <parent link="WAIST_LINK0"/>
     <child  link="WAIST_LINK1"/>
-    <origin xyz="0.01175 0 0.0347" rpy="0 -0 0 "/>
+    <origin xyz="0 0 0.0103" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -662,7 +662,7 @@
   <joint name="WAIST_P" type="revolute">
     <parent link="WAIST_LINK1"/>
     <child  link="WAIST_LINK2"/>
-    <origin xyz="0 0 0.11" rpy="0 -0 0 "/>
+    <origin xyz="0 0 0.1367" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -694,7 +694,7 @@
   <joint name="LARM_SHOULDER_P" type="revolute">
     <parent link="WAIST_LINK3"/>
     <child  link="LARM_LINK1"/>
-    <origin xyz="-0.02 0.134 0.31" rpy="0 -0 0 "/>
+    <origin xyz="-0.02 0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 -0.173648"/>
     <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -710,7 +710,7 @@
   <joint name="LARM_SHOULDER_R" type="revolute">
     <parent link="LARM_LINK1"/>
     <child  link="LARM_LINK2"/>
-    <origin xyz="0 0.055 0.002" rpy="0 -0 0 "/>
+    <origin xyz="0 0.0549 0.0023" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -726,7 +726,7 @@
   <joint name="LARM_SHOULDER_Y" type="continuous">
     <parent link="LARM_LINK2"/>
     <child  link="LARM_LINK3"/>
-    <origin xyz="0 -0.012 -0.123" rpy="0 -0 0 "/>
+    <origin xyz="0 -0.012 -0.1255" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -742,7 +742,7 @@
   <joint name="LARM_ELBOW" type="revolute">
     <parent link="LARM_LINK3"/>
     <child  link="LARM_LINK4"/>
-    <origin xyz="0 0 -0.17" rpy="0 -0 0 "/>
+    <origin xyz="0.014 0 -0.171" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -758,7 +758,7 @@
   <joint name="LARM_WRIST_Y" type="continuous">
     <parent link="LARM_LINK4"/>
     <child  link="LARM_LINK5"/>
-    <origin xyz="0 0 -0.121" rpy="0 -0 0 "/>
+    <origin xyz="-0.014 0 -0.1235" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -774,7 +774,7 @@
   <joint name="LARM_WRIST_P" type="revolute">
     <parent link="LARM_LINK5"/>
     <child  link="LARM_LINK6"/>
-    <origin xyz="0 0 -0.137" rpy="0 -0 0 "/>
+    <origin xyz="0 0 -0.1337" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <limit lower="-0.349066" upper="0.349066" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -806,7 +806,7 @@
   <joint name="LARM_INDEX_P1" type="continuous">
     <parent link="LARM_LINK7"/>
     <child  link="LARM_INDEX_LINK1"/>
-    <origin xyz="0 0.013 -0.1363" rpy="0 -0 0 "/>
+    <origin xyz="0 0.001 -0.1363" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -854,7 +854,7 @@
   <joint name="LARM_THUMB_P" type="continuous">
     <parent link="LARM_LINK7"/>
     <child  link="LARM_THUMB_LINK"/>
-    <origin xyz="0 -0.0224 -0.1" rpy="0 -0 0 "/>
+    <origin xyz="0 -0.0344 -0.1" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -870,7 +870,7 @@
   <joint name="NECK_Y" type="continuous">
     <parent link="WAIST_LINK3"/>
     <child  link="NECK_LINK1"/>
-    <origin xyz="0 0 0.3585" rpy="0 -0 0 "/>
+    <origin xyz="0 0 0.351" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -886,7 +886,7 @@
   <joint name="NECK_P" type="revolute">
     <parent link="NECK_LINK1"/>
     <child  link="NECK_LINK2"/>
-    <origin xyz="0.015 0 0.1025" rpy="0 -0 0 "/>
+    <origin xyz="0 0 0.105" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <limit lower="0" upper="1.04667" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -918,7 +918,7 @@
   <joint name="RARM_SHOULDER_P" type="revolute">
     <parent link="WAIST_LINK3"/>
     <child  link="RARM_LINK1"/>
-    <origin xyz="-0.02 -0.134 0.312" rpy="0 -0 0 "/>
+    <origin xyz="-0.02 -0.134 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 0.173648"/>
     <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -934,7 +934,7 @@
   <joint name="RARM_SHOULDER_R" type="revolute">
     <parent link="RARM_LINK1"/>
     <child  link="RARM_LINK2"/>
-    <origin xyz="0 -0.055 0.002" rpy="0 -0 0 "/>
+    <origin xyz="0 -0.0549 0.0023" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -950,7 +950,7 @@
   <joint name="RARM_SHOULDER_Y" type="continuous">
     <parent link="RARM_LINK2"/>
     <child  link="RARM_LINK3"/>
-    <origin xyz="0 0.012 -0.123" rpy="0 -0 0 "/>
+    <origin xyz="0 0.012 -0.1255" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -966,7 +966,7 @@
   <joint name="RARM_ELBOW" type="revolute">
     <parent link="RARM_LINK3"/>
     <child  link="RARM_LINK4"/>
-    <origin xyz="0 0 -0.17" rpy="0 -0 0 "/>
+    <origin xyz="0.014 0 -0.171" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -982,7 +982,7 @@
   <joint name="RARM_WRIST_Y" type="continuous">
     <parent link="RARM_LINK4"/>
     <child  link="RARM_LINK5"/>
-    <origin xyz="0 0 -0.121" rpy="0 -0 0 "/>
+    <origin xyz="-0.014 0 -0.1235" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -998,7 +998,7 @@
   <joint name="RARM_WRIST_P" type="revolute">
     <parent link="RARM_LINK5"/>
     <child  link="RARM_LINK6"/>
-    <origin xyz="0 0 -0.137" rpy="0 -0 0 "/>
+    <origin xyz="0 0 -0.1337" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <limit lower="-0.349066" upper="0.349066" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -1030,7 +1030,7 @@
   <joint name="RARM_INDEX_P1" type="continuous">
     <parent link="RARM_LINK7"/>
     <child  link="RARM_INDEX_LINK1"/>
-    <origin xyz="0 -0.013 -0.1358" rpy="0 -0 0 "/>
+    <origin xyz="0 -0.001 -0.1358" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
@@ -1078,7 +1078,7 @@
   <joint name="RARM_THUMB_P" type="continuous">
     <parent link="RARM_LINK7"/>
     <child  link="RARM_THUMB_LINK"/>
-    <origin xyz="0 0.0224 -0.1" rpy="0 -0 0 "/>
+    <origin xyz="0 0.0344 -0.1" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />

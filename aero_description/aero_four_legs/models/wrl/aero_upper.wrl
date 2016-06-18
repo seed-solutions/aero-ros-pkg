@@ -48,7 +48,7 @@ PROTO Segment [
   exposedField    MFNode      children          [ ]
   exposedField    SFNode      coord             NULL
   exposedField    MFNode      displacers        [ ]
-  exposedField    SFFloat     mass              0 
+  exposedField    SFFloat     mass              0
   exposedField    MFFloat     momentsOfInertia  [ 0 0 0 0 0 0 0 0 0 ]
   exposedField    SFString    name              ""
   eventIn         MFNode      addChildren
@@ -95,7 +95,7 @@ PROTO Humanoid [
         children IS viewpoints
       }
       Group {
-        children IS humanoidBody 
+        children IS humanoidBody
       }
     ]
   }
@@ -124,7 +124,7 @@ PROTO VisionSensor [
 }
 
 
-PROTO ForceSensor [  
+PROTO ForceSensor [
   exposedField SFVec3f    maxForce    -1 -1 -1
   exposedField SFVec3f    maxTorque   -1 -1 -1
   exposedField SFVec3f    translation 0 0 0
@@ -307,7 +307,7 @@ DEF AeroUpperRobot Humanoid {
           children [
             Transform {
 	      rotation 1 0 0 1.5708
-              scale 0.001 0.001 0.001 
+              scale 0.001 0.001 0.001
               scaleOrientation 0 0 1 1.5708
 	      translation 0.0119 0 -0.01
               children Inline {
@@ -334,7 +334,7 @@ DEF AeroUpperRobot Humanoid {
                 Transform {
 		  translation 0.01175 0 0.0244 # added 20160320
 		  rotation 1 0 0 1.5708
-                  scale 0.001 0.001 0.001 
+                  scale 0.001 0.001 0.001
                   scaleOrientation 0 0 1 1.5708
                   children Inline {
 		    url "SK_WST.wrl"
@@ -378,14 +378,14 @@ DEF AeroUpperRobot Humanoid {
                         # translation 0 0 0.17
                         translation 0.01175 0 0.1677
 			rotation 1 0 0 1.5708 #3.14
-                        scale 0.001 0.001 0.001 
+                        scale 0.001 0.001 0.001
                         scaleOrientation 0 0 1 0
                         children Inline {
 			  url "SK_BODY_LP.wrl"
                           #url "SK_cover_7P_chest.wrl"
                         }
                       }
-                      
+
                     } # segment WAIST_LINK3
 
 		    DEF NECK_Y Joint {
@@ -413,7 +413,7 @@ DEF AeroUpperRobot Humanoid {
                             }
 			  }
 		        } # segment NECK_LINK1
-			
+
                     	DEF NECK_P Joint {
                           jointType "rotate"
                       	  jointAxis 0 1 0
@@ -435,12 +435,12 @@ DEF AeroUpperRobot Humanoid {
                             	}
                               }
                             } # segment NECK_LINK2
-                        
+
 			    DEF NECK_R Joint {
                               jointType "rotate"
                               jointAxis 1 0 0
                               jointId 31
-			      translation 0 0 0                          
+			      translation 0 0 0
                               llimit [-0.122173] # -7
                               ulimit [0.122173] # 7
                               children [
@@ -452,15 +452,15 @@ DEF AeroUpperRobot Humanoid {
 				    # translation -0.01 0 0.08
 				    translation 0.01675 0 0.0827
                                     rotation 0 1 0 3.14 # 0 1 1 3.14
-                                    scale 0.001 0.001 0.001 
+                                    scale 0.001 0.001 0.001
                                     scaleOrientation 0 0 1 0
                                     children Inline {
 				      url "SK_HEAD.wrl"
                                       #url "SK_cover_7P_Face.wrl"
                                     }
-                              	  }                              
-                            	} # segment NECK_LINK3                         
-                              ]  
+                              	  }
+                            	} # segment NECK_LINK3
+                              ]
                             } # joint NECK_R
                       	  ]
                     	} # joint NECK_P
@@ -516,7 +516,7 @@ DEF AeroUpperRobot Humanoid {
                       llimit [-1.5708]
                       ulimit [0.0]
                       # translation   -0.02 0.134 0.310
-                      translation   0 0.134 0.3049
+                      translation   -0.02 0.1342 0.3049
                       children [
                         DEF LARM_LINK1 Segment {
                           centerOfMass 0 0.02 0 #-0.008 0.154 0.454
@@ -526,8 +526,9 @@ DEF AeroUpperRobot Humanoid {
                             Transform {
                               rotation 1 0 0 -1.5708
 			      # translation 0 0.004 -0.001
-			      translation -0.00825 0.004 0.0018
-                              scale 0.001 0.001 0.001 
+            #translation -0.00825 0.004 0.0018
+            translation 0 0.004 0.0018
+                              scale 0.001 0.001 0.001
                               scaleOrientation 0 0 1 0
                               children Inline {
 			        url "SK_P.wrl"
@@ -554,15 +555,16 @@ DEF AeroUpperRobot Humanoid {
                                 Transform {
                                   rotation 1 0 0 1.5708
 				  # translation 0 -0.012 -0.01
-				  translation -0.00825 -0.012 -0.0075
-                                  scale 0.001 0.001 0.001 
+          #translation -0.00825 -0.012 -0.0075
+          translation 0 -0.012 -0.0075
+                                  scale 0.001 0.001 0.001
                                   scaleOrientation 0 0 1 0
                                   children Inline {
 				    url "SK_R_MIR.wrl"
                                     #url "ARM_base_R1_MIR.wrl"
                                   }
                                 }
-                                
+
                               ]
                             } # Segment LARM_LINK2
 
@@ -571,7 +573,7 @@ DEF AeroUpperRobot Humanoid {
 			      jointAxis 0 0 1 # added 20160320
                               jointId  21
                               # translation 0 -0.012 -0.123
-                              translation 0 0 -0.1255
+                              translation 0 -0.012 -0.1255
                               children [
                                 DEF LARM_LINK3 Segment {
                                   centerOfMass 0.005 0 -0.0654 #-0.005 0.177 0.272
@@ -582,8 +584,9 @@ DEF AeroUpperRobot Humanoid {
                                     children Transform {
                                       rotation 1 0 0 -1.5708
                                       # translation 0 0 -0.103
-                                      translation -0.00825 0.012 -0.09799
-                                      scale 0.001 0.001 0.001 
+                                      #translation -0.00825 0.012 -0.09799
+                                      translation 0 0 -0.09799
+                                      scale 0.001 0.001 0.001
                                       scaleOrientation 0 0 1 0
                                       children Inline {
 				        url "SK_ARM1.wrl"
@@ -592,7 +595,7 @@ DEF AeroUpperRobot Humanoid {
                                     }
                                   }
 				} # Segment LARM_LINK3
-                                
+
                                 DEF LARM_ELBOW Joint {
                                   jointType "rotate"
                                   jointAxis 0 1 0
@@ -610,15 +613,16 @@ DEF AeroUpperRobot Humanoid {
                                         Transform {
                                           rotation 0 1 1 3.14
 					  # translation 0 0 0.02
-					  translation -0.02225 -0.012 0.026
-                                          scale 0.001 0.001 0.001 
+					  #translation -0.02225 -0.012 0.026
+            translation -0.014 0 0.006
+                                          scale 0.001 0.001 0.001
                                           scaleOrientation 0 0 1 0
                                           children Inline {
 					    url "SK_E.wrl"
                                             #url "SK_EL_MIR.wrl"
                                           }
                                         }
-                                      
+
                                       ]
                                     } # Segment LARM_LINK4
 
@@ -636,10 +640,11 @@ DEF AeroUpperRobot Humanoid {
                                           children Transform {
                                             rotation 1 0 0 3.14
                                             children Transform {
-                                              rotation 1 0 0 -1.5708 
+                                              rotation 1 0 0 -1.5708
                                               # translation 0 0 -0.085 #-0.095
-                                              translation -0.00825 0.012 -0.0765
-                                              scale 0.001 0.001 0.001 
+                                              #translation -0.00825 0.012 -0.0765
+                                              translation 0 0 -0.0765
+                                              scale 0.001 0.001 0.001
                                               scaleOrientation 0 0 1 0
                                               children Inline {
 					        url "SK_ARM2.wrl"
@@ -648,7 +653,7 @@ DEF AeroUpperRobot Humanoid {
                                             }
                                           }
 
-                                        } 
+                                        }
 
                                         DEF LARM_WRIST_P Joint {
                                           jointType "rotate"
@@ -682,11 +687,12 @@ DEF AeroUpperRobot Humanoid {
                                                   mass    0.183
                                                   momentsOfInertia [ 0.000601 0 0 0 0.000550 0 0 0 0.000102 ]
                                                   children DEF ARM_SHAPE7 Transform {
-						    children Transform { 
+						    children Transform {
                                 		      rotation 0 0 1 3.14
 						      # translation 0 0 -0.0468
-						      translation -0.00825 -0.012 -0.0416
-                                		      scale 0.001 0.001 0.001 
+                  #translation -0.00825 -0.012 -0.0416
+                  translation 0 0 -0.0416
+                                		      scale 0.001 0.001 0.001
                                 		      scaleOrientation 0 0 1 0
                                 		      children Inline {
                                   			url "SH_HAND_LP.wrl"
@@ -700,7 +706,8 @@ DEF AeroUpperRobot Humanoid {
 						  jointAxis 1 0 0
 						  jointId 32
 						  # translation 0 -0.0224 -0.1
-						  translation -0.00825 -0.0344 -0.1
+              #translation -0.00825 -0.0344 -0.1
+              translation 0 -0.0344 -0.1
 						  children [
 						    DEF LARM_THUMB_LINK Segment {
 						      children DEF FINGER_SHAPE3 Transform {
@@ -722,7 +729,8 @@ DEF AeroUpperRobot Humanoid {
 						  jointAxis 1 0 0
 						  jointId 33
 						  # translation 0 0.013 -0.1363
-						  translation -0.00825 0.001 -0.1363
+              #translation -0.00825 0.001 -0.1363
+              translation 0 0.001 -0.1363
 						  children [
 						    DEF LARM_INDEX_LINK1 Segment {
 						      children Transform {
@@ -809,7 +817,7 @@ DEF AeroUpperRobot Humanoid {
 						      ]
 						    } # Joint LARM_INDEX_P2
 						  ]
-						} # Joint LARM_INDEX_P1    
+						} # Joint LARM_INDEX_P1
 
                                               ]
                                             } # Joint LARM_WRIST_R
@@ -837,24 +845,25 @@ DEF AeroUpperRobot Humanoid {
                       llimit [-1.5708]
                       ulimit [0.0]
                       # translation   -0.02 -0.134 0.312
-                      translation   0 -0.134 0.3049
+                      translation   -0.02 -0.134 0.3049
                       children [
                         DEF RARM_LINK1 Segment {
                           centerOfMass          0 -0.02 0
                           mass                  0.242
                           momentsOfInertia      [ 0.000228 0 0 0 0.000148 0 0 0 0.000263 ]
-                          children [ 
+                          children [
                             Transform {
 			      rotation 1 0 0 1.5708
 			      # translation 0 -0.004 -0.001
-			      translation -0.00825 -0.004 0.0018
-                              scale 0.001 0.001 0.001 
+            #translation -0.00825 -0.004 0.0018
+            translation 0 -0.004 0.0018
+                              scale 0.001 0.001 0.001
                               scaleOrientation 0 0 1 0
                               children Inline {
 			        url "SK_P_MIR.wrl"
                                 #url "ARM_base_P1.wrl"
                               }
-                         
+
                             }
                           ]
                         }
@@ -871,12 +880,13 @@ DEF AeroUpperRobot Humanoid {
                             DEF RARM_LINK2 Segment {
                               centerOfMass          0 -0.01 0
                               mass                  0.744
-                              momentsOfInertia      [ 0.000841 0 0 0 0.000835 0 0 0 0.000305 ]                              
+                              momentsOfInertia      [ 0.000841 0 0 0 0.000835 0 0 0 0.000305 ]
                               children Transform {
 			        rotation 1 0 0 1.5708
 				# translation 0 0.012 -0.01
-				translation -0.00825 0.012 -0.0075
-                                scale 0.001 0.001 0.001 
+				#translation -0.00825 0.012 -0.0075
+        translation 0 0.012 -0.0075
+                                scale 0.001 0.001 0.001
                                 scaleOrientation 0 0 1 0
                                 children Inline {
 				  url "SK_R.wrl"
@@ -891,7 +901,7 @@ DEF AeroUpperRobot Humanoid {
 			      jointAxis 0 0 1 # added 20160320
                               jointId 8
                               # translation     0 0.012 -0.123
-                              translation     0 0 -0.1255
+                              translation     0 0.012 -0.1255
                               children [
                                 DEF RARM_LINK3 Segment {
                                   centerOfMass          0.005 0 -0.0654
@@ -900,10 +910,11 @@ DEF AeroUpperRobot Humanoid {
                                   children Transform {
 				    rotation 1 0 0 1.5708
                                     # translation 0 0 0.103
-                                    translation -0.00825 0.012 0.09799
-                                    #rotation 0 0 1 -1.5708 
+                                    #translation -0.00825 0.012 0.09799
+                                    translation 0 0 0.09799
+                                    #rotation 0 0 1 -1.5708
                                     #translation 0 0 0.123
-                                    scale 0.001 0.001 0.001 
+                                    scale 0.001 0.001 0.001
                                     scaleOrientation 0 0 1 0
                                     children Inline {
 				      url "SK_ARM1.wrl"
@@ -928,8 +939,9 @@ DEF AeroUpperRobot Humanoid {
                                       children Transform {
                                         rotation 0 1 1 3.14
 					# translation 0 0 0.02
-					translation -0.02225 0.012 0.026
-                                        scale 0.001 0.001 0.001 
+          #translation -0.02225 0.012 0.026
+          translation -0.014 0 0.006
+                                        scale 0.001 0.001 0.001
                                         scaleOrientation 0 0 1 0
                                         children Inline {
 					  url "SK_E.wrl"
@@ -950,10 +962,11 @@ DEF AeroUpperRobot Humanoid {
                                           mass                  0.132
                                           momentsOfInertia      [ 0.000276 0 0 0 0.000286 0 0 0 0.0001 ]
                                           children Transform {
-                                            rotation 1 0 0 1.5708 
+                                            rotation 1 0 0 1.5708
                                             # translation 0 0 0.095
-                                            translation -0.00825 0.012 0.0765
-                                            scale 0.001 0.001 0.001 
+                                            #translation -0.00825 0.012 0.0765
+                                            translation 0 0 0.0765
+                                            scale 0.001 0.001 0.001
                                             scaleOrientation 0 0 1 0
                                             children Inline {
 					      url "SK_ARM2.wrl"
@@ -961,7 +974,7 @@ DEF AeroUpperRobot Humanoid {
                                             }
                                           }
                                         }
-                                        
+
                                         DEF RARM_WRIST_P Joint {
                                           jointType "rotate"
                                           jointAxis 0 1 0
@@ -978,9 +991,9 @@ DEF AeroUpperRobot Humanoid {
                                                         # rotation 1 0 0 0
                                                         # sensorId 3
                                                 # }
-                                              ]  
+                                              ]
                                             }
-                                            
+
                                             DEF RARM_WRIST_R Joint {
                                               jointType "rotate"
                                               jointAxis 1 0 0
@@ -993,11 +1006,12 @@ DEF AeroUpperRobot Humanoid {
                                                   centerOfMass  0 0 -0.0875
                                                   mass    0.183
                                                   momentsOfInertia [ 0.000601 0 0 0 0.00055 0 0 0 0.000102 ]
-						  children Transform { 
+						  children Transform {
                                 		    rotation 0 0 1 0
 						    # translation 0 0 -0.0468
-						    translation -0.00825 0.012 -0.0416
-                                		    scale 0.001 0.001 0.001 
+                #translation -0.00825 0.012 -0.0416
+                translation 0 0 -0.0416
+                                		    scale 0.001 0.001 0.001
                                 		    scaleOrientation 0 0 1 0
                                 		    children Inline {
                                   		      url "SH_HAND_LP.wrl"
@@ -1010,7 +1024,8 @@ DEF AeroUpperRobot Humanoid {
 						  jointAxis 1 0 0
 						  jointId 36
 						  # translation 0 0.0224 -0.1
-						  translation -0.00825 0.0344 -0.1
+              #translation -0.00825 0.0344 -0.1
+              translation 0 0.0344 -0.1
 						  children [
 						    DEF RARM_THUMB_LINK Segment {
 						      children Transform {
@@ -1030,7 +1045,8 @@ DEF AeroUpperRobot Humanoid {
 						  jointAxis 1 0 0
 						  jointId 37
 						  # translation 0 -0.013 -0.1358 #-0.089 #-0.0146 0.013 -0.089
-						  translation -0.00825 -0.001 -0.1358
+						  #translation -0.00825 -0.001 -0.1358
+              translation 0 -0.001 -0.1358
 						  children [
 						    DEF RARM_INDEX_LINK1 Segment {
 						      children Transform {
@@ -1117,7 +1133,7 @@ DEF AeroUpperRobot Humanoid {
 						      ]
 						    } # Joint RARM_INDEX_P2
 						  ]
-						} # Joint RARM_INDEX_P1    
+						} # Joint RARM_INDEX_P1
 
                                               ]
                                             } # Joint RARM_WRIST_R
@@ -1152,10 +1168,10 @@ DEF AeroUpperRobot Humanoid {
     USE WAIST_P,
     USE WAIST_R,
 
-    USE NECK_Y,    
+    USE NECK_Y,
     USE NECK_P,
     USE NECK_R,
-    
+
     USE LARM_SHOULDER_P,
     USE LARM_SHOULDER_R,
     USE LARM_SHOULDER_Y,
@@ -1163,7 +1179,7 @@ DEF AeroUpperRobot Humanoid {
     USE LARM_WRIST_Y,
     USE LARM_WRIST_P,
     USE LARM_WRIST_R,
-    
+
     USE RARM_SHOULDER_P,
     USE RARM_SHOULDER_R,
     USE RARM_SHOULDER_Y,
@@ -1189,7 +1205,7 @@ DEF AeroUpperRobot Humanoid {
     USE WAIST_LINK1,
     USE WAIST_LINK2,
     USE WAIST_LINK3,
-    
+
     USE NECK_LINK1,
     USE NECK_LINK2,
     USE NECK_LINK3,
@@ -1201,7 +1217,7 @@ DEF AeroUpperRobot Humanoid {
     USE LARM_LINK5,
     USE LARM_LINK6,
     USE LARM_LINK7,
-    
+
     USE RARM_LINK1,
     USE RARM_LINK2,
     USE RARM_LINK3,
