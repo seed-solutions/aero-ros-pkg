@@ -347,6 +347,6 @@ void AeroControllerNode::WheelCommandCallback(
     uint16_t time_msec = static_cast<uint16_t>(time_sec * 100.0);
     lower_.flush();
     lower_.set_wheel_velocity(wheel_vector, time_msec);
-    usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
+    // usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
 }

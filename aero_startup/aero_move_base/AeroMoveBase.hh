@@ -113,6 +113,10 @@ namespace aero
 
     private: int num_of_wheels_;
 
+    private: float warm_up_time_;
+
+    private: unsigned int wait_for_servo_usec_;
+
     private: goal goal_;
 
     private: states states_;
