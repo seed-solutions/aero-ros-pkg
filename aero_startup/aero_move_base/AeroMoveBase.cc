@@ -88,24 +88,46 @@ bool AeroMoveBase::MoveBaseOnce()
   }
 
   if (states_.cur_time <= goal_.warm_up_time)
+  {
+    ROS_INFO(" Accel");
     for (unsigned int i = 0; i < num_of_wheels_; ++i)
     {
       states_.cur_vel[i] += goal_.wheel_dV[i];
       if (fabs(states_.cur_vel[i]) > fabs(goal_.max_vel[i]))
+      {
         states_.cur_vel[i] = goal_.max_vel[i];
+      }
     }
+  } 
   else if (states_.cur_time >= (goal_.run_time - goal_.warm_up_time))
+  {
+    ROS_INFO(" Break");
     for (unsigned int i = 0; i < goal_.wheel_dV.size(); ++i)
     {
       states_.cur_vel[i] -= goal_.wheel_dV[i];
       if (goal_.wheel_dV[i] > 0 && states_.cur_vel[i] < 0)
+      {
         states_.cur_vel[i] = 0.0;
+      }
       if (goal_.wheel_dV[i] < 0 && states_.cur_vel[i] > 0)
+      {
         states_.cur_vel[i] = 0.0;
+      }
     }
+  }
   else
+  {
+    ROS_INFO(" Conti");
     for (unsigned int i = 0; i < num_of_wheels_; ++i)
+    {
       states_.cur_vel[i] = goal_.max_vel[i];
+    }
+  }
+  ROS_INFO("  vel: %f, %f, %f, %f",
+	   states_.cur_vel[0],
+	   states_.cur_vel[1],
+	   states_.cur_vel[2],
+	   states_.cur_vel[3]);
 
   trajectory_msgs::JointTrajectory msg;
   msg.joint_names = wheel_names_;
@@ -167,6 +189,7 @@ void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
   states_.moved_distance = {0.0, 0.0, 0.0};
 
   // start wheels
+  ROS_INFO(" Wheel Servo On");
   std_msgs::Bool dat;
   dat.data = true;
   servo_pub_.publish(dat);
@@ -235,6 +258,7 @@ void AeroMoveBase::FinishMove()
   usleep(wait_for_servo_usec_);  // sleep until wheel command finished
 
   // wheel_off
+  ROS_INFO(" Wheel Servo Off");
   std_msgs::Bool dat;
   dat.data = false;
   servo_pub_.publish(dat);
