@@ -3,10 +3,10 @@
 using namespace aero;
 using namespace navigation;
 
-static const float radius = 76.0;
-static const float Radius = 297.4535;
+static const float radius = 0.076;
+static const float Radius = 0.2974535;
 // static const float max_velocity = 450.0;  // rpm * 10
-static const float max_velocity = 10.0;  // rpm * 10
+static const float max_velocity = 15.0;  // rpm
 
 //////////////////////////////////////////////////
 class AeroMoveBase::AeroMoveBaseImpl
@@ -146,17 +146,25 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
   // velocities[i]/sqrt(2) * 1/sqrt(2) = 0.5 * velocities[i]
   // there is four wheels so the velocities are averaged with 0.25
   float Vx =
-      0.25 * 0.5 *
+    // 0.25 * 0.5 *
+    0.25 * sqrt(2.0) * 0.5 *
       (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
   float Vy =
-      0.25 * 0.5 *
+    // 0.25 * 0.5 *
+    0.25 * sqrt(2.0) * 0.5 *
       (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
+
+  float distance = sqrt(_x * _x + _y * _y);  // m
+  float velocity_radian =
+    (sqrt(Vx * Vx + Vy * Vy) / 60.0) * 2.0 * M_PI;  // rpm -> rad/s
+  float wheel_travel = velocity_radian * radius;  // m/s
 
   wheels wheel_data;
   wheel_data.velocities = // move forward positive to signal positive
-      {velocities[0], -velocities[1], velocities[2], -velocities[3]};
+    {velocities[0], -velocities[1], velocities[2], -velocities[3]};
   wheel_data.time =
-      sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
+    distance / wheel_travel;
+    // sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
   // * 60 is rpm -> rps
 
   return wheel_data;
@@ -175,11 +183,11 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
         {max_velocity, max_velocity, max_velocity, max_velocity};
 
   float velocity_radian =
-    (max_velocity / 600.0) * 2.0 * M_PI;  // rpm -> rad/s
+    (max_velocity / 60.0) * 2.0 * M_PI;  // rpm -> rad/s
   float wheel_travel =
-    2.0 * M_PI * radius * velocity_radian;
+    radius * velocity_radian;  // rad/s -> m/s
   float turn_radius =
-    2.0 * M_PI * Radius * fabs(_theta);
+    Radius * fabs(_theta);  // rad -> m
 
   // wheel_data.time =
   //     300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
