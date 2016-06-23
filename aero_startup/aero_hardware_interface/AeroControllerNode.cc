@@ -53,6 +53,14 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
           &AeroControllerNode::WheelCommandCallback,
           this);
 
+  ROS_INFO(" create utility servo sub");
+  util_sub_ =
+      nh_.subscribe(
+          "util_servo",
+          10,
+          &AeroControllerNode::UtilServoCallback,
+          this);
+
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
 
@@ -119,7 +127,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     // note, an illegal name will return from process anyway
     name_duplicate_check[_msg->joint_names[i]] = false; // any value
 
-    // try finding name from upper_ 
+    // try finding name from upper_
     id_in_msg_to_ordered_id[i] =
         upper_.get_ordered_angle_id(_msg->joint_names[i]);
 
@@ -348,5 +356,20 @@ void AeroControllerNode::WheelCommandCallback(
     lower_.flush();
     lower_.set_wheel_velocity(wheel_vector, time_msec);
     // usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
+  }
+}
+
+void AeroControllerNode::UtilServoCallback(
+    const std_msgs::Int32::ConstPtr& _msg)
+{
+  boost::mutex::scoped_lock lock(mtx_);
+
+  if (_msg->data == 0)
+  {
+    upper_.util_servo_off();
+  }
+  else
+  {
+    upper_.util_servo_on();
   }
 }

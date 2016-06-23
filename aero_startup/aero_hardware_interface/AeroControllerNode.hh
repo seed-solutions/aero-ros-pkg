@@ -22,6 +22,7 @@
 
 #include <tf/transform_broadcaster.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 
@@ -71,6 +72,11 @@ namespace aero
     private: void WheelCommandCallback(
 	const trajectory_msgs::JointTrajectory::ConstPtr& _msg);
 
+      /// @brief subscribe utility servo message
+      /// @param _msg true: on, false :off
+    private: void UtilServoCallback(
+        const std_msgs::Int32::ConstPtr& _msg);
+
     private: AeroUpperController upper_;
 
     private: AeroLowerController lower_;
@@ -84,6 +90,8 @@ namespace aero
     private: ros::Subscriber wheel_servo_sub_;
 
     private: ros::Subscriber wheel_sub_;
+
+    private: ros::Subscriber util_sub_;
 
     private: ros::Publisher state_pub_;
 

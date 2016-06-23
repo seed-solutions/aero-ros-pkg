@@ -23,6 +23,38 @@ AeroUpperController::~AeroUpperController()
 }
 
 //////////////////////////////////////////////////
+void AeroUpperController::util_servo_on() {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
+  std::vector<uint8_t> dat;
+  dat.resize(8);
+  dat[0] = 0xfd;  // header
+  dat[1] = 0xdf;  // header
+  dat[2] = 0x04;  // data length
+  dat[3] = 0x21;  // servo
+  dat[4] = 0x1d;  // ID29
+  dat[5] = 0x00;  // on
+  dat[6] = 0x01;  // on
+  dat[7] = 0xbc;  // checksum
+  ser_.send_data(dat);
+}
+void AeroUpperController::util_servo_off() {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
+  std::vector<uint8_t> dat;
+  dat.resize(8);
+  dat[0] = 0xfd;  // header
+  dat[1] = 0xdf;  // header
+  dat[2] = 0x04;  // data length
+  dat[3] = 0x21;  // servo
+  dat[4] = 0x1d;  // ID29
+  dat[5] = 0x00;  // off
+  dat[6] = 0x00;  // off
+  dat[7] = 0xbd;  // checksum
+  ser_.send_data(dat);
+}
+
+//////////////////////////////////////////////////
 AeroLowerController::AeroLowerController(const std::string& _port) :
     AeroControllerProto(_port, ID_LOWER)
 {

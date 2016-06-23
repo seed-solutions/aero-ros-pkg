@@ -61,7 +61,7 @@ namespace aero
 
       /// @brief send raw data to SEED controller
       /// @param _send_data raw data buffer
-    private: void send_data(std::vector<uint8_t>& _send_data);
+    public: void send_data(std::vector<uint8_t>& _send_data);
 
     private: io_service io_;
 
