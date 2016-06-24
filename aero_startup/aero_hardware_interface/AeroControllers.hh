@@ -35,6 +35,12 @@ namespace aero
 
       /// @brief destructor
     public: ~AeroUpperController();
+
+    /// @brief utility servo on command
+    public: void util_servo_on();
+
+    /// @brief utility servo off command
+    public: void util_servo_off();
     };
 
   /// @brief Lower body controller
