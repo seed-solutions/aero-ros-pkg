@@ -99,6 +99,9 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   x_now = goal_position_x;
   z_now = goal_position_z;
 
+  float sleep_time = 1.0 * time_scale;
+  ros::Duration(sleep_time).sleep();
+
   res.status = "success";
   res.x = -x_now - x_origin;
   res.z = z_now - z_origin;
