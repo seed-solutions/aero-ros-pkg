@@ -60,7 +60,7 @@ namespace aero
       meta = -scale * rad2Deg * r_wrist_y_joint;
       meta = scale * right_wrist.one;
       meta = scale * right_wrist.two;
-      meta = -scale * (rad2Deg * r_thumb_joint + 50.0) * 0.18;
+      meta = -scale * (rad2Deg * r_thumb_joint + 50.0) * 0.18 * 1.5;
 
       meta =
 	scale * ShoulderPitchTable(-rad2Deg * l_shoulder_p_joint);
