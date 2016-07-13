@@ -163,7 +163,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
   wheel_data.velocities = // move forward positive to signal positive
     {velocities[0], -velocities[1], velocities[2], -velocities[3]};
   wheel_data.time =
-    distance / wheel_travel;
+    distance / wheel_travel / 1.4;
     // sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
   // * 60 is rpm -> rps
 

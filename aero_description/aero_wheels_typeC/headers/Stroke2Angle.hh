@@ -108,11 +108,13 @@ namespace aero
 	deg2Rad * WristRollInvTable(-fabs(right_wrist_roll_stroke))
 	* (right_wrist_roll_stroke >= 0 ? 1 : -1);
       meta =
-	deg2Rad * (scale * can_r_hand * 5.556 + 50.0);
+	//deg2Rad * (scale * can_r_hand * 5.556 * 0.784 + 50.0);
+	deg2Rad * (scale * can_r_hand * 5.556 * 0.5 + 50.0);
       meta = 0;
       meta = 0;
       meta =
-	-deg2Rad * (scale * can_r_hand * 5.556 + 50.0);
+	//-deg2Rad * (scale * can_r_hand * 5.556 * 0.784 + 50.0);
+	-deg2Rad * (scale * can_r_hand * 5.556 * 0.5 + 50.0);
 
       meta = 0;
       meta = crotch_angle;
