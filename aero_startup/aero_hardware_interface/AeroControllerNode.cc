@@ -366,10 +366,14 @@ void AeroControllerNode::UtilServoCallback(
 
   if (_msg->data == 0)
   {
+    usleep(static_cast<int32_t>(200.0 * 1000.0));
     upper_.util_servo_off();
+    usleep(static_cast<int32_t>(200.0 * 1000.0));
   }
   else
   {
+    usleep(static_cast<int32_t>(200.0 * 1000.0));
     upper_.util_servo_on();
+    usleep(static_cast<int32_t>(200.0 * 1000.0));
   }
 }
