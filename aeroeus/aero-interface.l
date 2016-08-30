@@ -59,6 +59,11 @@
       (send self hand :f-2p :joint-angle (elt hand-vector 2))
       (send self hand :f-3p :joint-angle (elt hand-vector 3))
       hand-vector))
+
+
+    (:reset-manip-pose () (send self :angle-vector (float-vector 0.000000 -15.000000 0.000000 -90.000000 0.000000 0.000000 0.000000 (send self :rarm :t-1p :joint-angle) (send self :rarm :f-1p :joint-angle) (send self :rarm :f-2p :joint-angle) (send self :rarm :f-3p :joint-angle) 0.000000 15.000000 0.000000 -90.000000 0.000000 0.000000 0.000000 (send self :larm :t-1p :joint-angle) (send self :larm :f-1p :joint-angle) (send self :larm :f-2p :joint-angle) (send self :larm :f-3p :joint-angle) 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000)))
+    (:reset-pose () (send self :angle-vector (float-vector 0.000000 0.000000 0.000000 -90.000000 0.000000 0.000000 0.000000 (send self :rarm :t-1p :joint-angle) (send self :rarm :f-1p :joint-angle) (send self :rarm :f-2p :joint-angle) (send self :rarm :f-3p :joint-angle) 0.000000 0.000000 0.000000 -90.000000 0.000000 0.000000 0.000000 (send self :larm :t-1p :joint-angle) (send self :larm :f-1p :joint-angle) (send self :larm :f-2p :joint-angle) (send self :larm :f-3p :joint-angle) 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000)))
+    (:reset-terrain-pose () (send self :angle-vector (float-vector 0.000000 -15.000000 0.000000 -90.000000 0.000000 0.000000 0.000000 (send self :rarm :t-1p :joint-angle) (send self :rarm :f-1p :joint-angle) (send self :rarm :f-2p :joint-angle) (send self :rarm :f-3p :joint-angle) 0.000000 15.000000 0.000000 -90.000000 0.000000 0.000000 0.000000 (send self :larm :t-1p :joint-angle) (send self :larm :f-1p :joint-angle) (send self :larm :f-2p :joint-angle) (send self :larm :f-3p :joint-angle) 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000)))
   )
 
 
