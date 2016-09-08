@@ -136,6 +136,10 @@ do
     fi
     echo "target_link_libraries(aero_${executable_name}_controller_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
 
+    # add dependencies to CMakeLists.txt
+    write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
+    echo "add_dependencies(aero_${executable_name}_controller_node \${PROJECT_NAME}_gencpp)" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     # add srv files if required
     check_for_srv=$(grep "@define srv" $copy_from_file)
     if [[ "$check_for_srv" != "" ]]

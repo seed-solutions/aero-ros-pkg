@@ -61,13 +61,14 @@ else()
   message(FATAL "c++11 required but not supported")
 endif()
 
-# >>> add dependencies
-# <<< add dependencies
 
 # Executables
 
 # >>> add controllers
 # <<< add controllers
+
+# >>> add dependencies
+# <<< add dependencies
 
 # >>> add applications
 # <<< add applications
