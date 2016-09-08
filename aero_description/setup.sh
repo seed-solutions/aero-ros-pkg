@@ -53,6 +53,10 @@ then
 
     ./scripts/install_srv.sh
 else
+    printf "\nsetting up srvs ...\n"
+
+    ./scripts/install_srv.sh
+
     printf "\nwriting files to aero_startup/aero_hardware_interface ...\n"
 
     ./scripts/make_controller.sh $dir
