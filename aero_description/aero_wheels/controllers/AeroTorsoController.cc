@@ -11,6 +11,7 @@
   string status
   float64 x
   float64 z
+  float64 time_sec
 */
 
 static const double link1_length = 290.09;
@@ -85,7 +86,7 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
 
   float time_scale =
       (std::pow(x_now - goal_position_x, 2) +
-       std::pow(z_now - goal_position_z, 2)) / 10000.0;
+       std::pow(z_now - goal_position_z, 2)) / 20000.0;
   time_scale = std::max(time_scale, static_cast<float>(1.0));
 
   trajectory_msgs::JointTrajectory msg;
@@ -102,6 +103,7 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   res.status = "success";
   res.x = x_now - x_origin;
   res.z = z_now - z_origin;
+  res.time_sec = time_scale;
   return true;
 };
 
