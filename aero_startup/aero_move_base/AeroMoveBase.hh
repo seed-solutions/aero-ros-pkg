@@ -3,8 +3,10 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <std_msgs/Bool.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <actionlib/server/simple_action_server.h>
@@ -116,6 +118,12 @@ namespace aero
     private: float warm_up_time_;
 
     private: unsigned int wait_for_servo_usec_;
+
+    private: float move_coefficient_x;
+
+    private: float move_coefficient_y;
+
+    private: float move_coefficient_theta;
 
     private: goal goal_;
 

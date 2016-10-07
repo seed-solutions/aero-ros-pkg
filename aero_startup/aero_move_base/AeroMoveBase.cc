@@ -15,6 +15,17 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   warm_up_time_ = 1.5;
   wait_for_servo_usec_ = 1000 * 500;
 
+  std::string cfg_path = ros::package::getPath("aero_startup") + "/aero_move_base/AeroMoveBase.txt";
+  std::ifstream fin;
+  fin.open(cfg_path);
+  if (!fin){
+    std::cout <<"movebase config gile cannot open" << std::endl;
+    std::cout << cfg_path << std::endl;
+    exit(1);
+  }
+  char comma;
+  fin >> move_coefficient_x >> comma >> move_coefficient_y >> comma >> move_coefficient_theta;
+
   goal_.wheel_dV.resize(num_of_wheels_);
   goal_.max_vel.resize(num_of_wheels_);
   states_.cur_vel.resize(num_of_wheels_);
@@ -153,7 +164,7 @@ bool AeroMoveBase::MoveBaseOnce()
 /// This function will call Translate() to determin wheel command.
 void AeroMoveBase::SetGoal(float _x, float _y, float _theta)
 {
-  wheels wheel_data = this->Translate(_x, _y, _theta);
+  wheels wheel_data = this->Translate(_x*move_coefficient_x, _y*move_coefficient_y, _theta*move_coefficient_theta);
 
   // set goals
   goal_.run_time = wheel_data.time;
