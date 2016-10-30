@@ -8,6 +8,8 @@
 #include <string>
 #include <stdint.h>
 #include <unistd.h>
+#include <cmath>
+#include <thread>
 
 #include "aero_hardware_interface/Constants.hh"
 #include "aero_hardware_interface/AeroControllers.hh"
@@ -15,6 +17,8 @@
 #include "aero_hardware_interface/AngleJointNames.hh"
 #include "aero_hardware_interface/Stroke2Angle.hh"
 #include "aero_hardware_interface/Angle2Stroke.hh"
+
+#include "aero_hardware_interface/Interpolation.hh"
 
 #include <ros/ros.h>
 #include <trajectory_msgs/JointTrajectory.h>
@@ -100,6 +104,8 @@ namespace aero
     private: ros::Timer timer_;
 
     private: boost::mutex mtx_;
+
+    private: std::vector<aero::interpolation::InterpolationPtr> interpolation_;
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;

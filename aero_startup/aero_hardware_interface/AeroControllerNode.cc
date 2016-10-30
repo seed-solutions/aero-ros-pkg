@@ -64,16 +64,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
 
-  if (get_state)
-  {
+  if (get_state) {
     ROS_INFO(" create timer sub");
 	//shiigi 0.1 -> 0.01
     timer_ =
         nh_.createTimer(ros::Duration(0.01),
                             &AeroControllerNode::JointStateCallback, this);
-  }
-  else
-  {
+  } else {
     ROS_INFO(" controller DO NOT return state.");
     this->JointStateOnce();
   }
@@ -113,83 +110,73 @@ void AeroControllerNode::JointTrajectoryCallback(
   std::vector<int32_t> id_in_msg_to_ordered_id;
   id_in_msg_to_ordered_id.resize(_msg->joint_names.size());
 
-  std::map<std::string, bool> name_duplicate_check;
-
   // if count is 0, commands will not go to robot
   //   used for occasions such as controlling only the upper body
   //   this way, controlling is safer
   size_t upper_count = 0;
   size_t lower_count = 0;
 
-  for (size_t i = 0; i < _msg->joint_names.size(); ++i)
-  {
-    // the size of name_duplicate_check is the number of identical names
-    // note, an illegal name will return from process anyway
-    name_duplicate_check[_msg->joint_names[i]] = false; // any value
+  // check for unused joints
+  std::vector<bool> send_true(number_of_angle_joints, false);
 
+  for (size_t i = 0; i < _msg->joint_names.size(); ++i) {
     // try finding name from upper_
     id_in_msg_to_ordered_id[i] =
         upper_.get_ordered_angle_id(_msg->joint_names[i]);
 
     // if finding name from upper_ failed
-    if (id_in_msg_to_ordered_id[i] < 0)
-    {
+    if (id_in_msg_to_ordered_id[i] < 0) {
       // try finding name from lower_
       id_in_msg_to_ordered_id[i] =
         lower_.get_ordered_angle_id(_msg->joint_names[i]);
-    }
-    else
-    {
+    } else {
       ++upper_count;
+      send_true[id_in_msg_to_ordered_id[i]] = true;
       continue;
     }
 
     if (id_in_msg_to_ordered_id[i] < 0) return; // invalid name
-    else ++lower_count;
+
+    ++lower_count;
+    send_true[id_in_msg_to_ordered_id[i]] = true;
+  }
+
+  // initiate trajectories
+
+  std::vector<std::pair<std::vector<int16_t>, uint16_t> > upper_stroke_trajectory;
+
+  // note: only upper will have interpolation
+  if (upper_count > 0) {
+    upper_stroke_trajectory.reserve(_msg->points.size() + 1);
+    // get current stroke values
+    std::vector<int16_t> ref_strokes;
+    ref_strokes.assign(upper_.get_reference_stroke_vector().begin(),
+                       upper_.get_reference_stroke_vector().end());
+    // fill in unused joints to no-send
+    for (size_t i = 0; i < ref_strokes.size(); ++i)
+      if (!send_true[i]) ref_strokes[i] = 0x7fff;
+    upper_stroke_trajectory.push_back({ref_strokes, 0});
   }
 
   // from here, get ready to handle the _msg positions
 
+  // this is a tmp variable that is reused
   std::vector<double> ordered_positions(number_of_angle_joints);
 
-  // if _msg does not have full set of joints
-  //   this is valid, however, empty joints will be set to current pose
-  //   duplicate names are valid, however, only the last value is used
-  if (name_duplicate_check.size() < number_of_angle_joints)
-  {
-    // get current stroke values
-    std::vector<int16_t>& upper_ref_vector =
-        upper_.get_reference_stroke_vector();
-    std::vector<int16_t>& lower_ref_vector =
-        lower_.get_reference_stroke_vector();
-    std::vector<int16_t> ref_strokes;
-    ref_strokes.assign(upper_ref_vector.begin(),
-		       upper_ref_vector.end());
-
-    // concatenate upper and lower into a single vector
-    ref_strokes.insert(ref_strokes.end(),
-		       lower_ref_vector.begin(),
-		       lower_ref_vector.end());
-
-    // why convert when we want strokes as our final result?
-    //   a single change in angle could change multiple stroke values
-    //   therefore, we cannot find out the changing strokes beforehand
-    std::vector<double> ref_angles(number_of_angle_joints);
-    common::Stroke2Angle(ref_angles, ref_strokes);
-
-    // fill in with current values
-    ordered_positions = ref_angles;
-  }
-
   // for each trajectory points,
-  for (size_t i = 0; i < _msg->points.size(); ++i)
-  {
+  for (size_t i = 0; i < _msg->points.size(); ++i) {
+    std::fill(ordered_positions.begin(), ordered_positions.end(), 0.0);
+
     for (size_t j = 0; j < _msg->points[i].positions.size(); ++j)
       ordered_positions[id_in_msg_to_ordered_id[j]] =
-	  _msg->points[i].positions[j];
+        _msg->points[i].positions[j];
 
     std::vector<int16_t> strokes(AERO_DOF);
     common::Angle2Stroke(strokes, ordered_positions);
+
+    // fill in unused joints to no-send
+    for (size_t i = 0; i < strokes.size(); ++i)
+      if (!send_true[i]) strokes[i] = 0x7fff;
 
     // split strokes into upper and lower
     std::vector<int16_t> upper_stroke_vector(
@@ -200,20 +187,67 @@ void AeroControllerNode::JointTrajectoryCallback(
     double time_sec = _msg->points[i].time_from_start.toSec();
     uint16_t time_msec = static_cast<uint16_t>(time_sec * 100.0);
 
-    if (upper_count > 0)
-    {
-      upper_.flush();
-      upper_.set_position(upper_stroke_vector, time_msec);
+    if (upper_count > 0) {
+      upper_stroke_trajectory.push_back({upper_stroke_vector, time_msec});
     }
-    if (lower_count > 0)
-    {
+
+    // only the first lower trajectory point is valid
+    if (lower_count > 0 && i == 0) {
       lower_.flush();
       lower_.set_position(lower_stroke_vector, time_msec);
     }
-
-	//comment out shiigi
-    //usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
+
+  if (upper_count <= 0) return; // nothing more to do
+
+  std::vector<aero::interpolation::InterpolationPtr> interpolation;
+  interpolation.reserve(upper_stroke_trajectory.size());
+  // copy interpolation setup
+  for (auto it = interpolation_.begin(); it != interpolation_.end(); ++it)
+    interpolation.push_back(*it);
+  // fillin rest with linear if not specified
+  for (size_t i = interpolation_.size(); i < upper_stroke_trajectory.size(); ++i)
+    interpolation.push_back(std::shared_ptr<aero::interpolation::Interpolation>(
+        new aero::interpolation::Interpolation(aero::interpolation::i_linear)));
+
+  if (interpolation_.size() < upper_stroke_trajectory.size());
+
+  std::thread send_av([&](std::vector<aero::interpolation::InterpolationPtr>
+                          _interpolation) {
+      uint16_t msec_per_frame = 50; // 20 fps
+
+      for (auto it = upper_stroke_trajectory.begin() + 1;
+           it != upper_stroke_trajectory.end(); ++it) {
+        // any movement faster than 600ms will not interpolate = linear
+        if (it->second < 600) {
+          upper_.flush();
+          upper_.set_position(it->first, it->second);
+          continue;
+        }
+        // find number of splits in this trajectory
+        // time becomes slightly faster if not cleanly dividable
+        int splits = static_cast<int>(it->second / msec_per_frame);
+        int k = static_cast<int>(it - upper_stroke_trajectory.begin());
+        // send splitted stroke
+        for (size_t j = 0; j < splits; ++j) {
+          float t_param = _interpolation.at(k)->interpolate(
+              static_cast<float>(j) / splits);
+          // calculate stroke in this split
+          std::vector<int16_t> stroke(it->first.size());
+          for (size_t i = 0; i < it->first.size(); ++i) {
+            if (it->first[i] == 0x7fff) continue; // skip non-send joints
+            stroke[i] =
+              (1 - t_param) * (it - 1)->first[i] + t_param * it->first[i];
+          }
+          upper_.flush();
+          // slightly longer time added for trajectory smoothness
+          upper_.set_position(stroke, msec_per_frame + 10);
+          usleep(static_cast<int32_t>(msec_per_frame * 1000.0 * 1000.0));
+        }
+      }
+  }, interpolation);
+
+  send_av.detach();
 }
 
 //////////////////////////////////////////////////
@@ -251,16 +285,14 @@ void AeroControllerNode::JointStateOnce()
   stroke_state.desired.positions.resize(AERO_DOF);
   stroke_state.actual.positions.resize(AERO_DOF);
 
-  for (size_t i = 0; i < AERO_DOF_UPPER; ++i)
-  {
+  for (size_t i = 0; i < AERO_DOF_UPPER; ++i) {
     stroke_state.joint_names[i] = upper_.get_stroke_joint_name(i);
     stroke_state.desired.positions[i] =
         static_cast<double>(upper_ref_vector[i]);
     stroke_state.actual.positions[i] =
         static_cast<double>(upper_stroke_vector[i]);
   }
-  for (size_t i = 0; i < AERO_DOF_LOWER; ++i)
-  {
+  for (size_t i = 0; i < AERO_DOF_LOWER; ++i) {
     stroke_state.joint_names[i + AERO_DOF_UPPER] =
         lower_.get_stroke_joint_name(i);
     stroke_state.desired.positions[i + AERO_DOF_UPPER] =
@@ -282,14 +314,12 @@ void AeroControllerNode::JointStateOnce()
   // convert to desired angle positions
   std::vector<int16_t> desired_strokes(stroke_state.desired.positions.begin(),
 				       stroke_state.desired.positions.end());
-  common::Stroke2Angle(
-      state.desired.positions, desired_strokes);
+  common::Stroke2Angle(state.desired.positions, desired_strokes);
 
   // convert to actual angle positions
   std::vector<int16_t> actual_strokes(stroke_state.actual.positions.begin(),
 				      stroke_state.actual.positions.end());
-  common::Stroke2Angle(
-      state.actual.positions, actual_strokes);
+  common::Stroke2Angle(state.actual.positions, actual_strokes);
 
   // get joint names (auto-generated function)
   common::AngleJointNames(state.joint_names);
@@ -304,13 +334,10 @@ void AeroControllerNode::WheelServoCallback(
 {
   boost::mutex::scoped_lock lock(mtx_);
 
-  if (_msg->data)
-  {
+  if (_msg->data) {
     // wheel_on sets all joints and wheels to servo on
     lower_.wheel_on();
-  }
-  else
-  {
+  } else {
     // servo_on joints only, and servo off wheels
     lower_.servo_on();
   }
@@ -324,8 +351,7 @@ void AeroControllerNode::WheelCommandCallback(
 
   // wheel name to indices, if not exist, then return -1
   std::vector<int32_t> joint_to_wheel_indices(AERO_DOF_WHEEL);
-  for (size_t i = 0; i < _msg->joint_names.size(); ++i)
-  {
+  for (size_t i = 0; i < _msg->joint_names.size(); ++i) {
     std::string joint_name = _msg->joint_names[i];
     joint_to_wheel_indices[i] =
         lower_.get_wheel_id(joint_name);
@@ -338,13 +364,10 @@ void AeroControllerNode::WheelCommandCallback(
   wheel_vector.assign(ref_vector.begin(), ref_vector.end());
 
   // for each trajectory points,
-  for (size_t i = 0; i < _msg->points.size(); ++i)
-  {
+  for (size_t i = 0; i < _msg->points.size(); ++i) {
     // convert positions to stroke vector
-    for (size_t j = 0; j < _msg->points[i].positions.size(); ++j)
-    {
-      if (joint_to_wheel_indices[j] >= 0)
-      {
+    for (size_t j = 0; j < _msg->points[i].positions.size(); ++j) {
+      if (joint_to_wheel_indices[j] >= 0) {
         wheel_vector[
             static_cast<size_t>(joint_to_wheel_indices[j])] =
             static_cast<int16_t>(_msg->points[i].positions[j]);
@@ -364,14 +387,11 @@ void AeroControllerNode::UtilServoCallback(
 {
   boost::mutex::scoped_lock lock(mtx_);
 
-  if (_msg->data == 0)
-  {
+  if (_msg->data == 0) {
     usleep(static_cast<int32_t>(200.0 * 1000.0));
     upper_.util_servo_off();
     usleep(static_cast<int32_t>(200.0 * 1000.0));
-  }
-  else
-  {
+  } else {
     usleep(static_cast<int32_t>(200.0 * 1000.0));
     upper_.util_servo_on();
     usleep(static_cast<int32_t>(200.0 * 1000.0));
