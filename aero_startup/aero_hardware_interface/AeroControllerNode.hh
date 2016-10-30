@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <cmath>
 #include <thread>
+#include <mutex>
 
 #include "aero_hardware_interface/Constants.hh"
 #include "aero_hardware_interface/AeroControllers.hh"
@@ -104,7 +105,7 @@ namespace aero
 
     private: ros::Timer timer_;
 
-    private: boost::mutex mtx_;
+    private: std::mutex mtx_;
 
     private: std::vector<aero::interpolation::InterpolationPtr> interpolation_;
     };
