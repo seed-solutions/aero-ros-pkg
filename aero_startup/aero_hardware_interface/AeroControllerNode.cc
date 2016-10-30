@@ -150,8 +150,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     upper_stroke_trajectory.reserve(_msg->points.size() + 1);
     // get current stroke values
     std::vector<int16_t> ref_strokes;
-    ref_strokes.assign(upper_.get_reference_stroke_vector().begin(),
-                       upper_.get_reference_stroke_vector().end());
+    upper_.get_position(ref_strokes);
     // fill in unused joints to no-send
     for (size_t i = 0; i < ref_strokes.size(); ++i)
       if (!send_true[i]) ref_strokes[i] = 0x7fff;
