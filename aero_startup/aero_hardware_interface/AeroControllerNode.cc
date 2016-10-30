@@ -96,7 +96,7 @@ AeroControllerNode::~AeroControllerNode()
 void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& _msg)
 {
-  mtx_.lock();
+  std::unique_lock<std::mutex> lock(mtx_);
 
   int number_of_angle_joints =
       upper_.get_number_of_angle_joints() +
@@ -104,7 +104,6 @@ void AeroControllerNode::JointTrajectoryCallback(
 
   if (_msg->joint_names.size() > number_of_angle_joints)
     // invalid number of joints from _msg
-    mtx_.unlock();
     return;
 
   // positions in _msg are not ordered
@@ -136,10 +135,7 @@ void AeroControllerNode::JointTrajectoryCallback(
       continue;
     }
 
-    if (id_in_msg_to_ordered_id[i] < 0) {
-      mtx_.unlock();
-      return; // invalid name
-    }
+    if (id_in_msg_to_ordered_id[i] < 0) return; // invalid name
 
     ++lower_count;
     send_true[id_in_msg_to_ordered_id[i]] = true;
@@ -200,8 +196,6 @@ void AeroControllerNode::JointTrajectoryCallback(
     }
   }
 
-  mtx_.unlock();
-
   if (upper_count <= 0) return; // nothing more to do
 
   std::vector<aero::interpolation::InterpolationPtr> interpolation;
@@ -214,16 +208,16 @@ void AeroControllerNode::JointTrajectoryCallback(
     interpolation.push_back(std::shared_ptr<aero::interpolation::Interpolation>(
         new aero::interpolation::Interpolation(aero::interpolation::i_linear)));
 
-  if (interpolation_.size() < upper_stroke_trajectory.size());
-
   std::thread send_av([&](std::vector<aero::interpolation::InterpolationPtr>
-                          _interpolation) {
+                          _interpolation,
+                          std::vector<std::pair<std::vector<int16_t>, uint16_t> >
+                          _upper_stroke_trajectory) {
       uint16_t msec_per_frame = 50; // 20 fps
 
-      mtx_.lock();
+      std::unique_lock<std::mutex> lock(mtx_);
 
-      for (auto it = upper_stroke_trajectory.begin() + 1;
-           it != upper_stroke_trajectory.end(); ++it) {
+      for (auto it = _upper_stroke_trajectory.begin() + 1;
+           it != _upper_stroke_trajectory.end(); ++it) {
         // any movement faster than 600ms will not interpolate = linear
         if (it->second < 600) {
           upper_.flush();
@@ -233,7 +227,7 @@ void AeroControllerNode::JointTrajectoryCallback(
         // find number of splits in this trajectory
         // time becomes slightly faster if not cleanly dividable
         int splits = static_cast<int>(it->second / msec_per_frame);
-        int k = static_cast<int>(it - upper_stroke_trajectory.begin());
+        int k = static_cast<int>(it - _upper_stroke_trajectory.begin());
         // send splitted stroke
         for (size_t j = 0; j < splits; ++j) {
           float t_param = _interpolation.at(k)->interpolate(
@@ -251,9 +245,7 @@ void AeroControllerNode::JointTrajectoryCallback(
           usleep(static_cast<int32_t>(msec_per_frame * 1000.0 * 1000.0));
         }
       }
-
-      mtx_.unlock();
-  }, interpolation);
+  }, interpolation, upper_stroke_trajectory);
 
   send_av.detach();
 }
@@ -267,7 +259,7 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event)
 //////////////////////////////////////////////////
 void AeroControllerNode::JointStateOnce()
 {
-  mtx_.lock();
+  std::unique_lock<std::mutex> lock(mtx_);
 
   // get desired positions
   std::vector<int16_t>& upper_ref_vector =
@@ -334,15 +326,13 @@ void AeroControllerNode::JointStateOnce()
 
   state_pub_.publish(state);
   stroke_state_pub_.publish(stroke_state);
-
-  mtx_.unlock();
 }
 
 //////////////////////////////////////////////////
 void AeroControllerNode::WheelServoCallback(
     const std_msgs::Bool::ConstPtr& _msg)
 {
-  mtx_.lock();
+  std::unique_lock<std::mutex> lock(mtx_);
 
   if (_msg->data) {
     // wheel_on sets all joints and wheels to servo on
@@ -351,15 +341,13 @@ void AeroControllerNode::WheelServoCallback(
     // servo_on joints only, and servo off wheels
     lower_.servo_on();
   }
-
-  mtx_.unlock();
 }
 
 //////////////////////////////////////////////////
 void AeroControllerNode::WheelCommandCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& _msg)
 {
-  mtx_.lock();
+  std::unique_lock<std::mutex> lock(mtx_);
 
   // wheel name to indices, if not exist, then return -1
   std::vector<int32_t> joint_to_wheel_indices(AERO_DOF_WHEEL);
@@ -392,14 +380,12 @@ void AeroControllerNode::WheelCommandCallback(
     lower_.set_wheel_velocity(wheel_vector, time_msec);
     // usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
-
-  mtx_.unlock();
 }
 
 void AeroControllerNode::UtilServoCallback(
     const std_msgs::Int32::ConstPtr& _msg)
 {
-  mtx_.lock();
+  std::unique_lock<std::mutex> lock(mtx_);
 
   if (_msg->data == 0) {
     usleep(static_cast<int32_t>(200.0 * 1000.0));
@@ -410,6 +396,4 @@ void AeroControllerNode::UtilServoCallback(
     upper_.util_servo_on();
     usleep(static_cast<int32_t>(200.0 * 1000.0));
   }
-
-  mtx_.unlock();
 }
