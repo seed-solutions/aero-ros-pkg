@@ -11,4 +11,5 @@ aero_startup/aero_hardware_interface/Constants.hh
 aero_startup/aero_hardware_interface/Angle2Stroke.*
 aero_startup/aero_hardware_interface/Stroke2Angle.*
 aero_startup/aero_hardware_interface/AngleJointNames.*
+aero_startup/aero_hardware_interface/UnusedAngle2Stroke.hh
 aero_startup/aero_move_base/AeroBaseController.cc
