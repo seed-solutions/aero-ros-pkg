@@ -174,8 +174,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     common::Angle2Stroke(strokes, ordered_positions);
 
     // fill in unused joints to no-send
-    for (size_t i = 0; i < strokes.size(); ++i)
-      if (!send_true[i]) strokes[i] = 0x7fff;
+    common::UnusedAngle2Stroke(strokes, send_true);
 
     // split strokes into upper and lower
     std::vector<int16_t> upper_stroke_vector(

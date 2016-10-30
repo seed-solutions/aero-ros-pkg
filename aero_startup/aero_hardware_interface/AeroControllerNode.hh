@@ -17,6 +17,7 @@
 #include "aero_hardware_interface/AngleJointNames.hh"
 #include "aero_hardware_interface/Stroke2Angle.hh"
 #include "aero_hardware_interface/Angle2Stroke.hh"
+#include "aero_hardware_interface/UnusedAngle2Stroke.hh"
 
 #include "aero_hardware_interface/Interpolation.hh"
 
