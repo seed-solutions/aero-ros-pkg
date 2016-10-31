@@ -159,8 +159,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     std::vector<int16_t> ref_strokes;
     upper_.get_position(ref_strokes);
     // fill in unused joints to no-send
-    for (size_t i = 0; i < ref_strokes.size(); ++i)
-      if (!send_true[i]) ref_strokes[i] = 0x7fff;
+    common::UnusedAngle2Stroke(ref_strokes, send_true);
     upper_stroke_trajectory.push_back({ref_strokes, 0});
   }
 
@@ -190,16 +189,16 @@ void AeroControllerNode::JointTrajectoryCallback(
 	strokes.begin() + AERO_DOF_UPPER, strokes.end());
 
     double time_sec = _msg->points[i].time_from_start.toSec();
-    uint16_t time_msec = static_cast<uint16_t>(time_sec * 100.0);
+    uint16_t time_csec = static_cast<uint16_t>(time_sec * 100.0);
 
     if (upper_count > 0) {
-      upper_stroke_trajectory.push_back({upper_stroke_vector, time_msec});
+      upper_stroke_trajectory.push_back({upper_stroke_vector, time_csec});
     }
 
     // only the first lower trajectory point is valid
     if (lower_count > 0 && i == 0) {
       lower_.flush();
-      lower_.set_position(lower_stroke_vector, time_msec);
+      lower_.set_position(lower_stroke_vector, time_csec);
     }
   }
 
@@ -207,6 +206,9 @@ void AeroControllerNode::JointTrajectoryCallback(
 
   std::vector<aero::interpolation::InterpolationPtr> interpolation;
   interpolation.reserve(upper_stroke_trajectory.size());
+  // fill in dummy setup in head
+  interpolation.push_back(std::shared_ptr<aero::interpolation::Interpolation>(
+        new aero::interpolation::Interpolation(aero::interpolation::i_constant)));
   // copy interpolation setup
   for (auto it = interpolation_.begin(); it != interpolation_.end(); ++it)
     interpolation.push_back(*it);
@@ -219,21 +221,21 @@ void AeroControllerNode::JointTrajectoryCallback(
                           _interpolation,
                           std::vector<std::pair<std::vector<int16_t>, uint16_t> >
                           _upper_stroke_trajectory) {
-      uint16_t msec_per_frame = 50; // 20 fps
+      uint16_t csec_per_frame = 10; // 10 fps
 
       std::unique_lock<std::mutex> lock(mtx_);
 
       for (auto it = _upper_stroke_trajectory.begin() + 1;
            it != _upper_stroke_trajectory.end(); ++it) {
-        // any movement faster than 600ms will not interpolate = linear
-        if (it->second < 600) {
+        // any movement faster than 600ms(60cs) will not interpolate = linear
+        if (it->second < 60) {
           upper_.flush();
           upper_.set_position(it->first, it->second);
           continue;
         }
         // find number of splits in this trajectory
         // time becomes slightly faster if not cleanly dividable
-        int splits = static_cast<int>(it->second / msec_per_frame);
+        int splits = static_cast<int>(it->second / csec_per_frame);
         int k = static_cast<int>(it - _upper_stroke_trajectory.begin());
         // send splitted stroke
         for (size_t j = 0; j < splits; ++j) {
@@ -248,8 +250,8 @@ void AeroControllerNode::JointTrajectoryCallback(
           }
           upper_.flush();
           // slightly longer time added for trajectory smoothness
-          upper_.set_position(stroke, msec_per_frame + 10);
-          usleep(static_cast<int32_t>(msec_per_frame * 1000.0 * 1000.0));
+          upper_.set_position(stroke, csec_per_frame + 10);
+          usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
         }
       }
   }, interpolation, upper_stroke_trajectory);
@@ -382,9 +384,9 @@ void AeroControllerNode::WheelCommandCallback(
     }
 
     double time_sec = _msg->points[i].time_from_start.toSec();
-    uint16_t time_msec = static_cast<uint16_t>(time_sec * 100.0);
+    uint16_t time_csec = static_cast<uint16_t>(time_sec * 100.0);
     lower_.flush();
-    lower_.set_wheel_velocity(wheel_vector, time_msec);
+    lower_.set_wheel_velocity(wheel_vector, time_csec);
     // usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }
 }
