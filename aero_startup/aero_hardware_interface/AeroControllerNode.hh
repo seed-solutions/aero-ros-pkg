@@ -32,6 +32,8 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 
+#include "aero_startup/AeroInterpolation.h"
+
 namespace aero
 {
   namespace controller
@@ -83,6 +85,13 @@ namespace aero
     private: void UtilServoCallback(
         const std_msgs::Int32::ConstPtr& _msg);
 
+      /// @brief server interpolation request message
+      /// @param _req request interpolation method
+      /// @param _res respond feedback of status
+    private: bool InterpolationCallback(
+        aero_startup::AeroInterpolation::Request &_req,
+        aero_startup::AeroInterpolation::Response &_res);
+
     private: AeroUpperController upper_;
 
     private: AeroLowerController lower_;
@@ -102,6 +111,8 @@ namespace aero
     private: ros::Publisher state_pub_;
 
     private: ros::Publisher stroke_state_pub_;
+
+    private: ros::ServiceServer interpolation_server_;
 
     private: ros::Timer timer_;
 

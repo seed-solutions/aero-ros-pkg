@@ -61,6 +61,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
           &AeroControllerNode::UtilServoCallback,
           this);
 
+  ROS_INFO(" create interpolation service");
+  interpolation_server_ =
+    nh_.advertiseService(
+        "interpolation",
+        &AeroControllerNode::InterpolationCallback,
+        this);
+
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
 
@@ -382,6 +389,7 @@ void AeroControllerNode::WheelCommandCallback(
   }
 }
 
+//////////////////////////////////////////////////
 void AeroControllerNode::UtilServoCallback(
     const std_msgs::Int32::ConstPtr& _msg)
 {
@@ -396,4 +404,34 @@ void AeroControllerNode::UtilServoCallback(
     upper_.util_servo_on();
     usleep(static_cast<int32_t>(200.0 * 1000.0));
   }
+}
+
+//////////////////////////////////////////////////
+bool AeroControllerNode::InterpolationCallback(
+    aero_startup::AeroInterpolation::Request &_req,
+    aero_startup::AeroInterpolation::Response &_res)
+{
+  _res.status = true;
+  interpolation_.clear();
+
+  for (auto it = _req.type.begin(); it != _req.type.end(); ++it) {
+    interpolation_.push_back(std::shared_ptr<aero::interpolation::Interpolation>(
+        new aero::interpolation::Interpolation(*it)));
+  }
+
+  int i = 0;
+  for (auto it = _req.p.begin(); it != _req.p.end(); ++it) {
+    if (i > interpolation_.size()) {
+      _res.status = false;
+      return true;
+    }
+    int j = 0;
+    for (auto itt = it->points.begin(); itt != it->points.end(); ++itt) {
+      interpolation_.at(i)->set_points({itt->x, itt->y}, j);
+      ++j;
+    }
+    ++i;
+  }
+
+  return true;
 }
