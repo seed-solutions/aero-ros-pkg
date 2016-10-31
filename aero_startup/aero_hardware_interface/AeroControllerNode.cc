@@ -7,7 +7,7 @@ using namespace controller;
 AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
                                        const std::string& _port_upper,
                                        const std::string& _port_lower) :
-    nh_(_nh), upper_(_port_upper), lower_(_port_lower)
+  nh_(_nh), upper_(_port_upper), lower_(_port_lower), async_spinner_(1, &wheel_queue_)
 {
   ROS_INFO("starting aero_hardware_interface");
 
@@ -45,13 +45,23 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
           &AeroControllerNode::WheelServoCallback,
           this);
 
+  // must be asynchronous or msgs will be dropped while running upper thread
   ROS_INFO(" create wheel command sub");
-  wheel_sub_ =
-      nh_.subscribe(
-          "wheel_command",
-          10,
-          &AeroControllerNode::WheelCommandCallback,
-          this);
+  wheel_ops_ =
+    ros::SubscribeOptions::create<trajectory_msgs::JointTrajectory>(
+         "wheel_command",
+         10,
+         boost::bind(&AeroControllerNode::WheelCommandCallback, this, _1),
+         ros::VoidPtr(),
+         &wheel_queue_);
+  wheel_sub_ = nh_.subscribe(wheel_ops_);
+  // wheel_sub_ =
+  //     nh_.subscribe(
+  //         "wheel_command",
+  //         10,
+  //         &AeroControllerNode::WheelCommandCallback,
+  //         this);
+  async_spinner_.start();
 
   ROS_INFO(" create utility servo sub");
   util_sub_ =
@@ -242,7 +252,7 @@ void AeroControllerNode::JointTrajectoryCallback(
           float t_param = _interpolation.at(k)->interpolate(
               static_cast<float>(j) / splits);
           // calculate stroke in this split
-          std::vector<int16_t> stroke(it->first.size());
+          std::vector<int16_t> stroke(it->first.size(), 0x7fff);
           for (size_t i = 0; i < it->first.size(); ++i) {
             if (it->first[i] == 0x7fff) continue; // skip non-send joints
             stroke[i] =

@@ -26,6 +26,9 @@
 #include <trajectory_msgs/JointTrajectory.h>
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
+#include <ros/callback_queue.h>
+#include <ros/subscribe_options.h>
+
 #include <tf/transform_broadcaster.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
@@ -103,6 +106,12 @@ namespace aero
     private: ros::Subscriber jointtraj_sub_;
 
     private: ros::Subscriber wheel_servo_sub_;
+
+    private: ros::SubscribeOptions wheel_ops_;
+
+    private: ros::CallbackQueue wheel_queue_;
+
+    private: ros::AsyncSpinner async_spinner_;
 
     private: ros::Subscriber wheel_sub_;
 
