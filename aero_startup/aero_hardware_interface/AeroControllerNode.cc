@@ -113,7 +113,8 @@ AeroControllerNode::~AeroControllerNode()
 void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& _msg)
 {
-  std::unique_lock<std::mutex> lock(mtx_);
+  std::unique_lock<std::mutex> locku(mtx_upper_);
+  std::unique_lock<std::mutex> lockl(mtx_lower_);
 
   int number_of_angle_joints =
       upper_.get_number_of_angle_joints() +
@@ -233,7 +234,7 @@ void AeroControllerNode::JointTrajectoryCallback(
                           _upper_stroke_trajectory) {
       uint16_t csec_per_frame = 10; // 10 fps
 
-      std::unique_lock<std::mutex> lock(mtx_);
+      std::unique_lock<std::mutex> lock(mtx_upper_);
 
       for (auto it = _upper_stroke_trajectory.begin() + 1;
            it != _upper_stroke_trajectory.end(); ++it) {
@@ -278,7 +279,8 @@ void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event)
 //////////////////////////////////////////////////
 void AeroControllerNode::JointStateOnce()
 {
-  std::unique_lock<std::mutex> lock(mtx_);
+  std::unique_lock<std::mutex> locku(mtx_upper_);
+  std::unique_lock<std::mutex> lockl(mtx_lower_);
 
   // get desired positions
   std::vector<int16_t>& upper_ref_vector =
@@ -351,7 +353,7 @@ void AeroControllerNode::JointStateOnce()
 void AeroControllerNode::WheelServoCallback(
     const std_msgs::Bool::ConstPtr& _msg)
 {
-  std::unique_lock<std::mutex> lock(mtx_);
+  std::unique_lock<std::mutex> lock(mtx_lower_);
 
   if (_msg->data) {
     // wheel_on sets all joints and wheels to servo on
@@ -366,7 +368,7 @@ void AeroControllerNode::WheelServoCallback(
 void AeroControllerNode::WheelCommandCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& _msg)
 {
-  std::unique_lock<std::mutex> lock(mtx_);
+  std::unique_lock<std::mutex> lock(mtx_lower_);
 
   // wheel name to indices, if not exist, then return -1
   std::vector<int32_t> joint_to_wheel_indices(AERO_DOF_WHEEL);
@@ -405,7 +407,7 @@ void AeroControllerNode::WheelCommandCallback(
 void AeroControllerNode::UtilServoCallback(
     const std_msgs::Int32::ConstPtr& _msg)
 {
-  std::unique_lock<std::mutex> lock(mtx_);
+  std::unique_lock<std::mutex> lock(mtx_upper_);
 
   if (_msg->data == 0) {
     usleep(static_cast<int32_t>(200.0 * 1000.0));

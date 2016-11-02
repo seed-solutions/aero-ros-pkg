@@ -125,7 +125,9 @@ namespace aero
 
     private: ros::Timer timer_;
 
-    private: std::mutex mtx_;
+    private: std::mutex mtx_upper_;
+
+    private: std::mutex mtx_lower_;
 
     private: std::vector<aero::interpolation::InterpolationPtr> interpolation_;
     };
