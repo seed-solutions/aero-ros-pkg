@@ -12,8 +12,8 @@ rm "$(rospack find aero_description)/../aero_startup/generated_controllers.launc
 
 cd "$(rospack find aero_description)/../aero_startup"
 
-delete_files=$(grep -r " \* This file auto-generated" | grep -v 'sed' | cut -d: -f1)
-num_of_files=$(grep -r " \* This file auto-generated" | grep -v 'sed' | wc -l)
+delete_files=$(grep -r " \* This file auto-generated" | cut -d: -f1)
+num_of_files=$(grep -r " \* This file auto-generated" | wc -l)
 for (( num=1; num<=${num_of_files}; num++ ))
 do
     file=$(echo $delete_files | awk '{print $'$num'}' | xargs rm)
