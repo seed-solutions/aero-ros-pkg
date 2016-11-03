@@ -249,7 +249,7 @@ void AeroControllerNode::JointTrajectoryCallback(
         int splits = static_cast<int>(it->second / csec_per_frame);
         int k = static_cast<int>(it - _upper_stroke_trajectory.begin());
         // send splitted stroke
-        for (size_t j = 0; j < splits; ++j) {
+        for (size_t j = 1; j <= splits; ++j) {
           float t_param = _interpolation.at(k)->interpolate(
               static_cast<float>(j) / splits);
           // calculate stroke in this split
