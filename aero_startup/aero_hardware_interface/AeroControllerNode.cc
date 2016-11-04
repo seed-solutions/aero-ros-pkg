@@ -167,8 +167,7 @@ void AeroControllerNode::JointTrajectoryCallback(
   if (upper_count > 0) {
     upper_stroke_trajectory.reserve(_msg->points.size() + 1);
     // get current stroke values
-    std::vector<int16_t> ref_strokes;
-    upper_.get_position(ref_strokes);
+    std::vector<int16_t> ref_strokes = upper_.get_actual_stroke_vector();
     // fill in unused joints to no-send
     common::UnusedAngle2Stroke(ref_strokes, send_true);
     upper_stroke_trajectory.push_back({ref_strokes, 0});
@@ -208,7 +207,6 @@ void AeroControllerNode::JointTrajectoryCallback(
 
     // only the first lower trajectory point is valid
     if (lower_count > 0 && i == 0) {
-      lower_.flush();
       lower_.set_position(lower_stroke_vector, time_csec);
     }
   }
@@ -238,9 +236,8 @@ void AeroControllerNode::JointTrajectoryCallback(
 
       for (auto it = _upper_stroke_trajectory.begin() + 1;
            it != _upper_stroke_trajectory.end(); ++it) {
-        // any movement faster than 600ms(60cs) will not interpolate = linear
-        if (it->second < 60) {
-          upper_.flush();
+        // any movement faster than 100ms(10cs) will not interpolate = linear
+        if (it->second < 10) {
           upper_.set_position(it->first, it->second);
           continue;
         }
@@ -259,7 +256,6 @@ void AeroControllerNode::JointTrajectoryCallback(
             stroke[i] =
               (1 - t_param) * (it - 1)->first[i] + t_param * it->first[i];
           }
-          upper_.flush();
           // slightly longer time added for trajectory smoothness
           upper_.set_position(stroke, csec_per_frame + 10);
           usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
@@ -289,14 +285,12 @@ void AeroControllerNode::JointStateOnce()
       lower_.get_reference_stroke_vector();
 
   // get upper actual positions
-  upper_.flush();
-  std::vector<int16_t> upper_stroke_vector;
-  upper_.get_position(upper_stroke_vector);
+  std::vector<int16_t> upper_stroke_vector =
+    upper_.get_actual_stroke_vector();
 
   // get lower actual positions
-  lower_.flush();
-  std::vector<int16_t> lower_stroke_vector;
-  lower_.get_position(lower_stroke_vector);
+  std::vector<int16_t> lower_stroke_vector =
+    lower_.get_actual_stroke_vector();
 
   // first handle the stroke publisher
   // in this way, we don't have to concatenate new vectors
@@ -397,7 +391,6 @@ void AeroControllerNode::WheelCommandCallback(
 
     double time_sec = _msg->points[i].time_from_start.toSec();
     uint16_t time_csec = static_cast<uint16_t>(time_sec * 100.0);
-    lower_.flush();
     lower_.set_wheel_velocity(wheel_vector, time_csec);
     // usleep(static_cast<int32_t>(time_sec * 1000.0 * 1000.0));
   }

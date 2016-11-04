@@ -9,12 +9,13 @@ AeroUpperController::AeroUpperController(const std::string& _port) :
 {
   stroke_vector_.resize(AERO_DOF_UPPER);
   stroke_ref_vector_.resize(AERO_DOF_UPPER);
-  stroke_cur_vector_.resize(AERO_DOF_UPPER);
 
   stroke_joint_indices_.clear();
   stroke_joint_indices_.reserve(AERO_DOF_UPPER);
 
   // adding code
+
+  get_command(CMD_GET_POS, stroke_cur_vector_);
 }
 
 //////////////////////////////////////////////////
@@ -23,7 +24,8 @@ AeroUpperController::~AeroUpperController()
 }
 
 //////////////////////////////////////////////////
-void AeroUpperController::util_servo_on() {
+void AeroUpperController::util_servo_on()
+{
   boost::mutex::scoped_lock lock(ctrl_mtx_);
 
   std::vector<uint8_t> dat;
@@ -36,9 +38,12 @@ void AeroUpperController::util_servo_on() {
   dat[5] = 0x00;  // on
   dat[6] = 0x01;  // on
   dat[7] = 0xbc;  // checksum
-  ser_.send_data(dat);
+  seed_.send_data(dat);
 }
-void AeroUpperController::util_servo_off() {
+
+//////////////////////////////////////////////////
+void AeroUpperController::util_servo_off()
+{
   boost::mutex::scoped_lock lock(ctrl_mtx_);
 
   std::vector<uint8_t> dat;
@@ -51,7 +56,7 @@ void AeroUpperController::util_servo_off() {
   dat[5] = 0x00;  // off
   dat[6] = 0x00;  // off
   dat[7] = 0xbd;  // checksum
-  ser_.send_data(dat);
+  seed_.send_data(dat);
 }
 
 //////////////////////////////////////////////////
@@ -60,7 +65,6 @@ AeroLowerController::AeroLowerController(const std::string& _port) :
 {
   stroke_vector_.resize(AERO_DOF_LOWER);
   stroke_ref_vector_.resize(AERO_DOF_LOWER);
-  stroke_cur_vector_.resize(AERO_DOF_LOWER);
 
   wheel_vector_.resize(AERO_DOF_WHEEL);
   wheel_ref_vector_.resize(AERO_DOF_WHEEL);
@@ -73,6 +77,8 @@ AeroLowerController::AeroLowerController(const std::string& _port) :
   wheel_indices_.reserve(AERO_DOF_WHEEL);
 
   // adding code
+
+  get_command(CMD_GET_POS, stroke_cur_vector_);
 }
 
 //////////////////////////////////////////////////
@@ -110,7 +116,7 @@ void AeroLowerController::servo_command(int16_t _d0, int16_t _d1)
 
   // adding code
 
-  ser_.send_command(CMD_MOTOR_SRV, 0, dat);
+  seed_.send_command(CMD_MOTOR_SRV, 0, dat);
 }
 
 //////////////////////////////////////////////////
@@ -125,25 +131,23 @@ void AeroLowerController::set_wheel_velocity(
   stroke_to_raw_(stroke_ref_vector_, dat);
 
   // wheel to raw
-  for (size_t i = 0; i < wheel_indices_.size(); ++i)
-  {
+  for (size_t i = 0; i < wheel_indices_.size(); ++i) {
     AJointIndex& aji = wheel_indices_[i];
     encode_short_(_wheel_vector[aji.stroke_index],
                   &dat[RAW_HEADER_OFFSET + aji.raw_index * 2]);
   }
-  ser_.send_command(CMD_MOVE_SPD, _time, dat);
+  seed_.send_command(CMD_MOVE_SPD, _time, dat);
 
   // MoveAbs returns current stroke
   // std::vector<uint8_t> dummy;
   // dummy.resize(RAW_DATA_LENGTH);
-  // ser_.read(dummy);
+  // seed_.read(dummy);
 }
 
 //////////////////////////////////////////////////
 int32_t AeroLowerController::get_wheel_id(std::string& _name)
 {
-  for (size_t i = 0; i < wheel_indices_.size(); ++i)
-  {
+  for (size_t i = 0; i < wheel_indices_.size(); ++i) {
     if (wheel_indices_[i].joint_name == _name)
       return static_cast<int32_t>(wheel_indices_[i].stroke_index);
   }
