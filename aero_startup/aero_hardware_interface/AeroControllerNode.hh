@@ -105,13 +105,19 @@ namespace aero
 
     private: ros::Subscriber jointtraj_sub_;
 
+    private: ros::SubscribeOptions jointtraj_ops_;
+
+    private: ros::CallbackQueue jointtraj_queue_;
+
+    private: ros::AsyncSpinner jointtraj_spinner_;
+
     private: ros::Subscriber wheel_servo_sub_;
 
     private: ros::SubscribeOptions wheel_ops_;
 
     private: ros::CallbackQueue wheel_queue_;
 
-    private: ros::AsyncSpinner async_spinner_;
+    private: ros::AsyncSpinner wheel_spinner_;
 
     private: ros::Subscriber wheel_sub_;
 
