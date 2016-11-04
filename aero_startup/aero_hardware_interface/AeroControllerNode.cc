@@ -30,6 +30,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   //         &AeroControllerNode::GoVelocityCallback,
   //         this);
 
+  // must be asynchronous or msgs will be dropped while running upper thread
   ROS_INFO(" create command sub");
   jointtraj_ops_ =
     ros::SubscribeOptions::create<trajectory_msgs::JointTrajectory>(
@@ -39,12 +40,6 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
          ros::VoidPtr(),
          &jointtraj_queue_);
   jointtraj_sub_ = nh_.subscribe(jointtraj_ops_);    
-  // jointtraj_sub_ =
-  //     nh_.subscribe(
-  //         "command",
-  //         10,
-  //         &AeroControllerNode::JointTrajectoryCallback,
-  //         this);
   jointtraj_spinner_.start();
 
   ROS_INFO(" create wheel servo sub");
@@ -65,12 +60,6 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
          ros::VoidPtr(),
          &wheel_queue_);
   wheel_sub_ = nh_.subscribe(wheel_ops_);
-  // wheel_sub_ =
-  //     nh_.subscribe(
-  //         "wheel_command",
-  //         10,
-  //         &AeroControllerNode::WheelCommandCallback,
-  //         this);
   wheel_spinner_.start();
 
   ROS_INFO(" create utility servo sub");
@@ -184,7 +173,7 @@ void AeroControllerNode::JointTrajectoryCallback(
   if (upper_count > 0) {
     upper_stroke_trajectory.reserve(_msg->points.size() + 1);
     // get current stroke values
-    std::vector<int16_t> ref_strokes = upper_.get_actual_stroke_vector();
+    std::vector<int16_t> ref_strokes = upper_.get_reference_stroke_vector();
     // fill in unused joints to no-send
     common::UnusedAngle2Stroke(ref_strokes, send_true);
     upper_stroke_trajectory.push_back({ref_strokes, 0});
@@ -301,9 +290,9 @@ void AeroControllerNode::JointStateOnce()
   mtx_lower_.lock();
 
   // get desired positions
-  std::vector<int16_t>& upper_ref_vector =
+  std::vector<int16_t> upper_ref_vector =
       upper_.get_reference_stroke_vector();
-  std::vector<int16_t>& lower_ref_vector =
+  std::vector<int16_t> lower_ref_vector =
       lower_.get_reference_stroke_vector();
 
   // get upper actual positions

@@ -92,7 +92,7 @@ namespace aero
     /// @param _d0 1: on, 0: off
     protected: void servo_command(int16_t _d0);
 
-    public: std::vector<int16_t>& get_reference_stroke_vector();
+    public: std::vector<int16_t> get_reference_stroke_vector();
 
     public: std::vector<int16_t> get_actual_stroke_vector();
 

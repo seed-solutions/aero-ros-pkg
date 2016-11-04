@@ -16,6 +16,8 @@ AeroUpperController::AeroUpperController(const std::string& _port) :
   // adding code
 
   get_command(CMD_GET_POS, stroke_cur_vector_);
+  stroke_ref_vector_.assign(stroke_cur_vector_.begin(),
+                            stroke_cur_vector_.end());
 }
 
 //////////////////////////////////////////////////
@@ -79,6 +81,8 @@ AeroLowerController::AeroLowerController(const std::string& _port) :
   // adding code
 
   get_command(CMD_GET_POS, stroke_cur_vector_);
+  stroke_ref_vector_.assign(stroke_cur_vector_.begin(),
+                            stroke_cur_vector_.end());
 }
 
 //////////////////////////////////////////////////

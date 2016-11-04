@@ -181,7 +181,7 @@ void AeroControllerProto::servo_command(int16_t _d0)
 }
 
 //////////////////////////////////////////////////
-std::vector<int16_t>& AeroControllerProto::get_reference_stroke_vector()
+std::vector<int16_t> AeroControllerProto::get_reference_stroke_vector()
 {
   return stroke_ref_vector_;
 }
@@ -283,7 +283,9 @@ void AeroControllerProto::set_position(
   boost::mutex::scoped_lock lock(ctrl_mtx_);
 
   // for ROS
-  stroke_ref_vector_.assign(_stroke_vector.begin(), _stroke_vector.end());
+  for (size_t i = 0; i < _stroke_vector.size(); ++i)
+    if (_stroke_vector[i] != 0x7fff)
+      stroke_ref_vector_[i] = _stroke_vector[i];
 
   // for seed
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
