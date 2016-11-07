@@ -252,13 +252,13 @@ void AeroControllerNode::JointTrajectoryCallback(
         // any movement faster than 100ms(10cs) will not interpolate = linear
         if (it->second < 10) {
           mtx_upper_.lock();
-          upper_.set_position(it->first, it->second);
+          upper_.set_position(it->first, it->second - (it-1)->second);
           mtx_upper_.unlock();
           continue;
         }
         // find number of splits in this trajectory
         // time becomes slightly faster if not cleanly dividable
-        int splits = static_cast<int>(it->second / csec_per_frame);
+        int splits = static_cast<int>((it->second - (it-1)->second) / csec_per_frame);
         int k = static_cast<int>(it - _upper_stroke_trajectory.begin());
         // send splitted stroke
         for (size_t j = 1; j <= splits; ++j) {
