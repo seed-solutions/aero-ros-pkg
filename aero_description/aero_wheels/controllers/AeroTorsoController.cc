@@ -97,7 +97,7 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   msg.joint_names = {"hip_joint", "knee_joint"};
   msg.points.resize(1);
 
-  if (z_now <= (z_origin - 200) && goal_position_z >= z_now) {
+  if (z_now <= (z_origin - 200)) {
     double theta0, phi0;
     if (!SolveIK(goal_position_x, z_now + 100, theta0, phi0, res)) {
       double try_x = static_cast<int>(goal_position_x / 10) * 10;
