@@ -214,6 +214,12 @@ int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
 }
 
 //////////////////////////////////////////////////
+void AeroControllerProto::update_position()
+{
+  get_command(CMD_GET_POS, stroke_cur_vector_);
+}
+
+//////////////////////////////////////////////////
 void AeroControllerProto::get_current(std::vector<int16_t>& _stroke_vector)
 {
   get_command(CMD_GET_CUR, _stroke_vector);

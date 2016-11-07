@@ -102,6 +102,10 @@ namespace aero
 
     public: int32_t get_ordered_angle_id(std::string _name);
 
+    /// @brief get current position from seed_
+    ///   to access position externally, use get_actual_stroke_vector
+    public: void update_position();
+
     /// @brief send Get_Cur command
     /// @param _stroke_vector stroke vector
     public: void get_current(std::vector<int16_t>& _stroke_vector);

@@ -135,7 +135,16 @@ namespace aero
 
     private: std::mutex mtx_lower_;
 
+      /// @brief saved interpolation settings
     private: std::vector<aero::interpolation::InterpolationPtr> interpolation_;
+
+    private: std::mutex mtx_intrpl_;
+
+      /// @brief count of on-going threads moving the upper body
+      ///   JointStateOnce does not update current position while on_move_ > 0
+    private: int on_move_;
+
+    private: std::mutex mtx_on_move_cnt_;
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;

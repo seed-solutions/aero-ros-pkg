@@ -50,7 +50,6 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
           &AeroControllerNode::WheelServoCallback,
           this);
 
-  // must be asynchronous or msgs will be dropped while running upper thread
   ROS_INFO(" create wheel command sub");
   wheel_ops_ =
     ros::SubscribeOptions::create<trajectory_msgs::JointTrajectory>(
@@ -172,7 +171,7 @@ void AeroControllerNode::JointTrajectoryCallback(
   // note: only upper will have interpolation
   if (upper_count > 0) {
     upper_stroke_trajectory.reserve(_msg->points.size() + 1);
-    // get current stroke values
+    // get current stroke values, use reference for safety
     std::vector<int16_t> ref_strokes = upper_.get_reference_stroke_vector();
     // fill in unused joints to no-send
     common::UnusedAngle2Stroke(ref_strokes, send_true);
@@ -228,12 +227,19 @@ void AeroControllerNode::JointTrajectoryCallback(
   interpolation.push_back(std::shared_ptr<aero::interpolation::Interpolation>(
         new aero::interpolation::Interpolation(aero::interpolation::i_constant)));
   // copy interpolation setup
+  mtx_intrpl_.lock();
   for (auto it = interpolation_.begin(); it != interpolation_.end(); ++it)
     interpolation.push_back(*it);
   // fillin rest with linear if not specified
   for (size_t i = interpolation_.size(); i < upper_stroke_trajectory.size(); ++i)
     interpolation.push_back(std::shared_ptr<aero::interpolation::Interpolation>(
         new aero::interpolation::Interpolation(aero::interpolation::i_linear)));
+  mtx_intrpl_.unlock();
+
+  // update count of on-going upper body threads
+  mtx_on_move_cnt_.lock();
+  ++on_move_;
+  mtx_on_move_cnt_.unlock();
 
   std::thread send_av([&](std::vector<aero::interpolation::InterpolationPtr>
                           _interpolation,
@@ -272,6 +278,11 @@ void AeroControllerNode::JointTrajectoryCallback(
           usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
         }
       }
+
+      // notify count thread finish
+      mtx_on_move_cnt_.lock();
+      --on_move_;
+      mtx_on_move_cnt_.unlock();
   }, interpolation, upper_stroke_trajectory);
 
   send_av.detach();
@@ -294,6 +305,15 @@ void AeroControllerNode::JointStateOnce()
       upper_.get_reference_stroke_vector();
   std::vector<int16_t> lower_ref_vector =
       lower_.get_reference_stroke_vector();
+
+  // update current position when upper body is not being controlled
+  // when upper body is controlled, current position is auto-updated
+  mtx_on_move_cnt_.lock();
+  if (on_move_ == 0) {
+    upper_.update_position();
+    lower_.update_position();
+  }
+  mtx_on_move_cnt_.unlock();
 
   // get upper actual positions
   std::vector<int16_t> upper_stroke_vector =
@@ -439,6 +459,8 @@ bool AeroControllerNode::InterpolationCallback(
     aero_startup::AeroInterpolation::Response &_res)
 {
   _res.status = true;
+
+  mtx_intrpl_.lock();
   interpolation_.clear();
 
   for (auto it = _req.type.begin(); it != _req.type.end(); ++it) {
@@ -459,6 +481,7 @@ bool AeroControllerNode::InterpolationCallback(
     }
     ++i;
   }
+  mtx_intrpl_.unlock();
 
   return true;
 }
