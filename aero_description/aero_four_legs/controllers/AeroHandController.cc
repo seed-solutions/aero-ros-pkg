@@ -45,9 +45,10 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
       msg.points[0].positions.resize(1);
       msg.points[0].positions[0] = -50.0 * M_PI / 180;
     }
-    msg.points[0].time_from_start = ros::Duration(0.5);
+    msg.points[0].time_from_start = ros::Duration(0.2);
+    usleep(500 * 1000); // make sure previous motion has finished
     pub.publish(msg);
-    usleep(static_cast<int32_t>(2.0 * 1000 * 1000));
+    usleep(static_cast<int32_t>(1.0 * 1000 * 1000));
     ros::spinOnce();
     std::string status_msg = "grasp success";
     // if (req.hand == "both")
