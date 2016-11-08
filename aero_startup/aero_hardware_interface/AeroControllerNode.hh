@@ -11,6 +11,7 @@
 #include <cmath>
 #include <thread>
 #include <mutex>
+#include <algorithm>
 
 #include "aero_hardware_interface/Constants.hh"
 #include "aero_hardware_interface/AeroControllers.hh"
@@ -42,8 +43,32 @@ namespace aero
   namespace controller
   {
 
-  /// @brief Aero controller node,
-  /// has AeroUpperController and AeroLowerController
+    /// @brief Handles kill running joint trajectory threads.
+    struct thread_info
+    {
+      uint id;
+
+      std::vector<int> joints;
+
+      bool kill;
+    };
+
+    /// @brief Handles copy killed joint trajectory threads.
+    struct killed_thread_info
+    {
+      std::vector<std::pair<std::vector<int16_t>, uint16_t> > trajectories;
+
+      std::vector<aero::interpolation::InterpolationPtr> interpolation;
+
+      int at_trajectory_num;
+
+      int at_split_num;
+
+      uint thread_id;
+    };
+
+    /// @brief Aero controller node,
+    /// has AeroUpperController and AeroLowerController
     class AeroControllerNode
     {
       /// @brief constructor
@@ -59,6 +84,17 @@ namespace aero
 
     // private: void GoVelocityCallback(
     //     const geometry_msgs::Twist::ConstPtr& _msg);
+
+      /// @brief joint tracjectory threads created from callback
+      /// @param _interpolaiton information on how to interpolate
+      /// @param _stroke_trajectory information of trajectory
+      /// @param _trajectory_start_from skips trajectory
+      /// @param _split_start_from skips split for first trajectory
+    private: void JointTrajectoryThread(
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
+        int _trajectory_start_from,
+        int _split_start_from);
 
       /// @brief subscribe joint tracjectory
       /// @param _msg joint trajectory
@@ -140,11 +176,22 @@ namespace aero
 
     private: std::mutex mtx_intrpl_;
 
-      /// @brief count of on-going threads moving the upper body
-      ///   JointStateOnce does not update current position while on_move_ > 0
-    private: int on_move_;
+      /// @brief info of on-going threads moving the upper body
+      ///   used to kill threads when interfered
+      ///   JointStateOnce does not update current position while threads > 0
+    private: std::vector<thread_info> registered_threads_;
 
-    private: std::mutex mtx_on_move_cnt_;
+      /// @brief thread id count (increments every time new thread is created)
+      ///   used for applying thread id to new thread
+    private: uint global_thread_cnt_;
+
+    private: std::mutex mtx_threads_;
+
+      /// @brief info of killed thread moving the upper body
+      ///   used to copy and re-split threads when interfered
+    private: std::vector<killed_thread_info> thread_graveyard_;
+
+    private: std::mutex mtx_thread_graveyard_;
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;

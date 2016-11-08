@@ -90,6 +90,8 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
     this->JointStateOnce();
   }
 
+  global_thread_cnt_ = 0;
+
   ROS_INFO(" done");
 }
 
@@ -106,6 +108,112 @@ AeroControllerNode::~AeroControllerNode()
 //   lower_.flush();
 //   usleep(1000 * 10);
 // }
+
+//////////////////////////////////////////////////
+void AeroControllerNode::JointTrajectoryThread(
+    std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+    std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
+    int _trajectory_start_from,
+    int _split_start_from)
+{
+  uint16_t csec_per_frame = 10; // 10 fps
+  uint this_id;
+
+  // register current thread
+  mtx_threads_.lock();
+  std::vector<int> joints;
+  for (size_t i = 0; i < _stroke_trajectory[0].first.size(); ++i)
+    if (_stroke_trajectory[0].first.at(i) != 0x7fff)
+      joints.push_back(static_cast<int>(i));
+  registered_threads_.push_back({global_thread_cnt_, joints, false});
+  this_id = global_thread_cnt_++;
+  mtx_threads_.unlock();
+
+  // main process starts here
+
+  for (auto it = _stroke_trajectory.begin() + _trajectory_start_from;
+       it != _stroke_trajectory.end(); ++it) {
+    // check if any kill signal was provided to current thread
+    mtx_threads_.lock();
+    for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th)
+      if (th->id == this_id) {
+        if (th->kill) {
+          // save info of killing thread
+          mtx_thread_graveyard_.lock();
+          thread_graveyard_.push_back({_stroke_trajectory, _interpolation,
+                it - _stroke_trajectory.begin(), 1, this_id});
+          mtx_thread_graveyard_.unlock();
+          // remove this thread info
+          registered_threads_.erase(th);
+          mtx_threads_.unlock();
+          return;
+        }
+        break;
+      }
+    mtx_threads_.unlock();
+
+    // from here, main process for trajectory it
+    // any movement faster than 100ms(10cs) will not interpolate = linear
+    if (it->second < 10) {
+      mtx_upper_.lock();
+      upper_.set_position(it->first, it->second - (it-1)->second);
+      mtx_upper_.unlock();
+      continue;
+    }
+    // find number of splits in this trajectory
+    // time becomes slightly faster if not cleanly dividable
+    int splits = static_cast<int>((it->second - (it-1)->second) / csec_per_frame);
+    int k = static_cast<int>(it - _stroke_trajectory.begin());
+    // send splitted stroke
+    for (size_t j = _split_start_from; j <= splits; ++j) {
+      // check if any kill signal was provided to current thread
+      mtx_threads_.lock();
+      for (auto th = registered_threads_.begin();
+           th != registered_threads_.end(); ++th)
+        if (th->id == this_id) {
+          if (th->kill) {
+            // save info of killing thread
+            mtx_thread_graveyard_.lock();
+            thread_graveyard_.push_back({_stroke_trajectory,
+                  _interpolation, k, j, this_id});
+            mtx_thread_graveyard_.unlock();
+            // remove this thread info
+            registered_threads_.erase(th);
+            mtx_threads_.unlock();
+            return;
+          }
+          break;
+        }
+      mtx_threads_.unlock();
+
+      // from here, main process for split j
+      float t_param = _interpolation.at(k)->interpolate(
+          static_cast<float>(j) / splits);
+      // calculate stroke in this split
+      std::vector<int16_t> stroke(it->first.size(), 0x7fff);
+      for (size_t i = 0; i < it->first.size(); ++i) {
+        if (it->first[i] == 0x7fff) continue; // skip non-send joints
+        stroke[i] =
+          (1 - t_param) * (it - 1)->first[i] + t_param * it->first[i];
+      }
+      // slightly longer time added for trajectory smoothness
+      mtx_upper_.lock();
+      upper_.set_position(stroke, csec_per_frame + 10);
+      mtx_upper_.unlock();
+      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
+    } // splits
+    _split_start_from = 1;
+  } // _stroke_trajectory
+
+  // remove finished thread
+  mtx_threads_.lock();
+  for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th)
+    if (th->id == this_id) {
+      registered_threads_.erase(th);
+      break;
+    }
+  mtx_threads_.unlock();
+}
 
 //////////////////////////////////////////////////
 void AeroControllerNode::JointTrajectoryCallback(
@@ -187,15 +295,22 @@ void AeroControllerNode::JointTrajectoryCallback(
   for (size_t i = 0; i < _msg->points.size(); ++i) {
     std::fill(ordered_positions.begin(), ordered_positions.end(), 0.0);
 
+    // check for cancelling joints (NaN values)
+    std::vector<bool> send_true_with_cancel;
+    send_true_with_cancel.assign(send_true.begin(), send_true.end());
+
     for (size_t j = 0; j < _msg->points[i].positions.size(); ++j)
-      ordered_positions[id_in_msg_to_ordered_id[j]] =
-        _msg->points[i].positions[j];
+      if (!std::isnan(_msg->points[i].positions[j]))
+        ordered_positions[id_in_msg_to_ordered_id[j]] =
+          _msg->points[i].positions[j];
+      else
+        send_true_with_cancel[id_in_msg_to_ordered_id[j]] = true;
 
     std::vector<int16_t> strokes(AERO_DOF);
     common::Angle2Stroke(strokes, ordered_positions);
 
     // fill in unused joints to no-send
-    common::UnusedAngle2Stroke(strokes, send_true);
+    common::UnusedAngle2Stroke(strokes, send_true_with_cancel);
 
     // split strokes into upper and lower
     std::vector<int16_t> upper_stroke_vector(
@@ -236,56 +351,122 @@ void AeroControllerNode::JointTrajectoryCallback(
         new aero::interpolation::Interpolation(aero::interpolation::i_linear)));
   mtx_intrpl_.unlock();
 
-  // update count of on-going upper body threads
-  mtx_on_move_cnt_.lock();
-  ++on_move_;
-  mtx_on_move_cnt_.unlock();
+  // start new thread if no other thread is running
+  mtx_threads_.lock();
+  if (registered_threads_.size() == 0) {
+    mtx_threads_.unlock();
+    std::thread send_av([&](
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory)
+    {
+      JointTrajectoryThread(_interpolation, _stroke_trajectory, 1, 1);
+    }, interpolation, upper_stroke_trajectory);
+    send_av.detach();
+    return;
+  }
+  mtx_threads_.unlock();
 
-  std::thread send_av([&](std::vector<aero::interpolation::InterpolationPtr>
-                          _interpolation,
-                          std::vector<std::pair<std::vector<int16_t>, uint16_t> >
-                          _upper_stroke_trajectory) {
-      uint16_t csec_per_frame = 10; // 10 fps
+  // check if any of current joint is already running in one of the threads
+  std::vector<std::pair<int, uint> > conflict_joints;
+  mtx_threads_.lock();
+  for (size_t i = 0; i < upper_stroke_trajectory[1].first.size(); ++i) {
+    if (upper_stroke_trajectory[1].first.at(i) == 0x7fff &&
+        upper_stroke_trajectory[0].first.at(i) == 0x7fff) // **
+      continue;
+    // ** if [1] == 0x7fff but [0] != 0x7fff : the 0x7fff in [1] means cancel
+    //    this distinguishes unused joints to cancelled joints
+    for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th)
+      for (auto j = th->joints.begin(); j != th->joints.end(); ++j)
+        if (i == *j) conflict_joints.push_back({static_cast<int>(i), th->id});
+  }
+  mtx_threads_.unlock();
 
-      for (auto it = _upper_stroke_trajectory.begin() + 1;
-           it != _upper_stroke_trajectory.end(); ++it) {
-        // any movement faster than 100ms(10cs) will not interpolate = linear
-        if (it->second < 10) {
-          mtx_upper_.lock();
-          upper_.set_position(it->first, it->second - (it-1)->second);
-          mtx_upper_.unlock();
-          continue;
+  // start new thread if there is no conflict
+  if (conflict_joints.size() == 0) {
+    std::thread send_av([&](
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory)
+    {
+      JointTrajectoryThread(_interpolation, _stroke_trajectory, 1, 1);
+    }, interpolation, upper_stroke_trajectory);
+    send_av.detach();
+    return;
+  }
+
+  // if there is a thread conflict, thread remapping must be conducted
+  // find and count the threads to be killed
+  std::vector<int> kill_thread_id;
+  for (auto it = conflict_joints.begin(); it != conflict_joints.end(); ++it) {
+    auto in_list = std::find(kill_thread_id.begin(), kill_thread_id.end(), it->second);
+    if (in_list == kill_thread_id.end()) { // kill thread if not killed yet
+      mtx_threads_.lock();
+      for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th)
+        if (it->second == th->id) {
+          th->kill = true; // register as kill
+          kill_thread_id.push_back(it->second); // save already set to kill thread
+          mtx_threads_.unlock();
+          break;
         }
-        // find number of splits in this trajectory
-        // time becomes slightly faster if not cleanly dividable
-        int splits = static_cast<int>((it->second - (it-1)->second) / csec_per_frame);
-        int k = static_cast<int>(it - _upper_stroke_trajectory.begin());
-        // send splitted stroke
-        for (size_t j = 1; j <= splits; ++j) {
-          float t_param = _interpolation.at(k)->interpolate(
-              static_cast<float>(j) / splits);
-          // calculate stroke in this split
-          std::vector<int16_t> stroke(it->first.size(), 0x7fff);
-          for (size_t i = 0; i < it->first.size(); ++i) {
-            if (it->first[i] == 0x7fff) continue; // skip non-send joints
-            stroke[i] =
-              (1 - t_param) * (it - 1)->first[i] + t_param * it->first[i];
-          }
-          // slightly longer time added for trajectory smoothness
-          mtx_upper_.lock();
-          upper_.set_position(stroke, csec_per_frame + 10);
-          mtx_upper_.unlock();
-          usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
-        }
+      mtx_threads_.unlock();
+    }
+  }
+
+  // wait till corresponding threads are killed
+  while (1) {
+    mtx_thread_graveyard_.lock();
+    if (thread_graveyard_.size() == kill_thread_id.size()) {
+      mtx_thread_graveyard_.unlock();
+      break;
+    }
+    mtx_thread_graveyard_.unlock();
+    usleep(10 * 1000); // sleep 10 ms and wait for update
+  }
+
+  mtx_thread_graveyard_.lock();
+  // remap use joint info
+  for (auto it = conflict_joints.begin(); it != conflict_joints.end(); ++it)
+    for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th)
+      if (it->second == th->thread_id) {
+        for (auto traj = th->trajectories.begin();
+             traj != th->trajectories.end(); ++traj)
+          traj->first.at(it->first) = 0x7fff;
+        break;
       }
+  // create new threads
+  std::vector<std::thread> new_threads;
+  // add this msg
+  new_threads.push_back(std::thread([&](
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory)
+    {
+      JointTrajectoryThread(_interpolation, _stroke_trajectory, 1, 1);
+    }, interpolation, upper_stroke_trajectory));
+  // add previously running threads that were remapped
+  for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th) {
+    int unused_joint_num = 0;
+    for (auto j = th->trajectories[0].first.begin();
+         j != th->trajectories[0].first.end(); ++j)
+      if (*j == 0x7fff) ++unused_joint_num;
+    // if remapped trajectory is still valid (= has moving joints)
+    if (unused_joint_num != th->trajectories[0].first.size()) {
+      new_threads.push_back(std::thread([&](
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
+        int _trajectory_start_from,
+        int _split_start_from)
+      {
+        JointTrajectoryThread(_interpolation, _stroke_trajectory,
+                              _trajectory_start_from, _split_start_from);
+      }, th->interpolation, th->trajectories, th->at_trajectory_num, th->at_split_num));
+    }
+  }
+  // free graveyard
+  thread_graveyard_.clear();
+  mtx_thread_graveyard_.unlock();
 
-      // notify count thread finish
-      mtx_on_move_cnt_.lock();
-      --on_move_;
-      mtx_on_move_cnt_.unlock();
-  }, interpolation, upper_stroke_trajectory);
-
-  send_av.detach();
+  // start threads
+  std::for_each(
+      new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
 }
 
 //////////////////////////////////////////////////
@@ -308,12 +489,12 @@ void AeroControllerNode::JointStateOnce()
 
   // update current position when upper body is not being controlled
   // when upper body is controlled, current position is auto-updated
-  mtx_on_move_cnt_.lock();
-  if (on_move_ == 0) {
+  mtx_threads_.lock();
+  if (registered_threads_.size() == 0) {
     upper_.update_position();
     lower_.update_position();
   }
-  mtx_on_move_cnt_.unlock();
+  mtx_threads_.unlock();
 
   // get upper actual positions
   std::vector<int16_t> upper_stroke_vector =
