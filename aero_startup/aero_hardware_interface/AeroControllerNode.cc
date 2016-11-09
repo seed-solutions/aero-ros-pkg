@@ -304,7 +304,7 @@ void AeroControllerNode::JointTrajectoryCallback(
         ordered_positions[id_in_msg_to_ordered_id[j]] =
           _msg->points[i].positions[j];
       else
-        send_true_with_cancel[id_in_msg_to_ordered_id[j]] = true;
+        send_true_with_cancel[id_in_msg_to_ordered_id[j]] = false;
 
     std::vector<int16_t> strokes(AERO_DOF);
     common::Angle2Stroke(strokes, ordered_positions);
@@ -411,10 +411,15 @@ void AeroControllerNode::JointTrajectoryCallback(
     }
   }
 
+  auto time_begin = std::chrono::high_resolution_clock::now();
+
   // wait till corresponding threads are killed
   while (1) {
     mtx_thread_graveyard_.lock();
-    if (thread_graveyard_.size() == kill_thread_id.size()) {
+    if (thread_graveyard_.size() == kill_thread_id.size() ||
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now() - time_begin).count()
+        > 500) { // a thread might have finished before kill
       mtx_thread_graveyard_.unlock();
       break;
     }
