@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <cmath>
 
 #include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
@@ -48,17 +49,6 @@ namespace aero
     /// @brief flush io buffer
     public: void flush();
 
-    /// @brief create command header into data buffer
-    /// @param _cmd command id
-    /// @param _time time[ms]
-    /// @param _dat data buffer, must be RAW_DATA_LENGTH bytes.
-    private: void set_command_header(uint8_t _cmd, uint16_t _time,
-				    std::vector<uint8_t>& _dat);
-
-    /// @brief calc checksum and put into last byte, MUST be called LAST.
-    /// @param _dat data buffer, MUST be RAW_DATA_LENGTH bytes.
-    private: void set_check_sum(std::vector<uint8_t>& _dat);
-
       /// @brief send raw data to SEED controller
       /// @param _send_data raw data buffer
     public: void send_data(std::vector<uint8_t>& _send_data);
@@ -74,6 +64,11 @@ namespace aero
     private: boost::mutex mtx_;
     };
 
+    /// @brief decode short(int16_t) from byte(uint8_t)
+    int16_t decode_short_(uint8_t* _raw);
+
+    /// @brief ecnode short(int16_t) to byte(uint8_t)
+    void encode_short_(int16_t _value, uint8_t* _raw);
 
   /// @brief super class of body controller,
   /// has SEED485Controller and some SEED command fucntions.
@@ -97,9 +92,19 @@ namespace aero
     /// @param _d0 1: on, 0: off
     protected: void servo_command(int16_t _d0);
 
-    /// @brief send Get_Pos command
-    /// @param _stroke_vector stroke vector
-    public: void get_position(std::vector<int16_t>& _stroke_vector);
+    public: std::vector<int16_t> get_reference_stroke_vector();
+
+    public: std::vector<int16_t> get_actual_stroke_vector();
+
+    public: std::string get_stroke_joint_name(size_t _idx);
+
+    public: int get_number_of_angle_joints();
+
+    public: int32_t get_ordered_angle_id(std::string _name);
+
+    /// @brief get current position from seed_
+    ///   to access position externally, use get_actual_stroke_vector
+    public: void update_position();
 
     /// @brief send Get_Cur command
     /// @param _stroke_vector stroke vector
@@ -112,15 +117,7 @@ namespace aero
     /// @brief get data from buffer,
     ///   this does not call command, but only read from buffer
     /// @param _stroke_vector stroke vector
-    public: void get_data(std::vector<int16_t>& _stroke_vector);
-
-    public: std::vector<int16_t>& get_reference_stroke_vector();
-
-    public: std::string get_stroke_joint_name(size_t _idx);
-
-    public: int get_number_of_angle_joints();
-
-    public: int32_t get_ordered_angle_id(std::string _name);
+    protected: void get_data(std::vector<int16_t>& _stroke_vector);
 
     /// @brief abstract of get commands
     /// @param _cmd command id
@@ -152,28 +149,15 @@ namespace aero
     protected: void set_command(uint8_t _cmd,
 				std::vector<int16_t>& _stroke_vector);
 
-      /// @brief flush buffer
-    public: void flush();
-
-    /// @brief decode short(int16_t) from byte(uint8_t)
-    protected: int16_t decode_short_(uint8_t* _raw);
-
-    /// @brief ecnode short(int16_t) to byte(uint8_t)
-    protected: void encode_short_(int16_t _value, uint8_t* _raw);
-
     /// @brief stoke_vector to raw command bytes
     protected: void stroke_to_raw_(std::vector<int16_t>& _stroke,
 				   std::vector<uint8_t>& _raw);
-
-    /// @brief raw command bytes to stoke_vector
-    protected: void raw_to_stroke_(std::vector<uint8_t>& _raw,
-				   std::vector<int16_t>& _stroke);
 
     protected: bool verbose_;
 
     protected: boost::mutex ctrl_mtx_;
 
-    protected: SEED485Controller ser_;
+    protected: SEED485Controller seed_;
 
     protected: std::vector<int16_t> stroke_vector_;
 

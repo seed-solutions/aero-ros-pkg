@@ -73,6 +73,10 @@ else
 
     ./scripts/make_stroke_to_angle_header.sh $dir
 
+    printf "\ncreating UnusedAngle2Stroke.hh ...\n"
+
+    ./scripts/unused_angle_to_stroke.sh $dir
+
     printf "\nconfigurating controllers ...\n"
 
     ./scripts/configure_controllers.sh $dir
