@@ -1,0 +1,4 @@
+link virtual_lifter_z_link
+link virtual_lifter_x_link
+joint virtual_lifter_z_joint
+joint virtual_lifter_x_joint

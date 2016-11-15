@@ -1,0 +1,21 @@
+<launch>
+  <!--/rarm_controller-->
+  <node name="rarm_controller" pkg="aero_moveit_config" type="joint_trajectory_action_server.py"  output="screen">
+    <rosparam command="load" file="$(find aero_moveit_config)/config/controllers.yaml" />
+  </node>
+
+  <!--/larm_controller-->
+  <node name="larm_controller" pkg="aero_moveit_config" type="joint_trajectory_action_server.py"  output="screen">
+    <rosparam command="load" file="$(find aero_moveit_config)/config/controllers.yaml" />
+  </node>
+
+  <!--/torso_controller-->
+  <node name="torso_controller" pkg="aero_moveit_config" type="joint_trajectory_action_server.py"  output="screen">
+    <rosparam command="load" file="$(find aero_moveit_config)/config/controllers.yaml" />
+  </node>
+
+  <!--/head_controller-->
+  <node name="head_controller" pkg="aero_moveit_config" type="joint_trajectory_action_server.py"  output="screen">
+    <rosparam command="load" file="$(find aero_moveit_config)/config/controllers.yaml" />
+  </node>
+</launch>

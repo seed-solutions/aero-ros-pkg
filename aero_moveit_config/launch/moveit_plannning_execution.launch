@@ -1,0 +1,16 @@
+<launch>
+ <node pkg="tf" type="static_transform_publisher" name="virtual_odom_base_tf_publisher" args="0 0 0 0 0 0 odom_combined virtual_lifter_x_link  100" />
+
+ <include file="$(find aero_moveit_config)/launch/move_group.launch">
+  <arg name="publish_monitored_planning_scene" value="true" />
+ </include>
+
+ <include file="$(find aero_moveit_config)/launch/moveit_rviz.launch"> 
+    <arg name="config" value="true"/>
+ </include>
+
+ <include file="$(find aero_moveit_config)/launch/planning_context.launch">
+   <arg name="load_robot_description" value="true"/>
+ </include>
+
+</launch>
