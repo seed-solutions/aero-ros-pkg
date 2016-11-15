@@ -1,4 +1,8 @@
 <launch>
+
+  <node name="joint_state_publisher_with_lifter" pkg="aero_moveit_config" type="joint_state_publisher_with_lifter.py"  output="screen">
+  </node>
+
   <!--/rarm_controller-->
   <node name="rarm_controller" pkg="aero_moveit_config" type="joint_trajectory_action_server.py"  output="screen">
     <rosparam command="load" file="$(find aero_moveit_config)/config/controllers.yaml" />
@@ -17,5 +21,9 @@
   <!--/head_controller-->
   <node name="head_controller" pkg="aero_moveit_config" type="joint_trajectory_action_server.py"  output="screen">
     <rosparam command="load" file="$(find aero_moveit_config)/config/controllers.yaml" />
+  </node>
+
+  <!--/lifter_controller-->
+  <node name="lifter_controller" pkg="aero_moveit_config" type="lifter_controller.py"  output="screen">
   </node>
 </launch>
