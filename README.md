@@ -5,7 +5,7 @@
 ### Install ROS
 
 ```
-sudo apt-get install ros-indigo-desktop-full ros-inidigo-roseus ros-indigo-hrpsys-ros-bridge ros-indigo-euscollada ros-indigo-pr2eus
+sudo apt-get install ros-indigo-desktop-full ros-indigo-roseus ros-indigo-hrpsys-ros-bridge ros-indigo-euscollada ros-indigo-pr2eus
 ```
 
 ### Setup catkin workspace
