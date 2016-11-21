@@ -57,6 +57,7 @@ class FollowAction(object):
 
 
         print "execute" + rospy.get_name()
+        self._finishable = False
         command = JointTrajectory()
         command = goal.trajectory
         self._active_goal = goal
