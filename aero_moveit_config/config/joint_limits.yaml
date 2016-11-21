@@ -153,8 +153,8 @@ joint_limits:
     has_acceleration_limits: false
     max_acceleration: 0
   waist_r_joint:
-    max_position: 0.02
-    min_position: -0.02
+    max_position: 0.034907
+    min_position: -0.034907
     has_velocity_limits: true
     max_velocity: 0.3
     has_acceleration_limits: false
