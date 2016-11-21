@@ -13,8 +13,8 @@ concatenate_urdf() {
 
     names="$(rospack find aero_moveit_config)/models/aero_virtual_lifter.txt"
 
-    cp $paste_to $output
-#    cat $paste_to | sed -e 's/continuous/revolute/g' > $output
+#    cp $paste_to $output
+    cat $paste_to | sed -e 's/continuous/revolute/g' > $output
 
     cat ${names} | while read line
     do
@@ -25,8 +25,7 @@ concatenate_urdf() {
 	    has_name=$(grep $name $paste_to)
 	    if [[ $has_name == "" ]]
 	    then
-                echo "link"
-		write_to=$(grep -n -m 1 "<joint" $paste_to | cut -d ':' -f1)
+		write_to=$(grep -n -m 1 "<joint" $output | cut -d ':' -f1)
 		awk "/<link name=\"${name}\">/,/<\/link>/" $copy_from | sed -e 's/\//\\\//g; s/\"/\\\"/g' > /tmp/virtual_tmp_tmp
 		sed '1!G;h;$!d' /tmp/virtual_tmp_tmp | xargs -I{} sed -i "${write_to}i\{}" $output
             fi
@@ -35,13 +34,8 @@ concatenate_urdf() {
             has_name=$(grep $name $paste_to)
 	    if [[ $has_name == "" ]]
             then
-                echo "joint"
-                #echo $name
-	        write_to=$(grep -n -m 1 "<\/robot" $paste_to | cut -d ':' -f1)
-                #cat $copy_from
-                awk "/<joint name=\"${name}\"/,/<\/joint>/" $copy_from
+	        write_to=$(grep -n -m 1 "<\/robot" $output | cut -d ':' -f1)
 		awk "/<joint name=\"${name}\"/,/<\/joint>/" $copy_from | sed -e 's/\//\\\//g; s/\"/\\\"/g' > /tmp/virtual_tmp_tmp
-                cat /tmp/virtual_tmp_tmp
 		sed '1!G;h;$!d' /tmp/virtual_tmp_tmp | xargs -I{} sed -i "${write_to}i\{}" $output
             fi
         fi
