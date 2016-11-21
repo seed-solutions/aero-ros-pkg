@@ -6,12 +6,12 @@
   	type="aero_controller_node" output="screen"/>
 
   <!--robot tfs-->
-  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"/>
-
   <!--  without moveit -->
-  <include file="$(find aero_startup)/generated_controllers.launch" unless="$(arg MOVEIT)"/>
+  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"  unless="$(arg MOVEIT)"/>
   <!--  with moveit -->
-  <include file="$(find aero_moveit_config)/launch/generated_controllers.launch" if="$(arg MOVEIT)"/>
+  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"  if="$(arg MOVEIT)"/>
+
+  <include file="$(find aero_startup)/generated_controllers.launch"/>
 
   <!--ps4eye sensor-->
   <include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
