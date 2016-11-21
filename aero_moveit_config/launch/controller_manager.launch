@@ -1,5 +1,6 @@
 <launch>
   <param name="aero_description" command="cat $(find aero_description)/models/aero.urdf"/>
+  <param name="robot_description" command="cat $(find aero_description)/models/aero_moveit.urdf"/>
   <node name="aero_state_publisher" pkg="robot_state_publisher" type="state_publisher">
   </node>
   <node name="aero_joint_state_publisher" pkg="aero_startup" type="aero_joint_state_publisher"/>
