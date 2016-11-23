@@ -1,3 +1,5 @@
+#ifndef _AERO_MOVEIT_LIFTER_UTIL_
+#define _AERO_MOVEIT_LIFTER_UTIL_
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
@@ -51,12 +53,13 @@ namespace aero {
           bound_original = jm[i]->getVariableBounds();
           aero::lifter::copyBounds(bound_original[0], bound);
           bound.max_position_ = -0.08;
-          bound.min_position_ = -0.4;
+          bound.min_position_ = -0.3;
           jm[i]->setVariableBounds("virtual_lifter_z_joint", bound);
         }
       }
     }
-
+    
   }
 }
 
+#endif
