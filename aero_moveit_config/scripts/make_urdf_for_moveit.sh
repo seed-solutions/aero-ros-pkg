@@ -41,4 +41,48 @@ concatenate_urdf() {
         fi
     done
 }
+
+replace_limits() {
+    file=$1
+    joint=$2
+    lower=$3
+    upper=$4
+    line=$(cat ${file}| grep -n -A 10  ${joint} | grep -m 1 upper | cut -d '-' -f1)
+
+    lower_original=`echo "cat /robot/joint[@name=\"${joint}\"]/limit/@lower" | xmllint --shell ${file}  | grep "lower=" | sed 's/[^"]*"\([^"]*\)"[^"]*/\1/g'`
+    upper_original=`echo "cat /robot/joint[@name=\"${joint}\"]/limit/@upper" | xmllint --shell ${file}  | grep "upper=" | sed 's/[^"]*"\([^"]*\)"[^"]*/\1/g'`
+
+    echo ${line}
+    sed -i "${line}s/lower=\"${lower_original}/lower=\"${lower}/" $file
+    sed -i "${line}s/upper=\"${upper_original}/upper=\"${upper}/" $file
+    #echo $upper
+    #echo $upper_original
+}
+
 concatenate_urdf
+original="$(rospack find aero_description)/models/aero_moveit.urdf"
+file_mg="$(rospack find aero_description)/models/aero_moveit_limited.urdf"
+file_ho="$(rospack find aero_description)/models/aero_moveit_limited_height_only.urdf"
+file_op="$(rospack find aero_description)/models/aero_moveit_limited_on_plane.urdf"
+
+cp $original $file_mg
+cp $original $file_ho
+cp $original $file_op
+
+replace_limits $file_mg "l_wrist_p_joint" -0.04 0.04
+replace_limits $file_mg "r_wrist_p_joint" -0.04 0.04
+replace_limits $file_mg "waist_r_joint" -0.03 0.03
+replace_limits $file_mg "virtual_lifter_x_joint" -0.2 0.2
+replace_limits $file_mg "virtual_lifter_z_joint" -0.4 0.0
+
+replace_limits $file_ho "l_wrist_p_joint" -0.04 0.04
+replace_limits $file_ho "r_wrist_p_joint" -0.04 0.04
+replace_limits $file_ho "waist_r_joint" -0.03 0.03
+replace_limits $file_ho "virtual_lifter_x_joint" -0.0 0.0
+replace_limits $file_ho "virtual_lifter_z_joint" -0.4 0.0
+
+replace_limits $file_op "l_wrist_p_joint" -0.04 0.04
+replace_limits $file_op "r_wrist_p_joint" -0.04 0.04
+replace_limits $file_op "waist_r_joint" -0.03 0.03
+replace_limits $file_op "virtual_lifter_x_joint" -0.2 0.2
+replace_limits $file_op "virtual_lifter_z_joint" -0.3 -0.08
