@@ -61,7 +61,7 @@ class FollowAction(object):
         command = JointTrajectory()
         command.header = goal.trajectory.header
         command.joint_names = goal.trajectory.joint_names
-        command.points = goal.trajectory.points[-1]
+        command.points = [goal.trajectory.points[-1], ]
         self._active_goal = goal
         self._active_command = command
         self._active_end_time = rospy.get_rostime() + goal.trajectory.points[-1].time_from_start + goal.goal_time_tolerance
