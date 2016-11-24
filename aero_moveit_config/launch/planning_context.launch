@@ -21,4 +21,6 @@
     <rosparam command="load" file="$(find aero_moveit_config)/config/kinematics.yaml"/>
   </group>
   
+  <include file="$(find aero_moveit_config)/launch/aero_descriptions_for_moveit.launch" />
+
 </launch>
