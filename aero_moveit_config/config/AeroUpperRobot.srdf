@@ -29,9 +29,6 @@
     <group name="lifter">
         <chain base_link="virtual_lifter_x_link" tip_link="base_link" />
     </group>
-    <group name="lifter_z">
-        <chain base_link="virtual_lifter_z_link" tip_link="base_link" />
-    </group>
     <group name="rarm_with_lifter">
         <group name="rarm_with_torso" />
         <group name="lifter" />
@@ -39,14 +36,6 @@
     <group name="larm_with_lifter">
         <group name="larm_with_torso" />
         <group name="lifter" />
-    </group>
-    <group name="rarm_with_lifter_z">
-        <group name="rarm_with_torso" />
-        <group name="lifter_z" />
-    </group>
-    <group name="larm_with_lifter_z">
-        <group name="larm_with_torso" />
-        <group name="lifter_z" />
     </group>
     <group name="head">
         <chain base_link="body_link" tip_link="head_link" />

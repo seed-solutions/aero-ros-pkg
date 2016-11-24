@@ -28,13 +28,3 @@ larm_with_lifter:
   kinematics_solver_search_resolution: 0.005
   kinematics_solver_timeout: 0.005
   kinematics_solver_attempts: 3
-rarm_with_lifter_z:
-  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
-  kinematics_solver_search_resolution: 0.005
-  kinematics_solver_timeout: 0.005
-  kinematics_solver_attempts: 3
-larm_with_lifter_z:
-  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
-  kinematics_solver_search_resolution: 0.005
-  kinematics_solver_timeout: 0.005
-  kinematics_solver_attempts: 3
