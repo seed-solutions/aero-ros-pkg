@@ -134,8 +134,8 @@ joint_limits:
     has_acceleration_limits: false
     max_acceleration: 0
   virtual_lifter_x_joint:
-    max_position: 0.1
-    min_position: -0.1
+    max_position: 0.2
+    min_position: -0.2
     has_velocity_limits: true
     max_velocity: 0.1
     has_acceleration_limits: false
