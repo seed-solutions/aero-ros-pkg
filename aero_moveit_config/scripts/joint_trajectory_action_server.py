@@ -74,10 +74,11 @@ class FollowAction(object):
                 break
             r.sleep()
 
+        self._active_flag = False
         rospy.loginfo('%s: Succeeded' % self._action_name)
         self._result.error_code = 0
         self._as.set_succeeded()
-        self._active_flag = False
+
 
 
     def states_cb(self, states):
