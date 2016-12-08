@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import time
 
 from aero_startup.srv import AeroTorsoController
 
@@ -49,12 +50,13 @@ class FollowAction(object):
             res = srv(x,z,"world")
             result = FollowJointTrajectoryResult()
             if res.status == "success":
+                time.sleep(res.time_sec)
                 result.error_code = 0
                 self._as.set_succeeded()
                 rospy.loginfo('%s: Succeeded' % self._action_name)
                 return
             #error syori wo kaku
-                self._as.set_aborted()
+            self._as.set_aborted()
 
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
