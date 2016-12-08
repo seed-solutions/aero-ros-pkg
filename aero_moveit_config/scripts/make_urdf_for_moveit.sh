@@ -52,11 +52,19 @@ replace_limits() {
     lower_original=`echo "cat /robot/joint[@name=\"${joint}\"]/limit/@lower" | xmllint --shell ${file}  | grep "lower=" | sed 's/[^"]*"\([^"]*\)"[^"]*/\1/g'`
     upper_original=`echo "cat /robot/joint[@name=\"${joint}\"]/limit/@upper" | xmllint --shell ${file}  | grep "upper=" | sed 's/[^"]*"\([^"]*\)"[^"]*/\1/g'`
 
-    echo ${line}
     sed -i "${line}s/lower=\"${lower_original}/lower=\"${lower}/" $file
     sed -i "${line}s/upper=\"${upper_original}/upper=\"${upper}/" $file
     #echo $upper
     #echo $upper_original
+}
+
+remove_mesh() {
+    file=$1
+    sed -i '/mesh/c\<!---->' $file
+}
+remove_geometry() {
+    file=$1
+    sed -i '/geometry/c\<!---->' $file
 }
 
 concatenate_urdf
@@ -86,3 +94,11 @@ replace_limits $file_op "r_wrist_p_joint" -0.04 0.04
 replace_limits $file_op "waist_r_joint" -0.03 0.03
 replace_limits $file_op "virtual_lifter_x_joint" -0.2 0.2
 replace_limits $file_op "virtual_lifter_z_joint" -0.3 -0.08
+
+#remove_mesh $file_mg
+#remove_mesh $file_ho
+#remove_mesh $file_op
+
+#remove_geometry $file_mg
+#remove_geometry $file_ho
+#remove_geometry $file_op

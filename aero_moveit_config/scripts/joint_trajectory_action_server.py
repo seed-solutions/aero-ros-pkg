@@ -35,7 +35,7 @@ class FollowAction(object):
                 continue
             self._joints = cont["joints"]
         if not self._joints:
-            roispy.logerr("{} not found in controllers list".format(rospy.get_name()))
+            rospy.logerr("{} not found in controllers list".format(rospy.get_name()))
             exit()
         self._pub_command = rospy.Publisher("/aero_controller/command", JointTrajectory, queue_size=1)
         self._sub_states = rospy.Subscriber("/aero_joint_states", JointState, self.states_cb)
