@@ -64,9 +64,10 @@ class FollowAction(object):
         command.points = [goal.trajectory.points[-1], ]
         self._active_goal = goal
         self._active_command = command
-        self._active_end_time = rospy.get_rostime() + goal.trajectory.points[-1].time_from_start + goal.goal_time_tolerance
+        self._active_end_time = rospy.get_rostime() + goal.trajectory.points[-1].time_from_start + goal.goal_time_tolerance + rospy.Duration(2, 0) #2.0 is nantonaku
         self._pub_command.publish(command)    
         self._active_flag = True
+        self._execute_state = True
 
         r = rospy.Rate(20)
         while not rospy.is_shutdown():
@@ -75,6 +76,9 @@ class FollowAction(object):
             r.sleep()
 
         self._active_flag = False
+        if not self._execute_state:
+            self._as.set_aborted()
+            return
         rospy.loginfo('%s: Succeeded' % self._action_name)
         self._result.error_code = 0
         self._as.set_succeeded()
@@ -87,6 +91,21 @@ class FollowAction(object):
 
         if rospy.get_rostime() > self._active_end_time:
             self._finishable = True
+            self._execute_state = False
+            return
+
+        all_in_tole = True
+        for i, joint in enumerate(self._active_goal.trajectory.joint_names):
+            j = states.name.index(joint)
+            if abs(states.position[j] - self._active_gola.trajectory.points[-1].positions[i]) > 0.001:
+                all_in_tole = False
+                break
+        if all_in_tole:
+            self._finishable = True
+            return
+        return
+
+
 
     def equalJoints(self, joints):
         print self._joints
