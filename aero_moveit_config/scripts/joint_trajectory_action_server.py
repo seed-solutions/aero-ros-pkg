@@ -64,7 +64,7 @@ class FollowAction(object):
         command.points = [goal.trajectory.points[-1], ]
         self._active_goal = goal
         self._active_command = command
-        self._active_end_time = rospy.get_rostime() + goal.trajectory.points[-1].time_from_start + goal.goal_time_tolerance + rospy.Duration(2, 0) #2.0 is nantonaku
+        self._active_end_time = rospy.get_rostime() + goal.trajectory.points[-1].time_from_start + goal.goal_time_tolerance + rospy.Duration(2, 0) #2.0 sec is nantonaku
         self._pub_command.publish(command)    
         self._active_flag = True
         self._execute_state = True
@@ -77,11 +77,13 @@ class FollowAction(object):
 
         self._active_flag = False
         if not self._execute_state:
-            self._as.set_aborted()
+            self._result.error_string = "execution timeout"
+            self._as.set_aborted(self._result)
             return
         rospy.loginfo('%s: Succeeded' % self._action_name)
+        self._result.error_string = "execution succeeded"
         self._result.error_code = 0
-        self._as.set_succeeded()
+        self._as.set_succeeded(self._result)
 
 
 
@@ -97,10 +99,13 @@ class FollowAction(object):
         all_in_tole = True
         for i, joint in enumerate(self._active_goal.trajectory.joint_names):
             j = states.name.index(joint)
-            if abs(states.position[j] - self._active_gola.trajectory.points[-1].positions[i]) > 0.001:
+            if abs(states.position[j] - self._active_goal.trajectory.points[-1].positions[i]) > 0.05:
                 all_in_tole = False
+                rospy.loginfo('%s: timeout' % self._action_name)
+
                 break
         if all_in_tole:
+            rospy.loginfo('%s: Inside tolerance' % self._action_name)
             self._finishable = True
             return
         return
