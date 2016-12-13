@@ -8,7 +8,10 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
+  cmake_modules
 )
+
+find_package(Eigen REQUIRED)
 
 catkin_package(
  INCLUDE_DIRS include
@@ -19,6 +22,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
 
 
