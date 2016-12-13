@@ -1,10 +1,16 @@
 <launch>
+  <arg name="MOVEIT" default="false" />
+
   <!--hardware controller-->
   <node name="aero_controller" pkg="aero_startup"
   	type="aero_controller_node" output="screen"/>
 
   <!--robot tfs-->
-  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"/>
+  <!--  without moveit -->
+  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"  unless="$(arg MOVEIT)"/>
+  <!--  with moveit -->
+  <include file="$(find aero_moveit_config)/launch/controller_manager.launch"  if="$(arg MOVEIT)"/>
+
   <include file="$(find aero_startup)/generated_controllers.launch"/>
 
   <!--ps4eye sensor-->
