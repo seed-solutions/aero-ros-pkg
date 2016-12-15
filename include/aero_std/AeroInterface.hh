@@ -21,6 +21,8 @@
 #include "aero_msgs/MBasedLoaded.h"
 #include <mutex>
 
+#include <tf/transform_broadcaster.h>
+
 namespace aero
 {
   namespace interface

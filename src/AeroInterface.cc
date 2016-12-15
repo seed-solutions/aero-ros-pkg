@@ -38,6 +38,9 @@ AeroInterface::AeroInterface(ros::NodeHandle _nh) : nh_(_nh)
 
   tts_finished_ = false;
 
+  // don't remove the next line! it's not used but compile fails without it!
+  static tf::TransformBroadcaster tmp;
+
   // robot status
 
   body_pose_ = ReadOnlyResetManipPose();
