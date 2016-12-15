@@ -13,7 +13,6 @@
 #include <move_base_msgs/MoveBaseFeedback.h>
 #include <move_base_msgs/MoveBaseResult.h>
 #include "std_msgs/String.h"
-#include "std_msgs/Bool.h"
 #include "std_msgs/Float32.h"
 #include "geometry_msgs/Vector3.h"
 #include "aero_msgs/JointAngles.h"
@@ -48,8 +47,6 @@ namespace aero
     public: bool GoPos(float _x, float _y, float _theta);
 
     public: bool GoPos(float _x, float _y, float _theta, float _time_out);
-
-    public: void Speak(std::string _speech, float _wait_sec);
 
     public: void SendAngleVector
     (aero_msgs::JointAngles _av, geometry_msgs::Vector3 _look_at,
@@ -108,12 +105,6 @@ namespace aero
     private: actionlib::SimpleActionClient
     <move_base_msgs::MoveBaseAction> *ac_;
 
-    private: ros::Publisher speech_publisher_;
-
-    private: ros::Subscriber speech_listener_;
-
-    private: ros::Publisher speech_detection_settings_publisher_;
-
     private: ros::ServiceClient grasp_client_;
 
     private: ros::ServiceClient look_client_;
@@ -129,15 +120,15 @@ namespace aero
     // human status
 
     public: inline void BeginListen() {
-        std_msgs::Bool flag;
-        flag.data = true;
-        speech_detection_settings_publisher_.publish(flag);
+        std_msgs::String topic;
+        topic.data = "/template/on";
+        speech_detection_settings_publisher_.publish(topic);
       };
 
     public: inline void EndListen() {
-        std_msgs::Bool flag;
-        flag.data = false;
-        speech_detection_settings_publisher_.publish(flag);
+        std_msgs::String topic;
+        topic.data = "/template/off";
+        speech_detection_settings_publisher_.publish(topic);
       };
 
     public: inline std::string Listen() {
@@ -148,7 +139,27 @@ namespace aero
 
     private: void Listener(const std_msgs::String::ConstPtr& _msg);
 
+    private: ros::Subscriber speech_listener_;
+
+    private: ros::Publisher speech_detection_settings_publisher_;
+
     private: std::string detected_speech_;
+
+    // tts
+
+    public: void Speak(std::string _speech);
+
+    public: void SpeakAsync(std::string _speech);
+
+    public: void Speak(std::string _speech, float _wait_sec);
+
+    private: void TTSFlagListener(const std_msgs::String::ConstPtr& _msg);
+
+    private: ros::Publisher speech_publisher_;
+
+    private: ros::Subscriber tts_flag_listener_;
+
+    private: bool tts_finished_;
 
     // robot status
 
