@@ -134,6 +134,7 @@ namespace aero
       };
 
     public: inline std::string Listen() {
+      ros::spinOnce();
       std::string result = detected_speech_;
       detected_speech_ = "";
       return result;
@@ -162,6 +163,8 @@ namespace aero
     private: ros::Subscriber tts_flag_listener_;
 
     private: bool tts_finished_;
+
+    private: int ignore_count_;
 
     // robot status
 

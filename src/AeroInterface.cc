@@ -38,8 +38,10 @@ AeroInterface::AeroInterface(ros::NodeHandle _nh) : nh_(_nh)
 
   tts_finished_ = false;
 
+  ignore_count_ = 0;
+
   // don't remove the next line! it's not used but compile fails without it!
-  static tf::TransformBroadcaster tmp;
+  tf::TransformBroadcaster tmp;
 
   // robot status
 
@@ -237,6 +239,7 @@ void AeroInterface::SpeakAsync(std::string _speech)
   std_msgs::String msg;
   msg.data = _speech;
   speech_publisher_.publish(msg);
+  ++ignore_count_;
 }
 
 //////////////////////////////////////////////////
@@ -246,6 +249,7 @@ void AeroInterface::Speak(std::string _speech, float _wait_sec)
   msg.data = _speech;
   speech_publisher_.publish(msg);
   usleep(static_cast<int>(_wait_sec * 1000) * 1000);
+  ++ignore_count_;
 }
 
 //////////////////////////////////////////////////
@@ -550,7 +554,8 @@ void AeroInterface::Listener(const std_msgs::String::ConstPtr& _msg)
 //////////////////////////////////////////////////
 void AeroInterface::TTSFlagListener(const std_msgs::String::ConstPtr& _msg)
 {
-  tts_finished_ = true;
+  if (ignore_count_ == 0) tts_finished_ = true;
+  else if (ignore_count_ > 0) --ignore_count_;
 }
 
 //////////////////////////////////////////////////
