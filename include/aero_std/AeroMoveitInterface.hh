@@ -14,10 +14,15 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 
+#include <aero_std/AeroInterface.hh>
+#include <aero_std/GraspRequest.hh>
+
 
 namespace aero
 {
-  class AeroMoveitInterface
+  namespace interface
+  {
+  class AeroMoveitInterface : public AeroInterface
   {
   public:
     //explicit AeroMoveitInterface();
@@ -82,13 +87,24 @@ namespace aero
 
     void moveWaist(double _x, double _z);
 
+    //
+    bool solveIKSequence(aero::GraspRequest &_grasp);
+    std::string solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> &_result);
+
+    bool moveSequence();
+
   private:
+    void getRobotStateVariables(std::vector<double> &_av);
+
     ros::Publisher display_publisher_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
     bool height_only_;
+    std::vector<std::vector<double>> trajectory_;
+    std::vector<std::string> trajectory_groups_;
 
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
+  }
 }
 #endif
