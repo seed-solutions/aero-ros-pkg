@@ -1,20 +1,27 @@
 <launch>
   <arg name="MOVEIT" default="false" />
+  <arg name="port_upper" default="/dev/aero_upper"/>
+  <arg name="port_lower" default="/dev/aero_lower"/>
 
   <!--hardware controller-->
   <node name="aero_controller" pkg="aero_startup"
-  	type="aero_controller_node" output="screen"/>
+        type="aero_controller_node" output="screen">
+      <param name="port_upper" value="$(arg port_upper)"/>
+      <param name="port_lower" value="$(arg port_lower)"/>
+  </node>
 
   <!--robot tfs-->
   <!--  without moveit -->
-  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"  unless="$(arg MOVEIT)"/>
+  <include file="$(find aero_startup)/aero_controller_manager/launch/controller_manager.launch"
+           unless="$(arg MOVEIT)"/>
   <!--  with moveit -->
-  <include file="$(find aero_moveit_config)/launch/controller_manager.launch"  if="$(arg MOVEIT)"/>
+  <include file="$(find aero_moveit_config)/launch/controller_manager.launch"
+           if="$(arg MOVEIT)"/>
 
   <include file="$(find aero_startup)/generated_controllers.launch"/>
 
   <!--ps4eye sensor-->
-  <include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
+  <!--include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
   <node pkg="topic_tools" type="throttle" name="ps4eye_throttle"
-        args="messages /stereo/points2 2.0" />
+        args="messages /stereo/points2 2.0" /-->
 </launch>

@@ -13,13 +13,10 @@ int main(int argc, char** argv)
 
   nh.param<bool> ("debug", debug, false);
 
-  if (debug)
-  {
+  if (debug) {
     port_upper = "";
     port_lower = "";
-  }
-  else
-  {
+  } else {
     nh.param<std::string> ("port_upper", port_upper, "/dev/aero_upper");
     nh.param<std::string> ("port_lower", port_lower, "/dev/aero_lower");
   }
