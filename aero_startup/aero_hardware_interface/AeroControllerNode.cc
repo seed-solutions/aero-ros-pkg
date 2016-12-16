@@ -517,21 +517,37 @@ void AeroControllerNode::JointStateOnce()
   stroke_state.desired.positions.resize(AERO_DOF);
   stroke_state.actual.positions.resize(AERO_DOF);
 
-  for (size_t i = 0; i < AERO_DOF_UPPER; ++i) {
-    stroke_state.joint_names[i] = upper_.get_stroke_joint_name(i);
-    stroke_state.desired.positions[i] =
-        static_cast<double>(upper_ref_vector[i]);
-    stroke_state.actual.positions[i] =
-        static_cast<double>(upper_stroke_vector[i]);
-  }
-  for (size_t i = 0; i < AERO_DOF_LOWER; ++i) {
-    stroke_state.joint_names[i + AERO_DOF_UPPER] =
-        lower_.get_stroke_joint_name(i);
-    stroke_state.desired.positions[i + AERO_DOF_UPPER] =
-        static_cast<double>(lower_ref_vector[i]);
-    stroke_state.actual.positions[i + AERO_DOF_UPPER] =
-        static_cast<double>(lower_stroke_vector[i]);
-  }
+  if (upper_ref_vector.size() < AERO_DOF_UPPER || upper_stroke_vector.size() < AERO_DOF_UPPER)
+    for (size_t i = 0; i < AERO_DOF_UPPER; ++i) {
+      stroke_state.joint_names[i] = upper_.get_stroke_joint_name(i);
+      stroke_state.desired.positions[i] = 0.0;
+      stroke_state.actual.positions[i] = 0.0;
+    }
+  else // usually should enter else, enters if when port is not activated
+    for (size_t i = 0; i < AERO_DOF_UPPER; ++i) {
+      stroke_state.joint_names[i] = upper_.get_stroke_joint_name(i);
+      stroke_state.desired.positions[i] =
+          static_cast<double>(upper_ref_vector[i]);
+      stroke_state.actual.positions[i] =
+          static_cast<double>(upper_stroke_vector[i]);
+    }
+
+  if (lower_ref_vector.size() < AERO_DOF_LOWER || lower_stroke_vector.size() < AERO_DOF_LOWER)
+    for (size_t i = 0; i < AERO_DOF_LOWER; ++i) {
+      stroke_state.joint_names[i + AERO_DOF_UPPER] =
+          lower_.get_stroke_joint_name(i);
+      stroke_state.desired.positions[i + AERO_DOF_UPPER] = 0.0;
+      stroke_state.actual.positions[i + AERO_DOF_UPPER] = 0.0;
+    }
+  else // usually should enter else, enters if when port is not activated
+    for (size_t i = 0; i < AERO_DOF_LOWER; ++i) {
+      stroke_state.joint_names[i + AERO_DOF_UPPER] =
+          lower_.get_stroke_joint_name(i);
+      stroke_state.desired.positions[i + AERO_DOF_UPPER] =
+          static_cast<double>(lower_ref_vector[i]);
+      stroke_state.actual.positions[i + AERO_DOF_UPPER] =
+          static_cast<double>(lower_stroke_vector[i]);
+    }
 
   int number_of_angle_joints =
       upper_.get_number_of_angle_joints() +
@@ -545,12 +561,12 @@ void AeroControllerNode::JointStateOnce()
 
   // convert to desired angle positions
   std::vector<int16_t> desired_strokes(stroke_state.desired.positions.begin(),
-				       stroke_state.desired.positions.end());
+                                       stroke_state.desired.positions.end());
   common::Stroke2Angle(state.desired.positions, desired_strokes);
 
   // convert to actual angle positions
   std::vector<int16_t> actual_strokes(stroke_state.actual.positions.begin(),
-				      stroke_state.actual.positions.end());
+                                      stroke_state.actual.positions.end());
   common::Stroke2Angle(state.actual.positions, actual_strokes);
 
   // get joint names (auto-generated function)
