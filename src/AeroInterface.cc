@@ -25,13 +25,23 @@ AeroInterface::AeroInterface(ros::NodeHandle _nh) : nh_(_nh)
     ("/windows/voice", 1000);
 
   speech_listener_ = nh_.subscribe
-    ("/kinect/voice",  1000, &AeroInterface::Listener, this);
+    ("/detected/speech/template",  1000, &AeroInterface::Listener, this);
 
-  speech_detection_settings_publisher_ = nh_.advertise<std_msgs::Bool>
-    ("/stt/trigger/manual", 1000);
+  speech_detection_settings_publisher_ = nh_.advertise<std_msgs::String>
+    ("/settings/speech", 1000);
+
+  tts_flag_listener_ = nh_.subscribe
+    ("/windows/voice/finished", 1000, &AeroInterface::TTSFlagListener, this);
 
   mbased_loaded_ =
     nh_.advertiseService("/aero_mbased/loaded", &AeroInterface::MBasedLoaded, this);
+
+  tts_finished_ = false;
+
+  ignore_count_ = 0;
+
+  // don't remove the next line! it's not used but compile fails without it!
+  tf::TransformBroadcaster tmp;
 
   // robot status
 
@@ -213,12 +223,33 @@ bool AeroInterface::GoPos(float _x, float _y, float _theta,
 }
 
 //////////////////////////////////////////////////
+void AeroInterface::Speak(std::string _speech)
+{
+  std_msgs::String msg;
+  msg.data = _speech;
+  speech_publisher_.publish(msg);
+  while (!tts_finished_)
+    ros::spinOnce();
+  tts_finished_ = false;
+}
+
+//////////////////////////////////////////////////
+void AeroInterface::SpeakAsync(std::string _speech)
+{
+  std_msgs::String msg;
+  msg.data = _speech;
+  speech_publisher_.publish(msg);
+  ++ignore_count_;
+}
+
+//////////////////////////////////////////////////
 void AeroInterface::Speak(std::string _speech, float _wait_sec)
 {
   std_msgs::String msg;
   msg.data = _speech;
   speech_publisher_.publish(msg);
   usleep(static_cast<int>(_wait_sec * 1000) * 1000);
+  ++ignore_count_;
 }
 
 //////////////////////////////////////////////////
@@ -518,6 +549,13 @@ aero_msgs::JointAngles AeroInterface::ReverseJointAngles(aero_msgs::JointAngles&
 void AeroInterface::Listener(const std_msgs::String::ConstPtr& _msg)
 {
   detected_speech_ = _msg->data;
+}
+
+//////////////////////////////////////////////////
+void AeroInterface::TTSFlagListener(const std_msgs::String::ConstPtr& _msg)
+{
+  if (ignore_count_ == 0) tts_finished_ = true;
+  else if (ignore_count_ > 0) --ignore_count_;
 }
 
 //////////////////////////////////////////////////
