@@ -15,6 +15,9 @@
 #include <cstring>
 #include <cstdint>
 
+#include <limits>
+#include <cmath>
+
 namespace xtion
 {
   namespace interface
@@ -28,10 +31,15 @@ namespace xtion
 
     public: sensor_msgs::PointCloud2 ReadPoints();
 
+    public: sensor_msgs::PointCloud2 ReadPoints(float _scale_x, float _scale_y);
+
     public: sensor_msgs::Image ReadImage();
 
     public: std::vector<sensor_msgs::RegionOfInterest> ImageBounds
     (std::vector<std::array<int, 4> > _depth_indicies);
+
+    public: std::vector<sensor_msgs::RegionOfInterest> ImageBounds
+    (std::vector<std::array<int, 4> > _depth_indicies, float _w_scale, float _h_scale);
 
     public: std::vector<geometry_msgs::Point> ImageCenters
     (std::vector<sensor_msgs::RegionOfInterest> _image_bounds);
@@ -67,6 +75,8 @@ namespace xtion
     private: ros::AsyncSpinner image_spinner_;
 
     private: int depth_width_;
+
+    private: int depth_height_;
     };
 
     typedef std::shared_ptr<XtionInterface> XtionInterfacePtr;

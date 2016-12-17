@@ -36,9 +36,10 @@ int main(int argc, char **argv)
   xtion::interface::XtionInterfacePtr xtion
     (new xtion::interface::XtionInterface(nh));
 
-  auto points = xtion->ReadPoints();
+  float resize_x = 0.25;
+  float resize_y = 0.25;
 
-  ROS_INFO("read points finished");
+  auto points = xtion->ReadPoints(resize_x, resize_y);
 
   // ros msg -> pcl PointCloud
   pcl::PCLPointCloud2 pcl;
@@ -46,8 +47,6 @@ int main(int argc, char **argv)
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud
     (new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::fromPCLPointCloud2(pcl, *cloud);
-
-  ROS_INFO("ros msg -> pcl finished");
 
   // get normal
   pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
@@ -59,12 +58,10 @@ int main(int argc, char **argv)
   pcl::PointCloud<pcl::Normal>::Ptr normal(new pcl::PointCloud<pcl::Normal>);
   ne.compute(*normal);
 
-  ROS_INFO("compute normal finished");
-
   // plane segmentation
   pcl::OrganizedMultiPlaneSegmentation<
     pcl::PointXYZRGB, pcl::Normal, pcl::Label> mps;
-  mps.setMinInliers(1000);
+  mps.setMinInliers(static_cast<int>(1000 * resize_x * resize_y));
   mps.setAngularThreshold(0.034906);
   mps.setDistanceThreshold(0.02);
   mps.setInputNormals(normal);
@@ -74,8 +71,6 @@ int main(int argc, char **argv)
      Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZRGB> > >
     regions;
   mps.segmentAndRefine(regions);
-
-  ROS_INFO("find plane finished");
 
   // find nearest plane region
   float min_dist = std::numeric_limits<int>::max();
@@ -89,8 +84,6 @@ int main(int argc, char **argv)
       target_idx = i;
     }
   }
-
-  ROS_INFO("find target plane finished");
 
   // get plane info
   Eigen::Vector4f plane = regions[target_idx].getCoefficients();
@@ -111,6 +104,13 @@ int main(int argc, char **argv)
   points_above_plane->points.reserve(cloud->points.size());
   raw_indices.reserve(cloud->points.size());
 
+  float plane_min_x = std::numeric_limits<int>::max();
+  float plane_min_y = std::numeric_limits<int>::max();
+  float plane_max_x = std::numeric_limits<int>::min();
+  float plane_max_y = std::numeric_limits<int>::min();
+  int plane_min_x_idx = -1, plane_min_y_idx = -1;
+  int plane_max_x_idx = -1, plane_max_y_idx = -1;
+
   // get points on plane
   for (auto it = cloud->points.begin(); it != cloud->points.end(); ++it) {
     if (std::isnan(it->x) || std::isnan(it->y) || std::isnan(it->z))
@@ -124,18 +124,33 @@ int main(int argc, char **argv)
         + std::pow(it->z - plane_center.z(), 2) >= plane_size)
       continue;
 
+    // get x min and max on plane
+    if (it->x < plane_min_x) {
+      plane_min_x = it->x;
+      plane_min_x_idx = static_cast<int>(it - cloud->points.begin());
+    } else if (it->x > plane_max_x) {
+      plane_max_x = it->x;
+      plane_max_x_idx = static_cast<int>(it - cloud->points.begin());
+    }
+
+    // get y min and max on plane
+    if (it->y < plane_min_y) {
+      plane_min_y = it->y;
+      plane_min_y_idx = static_cast<int>(it - cloud->points.begin());
+    } else if (it->y > plane_max_y) {
+      plane_max_y = it->y;
+      plane_max_y_idx = static_cast<int>(it - cloud->points.begin());
+    }
+
     points_above_plane->points.push_back(*it);
     raw_indices.push_back(static_cast<int>(it - cloud->points.begin()));
   }
-
-  ROS_INFO("get points on plane finished");
-
 
   // euclidean cluster points on plane
   std::vector<pcl::PointIndices> clusters;
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
   ec.setClusterTolerance(0.01);
-  ec.setMinClusterSize(100);
+  ec.setMinClusterSize(static_cast<int>(200 * resize_x * resize_y));
   ec.setMaxClusterSize(25000);
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr kdtree
     (new pcl::search::KdTree<pcl::PointXYZRGB>);
@@ -144,12 +159,11 @@ int main(int argc, char **argv)
   ec.setInputCloud(points_above_plane);
   ec.extract(clusters);
 
-  ROS_INFO("euclidean cluster finished");
-
   // find the bounds of each cluster (bound depth indicies)
   // note: vision is always xy plane, so bounds are also xy based
   std::vector<std::array<int, 4> > cluster_bounds;
-  cluster_bounds.reserve(clusters.size());
+  cluster_bounds.reserve(clusters.size() + 1);
+  cluster_bounds.push_back({plane_min_x_idx, plane_min_y_idx, plane_max_x_idx, plane_max_y_idx});
   for (auto it = clusters.begin(); it != clusters.end(); ++it) {
     float min_x = std::numeric_limits<int>::max();
     float min_y = std::numeric_limits<int>::max();
@@ -184,12 +198,8 @@ int main(int argc, char **argv)
     cluster_bounds.push_back({min_x_idx, min_y_idx, max_x_idx, max_y_idx});
   }
 
-  ROS_INFO("setting bounds finished");
-
   // get 2d image bounds from 3d indices
-  auto bounds = xtion->ImageBounds(cluster_bounds);
-
-  ROS_INFO("get bounds finished");
+  auto bounds = xtion->ImageBounds(cluster_bounds, resize_x, resize_y);
 
   // get image as cv::Mat
   auto image = xtion->ReadImage();

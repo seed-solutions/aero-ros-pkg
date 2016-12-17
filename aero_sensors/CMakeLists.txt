@@ -55,6 +55,13 @@ add_executable(points_sample
 target_link_libraries(points_sample
   ${catkin_LIBRARIES})
 
+add_executable(points_compressed_sample
+  xtion/samples/points_compressed.cc
+  xtion/src/XtionInterface.cc
+  )
+target_link_libraries(points_compressed_sample
+  ${catkin_LIBRARIES})
+
 add_executable(image_sample
   xtion/samples/image.cc
   xtion/src/XtionInterface.cc
