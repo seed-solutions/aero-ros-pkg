@@ -20,8 +20,8 @@ namespace aero
     arm("either"), object_position({0.0, 0.0, 0.0}), height(0.0),
     offset_z_mid(0.0),offset_x_mid(0.0),
     offset_z_end(0.0),offset_x_end(0.0),
-    default_offset_z(0.15), default_offset_x(-0.15),
-    default_offset_z_mid(0.15),
+    default_offset_z(0.2), default_offset_x(-0.20),
+    default_offset_z_mid(-0.1),
     maximum_grasp_width(0.15) {}
     
     // arm to grasp object, "left" or "right" or "either"
@@ -75,7 +75,7 @@ namespace aero
     Eigen::Quaternionf end_rot = // rotate on axis Y by -M_PI/4 world
       Eigen::Quaternionf(0.92388, 0.0, 0.382683, 0.0) * mid_rot;
 
-    result.mid_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_mid + _grasp.maximum_grasp_width;
+    result.mid_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_mid;
     result.mid_pose.position.y = _grasp.object_position.y();
     result.mid_pose.position.z = _grasp.object_position.z() + _grasp.height/2.0 + _grasp.default_offset_z + _grasp.default_offset_z_mid;
     result.mid_pose.orientation.x = mid_rot.x();

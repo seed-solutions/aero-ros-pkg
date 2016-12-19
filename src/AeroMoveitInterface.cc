@@ -71,6 +71,7 @@ bool aero::interface::AeroMoveitInterface::execute(){
 bool aero::interface::AeroMoveitInterface::move(std::string _move_group){
   bool success = plan(_move_group);
   if (!success) return false;
+  viewTrajectory();
   success = execute();
   return success;
 }
@@ -251,9 +252,14 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string
 
 bool aero::interface::AeroMoveitInterface::moveSequence()
 {
+  ROS_INFO("%d", trajectory_.size());
   for (int i = 0; i < trajectory_.size(); ++i) {
-    ROS_INFO("%f", trajectory_.size());
+    for(int j=0; j<36; ++j) {
+      std::cout << trajectory_[i][j];
+    }
+    std::cout << std::endl;
     kinematic_state->setVariablePositions(trajectory_[i]);
+    getMoveGroup(trajectory_groups_[i]).setJointValueTarget(*kinematic_state);
     move(trajectory_groups_[i]);
   }
 }
@@ -270,4 +276,9 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<do
   _av.assign(tmp, tmp + num);
   ROS_INFO("av  %d", _av.size());
   ROS_INFO("jnt %f", _av[static_cast<int>(kinematic_model->getVariableCount())]);
+
+  for (int i=0; i<num; ++i) {
+    std::cout << _av[i];
+  }
+  std::cout << std::endl;
 }
