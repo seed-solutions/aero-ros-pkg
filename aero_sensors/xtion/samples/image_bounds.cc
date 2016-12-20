@@ -120,5 +120,5 @@ int main(int argc, char **argv)
   cv::namedWindow("bounds", CV_WINDOW_NORMAL);
   cv::resizeWindow("bounds", 640, 480);
   cv::imshow("bounds", img);
-  cv::waitKey(100000);
+  cv::waitKey(10000);
 }
