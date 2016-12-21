@@ -46,7 +46,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   trajectory_ = std::vector<std::vector<double>>();
   trajectory_groups_ = std::vector<std::string>();
 
-  ROS_INFO("initialize finished");
+  ROS_INFO("AERO MOVEIT INTERFACE is initialized");
 }
 
 aero::interface::AeroMoveitInterface::~AeroMoveitInterface()
@@ -75,6 +75,7 @@ bool aero::interface::AeroMoveitInterface::move(std::string _move_group){
   success = execute();
   return success;
 }
+
 bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geometry_msgs::Pose _pose){
   const robot_state::JointModelGroup* jmg_tmp;
   bool lifter_ik = false;
@@ -162,6 +163,9 @@ void aero::interface::AeroMoveitInterface::switchHeightOnly()
 
 void aero::interface::AeroMoveitInterface::setNamedTarget(std::string _move_group, std::string _target)
 {
+  // named-targetに目標値をセットします
+  // named_targetはaero_moveit_config/config/AeroUpperRobot.srdfに記載されているgroup-stateです
+  // 初期姿勢は("upper_body", "reset-pose")です
   getMoveGroup(_move_group).setNamedTarget(_target);
 }
 
@@ -252,12 +256,8 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string
 
 bool aero::interface::AeroMoveitInterface::moveSequence()
 {
-  ROS_INFO("%d", trajectory_.size());
+  // trajectory_に保存されたik結果列を順に実行する
   for (int i = 0; i < trajectory_.size(); ++i) {
-    for(int j=0; j<36; ++j) {
-      std::cout << trajectory_[i][j];
-    }
-    std::cout << std::endl;
     kinematic_state->setVariablePositions(trajectory_[i]);
     getMoveGroup(trajectory_groups_[i]).setJointValueTarget(*kinematic_state);
     move(trajectory_groups_[i]);
@@ -267,18 +267,17 @@ bool aero::interface::AeroMoveitInterface::moveSequence()
 
 void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<double> &_av)
 {
+  // kinematic_stateが持っているすべての関節値を引数の_avに保存します。
+  // solveIKを解くとkinematic_stateの角度列が変更されるので、それを取り出すのなどに使えます。
+  // kinematic_stateに代入する場合は、this.kinematic_state->setVariablePositions(_av);を実行してください。
+
   double* tmp;
+  // Aeroには無いが多変数関節などもありうるので、関節数ではなく関節変数の数を取得
   int num = static_cast<int>(kinematic_model->getVariableCount());
-  _av.clear();
+  // double* が返ってくる
   tmp = kinematic_state->getVariablePositions();
-  ROS_INFO("num %d", num);
+  // std::vectorに入れる
+  _av.clear();
   _av.reserve(num);
   _av.assign(tmp, tmp + num);
-  ROS_INFO("av  %d", _av.size());
-  ROS_INFO("jnt %f", _av[static_cast<int>(kinematic_model->getVariableCount())]);
-
-  for (int i=0; i<num; ++i) {
-    std::cout << _av[i];
-  }
-  std::cout << std::endl;
 }

@@ -74,7 +74,6 @@ namespace aero
       Eigen::Quaternionf(0.707107, 0.707107, 0.0, 0.0) * ini_rot;
     Eigen::Quaternionf end_rot = // rotate on axis Y by -M_PI/4 world
       Eigen::Quaternionf(0.92388, 0.0, 0.382683, 0.0) * mid_rot;
-
     if (result.arm == "right") {
       mid_rot =
         Eigen::Quaternionf(0.707107, -0.707107, 0.0, 0.0) * ini_rot;
