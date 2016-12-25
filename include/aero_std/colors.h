@@ -220,6 +220,34 @@ namespace aero
                 _palettes);
     };
 
+    //////////////////////////////////////////////////
+    void drawPalette(std::vector<cv::Vec3b> &_palette,
+                     cv::Vec3b _ref = cv::Vec3b(255, 255, 255))
+    {
+      cv::Mat color_cells = cv::Mat_<cv::Vec3b>(80, 720, cv::Vec3b(255, 255, 255));
+      int cell_width = 720 / (_palette.size() + 1);
+
+      // first cell is reference color
+      for (unsigned int j = 0; j < cell_width; ++j)
+        for (unsigned int i = 0; i < color_cells.rows; ++i)
+          color_cells.at<cv::Vec3b>(i, j) = _ref;
+
+      // the remaining cells are the paletter color
+      int cell_left = cell_width;
+      for (auto it = _palette.begin(); it != _palette.end(); ++it) {
+        int cell_right = cell_left + cell_width;
+        for (unsigned int j = cell_left; j < cell_right; ++j)
+          for (unsigned int i = 0; i < color_cells.rows; ++i)
+            color_cells.at<cv::Vec3b>(i, j) = *it;
+        cell_left += cell_width;
+      }
+
+      cv::namedWindow("palette", CV_WINDOW_NORMAL);
+      cv::resizeWindow("palette", 720, 160);
+      cv::imshow("palette", color_cells);
+      cv::waitKey(100);
+    };
+
   }
 }
 
