@@ -40,7 +40,8 @@ namespace aero
 
       // additional info for post-process
       // (calculated unless for speed optimization)
-      std::array<int, 4> corner2d; // used for OCR, ...
+      std::array<cv::Point2f, 4> corners2d; // used for OCR, ...
+      // corners2d coordinate is local to bounds
       float width3d; // used for OCR, grasp utils, ...
       float height3d; // used for OCR, grasp utils, ...
     };
@@ -52,7 +53,7 @@ namespace aero
 
     std::vector<objectarea> DetectObjectnessArea
     (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
-     cv::Mat &_image, cv::Vec3b _env_color);
+     cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view = true);
 
   }
 }

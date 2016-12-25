@@ -7,7 +7,7 @@ using namespace aerocv;
 //////////////////////////////////////////////////
 std::vector<objectarea> aero::aerocv::DetectObjectnessArea
 (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
- cv::Mat &img, cv::Vec3b _env_color)
+ cv::Mat &img, cv::Vec3b _env_color, bool _debug_view)
 {
   auto begin = aero::time::now();
 
@@ -193,7 +193,8 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
       cv::Mat divstats;
       cv::Mat divcentroids;
       int n_div =
-        aero::aerocv::cutComponentsWithStats(blob, divs, divstats, divcentroids);
+        aero::aerocv::cutComponentsWithStats(
+            blob, divs, divstats, divcentroids, _debug_view);
 
       // if no further division
       if (n_div == 1) {
@@ -227,12 +228,43 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
     }
   }
 
-  // get 2D bounds of RGS regions
-  for (auto it = clusters.begin(); it != clusters.end(); ++it) {
-    std::vector<uchar> cluster1d(cloud->points.size(), 0);
-    for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit)
-      cluster1d[*pit] = 255;
+  // analyze bounds, corners, color properties of RGS regions
+  for (auto it = clusters.begin(); it != clusters.end(); ) {
+    auto obj = scene.begin() + static_cast<int>(it - clusters.begin());
 
+    std::vector<uchar> cluster1d(cloud->points.size(), 0);
+    std::vector<cv::Vec3b> colors1d(it->indices.size());
+    int color1d_idx = 0;
+    for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
+      cluster1d[*pit] = 255;
+      // in the meantime, get color as well
+      uint32_t rgb = *reinterpret_cast<int*>(&cloud->points[*pit].rgb);
+      colors1d[color1d_idx++] = cv::Vec3b
+        ((rgb) & 0x0000ff, (rgb >> 8) & 0x0000ff, (rgb >> 16) & 0x0000ff);
+    }
+
+    // get color information of cluster
+    int quantize_amount = 4;
+    std::vector<cv::Vec3b> dominant_colors(quantize_amount);
+    aero::aerocv::medianCut(colors1d, 0, 0, dominant_colors);
+    // check how many colors match environment color information
+    float distance_threshold = 10;
+    int expected_matches = 3;
+    int matches = 0;
+    for (auto c = dominant_colors.begin(); c != dominant_colors.end(); ++c)
+      if (aero::aerocv::distance(aero::aerocv::rgb2lab(*c),
+                                 aero::aerocv::rgb2lab(_env_color))
+          < distance_threshold)
+        ++matches;
+    if (matches >= expected_matches) { // if likely environment
+      it = clusters.erase(it);
+      scene.erase(obj); // remove object from scene
+
+      if (_debug_view)
+        aero::aerocv::drawPalette(dominant_colors, _env_color);
+
+      continue;
+    }
     cv::Mat cluster(cloud->height, cloud->width, CV_8U);
     int at = 0;
     for (unsigned int i = 0; i < cluster.rows; ++i)
@@ -241,39 +273,72 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
 
     // get bounding box of cluster
     auto bb = cv::boundingRect(cluster);
-    scene.at(static_cast<int>(it - clusters.begin())).bounds2d =
+    obj->bounds2d =
       cv::Rect(bb.x*w_scale, bb.y*h_scale, bb.width*w_scale, bb.height*h_scale);
+
+    // get additional infos
+
+    // get corner2d
+    auto corners = aero::aerocv::getCornersInBoundingBox(cluster, bb);
+    obj->corners2d =
+      {cv::Point2f(corners.at(0).x*w_scale, corners.at(0).y*h_scale),
+       cv::Point2f(corners.at(1).x*w_scale, corners.at(1).y*h_scale),
+       cv::Point2f(corners.at(2).x*w_scale, corners.at(2).y*h_scale),
+       cv::Point2f(corners.at(3).x*w_scale, corners.at(3).y*h_scale)};
+
+    // get width3d and height3d from corners
+    int tl = (bb.y + corners.at(0).y) * cloud->width + bb.x + corners.at(0).x;
+    Eigen::Vector3f tl_pos
+      (cloud->points[tl].x, cloud->points[tl].y, cloud->points[tl].z);
+    int tr = (bb.y + corners.at(1).y) * cloud->width + bb.x + corners.at(1).x;
+    Eigen::Vector3f tr_pos
+      (cloud->points[tr].x, cloud->points[tr].y, cloud->points[tr].z);
+    int br = (bb.y + corners.at(2).y) * cloud->width + bb.x + corners.at(2).x;
+    Eigen::Vector3f br_pos
+      (cloud->points[br].x, cloud->points[br].y, cloud->points[br].z);
+    int bl = (bb.y + corners.at(3).y) * cloud->width + bb.x + corners.at(3).x;
+    Eigen::Vector3f bl_pos
+      (cloud->points[bl].x, cloud->points[bl].y, cloud->points[bl].z);
+    obj->width3d = (tr_pos - tl_pos).norm();
+    obj->height3d = (br_pos - bl_pos).norm();
+
+    ++it;
   }
 
   auto end = aero::time::now();
 
   std::cout << "detection time " << aero::time::ms(end - begin) << std::endl;
 
-  // draw bounds
+  // view results if debug mode is true
 
-  for (auto it = scene.begin(); it < scene.begin() + clusters.size(); ++it)
-    cv::rectangle(img, it->bounds2d, cv::Scalar(0, 255, 0), 2);
+  if (_debug_view) {
+    // draw bounds2d
 
-  for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it)
-    cv::rectangle(img, it->bounds2d, cv::Scalar(255, 0, 0), 2);
+    for (auto it = scene.begin(); it < scene.begin() + clusters.size(); ++it)
+      cv::rectangle(img, it->bounds2d, cv::Scalar(0, 255, 0), 2);
 
-  // show results
-  cv::namedWindow("mid1", CV_WINDOW_NORMAL);
-  cv::resizeWindow("mid1", 640, 480);
-  cv::imshow("mid1", binary_img);
-  cv::waitKey(100);
+    for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it)
+      cv::rectangle(img, it->bounds2d, cv::Scalar(255, 0, 0), 2);
 
-  if (outmost_label > 0) {
-    cv::namedWindow("mid2", CV_WINDOW_NORMAL);
-    cv::resizeWindow("mid2", 640, 480);
-    cv::imshow("mid2", outmost);
+    // show results
+
+    cv::namedWindow("mid1", CV_WINDOW_NORMAL);
+    cv::resizeWindow("mid1", 640, 480);
+    cv::imshow("mid1", binary_img);
+    cv::waitKey(100);
+
+    if (outmost_label > 0) {
+      cv::namedWindow("mid2", CV_WINDOW_NORMAL);
+      cv::resizeWindow("mid2", 640, 480);
+      cv::imshow("mid2", outmost);
+      cv::waitKey(100);
+    }
+
+    cv::namedWindow("result", CV_WINDOW_NORMAL);
+    cv::resizeWindow("result", 640, 480);
+    cv::imshow("result", img);
     cv::waitKey(100);
   }
-
-  cv::namedWindow("result", CV_WINDOW_NORMAL);
-  cv::resizeWindow("result", 640, 480);
-  cv::imshow("result", img);
-  cv::waitKey(100000);
 
   return scene;
 }
