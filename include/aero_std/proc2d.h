@@ -18,7 +18,8 @@ namespace aero
 
     //////////////////////////////////////////////////
     int cutComponentsWithStats
-      (cv::Mat image, cv::Mat &labels, cv::Mat &stats, cv::Mat &centroids)
+      (cv::Mat image, cv::Mat &labels, cv::Mat &stats, cv::Mat &centroids,
+       bool debug_view = false)
     {
       // if image is too small to resize, return
       if (image.cols < 8 || image.rows < 8) return 1;
@@ -45,20 +46,22 @@ namespace aero
       // if cluster is not further dividable
       if (n8x8 <= 2) return 1;
 
-      std::string window_name =
-        std::to_string(image.cols) + "x" + std::to_string(image.rows);
+      if (debug_view) {
+        std::string window_name =
+          std::to_string(image.cols) + "x" + std::to_string(image.rows);
 
-      cv::namedWindow(window_name, CV_WINDOW_NORMAL);
-      cv::imshow(window_name, image);
-      cv::waitKey(100);
+        cv::namedWindow(window_name, CV_WINDOW_NORMAL);
+        cv::imshow(window_name, image);
+        cv::waitKey(100);
 
-      cv::namedWindow(window_name + "stretched", CV_WINDOW_NORMAL);
-      cv::imshow(window_name + "stretched", image_stretchedin);
-      cv::waitKey(100);
+        cv::namedWindow(window_name + "stretched", CV_WINDOW_NORMAL);
+        cv::imshow(window_name + "stretched", image_stretchedin);
+        cv::waitKey(100);
 
-      cv::namedWindow(window_name + "thre", CV_WINDOW_NORMAL);
-      cv::imshow(window_name + "thre", image8x8in);
-      cv::waitKey(100);
+        cv::namedWindow(window_name + "thre", CV_WINDOW_NORMAL);
+        cv::imshow(window_name + "thre", image8x8in);
+        cv::waitKey(100);
+      }
 
       // get centroids in original image size
       double r_w = image.cols / 8.0;
@@ -108,6 +111,45 @@ namespace aero
       }
 
       return n8x8;
+    };
+
+    //////////////////////////////////////////////////
+    std::array<cv::Point2f, 4> getCornersInBoundingBox
+      (cv::Mat &image, cv::Rect bb)
+    {
+      std::array<cv::Point2f, 4> corners;
+
+      float dist_tl = std::numeric_limits<float>::max();
+      float dist_tr = std::numeric_limits<float>::max();
+      float dist_br = std::numeric_limits<float>::max();
+      float dist_bl = std::numeric_limits<float>::max();
+      for (unsigned int i = 0; i < bb.height; ++i)
+        for (unsigned int j = 0; j < bb.width; ++j)
+          if (static_cast<int>(image.at<uchar>(bb.y + i, bb.x + j)) == 255) {
+            float dist;
+            // check for top left
+            dist = std::pow(i, 2) + std::pow(j, 2);
+            if (dist < dist_tl) {
+              corners.at(0) = cv::Point2f(j, i); dist_tl = dist;
+            }
+            // check for top right
+            dist = std::pow(bb.width - i, 2) + std::pow(j, 2);
+            if (dist < dist_tl) {
+              corners.at(1) = cv::Point2f(j, i); dist_tr = dist;
+            }
+            // check for bottom right
+            dist = std::pow(bb.width - i, 2) + std::pow(bb.height - j, 2);
+            if (dist < dist_tl) {
+              corners.at(2) = cv::Point2f(j, i); dist_br = dist;
+            }
+            // check for bottom left
+            dist = std::pow(i, 2) + std::pow(bb.height - j, 2);
+            if (dist < dist_tl) {
+              corners.at(3) = cv::Point2f(j, i); dist_bl = dist;
+            }
+          }
+
+      return corners;
     };
 
   }
