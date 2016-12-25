@@ -12,7 +12,7 @@
 
 namespace aero
 {
-  namespace colors
+  namespace aerocv
   {
 
     //////////////////////////////////////////////////
@@ -29,9 +29,9 @@ namespace aero
       std::array<float, 3> rgb = {g(_color[2]), g(_color[1]), g(_color[0])};
 
       std::array<float, 3> xyz = {
-        0.412424 * rgb[0] + 0.357579 * rgb[1] + 0.180464 * rgb[2],
-        0.212656 * rgb[0] + 0.715158 * rgb[1] + 0.0721856 * rgb[2],
-        0.0193324 * rgb[0] + 0.119193 * rgb[1] + 0.950444 * rgb[2]
+        0.412424f * rgb[0] + 0.357579f * rgb[1] + 0.180464f * rgb[2],
+        0.212656f * rgb[0] + 0.715158f * rgb[1] + 0.0721856f * rgb[2],
+        0.0193324f * rgb[0] + 0.119193f * rgb[1] + 0.950444f * rgb[2]
       };
 
       std::function<float(float)> f = [=](float _v) {
@@ -99,7 +99,7 @@ namespace aero
     };
 
     //////////////////////////////////////////////////
-    void MedianCut(std::vector<cv::Vec3b> _img, int _bucket_idx, int _layer,
+    void medianCut(std::vector<cv::Vec3b> _img, int _bucket_idx, int _layer,
                    std::vector<cv::Vec3b> &_palettes)
     {
       if (_layer >= log2(_palettes.size())) {
@@ -130,7 +130,7 @@ namespace aero
         if ((*it)[2] < min[2]) min[2] = (*it)[2];
       }
 
-      cv::Vec3b range = {max[0] - min[0], max[1] - min[1], max[2] - min[2]};
+      cv::Vec3b range(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
       std::function<bool(cv::Vec3b, cv::Vec3b)> compare;
 
       if (range[0] > range[1]) {
@@ -153,13 +153,13 @@ namespace aero
 
       ++_layer;
 
-      MedianCut(bucket_one, _bucket_idx, _layer, _palettes);
-      MedianCut(bucket_two, _bucket_idx + _palettes.size()/(2*_layer), _layer,
+      medianCut(bucket_one, _bucket_idx, _layer, _palettes);
+      medianCut(bucket_two, _bucket_idx + _palettes.size()/(2*_layer), _layer,
                 _palettes);
     };
 
     //////////////////////////////////////////////////
-    void MedianCut(cv::Mat _img, int _bucket_idx, int _layer,
+    void medianCut(cv::Mat _img, int _bucket_idx, int _layer,
                    std::vector<cv::Vec3b> &_palettes)
     {
       cv::Vec3b max(0, 0, 0);
@@ -174,7 +174,7 @@ namespace aero
         if ((*it)[2] < min[2]) min[2] = (*it)[2];
       }
 
-      cv::Vec3b range = {max[0] - min[0], max[1] - min[1], max[2] - min[2]};
+      cv::Vec3b range(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
       std::function<bool(cv::Vec3b, cv::Vec3b)> compare;
 
       if (range[0] > range[1]) {
@@ -215,8 +215,8 @@ namespace aero
 
       ++_layer;
 
-      MedianCut(bucket_one, _bucket_idx, _layer, _palettes);
-      MedianCut(bucket_two, _bucket_idx + _palettes.size()/(2*_layer), _layer,
+      medianCut(bucket_one, _bucket_idx, _layer, _palettes);
+      medianCut(bucket_two, _bucket_idx + _palettes.size()/(2*_layer), _layer,
                 _palettes);
     };
 
