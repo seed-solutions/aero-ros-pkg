@@ -1,23 +1,20 @@
 #include "aero_std/aerocv.hh"
 #include "aero_std/time.h"
 
-using namespace aero;
-using namespace aerocv;
-
 //////////////////////////////////////////////////
-std::vector<objectarea> aero::aerocv::DetectObjectnessArea
-(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
- cv::Mat &img, cv::Vec3b _env_color, bool _debug_view)
+std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
+(pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
+ cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view)
 {
   auto begin = aero::time::now();
 
-  std::vector<objectarea> scene;
-  int w_scale = img.cols / cloud->width;
-  int h_scale = img.rows / cloud->height;
+  std::vector<aero::aerocv::objectarea> scene;
+  int w_scale = _img.cols / _cloud->width;
+  int h_scale = _img.rows / _cloud->height;
 
   // get normal
   pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
-  ne.setInputCloud(cloud);
+  ne.setInputCloud(_cloud);
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree
     (new pcl::search::KdTree<pcl::PointXYZRGB>);
   ne.setSearchMethod(tree);
@@ -31,7 +28,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
   reg.setMaxClusterSize(1000000);
   reg.setSearchMethod(tree);
   reg.setNumberOfNeighbours(30);
-  reg.setInputCloud(cloud);
+  reg.setInputCloud(_cloud);
   reg.setInputNormals(normal);
   reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
   reg.setCurvatureThreshold(1.0);
@@ -46,8 +43,8 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
 
     for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit)
       center +=
-        Eigen::Vector3f(cloud->points[*pit].x, cloud->points[*pit].y,
-                        cloud->points[*pit].z);
+        Eigen::Vector3f(_cloud->points[*pit].x, _cloud->points[*pit].y,
+                        _cloud->points[*pit].z);
 
     center /= it->indices.size();
     if (center.norm() > radius_threshold) {
@@ -56,7 +53,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
     }
 
     // add object to scene
-    objectarea obj;
+    aero::aerocv::objectarea obj;
     obj.indices3d.assign(it->indices.begin(), it->indices.end());
     obj.visible3d = true;
     obj.center3d = center;
@@ -65,13 +62,13 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
   }
 
   // find indices without a cluster label
-  std::vector<uchar> indices_without_label(cloud->points.size(), 255);
+  std::vector<uchar> indices_without_label(_cloud->points.size(), 255);
   for (auto it = clusters.begin(); it != clusters.end(); ++it)
     for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit)
       indices_without_label[*pit] = 0;
 
   // binary cluster non-labeled regions
-  cv::Mat binary_img(cloud->height, cloud->width, CV_8U);
+  cv::Mat binary_img(_cloud->height, _cloud->width, CV_8U);
   int at = 0;
   for (unsigned int i = 0; i < binary_img.rows; ++i)
     for (unsigned int j = 0; j < binary_img.cols; ++j)
@@ -98,8 +95,8 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
     // remove region adjacent to the edge of image
     // this removes floor, wall, and edge NaN noises all together
     // but will also remove some connected regions as well
-    if (x == 0 || (x + width) == cloud->width ||
-        y == 0 || (y + height) == cloud->height) {
+    if (x == 0 || (x + width) == _cloud->width ||
+        y == 0 || (y + height) == _cloud->height) {
       if (param[cv::ConnectedComponentsTypes::CC_STAT_AREA] > max_outmost_area) {
         outmost_label = k; // keep track of largest edge region
         max_outmost_area = param[cv::ConnectedComponentsTypes::CC_STAT_AREA];
@@ -108,7 +105,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
     }
 
     // add object to scene
-    objectarea obj;
+    aero::aerocv::objectarea obj;
     obj.indices3d.reserve(param[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
     for (unsigned int i = 0; i < height; ++i)
       for (unsigned int j = 0; j < width; ++j)
@@ -125,7 +122,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
   // break region apart by suppressing countour regions
   // why this works: connections are usually due to undefined object edges
   // the suppression eliminates such undefined edges
-  cv::Mat outmost(cloud->height, cloud->width, CV_8U);
+  cv::Mat outmost(_cloud->height, _cloud->width, CV_8U);
   if (outmost_label > 0) {
     int at = 0;
     for (unsigned int i = 0; i < labeled_image.rows; ++i)
@@ -170,12 +167,12 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
       // when the bound of background clusters covers the whole image,
       // the cluster center is the center of image
       // the distance threshold is set so that such clusters are removed
-      if (y + 0.5 * height <= 0.5 * cloud->height + 1)
+      if (y + 0.5 * height <= 0.5 * _cloud->height + 1)
         if (param[cv::ConnectedComponentsTypes::CC_STAT_AREA]
             > upper_noise_threshold)
           continue;
 
-      objectarea obj;
+      aero::aerocv::objectarea obj;
       obj.indices3d.reserve(param[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
 
       // get current cluster to check further division
@@ -213,7 +210,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
         int dheight = bounds[cv::ConnectedComponentsTypes::CC_STAT_HEIGHT];
         int dwidth = bounds[cv::ConnectedComponentsTypes::CC_STAT_WIDTH];
 
-        objectarea dobj;
+        aero::aerocv::objectarea dobj;
         dobj.indices3d.reserve(bounds[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
         for (unsigned int i = 0; i < dheight; ++i)
           for (unsigned int j = 0; j < dwidth; ++j)
@@ -232,13 +229,13 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
   for (auto it = clusters.begin(); it != clusters.end(); ) {
     auto obj = scene.begin() + static_cast<int>(it - clusters.begin());
 
-    std::vector<uchar> cluster1d(cloud->points.size(), 0);
+    std::vector<uchar> cluster1d(_cloud->points.size(), 0);
     std::vector<cv::Vec3b> colors1d(it->indices.size());
     int color1d_idx = 0;
     for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
       cluster1d[*pit] = 255;
       // in the meantime, get color as well
-      uint32_t rgb = *reinterpret_cast<int*>(&cloud->points[*pit].rgb);
+      uint32_t rgb = *reinterpret_cast<int*>(&_cloud->points[*pit].rgb);
       colors1d[color1d_idx++] = cv::Vec3b
         ((rgb) & 0x0000ff, (rgb >> 8) & 0x0000ff, (rgb >> 16) & 0x0000ff);
     }
@@ -269,7 +266,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
       (dominant_colors, obj->properties.colors, aero::aerocv::colorMap9);
 
     // create cv::Mat from cluster1d
-    cv::Mat cluster(cloud->height, cloud->width, CV_8U);
+    cv::Mat cluster(_cloud->height, _cloud->width, CV_8U);
     int at = 0;
     for (unsigned int i = 0; i < cluster.rows; ++i)
       for (unsigned int j = 0; j < cluster.cols; ++j)
@@ -291,18 +288,18 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
        cv::Point2f(corners.at(3).x*w_scale, corners.at(3).y*h_scale)};
 
     // get width3d and height3d from corners
-    int tl = (bb.y + corners.at(0).y) * cloud->width + bb.x + corners.at(0).x;
+    int tl = (bb.y + corners.at(0).y) * _cloud->width + bb.x + corners.at(0).x;
     Eigen::Vector3f tl_pos
-      (cloud->points[tl].x, cloud->points[tl].y, cloud->points[tl].z);
-    int tr = (bb.y + corners.at(1).y) * cloud->width + bb.x + corners.at(1).x;
+      (_cloud->points[tl].x, _cloud->points[tl].y, _cloud->points[tl].z);
+    int tr = (bb.y + corners.at(1).y) * _cloud->width + bb.x + corners.at(1).x;
     Eigen::Vector3f tr_pos
-      (cloud->points[tr].x, cloud->points[tr].y, cloud->points[tr].z);
-    int br = (bb.y + corners.at(2).y) * cloud->width + bb.x + corners.at(2).x;
+      (_cloud->points[tr].x, _cloud->points[tr].y, _cloud->points[tr].z);
+    int br = (bb.y + corners.at(2).y) * _cloud->width + bb.x + corners.at(2).x;
     Eigen::Vector3f br_pos
-      (cloud->points[br].x, cloud->points[br].y, cloud->points[br].z);
-    int bl = (bb.y + corners.at(3).y) * cloud->width + bb.x + corners.at(3).x;
+      (_cloud->points[br].x, _cloud->points[br].y, _cloud->points[br].z);
+    int bl = (bb.y + corners.at(3).y) * _cloud->width + bb.x + corners.at(3).x;
     Eigen::Vector3f bl_pos
-      (cloud->points[bl].x, cloud->points[bl].y, cloud->points[bl].z);
+      (_cloud->points[bl].x, _cloud->points[bl].y, _cloud->points[bl].z);
     obj->width3d = (tr_pos - tl_pos).norm();
     obj->height3d = (br_pos - bl_pos).norm();
 
@@ -319,7 +316,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
     // draw bounds2d
 
     for (auto it = scene.begin(); it < scene.begin() + clusters.size(); ++it) {
-      cv::rectangle(img, it->bounds2d, cv::Scalar(0, 255, 0), 2);
+      cv::rectangle(_img, it->bounds2d, cv::Scalar(0, 255, 0), 2);
 
       // write color properties info
       std::string text = "";
@@ -329,13 +326,13 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
         val << std::setprecision(2) << c->second;
         text += c->first + "(" + val.str() + ") ";
       }
-      cv::putText(img, text,
+      cv::putText(_img, text,
                   cv::Point(it->bounds2d.x, it->bounds2d.y + it->bounds2d.height),
                   cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255,255,255), 1.0);
     }
 
     for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it)
-      cv::rectangle(img, it->bounds2d, cv::Scalar(255, 0, 0), 2);
+      cv::rectangle(_img, it->bounds2d, cv::Scalar(255, 0, 0), 2);
 
     // show results
 
@@ -353,7 +350,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
 
     cv::namedWindow("result", CV_WINDOW_NORMAL);
     cv::resizeWindow("result", 640, 480);
-    cv::imshow("result", img);
+    cv::imshow("result", _img);
     cv::waitKey(100);
   }
 
