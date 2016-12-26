@@ -55,6 +55,9 @@ namespace aero
     (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
      cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view = true);
 
+    std::vector<int> FindTarget
+    (std::string _target_color, std::vector<objectarea> &_scene);
+
   }
 }
 

@@ -356,3 +356,58 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
 
   return scene;
 }
+
+//////////////////////////////////////////////////
+std::vector<int> aero::aerocv::FindTarget
+(std::string _target_color, std::vector<objectarea> &_scene)
+{
+  std::vector<std::pair<int, float> > candidates;
+
+  for (auto obj = _scene.begin(); obj != _scene.end(); ++obj) {
+    if (!obj->visible3d) break;
+    for (auto c = obj->properties.colors.begin();
+         c != obj->properties.colors.end(); ++c)
+      if (c->first == _target_color) {
+        candidates.push_back({static_cast<int>(obj - _scene.begin()), c->second});
+        break;
+      }
+  }
+
+  if (candidates.size() == 0)
+    return std::vector<int> {};
+
+  // order candidates such that best match comes first
+  std::sort(candidates.begin(), candidates.end(),
+            [](std::pair<int, float> x, std::pair<int, float> y) -> bool {
+              return (x.second > y.second);
+            });
+
+  // divide candidates into fields depending on color score
+  std::vector<std::vector<std::pair<int, float> > > ordered_candidates(1);
+  auto oc = ordered_candidates.begin();
+  float best_score = candidates.begin()->second;
+  for (auto obj = candidates.begin(); obj != candidates.end(); ++obj) {
+    auto s = _scene.begin() + obj->first;
+    if (fabs(obj->second - best_score) < 0.1) {
+      oc->push_back({obj->first, s->center3d.norm()});
+    } else { // any score with more than 0.1 difference, add to next field
+      best_score = obj->second;
+      ordered_candidates.push_back({{obj->first, s->center3d.norm()}});
+      oc = ordered_candidates.end() - 1;
+    }
+  }
+
+  // sort matches by distance and add to result
+  std::vector<int> result(candidates.size());
+  auto it = result.begin();
+  for (auto c = ordered_candidates.begin(); c != ordered_candidates.end(); ++c) {
+    std::sort(c->begin(), c->end(),
+              [](std::pair<int, float> x, std::pair<int, float> y) -> bool {
+                return (x.second < y.second);
+              });
+    for (auto obj = c->begin(); obj != c->end(); ++obj)
+      *it++ = obj->first;
+  }
+
+  return result;
+}
