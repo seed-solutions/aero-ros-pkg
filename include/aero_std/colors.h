@@ -99,7 +99,7 @@ namespace aero
     };
 
     //////////////////////////////////////////////////
-    void medianCut(std::vector<cv::Vec3b> _img, int _bucket_idx, int _layer,
+    void medianCut(std::vector<cv::Vec3b> &_img, int _bucket_idx, int _layer,
                    std::vector<cv::Vec3b> &_palettes)
     {
       if (_layer >= log2(_palettes.size())) {
@@ -159,7 +159,7 @@ namespace aero
     };
 
     //////////////////////////////////////////////////
-    void medianCut(cv::Mat _img, int _bucket_idx, int _layer,
+    void medianCut(cv::Mat &_img, int _bucket_idx, int _layer,
                    std::vector<cv::Vec3b> &_palettes)
     {
       cv::Vec3b max(0, 0, 0);
@@ -232,7 +232,7 @@ namespace aero
         for (unsigned int i = 0; i < color_cells.rows; ++i)
           color_cells.at<cv::Vec3b>(i, j) = _ref;
 
-      // the remaining cells are the paletter color
+      // the remaining cells are the palette color
       int cell_left = cell_width;
       for (auto it = _palette.begin(); it != _palette.end(); ++it) {
         int cell_right = cell_left + cell_width;
@@ -246,6 +246,66 @@ namespace aero
       cv::resizeWindow("palette", 720, 160);
       cv::imshow("palette", color_cells);
       cv::waitKey(100);
+    };
+
+    //////////////////////////////////////////////////
+    void getColorNames(std::vector<cv::Vec3b> &_colors,
+                       std::vector<std::pair<std::string, float> > &_res,
+                       const std::map<std::string, cv::Vec3b> &_map)
+    {
+      std::vector<std::string> names(_colors.size());
+
+      // for each color value, find color of nearest distance
+      for (auto c = _colors.begin(); c != _colors.end(); ++c) {
+        auto n = names.begin() + static_cast<int>(c - _colors.begin());
+
+        float min_dist = std::numeric_limits<float>::max();
+        for (auto m = _map.begin(); m != _map.end(); ++m) {
+          float dist = distance(rgb2lab(*c), rgb2lab(m->second));
+          if (dist < min_dist) {
+            min_dist = dist;
+            *n = m->first;
+          }
+        }
+      }
+
+      _res.clear();
+      float percentage = 1.0 / _colors.size();
+      for (auto n = names.begin(); n != names.end(); ++n) {
+        bool color_exists = false;
+        // check if color has already been added to result
+        for (auto p = _res.begin(); p != _res.end(); ++p)
+          if (p->first == *n) { // if already exists, count
+            p->second += percentage;
+            color_exists = true;
+            break;
+          }
+        if (color_exists) continue;
+        // color has not yet been added, add to result
+        _res.push_back({*n, percentage});
+      }
+    };
+
+    //////////////////////////////////////////////////
+    static const std::map<std::string, cv::Vec3b> colorMap9 = {
+      {"pink", cv::Vec3b(203, 192, 255)},
+      // {"magenta", cv::Vec3b(255, 0, 255)},
+      // {"purple", cv::Vec3b(128, 0, 128)},
+      {"blue", cv::Vec3b(255, 0, 0)},
+      // {"navy", cv::Vec3b(128, 0, 0)},
+      // {"cyan", cv::Vec3b(255, 255, 0)},
+      // {"teal", cv::Vec3b(128, 128, 0)},
+      // {"limegreen", cv::Vec3b(0, 255, 0)},
+      {"green", cv::Vec3b(0, 128, 0)},
+      {"yellow", cv::Vec3b(0, 255, 255)},
+      // {"olive", cv::Vec3b(0, 128, 128)},
+      // {"gold", cv::Vec3b(0, 117, 139)},
+      {"orange", cv::Vec3b(0, 128, 255)},
+      // {"brown", cv::Vec3b(19, 69, 139)},
+      {"red", cv::Vec3b(0, 0, 255)},
+      // {"gray", cv::Vec3b(128, 128, 128)},
+      {"black", cv::Vec3b(0, 0, 0)},
+      {"white", cv::Vec3b(255, 255, 255)}
     };
 
   }

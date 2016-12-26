@@ -248,7 +248,7 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
     std::vector<cv::Vec3b> dominant_colors(quantize_amount);
     aero::aerocv::medianCut(colors1d, 0, 0, dominant_colors);
     // check how many colors match environment color information
-    float distance_threshold = 10;
+    float distance_threshold = 20;
     int expected_matches = 3;
     int matches = 0;
     for (auto c = dominant_colors.begin(); c != dominant_colors.end(); ++c)
@@ -258,13 +258,17 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
         ++matches;
     if (matches >= expected_matches) { // if likely environment
       it = clusters.erase(it);
-      scene.erase(obj); // remove object from scene
-
+      scene.erase(obj); // remove environment object(e.g. table) from scene
       if (_debug_view)
         aero::aerocv::drawPalette(dominant_colors, _env_color);
-
       continue;
     }
+
+    // from color palette, get best matched color names
+    aero::aerocv::getColorNames
+      (dominant_colors, obj->properties.colors, aero::aerocv::colorMap9);
+
+    // create cv::Mat from cluster1d
     cv::Mat cluster(cloud->height, cloud->width, CV_8U);
     int at = 0;
     for (unsigned int i = 0; i < cluster.rows; ++i)
@@ -314,8 +318,21 @@ std::vector<objectarea> aero::aerocv::DetectObjectnessArea
   if (_debug_view) {
     // draw bounds2d
 
-    for (auto it = scene.begin(); it < scene.begin() + clusters.size(); ++it)
+    for (auto it = scene.begin(); it < scene.begin() + clusters.size(); ++it) {
       cv::rectangle(img, it->bounds2d, cv::Scalar(0, 255, 0), 2);
+
+      // write color properties info
+      std::string text = "";
+      for (auto c = it->properties.colors.begin();
+           c != it->properties.colors.end(); ++c) {
+        std::ostringstream val;
+        val << std::setprecision(2) << c->second;
+        text += c->first + "(" + val.str() + ") ";
+      }
+      cv::putText(img, text,
+                  cv::Point(it->bounds2d.x, it->bounds2d.y + it->bounds2d.height),
+                  cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255,255,255), 1.0);
+    }
 
     for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it)
       cv::rectangle(img, it->bounds2d, cv::Scalar(255, 0, 0), 2);
