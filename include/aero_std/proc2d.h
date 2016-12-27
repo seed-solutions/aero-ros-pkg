@@ -133,18 +133,18 @@ namespace aero
               corners.at(0) = cv::Point2f(j, i); dist_tl = dist;
             }
             // check for top right
-            dist = std::pow(bb.width - i, 2) + std::pow(j, 2);
-            if (dist < dist_tl) {
+            dist = std::pow(bb.width - j, 2) + std::pow(i, 2);
+            if (dist < dist_tr) {
               corners.at(1) = cv::Point2f(j, i); dist_tr = dist;
             }
             // check for bottom right
-            dist = std::pow(bb.width - i, 2) + std::pow(bb.height - j, 2);
-            if (dist < dist_tl) {
+            dist = std::pow(bb.width - j, 2) + std::pow(bb.height - i, 2);
+            if (dist < dist_br) {
               corners.at(2) = cv::Point2f(j, i); dist_br = dist;
             }
             // check for bottom left
-            dist = std::pow(i, 2) + std::pow(bb.height - j, 2);
-            if (dist < dist_tl) {
+            dist = std::pow(j, 2) + std::pow(bb.height - i, 2);
+            if (dist < dist_bl) {
               corners.at(3) = cv::Point2f(j, i); dist_bl = dist;
             }
           }

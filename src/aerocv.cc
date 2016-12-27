@@ -24,13 +24,13 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
 
   // cluster with region growing
   pcl::RegionGrowing<pcl::PointXYZRGB, pcl::Normal> reg;
-  reg.setMinClusterSize(50);
+  reg.setMinClusterSize(100);
   reg.setMaxClusterSize(1000000);
   reg.setSearchMethod(tree);
-  reg.setNumberOfNeighbours(30);
+  reg.setNumberOfNeighbours(10);
   reg.setInputCloud(_cloud);
   reg.setInputNormals(normal);
-  reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
+  reg.setSmoothnessThreshold(5.0 / 180.0 * M_PI);
   reg.setCurvatureThreshold(1.0);
   std::vector<pcl::PointIndices> clusters;
   reg.extract(clusters);
@@ -294,14 +294,14 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
     int tr = (bb.y + corners.at(1).y) * _cloud->width + bb.x + corners.at(1).x;
     Eigen::Vector3f tr_pos
       (_cloud->points[tr].x, _cloud->points[tr].y, _cloud->points[tr].z);
-    int br = (bb.y + corners.at(2).y) * _cloud->width + bb.x + corners.at(2).x;
-    Eigen::Vector3f br_pos
-      (_cloud->points[br].x, _cloud->points[br].y, _cloud->points[br].z);
+    // int br = (bb.y + corners.at(2).y) * _cloud->width + bb.x + corners.at(2).x;
+    // Eigen::Vector3f br_pos
+    //   (_cloud->points[br].x, _cloud->points[br].y, _cloud->points[br].z);
     int bl = (bb.y + corners.at(3).y) * _cloud->width + bb.x + corners.at(3).x;
     Eigen::Vector3f bl_pos
       (_cloud->points[bl].x, _cloud->points[bl].y, _cloud->points[bl].z);
-    obj->width3d = (tr_pos - tl_pos).norm();
-    obj->height3d = (br_pos - bl_pos).norm();
+    obj->width3d = (tl_pos - tr_pos).norm();
+    obj->height3d = (tl_pos - bl_pos).norm();
 
     ++it;
   }
