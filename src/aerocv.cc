@@ -19,8 +19,8 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
     (new pcl::search::KdTree<pcl::PointXYZRGB>);
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(0.03);
-  pcl::PointCloud<pcl::Normal>::Ptr normal(new pcl::PointCloud<pcl::Normal>);
-  ne.compute(*normal);
+  pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+  ne.compute(*normals);
 
   // cluster with region growing
   pcl::RegionGrowing<pcl::PointXYZRGB, pcl::Normal> reg;
@@ -29,8 +29,8 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
   reg.setSearchMethod(tree);
   reg.setNumberOfNeighbours(10);
   reg.setInputCloud(_cloud);
-  reg.setInputNormals(normal);
-  reg.setSmoothnessThreshold(5.0 / 180.0 * M_PI);
+  reg.setInputNormals(normals);
+  reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
   reg.setCurvatureThreshold(1.0);
   std::vector<pcl::PointIndices> clusters;
   reg.extract(clusters);
@@ -40,13 +40,20 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
   float radius_threshold = 1.2; // meter
   for (auto it = clusters.begin(); it != clusters.end(); ) {
     Eigen::Vector3f center = {0.0, 0.0, 0.0};
+    Eigen::Vector3f normal = {0.0, 0.0, 0.0};
 
-    for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit)
+    for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
       center +=
         Eigen::Vector3f(_cloud->points[*pit].x, _cloud->points[*pit].y,
                         _cloud->points[*pit].z);
+      normal +=
+        Eigen::Vector3f(normals->points[*pit].normal_x,
+                        normals->points[*pit].normal_y,
+                        normals->points[*pit].normal_z);
+    }
 
     center /= it->indices.size();
+    normal /= it->indices.size();
     if (center.norm() > radius_threshold) {
       it = clusters.erase(it);
       continue;
@@ -57,6 +64,7 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
     obj.indices3d.assign(it->indices.begin(), it->indices.end());
     obj.visible3d = true;
     obj.center3d = center;
+    obj.normal3d = normal;
     scene.push_back(obj);
     ++it;
   }
@@ -277,31 +285,28 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
     obj->bounds2d =
       cv::Rect(bb.x*w_scale, bb.y*h_scale, bb.width*w_scale, bb.height*h_scale);
 
-    // get additional infos
+    // // get additional infos
 
-    // get corner2d
-    auto corners = aero::aerocv::getCornersInBoundingBox(cluster, bb);
-    obj->corners2d =
-      {cv::Point2f(corners.at(0).x*w_scale, corners.at(0).y*h_scale),
-       cv::Point2f(corners.at(1).x*w_scale, corners.at(1).y*h_scale),
-       cv::Point2f(corners.at(2).x*w_scale, corners.at(2).y*h_scale),
-       cv::Point2f(corners.at(3).x*w_scale, corners.at(3).y*h_scale)};
+    // // get corner2d
+    // auto corners = aero::aerocv::getCornersInBoundingBox(cluster, bb);
+    // obj->corners2d =
+    //   {cv::Point2f(corners.at(0).x*w_scale, corners.at(0).y*h_scale),
+    //    cv::Point2f(corners.at(1).x*w_scale, corners.at(1).y*h_scale),
+    //    cv::Point2f(corners.at(2).x*w_scale, corners.at(2).y*h_scale),
+    //    cv::Point2f(corners.at(3).x*w_scale, corners.at(3).y*h_scale)};
 
-    // get width3d and height3d from corners
-    int tl = (bb.y + corners.at(0).y) * _cloud->width + bb.x + corners.at(0).x;
-    Eigen::Vector3f tl_pos
-      (_cloud->points[tl].x, _cloud->points[tl].y, _cloud->points[tl].z);
-    int tr = (bb.y + corners.at(1).y) * _cloud->width + bb.x + corners.at(1).x;
-    Eigen::Vector3f tr_pos
-      (_cloud->points[tr].x, _cloud->points[tr].y, _cloud->points[tr].z);
-    // int br = (bb.y + corners.at(2).y) * _cloud->width + bb.x + corners.at(2).x;
-    // Eigen::Vector3f br_pos
-    //   (_cloud->points[br].x, _cloud->points[br].y, _cloud->points[br].z);
-    int bl = (bb.y + corners.at(3).y) * _cloud->width + bb.x + corners.at(3).x;
-    Eigen::Vector3f bl_pos
-      (_cloud->points[bl].x, _cloud->points[bl].y, _cloud->points[bl].z);
-    obj->width3d = (tl_pos - tr_pos).norm();
-    obj->height3d = (tl_pos - bl_pos).norm();
+    // // get width3d and height3d from corners
+    // int tl = (bb.y + corners.at(0).y) * _cloud->width + bb.x + corners.at(0).x;
+    // Eigen::Vector3f tl_pos
+    //   (_cloud->points[tl].x, _cloud->points[tl].y, _cloud->points[tl].z);
+    // int tr = (bb.y + corners.at(1).y) * _cloud->width + bb.x + corners.at(1).x;
+    // Eigen::Vector3f tr_pos
+    //   (_cloud->points[tr].x, _cloud->points[tr].y, _cloud->points[tr].z);
+    // int bl = (bb.y + corners.at(3).y) * _cloud->width + bb.x + corners.at(3).x;
+    // Eigen::Vector3f bl_pos
+    //   (_cloud->points[bl].x, _cloud->points[bl].y, _cloud->points[bl].z);
+    // obj->width3d = (tl_pos - tr_pos).norm();
+    // obj->height3d = (tl_pos - bl_pos).norm();
 
     ++it;
   }
@@ -329,6 +334,19 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
       cv::putText(_img, text,
                   cv::Point(it->bounds2d.x, it->bounds2d.y + it->bounds2d.height),
                   cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255,255,255), 1.0);
+
+      // draw norm
+      float s = 10; // scale
+      cv::Point center(it->bounds2d.x + 0.5 * it->bounds2d.width,
+                       it->bounds2d.y + 0.5 * it->bounds2d.height);
+      // note: normal z value is likely negative
+      cv::Point normal(
+          s * static_cast<float>(it->normal3d.x()) / fabs(it->normal3d.z()),
+          s * static_cast<float>(it->normal3d.y()) / fabs(it->normal3d.z()));
+      cv::line(_img, center, cv::Point(center.x + normal.x, center.y + normal.y),
+               cv::Scalar(255, 255, 0));
+      cv::circle(_img, cv::Point(center.x + normal.x, center.y + normal.y),
+                 2, cv::Scalar(255, 255, 0), 2);
     }
 
     for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it)
