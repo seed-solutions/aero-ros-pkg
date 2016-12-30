@@ -262,6 +262,9 @@ namespace aero
         float min_dist = std::numeric_limits<float>::max();
         for (auto m = _map.begin(); m != _map.end(); ++m) {
           float dist = distance(rgb2lab(*c), rgb2lab(m->second));
+          if (m->first == "black" || m->first == "white")
+            if (dist > 20) // black and white are powerful colors
+              continue; // requires strict threshold
           if (dist < min_dist) {
             min_dist = dist;
             *n = m->first;
@@ -288,7 +291,7 @@ namespace aero
 
     //////////////////////////////////////////////////
     static const std::map<std::string, cv::Vec3b> colorMap9 = {
-      {"pink", cv::Vec3b(203, 192, 255)},
+      /* {"pink", cv::Vec3b(203, 192, 255)}, */
       // {"magenta", cv::Vec3b(255, 0, 255)},
       // {"purple", cv::Vec3b(128, 0, 128)},
       {"blue", cv::Vec3b(255, 0, 0)},
