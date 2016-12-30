@@ -64,6 +64,7 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
     obj.indices3d.assign(it->indices.begin(), it->indices.end());
     obj.visible3d = true;
     obj.center3d = center;
+    normal.normalize();
     obj.normal3d = normal;
     scene.push_back(obj);
     ++it;
@@ -377,7 +378,7 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
 
 //////////////////////////////////////////////////
 std::vector<int> aero::aerocv::FindTarget
-(std::string _target_color, std::vector<objectarea> &_scene)
+(std::string _target_color, std::vector<aero::aerocv::objectarea> &_scene)
 {
   std::vector<std::pair<int, float> > candidates;
 
@@ -427,5 +428,145 @@ std::vector<int> aero::aerocv::FindTarget
       *it++ = obj->first;
   }
 
+  return result;
+}
+
+//////////////////////////////////////////////////
+aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
+(int _target, std::vector<aero::aerocv::objectarea> &_scene,
+ pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud)
+{
+  aero::aerocv::graspconfig result;
+  auto target = _scene.begin() + _target;
+
+  // check sparsity of surroundings
+  // here, objects with more than two detected facets will not be sparse
+  // only objects with one detected facet and are far apart will be sparse
+  float distance_threshold = 0.15; // m
+  std::vector<std::vector<aero::aerocv::objectarea>::iterator > nearby_objects;
+  for (auto obj = _scene.begin(); obj != _scene.end(); ++obj) {
+    if (!obj->visible3d) continue; // currently not supported
+    if (obj == target) continue; // obviously, don't include self
+    if ((obj->center3d - target->center3d).norm() < distance_threshold)
+      nearby_objects.push_back(obj);
+  }
+
+  if (nearby_objects.size() == 0) {
+    std::cout << "sparse top-grasp-able!\n";
+    result.sparse = 1;
+    result.contact = 0;
+    return result;
+  }
+
+  // get indices bounds of target object
+  // note, bounds2d is image coords so cannot be used as comparison
+  int bound_y = std::numeric_limits<int>::max();
+  int bound_left = std::numeric_limits<int>::max();
+  int bound_right = -1;
+  for (auto p = target->indices3d.begin(); p != target->indices3d.end(); ++p) {
+    int y = *p / _cloud->width;
+    int x = *p - y * _cloud->width;
+    if (y < bound_y) bound_y = y;
+    if (x < bound_left) bound_left = x;
+    if (x > bound_right) bound_right = x;
+  }
+
+  // check top grasp-ability from environment
+  // check depth of points behind target
+  float depth_threshold = 0.02; // m
+  std::vector<std::vector<aero::aerocv::objectarea>::iterator > objects_behind;
+  for (auto it = nearby_objects.begin(); it != nearby_objects.end(); ++it) {
+    auto obj = *it;
+
+    for (auto p = obj->indices3d.begin(); p != obj->indices3d.end(); ++p) {
+      int y = *p / _cloud->width;
+      int x = *p - y * _cloud->width;
+      // check if point is behind object
+      if (y < bound_y && bound_left < x && x < bound_right)
+        // check if point is deeper than target
+        if (_cloud->points[*p].z < target->center3d.z() + depth_threshold) {
+          objects_behind.push_back(obj);
+          break;
+        }
+    }
+  }
+
+  // if target is not buried, target is likely top-grasp-able
+  if (objects_behind.size() == 0) {
+    std::cout << "not buried top-grasp-able!\n";
+    result.sparse = 0;
+    result.contact = 0;
+    return result;
+  }
+
+  // check norm of objects behind and check for facets
+  bool detected_parallel = false;
+  std::vector<std::vector<aero::aerocv::objectarea>::iterator > facets;
+  for (auto it = objects_behind.begin(); it != objects_behind.end(); ++it) {
+    auto obj = *it;
+
+    // find objects right behind considering orientation
+    // the following projected dot product can calculate this
+    Eigen::Vector3f v = target->center3d - obj->center3d;
+    float c_norm = std::sqrt(std::pow(v.x(), 2) + std::pow(v.y(), 2));
+    float n_norm =
+      std::sqrt(std::pow(target->normal3d.x(), 2)
+                + std::pow(target->normal3d.y(), 2));
+    if (fabs(v.x() * target->normal3d.x() + v.y() * target->normal3d.y())
+        < 0.7 * c_norm * n_norm)
+      continue;
+
+    // check clockwise-ness of 3d dot product
+    // parallel > front facing > slightly bigger object behind (contact-grasp-able)
+    // c clockwise > front facing > detected facet behind (further analyze)
+    // clockwise > top facing > detected object preventing grasp (not grasp-able)
+    float dot3d = target->normal3d.dot(obj->normal3d);
+
+    if (0.7 < dot3d) { // likely parallel
+      detected_parallel = true;
+      continue;
+    }
+
+    if (fabs(dot3d) < 0.3) { // likely perpendicular
+      Eigen::Vector3f crossv = target->normal3d.cross(obj->normal3d);
+      crossv.normalize();
+      float det3d = Eigen::Vector3f(-1, 0, 0).dot(crossv);
+      if (det3d < 0) { // likely clockwise (higher priority than parallel)
+        std::cout << "buried not grasp-able!\n";
+        result.sparse = 0;
+        result.contact = -1;
+        // report what object may be preventing grasp
+        result.facets.push_back(static_cast<int>(obj - _scene.begin()));
+        return result;
+      }
+      // likely counter clockwise
+      facets.push_back(obj);
+    }
+  }
+
+  // at least not buried
+  if (detected_parallel) {
+    std::cout << "large object behind, insist contact grasp!\n";
+    result.sparse = 0;
+    result.contact = 1;
+    return result;
+  }
+
+  // if no objects behind are preventing grasp
+  if (facets.size() == 0) {
+    std::cout << "no direct behind objects found, likely top-grasp-able!\n";
+    result.sparse = 0;
+    result.contact = 0;
+    return result;
+  }
+
+  for (auto it = facets.begin(); it != facets.end(); ++it) {
+    auto obj = *it;
+    // TODO: Analyze whether facet is pile of objects or single facet
+  }
+
+  std::cout << "likely contact grasp-able!\n";
+  result.sparse = 0;
+  result.contact = 1;
   return result;
 }
