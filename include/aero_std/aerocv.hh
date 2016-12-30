@@ -57,7 +57,6 @@ namespace aero
       std::vector<int> facets; // id of detected facets (for futher analysis)
     };
 
-    // TODO: return pair
     /// @brief Detect area where objects likely exist with 3d region growing.
     ///   First, region growing segmentation is conducted.
     ///   Second, 2d clustering for non-detected area is conducted.
@@ -67,7 +66,7 @@ namespace aero
     /// @param[in] _env_color Color of environment to remove from object list.
     /// @param[in] _debug_view Flag to illustrate process or not.
     /// @return {List of detected objects, List of detected environment}
-    std::vector<objectarea> DetectObjectnessArea
+    std::pair<std::vector<objectarea>, std::vector<objectarea> > DetectObjectnessArea
     (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
      cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view=true);
 

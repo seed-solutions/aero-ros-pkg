@@ -2,13 +2,15 @@
 #include "aero_std/time.h"
 
 //////////////////////////////////////////////////
-std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
+std::pair<std::vector<aero::aerocv::objectarea>,
+          std::vector<aero::aerocv::objectarea> > aero::aerocv::DetectObjectnessArea
 (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
  cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view)
 {
   auto begin = aero::time::now();
 
   std::vector<aero::aerocv::objectarea> scene;
+  std::vector<aero::aerocv::objectarea> env;
   int w_scale = _img.cols / _cloud->width;
   int h_scale = _img.rows / _cloud->height;
 
@@ -263,6 +265,7 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
           < distance_threshold)
         ++matches;
     if (matches >= expected_matches) { // if likely environment
+      env.push_back(*obj);
       it = clusters.erase(it);
       scene.erase(obj); // remove environment object(e.g. table) from scene
       if (_debug_view)
@@ -373,7 +376,7 @@ std::vector<aero::aerocv::objectarea> aero::aerocv::DetectObjectnessArea
     cv::waitKey(100);
   }
 
-  return scene;
+  return {scene, env};
 }
 
 //////////////////////////////////////////////////
