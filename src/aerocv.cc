@@ -437,7 +437,7 @@ std::vector<int> aero::aerocv::FindTarget
 //////////////////////////////////////////////////
 aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
 (int _target, std::vector<aero::aerocv::objectarea> &_scene,
- pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud)
+ pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img)
 {
   aero::aerocv::graspconfig result;
   auto target = _scene.begin() + _target;
@@ -563,13 +563,100 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
     return result;
   }
 
+  // analyze whether facet is pile of objects or single facets
   for (auto it = facets.begin(); it != facets.end(); ++it) {
     auto obj = *it;
-    // TODO: Analyze whether facet is pile of objects or single facet
+
+    // get facet image as gray
+    cv::Mat gray;
+    // cv::cvtColor(_img(obj->bounds2d), gray, CV_RGB2GRAY);
+    cv::cvtColor(_img, gray, CV_RGB2GRAY);
+    cv::Mat img;
+    cv::resize(gray, img, cv::Size(400, 400));
+
+    // fft img for filtering
+    cv::Mat planes[] = {cv::Mat_<float>(img), cv::Mat::zeros(img.size(), CV_32F)};
+    cv::Mat dft;
+    merge(planes, 2, dft);
+    cv::dft(dft, dft);
+    cv::split(dft, planes); // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
+
+    // mask where color in x direction is stable
+    // this assumes that between items are horizontally stable in terms of color
+    // by eliminating the between, we are able to part each items in pile
+    // if parted items are detected, facet is most likely a pile of items
+    // note, dft is not shifted, therefore, mask edge region instead of center
+    for (unsigned int i = 0; i < 2; ++i) {
+      cv::Mat mask1 = planes[i](cv::Rect(0, 0, 30, img.rows));
+      mask1.setTo(0.0);
+      cv::Mat mask2 = planes[i](cv::Rect(img.cols - 30, 0, 30, img.rows));
+      mask2.setTo(0.0);
+    }
+
+    // ifft to get image back
+    cv::Mat idft;
+    cv::Mat iplanes[] =
+      {cv::Mat::zeros(img.size(), CV_32F), cv::Mat::zeros(img.size(), CV_32F)};
+    cv::merge(planes, 2, dft);
+    cv::idft(dft, idft);
+    cv::split(idft, iplanes);
+    cv::Mat img_back;
+    cv::magnitude(iplanes[0], iplanes[1], img_back);
+
+    // float Mat to gray image
+    cv::Mat roi = img_back(cv::Rect(10, 10, img.cols - 10, img.rows - 10));
+    cv::Mat img2(roi.rows, roi.cols, CV_8U);
+    double max;
+    double min; // not used
+    cv::minMaxLoc(roi, &min, &max);
+    for (unsigned int i = 0; i < img.rows; ++i)
+      for (unsigned int j = 0; j < img.cols; ++j)
+        img2.at<uchar>(i, j) = static_cast<int>(roi.at<float>(i, j) / max * 255);
+
+    // otsu binary
+    cv::Mat blur;
+    cv::GaussianBlur(img2, blur, cv::Size(101, 101), 0);
+    cv::Mat binary;
+    cv::threshold(blur, binary, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
+
+    // get width of each cluster, if cluster > 2, likely a pile of items
+    // false negative when
+    //   1. cluster is actually 2 (we are not interested in pile of two)
+    //   2. roi includes other than pile (= frequency strength has noise)
+    //   3. low resolution (= frequency strength is normalized)
+    //   4. depending on package design (= between items not horizontally stable)
+    cv::Mat labeled_image;
+    cv::Mat stats;
+    cv::Mat centroids;
+    int n_lables =
+      cv::connectedComponentsWithStats(binary, labeled_image, stats, centroids);
+
+    std::vector<int> y_values;
+    for (int k = 1; k < n_lables; ++k) {
+      int *param = stats.ptr<int>(k);
+      int height = param[cv::ConnectedComponentsTypes::CC_STAT_HEIGHT];
+      int width = param[cv::ConnectedComponentsTypes::CC_STAT_WIDTH];
+      if (height * 1.5 < width)
+        y_values.push_back(param[cv::ConnectedComponentsTypes::CC_STAT_TOP]);
+    }
+
+    std::sort(y_values.begin(), y_values.end());
+    if (y_values.size() > 2 &&
+        y_values.at(y_values.size() - 1) - y_values.at(0) > 180) {
+      std::cout << "detected pile, likely contact grasp-able!\n";
+      result.sparse = 0;
+      result.contact = 1;
+      return result;
+    }
+
+    // keep track of facet id
+    result.facets.push_back(static_cast<int>(obj - _scene.begin()));
   }
 
-  std::cout << "likely contact grasp-able!\n";
-  result.sparse = 0;
-  result.contact = 1;
+  // code exits here
+  // recursively call ConfigurationFromLocal1DState when facet is detected
+  std::cout << "detected facet, state could not be determined!\n";
+  result.sparse = -1;
+  result.contact = -1;
   return result;
 }

@@ -84,10 +84,11 @@ namespace aero
     /// @param[in] _target Id of target in vector _scene.
     /// @param[in] _scene List of objects to consider when analyzing.
     /// @param[in] _cloud Point cloud from sensor (used in DetectObjectnessArea).
+    /// @param[in] _img Image from sensor (used in DetecObjectnessArea)
     /// @return Likely required grasp strategy and detected object relations.
     graspconfig ConfigurationFromLocal1DState
     (int _target, std::vector<objectarea> &_scene,
-     pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud);
+     pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img);
 
   }
 }
