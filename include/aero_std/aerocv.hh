@@ -56,11 +56,11 @@ namespace aero
     /// @param[in] _cloud Point cloud from sensor (low resolution for performance).
     /// @param[in] _img Image from sensor (for resolution ratio and drawing).
     /// @param[in] _env_color Color of environment to remove from object list.
-    /// @param[in] _debug_view Flag to illustrate process or not.
+    /// @param[in] _debug_folder Folder to save process images. No save if empty.
     /// @return {List of detected objects, List of detected environment}
     std::pair<std::vector<objectarea>, std::vector<objectarea> > DetectObjectnessArea
     (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
-     cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view=true);
+     cv::Mat &_img, cv::Vec3b _env_color, std::string _debug_folder="");
 
     /// @brief Sorts by color percentage and distance (best match comes first).
     ///   e.g. 100% blue is better match than 50% blue
@@ -77,10 +77,12 @@ namespace aero
     /// @param[in] _scene List of objects to consider when analyzing.
     /// @param[in] _cloud Point cloud from sensor (used in DetectObjectnessArea).
     /// @param[in] _img Image from sensor (used in DetecObjectnessArea)
+    /// @param[in] _debug_folder Folder to save process images. No save if empty.
     /// @return Likely required grasp strategy and detected object relations.
     graspconfig ConfigurationFromLocal1DState
     (int _target, std::vector<objectarea> &_scene,
-     pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img);
+     pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img,
+     std::string _debug_folder="");
 
   }
 }

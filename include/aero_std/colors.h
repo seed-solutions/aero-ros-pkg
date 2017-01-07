@@ -222,7 +222,8 @@ namespace aero
 
     //////////////////////////////////////////////////
     void drawPalette(std::vector<cv::Vec3b> &_palette,
-                     cv::Vec3b _ref = cv::Vec3b(255, 255, 255))
+                     cv::Vec3b _ref = cv::Vec3b(255, 255, 255),
+                     std::string _save_to="")
     {
       cv::Mat color_cells = cv::Mat_<cv::Vec3b>(80, 720, cv::Vec3b(255, 255, 255));
       int cell_width = 720 / (_palette.size() + 1);
@@ -242,10 +243,14 @@ namespace aero
         cell_left += cell_width;
       }
 
-      cv::namedWindow("palette", CV_WINDOW_NORMAL);
-      cv::resizeWindow("palette", 720, 160);
-      cv::imshow("palette", color_cells);
-      cv::waitKey(100);
+      if (_save_to != "") {
+        cv::imwrite(_save_to + "palette.jpg", color_cells);
+      } else {
+        cv::namedWindow("palette", CV_WINDOW_NORMAL);
+        cv::resizeWindow("palette", 720, 160);
+        cv::imshow("palette", color_cells);
+        cv::waitKey(100);
+      }
     };
 
     //////////////////////////////////////////////////

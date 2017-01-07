@@ -19,7 +19,7 @@ namespace aero
     //////////////////////////////////////////////////
     int cutComponentsWithStats
       (cv::Mat image, cv::Mat &labels, cv::Mat &stats, cv::Mat &centroids,
-       bool debug_view = false)
+       std::string debug_folder="")
     {
       // if image is too small to resize, return
       if (image.cols < 8 || image.rows < 8) return 1;
@@ -46,21 +46,11 @@ namespace aero
       // if cluster is not further dividable
       if (n8x8 <= 2) return 1;
 
-      if (debug_view) {
-        std::string window_name =
-          std::to_string(image.cols) + "x" + std::to_string(image.rows);
-
-        cv::namedWindow(window_name, CV_WINDOW_NORMAL);
-        cv::imshow(window_name, image);
-        cv::waitKey(100);
-
-        cv::namedWindow(window_name + "stretched", CV_WINDOW_NORMAL);
-        cv::imshow(window_name + "stretched", image_stretchedin);
-        cv::waitKey(100);
-
-        cv::namedWindow(window_name + "thre", CV_WINDOW_NORMAL);
-        cv::imshow(window_name + "thre", image8x8in);
-        cv::waitKey(100);
+      if (debug_folder != "") {
+        debug_folder += std::to_string(image.cols) + "x" + std::to_string(image.rows);
+        cv::imwrite(debug_folder + ".jpg", image);
+        cv::imwrite(debug_folder + "stretched.jpg", image_stretchedin);
+        cv::imwrite(debug_folder + "thre.jpg", image8x8in);
       }
 
       // get centroids in original image size

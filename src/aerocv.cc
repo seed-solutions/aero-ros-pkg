@@ -5,7 +5,7 @@
 std::pair<std::vector<aero::aerocv::objectarea>,
           std::vector<aero::aerocv::objectarea> > aero::aerocv::DetectObjectnessArea
 (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
- cv::Mat &_img, cv::Vec3b _env_color, bool _debug_view)
+ cv::Mat &_img, cv::Vec3b _env_color, std::string _debug_folder)
 {
   auto begin = aero::time::now();
 
@@ -202,7 +202,7 @@ std::pair<std::vector<aero::aerocv::objectarea>,
       cv::Mat divcentroids;
       int n_div =
         aero::aerocv::cutComponentsWithStats(
-            blob, divs, divstats, divcentroids, _debug_view);
+            blob, divs, divstats, divcentroids, _debug_folder + "objectness_");
 
       // if no further division
       if (n_div == 1) {
@@ -268,8 +268,9 @@ std::pair<std::vector<aero::aerocv::objectarea>,
       env.push_back(*obj);
       it = clusters.erase(it);
       scene.erase(obj); // remove environment object(e.g. table) from scene
-      if (_debug_view)
-        aero::aerocv::drawPalette(dominant_colors, _env_color);
+      if (_debug_folder != "")
+        aero::aerocv::drawPalette
+          (dominant_colors, _env_color, _debug_folder + "objectness_");
       continue;
     }
 
@@ -298,7 +299,7 @@ std::pair<std::vector<aero::aerocv::objectarea>,
 
   // view results if debug mode is true
 
-  if (_debug_view) {
+  if (_debug_folder != "") {
     // draw bounds2d
 
     for (auto it = scene.begin(); it < scene.begin() + clusters.size(); ++it) {
@@ -335,22 +336,10 @@ std::pair<std::vector<aero::aerocv::objectarea>,
 
     // show results
 
-    cv::namedWindow("mid1", CV_WINDOW_NORMAL);
-    cv::resizeWindow("mid1", 640, 480);
-    cv::imshow("mid1", binary_img);
-    cv::waitKey(100);
-
-    if (outmost_label > 0) {
-      cv::namedWindow("mid2", CV_WINDOW_NORMAL);
-      cv::resizeWindow("mid2", 640, 480);
-      cv::imshow("mid2", outmost);
-      cv::waitKey(100);
-    }
-
-    cv::namedWindow("result", CV_WINDOW_NORMAL);
-    cv::resizeWindow("result", 640, 480);
-    cv::imshow("result", _img);
-    cv::waitKey(100);
+    cv::imwrite(_debug_folder + "objectness_mid1.jpg", binary_img);
+    if (outmost_label > 0)
+      cv::imwrite(_debug_folder + "objectness_mid2.jpg", outmost);
+    cv::imwrite(_debug_folder + "objectness.jpg", _img);
   }
 
   return {scene, env};
@@ -414,7 +403,8 @@ std::vector<int> aero::aerocv::FindTarget
 //////////////////////////////////////////////////
 aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
 (int _target, std::vector<aero::aerocv::objectarea> &_scene,
- pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img)
+ pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img,
+ std::string _debug_folder)
 {
   aero::aerocv::graspconfig result;
   auto target = _scene.begin() + _target;
@@ -627,6 +617,12 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
 
     // keep track of facet id
     result.facets.push_back(static_cast<int>(obj - _scene.begin()));
+
+    if (_debug_folder != "") {
+      cv::imwrite(_debug_folder + "local1d_facet_raw.jpg", gray);
+      cv::imwrite(_debug_folder + "local1d_facet_fft.jpg", img2);
+      cv::imwrite(_debug_folder + "local1d_facet.jpg", binary);
+    }
   }
 
   // code exits here
