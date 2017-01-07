@@ -40,14 +40,6 @@ namespace aero
       Eigen::Vector3f center3d; // used in post-process
       Eigen::Vector3f normal3d; // pre-calculated for post-process
       objectproperties properties; // only colors property is filled w/ detection
-
-      // below, to be deprecated
-      // additional info for post-process
-      // (calculated unless for speed optimization)
-      std::array<cv::Point2f, 4> corners2d; // used for OCR, ...
-      // corners2d coordinate is local to bounds
-      float width3d; // used for OCR, grasp utils, ...
-      float height3d; // used for OCR, grasp utils, ...
     };
 
     /// @brief Information of object in relation to environment.
