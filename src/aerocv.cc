@@ -32,7 +32,7 @@ std::pair<std::vector<aero::aerocv::objectarea>,
   reg.setNumberOfNeighbours(10);
   reg.setInputCloud(_cloud);
   reg.setInputNormals(normals);
-  reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
+  reg.setSmoothnessThreshold(5.0 / 180.0 * M_PI);
   reg.setCurvatureThreshold(1.0);
   std::vector<pcl::PointIndices> clusters;
   reg.extract(clusters);
@@ -288,29 +288,6 @@ std::pair<std::vector<aero::aerocv::objectarea>,
     auto bb = cv::boundingRect(cluster);
     obj->bounds2d =
       cv::Rect(bb.x*w_scale, bb.y*h_scale, bb.width*w_scale, bb.height*h_scale);
-
-    // // get additional infos
-
-    // // get corner2d
-    // auto corners = aero::aerocv::getCornersInBoundingBox(cluster, bb);
-    // obj->corners2d =
-    //   {cv::Point2f(corners.at(0).x*w_scale, corners.at(0).y*h_scale),
-    //    cv::Point2f(corners.at(1).x*w_scale, corners.at(1).y*h_scale),
-    //    cv::Point2f(corners.at(2).x*w_scale, corners.at(2).y*h_scale),
-    //    cv::Point2f(corners.at(3).x*w_scale, corners.at(3).y*h_scale)};
-
-    // // get width3d and height3d from corners
-    // int tl = (bb.y + corners.at(0).y) * _cloud->width + bb.x + corners.at(0).x;
-    // Eigen::Vector3f tl_pos
-    //   (_cloud->points[tl].x, _cloud->points[tl].y, _cloud->points[tl].z);
-    // int tr = (bb.y + corners.at(1).y) * _cloud->width + bb.x + corners.at(1).x;
-    // Eigen::Vector3f tr_pos
-    //   (_cloud->points[tr].x, _cloud->points[tr].y, _cloud->points[tr].z);
-    // int bl = (bb.y + corners.at(3).y) * _cloud->width + bb.x + corners.at(3).x;
-    // Eigen::Vector3f bl_pos
-    //   (_cloud->points[bl].x, _cloud->points[bl].y, _cloud->points[bl].z);
-    // obj->width3d = (tl_pos - tr_pos).norm();
-    // obj->height3d = (tl_pos - bl_pos).norm();
 
     ++it;
   }
@@ -569,8 +546,7 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
 
     // get facet image as gray
     cv::Mat gray;
-    // cv::cvtColor(_img(obj->bounds2d), gray, CV_RGB2GRAY);
-    cv::cvtColor(_img, gray, CV_RGB2GRAY);
+    cv::cvtColor(_img(obj->bounds2d), gray, CV_RGB2GRAY);
     cv::Mat img;
     cv::resize(gray, img, cv::Size(400, 400));
 
@@ -609,8 +585,8 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
     double max;
     double min; // not used
     cv::minMaxLoc(roi, &min, &max);
-    for (unsigned int i = 0; i < img.rows; ++i)
-      for (unsigned int j = 0; j < img.cols; ++j)
+    for (unsigned int i = 0; i < img2.rows; ++i)
+      for (unsigned int j = 0; j < img2.cols; ++j)
         img2.at<uchar>(i, j) = static_cast<int>(roi.at<float>(i, j) / max * 255);
 
     // otsu binary
