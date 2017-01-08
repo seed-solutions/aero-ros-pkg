@@ -104,42 +104,98 @@ namespace aero
     };
 
     //////////////////////////////////////////////////
-    std::array<cv::Point2f, 4> getCornersInBoundingBox
-      (cv::Mat &image, cv::Rect bb)
-    {
-      std::array<cv::Point2f, 4> corners;
+    bool findPackagePattern(cv::Mat &_input, cv::Mat &_stats,
+                            std::string _debug_folder="") {
+      cv::Mat img;
+      cv::resize(_input, img, cv::Size(400, 400));
 
-      float dist_tl = std::numeric_limits<float>::max();
-      float dist_tr = std::numeric_limits<float>::max();
-      float dist_br = std::numeric_limits<float>::max();
-      float dist_bl = std::numeric_limits<float>::max();
-      for (unsigned int i = 0; i < bb.height; ++i)
-        for (unsigned int j = 0; j < bb.width; ++j)
-          if (static_cast<int>(image.at<uchar>(bb.y + i, bb.x + j)) == 255) {
-            float dist;
-            // check for top left
-            dist = std::pow(i, 2) + std::pow(j, 2);
-            if (dist < dist_tl) {
-              corners.at(0) = cv::Point2f(j, i); dist_tl = dist;
-            }
-            // check for top right
-            dist = std::pow(bb.width - j, 2) + std::pow(i, 2);
-            if (dist < dist_tr) {
-              corners.at(1) = cv::Point2f(j, i); dist_tr = dist;
-            }
-            // check for bottom right
-            dist = std::pow(bb.width - j, 2) + std::pow(bb.height - i, 2);
-            if (dist < dist_br) {
-              corners.at(2) = cv::Point2f(j, i); dist_br = dist;
-            }
-            // check for bottom left
-            dist = std::pow(j, 2) + std::pow(bb.height - i, 2);
-            if (dist < dist_bl) {
-              corners.at(3) = cv::Point2f(j, i); dist_bl = dist;
-            }
-          }
+      // fft img for filtering
+      cv::Mat planes[] = {cv::Mat_<float>(img), cv::Mat::zeros(img.size(), CV_32F)};
+      cv::Mat dft;
+      merge(planes, 2, dft);
+      cv::dft(dft, dft);
+      cv::split(dft, planes); // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
 
-      return corners;
+      // mask where color in x direction is stable
+      // this assumes that between items are horizontally stable in terms of color
+      // by eliminating the between, we are able to part each items in pile
+      // if parted items are detected, facet is most likely a pile of items
+      // note, dft is not shifted, therefore, mask edge region instead of center
+      for (unsigned int i = 0; i < 2; ++i) {
+        cv::Mat mask1 = planes[i](cv::Rect(0, 0, 30, img.rows));
+        mask1.setTo(0.0);
+        cv::Mat mask2 = planes[i](cv::Rect(img.cols - 30, 0, 30, img.rows));
+        mask2.setTo(0.0);
+      }
+
+      // ifft to get image back
+      cv::Mat idft;
+      cv::Mat iplanes[] =
+        {cv::Mat::zeros(img.size(), CV_32F), cv::Mat::zeros(img.size(), CV_32F)};
+      cv::merge(planes, 2, dft);
+      cv::idft(dft, idft);
+      cv::split(idft, iplanes);
+      cv::Mat img_back;
+      cv::magnitude(iplanes[0], iplanes[1], img_back);
+
+      // float Mat to gray image
+      // cut image, as edge ffts have high magnitude independent to image features
+      cv::Mat roi = img_back(cv::Rect(10, 10, img.cols - 20, img.rows - 20));
+      cv::Mat img2(roi.rows, roi.cols, CV_8U);
+      double max;
+      double min; // not used
+      cv::minMaxLoc(roi, &min, &max);
+      for (unsigned int i = 0; i < img2.rows; ++i)
+        for (unsigned int j = 0; j < img2.cols; ++j)
+          img2.at<uchar>(i, j) = static_cast<int>(roi.at<float>(i, j) / max * 255);
+
+      // stretch image toward y direction
+      // this stresses the in-between features
+      // this process lessens false negatives and will not add much false positives
+      cv::Mat stretch2;
+      cv::resize(img2, stretch2, cv::Size(100, 800));
+
+      // otsu binary
+      cv::Mat blur;
+      cv::GaussianBlur(stretch2, blur, cv::Size(101, 101), 0);
+      cv::Mat binary;
+      cv::threshold(blur, binary, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
+
+      cv::resize(binary, img2, cv::Size(400, 400));
+
+      // get width of each cluster
+      cv::Mat labeled_image;
+      cv::Mat centroids;
+      int n_lables =
+        cv::connectedComponentsWithStats(img2, labeled_image, _stats, centroids);
+
+      // likeliness1 evaluates likeliness of pile
+      // likeliness1 = a cluster with a long width is likely an item
+      // false negative
+      //   1. when cluster count is 2 (hard to distinguish if two is a pile)
+      //      (besides, we should not be interested in pile of two)
+      //   2. depending on package design (assumption may not be met)
+      int likeliness1 = 0;
+      for (int k = 1; k < n_lables; ++k) {
+        int *param = _stats.ptr<int>(k);
+        int height = param[cv::ConnectedComponentsTypes::CC_STAT_HEIGHT];
+        int width = param[cv::ConnectedComponentsTypes::CC_STAT_WIDTH];
+        if (width > (img2.cols >> 1) - 30) ++likeliness1;
+
+        // TODO: should return _stats in original size
+        // 400, 400 -> _input.rows, _input.cols
+      }
+
+      if (_debug_folder != "") {
+        cv::imwrite(_debug_folder + "local1d_facet_raw.jpg", _input);
+        cv::imwrite(_debug_folder + "local1d_facet_fft.jpg", img2);
+        cv::imwrite(_debug_folder + "local1d_facet.jpg", stretch2);
+      }
+
+      if (likeliness1 > 2)
+        return true;
+
+      return false;
     };
 
   }
