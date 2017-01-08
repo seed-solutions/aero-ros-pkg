@@ -570,7 +570,8 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
     cv::magnitude(iplanes[0], iplanes[1], img_back);
 
     // float Mat to gray image
-    cv::Mat roi = img_back(cv::Rect(10, 10, img.cols - 10, img.rows - 10));
+    // cut image, as edge ffts have high magnitude independent to image features
+    cv::Mat roi = img_back(cv::Rect(10, 10, img.cols - 20, img.rows - 20));
     cv::Mat img2(roi.rows, roi.cols, CV_8U);
     double max;
     double min; // not used
@@ -579,36 +580,48 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
       for (unsigned int j = 0; j < img2.cols; ++j)
         img2.at<uchar>(i, j) = static_cast<int>(roi.at<float>(i, j) / max * 255);
 
+    // stretch image toward y direction
+    // this stresses the in-between features
+    // this process lessens false negatives and will not add much false positives
+    cv::Mat stretch2;
+    cv::resize(img2, stretch2, cv::Size(100, 800));
+
     // otsu binary
     cv::Mat blur;
-    cv::GaussianBlur(img2, blur, cv::Size(101, 101), 0);
+    cv::GaussianBlur(stretch2, blur, cv::Size(101, 101), 0);
     cv::Mat binary;
     cv::threshold(blur, binary, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
 
-    // get width of each cluster, if cluster > 2, likely a pile of items
-    // false negative when
-    //   1. cluster is actually 2 (we are not interested in pile of two)
-    //   2. roi includes other than pile (= frequency strength has noise)
-    //   3. low resolution (= frequency strength is normalized)
-    //   4. depending on package design (= between items not horizontally stable)
+    cv::resize(binary, img2, cv::Size(400, 400));
+
+    // get width of each cluster
     cv::Mat labeled_image;
     cv::Mat stats;
     cv::Mat centroids;
     int n_lables =
-      cv::connectedComponentsWithStats(binary, labeled_image, stats, centroids);
+      cv::connectedComponentsWithStats(img2, labeled_image, stats, centroids);
 
-    std::vector<int> y_values;
+    // likeliness1 evaluates likeliness of pile
+    // likeliness1 = a cluster with a long width is likely an item
+    // false negative
+    //   1. when cluster count is 2 (hard to distinguish if two is a pile)
+    //      (besides, we should not be interested in pile of two)
+    //   2. depending on package design (assumption may not be met)
+    int likeliness1 = 0;
     for (int k = 1; k < n_lables; ++k) {
       int *param = stats.ptr<int>(k);
       int height = param[cv::ConnectedComponentsTypes::CC_STAT_HEIGHT];
       int width = param[cv::ConnectedComponentsTypes::CC_STAT_WIDTH];
-      if (height * 1.5 < width)
-        y_values.push_back(param[cv::ConnectedComponentsTypes::CC_STAT_TOP]);
+      if (width > (img2.cols >> 1) - 30) ++likeliness1;
     }
 
-    std::sort(y_values.begin(), y_values.end());
-    if (y_values.size() > 2 &&
-        y_values.at(y_values.size() - 1) - y_values.at(0) > 180) {
+    if (_debug_folder != "") {
+      cv::imwrite(_debug_folder + "local1d_facet_raw.jpg", gray);
+      cv::imwrite(_debug_folder + "local1d_facet_fft.jpg", img2);
+      cv::imwrite(_debug_folder + "local1d_facet.jpg", stretch2);
+    }
+
+    if (likeliness1 > 2) {
       std::cout << "detected pile, likely contact grasp-able!\n";
       result.sparse = 0;
       result.contact = 1;
@@ -617,12 +630,6 @@ aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
 
     // keep track of facet id
     result.facets.push_back(static_cast<int>(obj - _scene.begin()));
-
-    if (_debug_folder != "") {
-      cv::imwrite(_debug_folder + "local1d_facet_raw.jpg", gray);
-      cv::imwrite(_debug_folder + "local1d_facet_fft.jpg", img2);
-      cv::imwrite(_debug_folder + "local1d_facet.jpg", binary);
-    }
   }
 
   // code exits here
