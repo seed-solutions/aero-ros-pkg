@@ -37,6 +37,66 @@ std::pair<std::vector<aero::aerocv::objectarea>,
   std::vector<pcl::PointIndices> clusters;
   reg.extract(clusters);
 
+  // euclidean cluster each cluster
+  // region growing sometimes fails clustering
+  // the reason behind: RGS uses neighbors but not with distance
+  int num_rgs_clusters = clusters.size();
+  for (auto c = clusters.begin(); c != clusters.end(); ) {
+    // when all initial clusters were checked, return
+    if (--num_rgs_clusters == 0) break;
+
+    // create point cloud from detected cluster indices
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cluster
+      (new pcl::PointCloud<pcl::PointXYZ>);
+    cluster->width = c->indices.size();
+    cluster->height = 1;
+    cluster->points.resize(cluster->width * cluster->height);
+    int index = 0;
+    for (auto it = c->indices.begin(); it != c->indices.end(); ++it) {
+      cluster->points[index].x = _cloud->points[*it].x;
+      cluster->points[index].y = _cloud->points[*it].y;
+      cluster->points[index].z = _cloud->points[*it].z;
+      ++index;
+    }
+
+    // euclidean clustering
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree
+      (new pcl::search::KdTree<pcl::PointXYZ>);
+    tree->setInputCloud(cluster);
+    std::vector<pcl::PointIndices> ec_clusters;
+    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+    ec.setClusterTolerance(0.02); // 2cm
+    ec.setMinClusterSize(50);
+    ec.setMaxClusterSize(25000);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(cluster);
+    ec.extract(ec_clusters);
+
+    if (ec_clusters.size() == 0) {
+      c = clusters.erase(c);
+      continue;
+    }
+
+    if (ec_clusters.size() > 1 || // cluster can be divided
+        (ec_clusters.size() == 1 && // noises found in cluster
+         ec_clusters.at(0).indices.size() != c->indices.size())) {
+      // add newly seperated clusters
+      for (auto nc = ec_clusters.begin(); nc != ec_clusters.end(); ++nc) {
+        pcl::PointIndices pi;
+        pi.indices.resize(nc->indices.size());
+        // indices in masked point cloud -> indices in original point cloud
+        for (unsigned int i = 0; i < nc->indices.size(); ++i)
+          pi.indices[i] = c->indices.at(nc->indices.at(i));
+        clusters.push_back(pi);
+      }
+
+      c = clusters.erase(c);
+      continue;
+    }
+
+    ++c;
+  }
+
   // evaluate whether cluster is within expected range
   // this operation removes floors and walls
   float radius_threshold = 1.2; // meter
@@ -48,10 +108,13 @@ std::pair<std::vector<aero::aerocv::objectarea>,
       center +=
         Eigen::Vector3f(_cloud->points[*pit].x, _cloud->points[*pit].y,
                         _cloud->points[*pit].z);
-      normal +=
-        Eigen::Vector3f(normals->points[*pit].normal_x,
-                        normals->points[*pit].normal_y,
-                        normals->points[*pit].normal_z);
+      if (!std::isnan(normals->points[*pit].normal_x) &&
+          !std::isnan(normals->points[*pit].normal_y) &&
+          !std::isnan(normals->points[*pit].normal_z))
+        normal +=
+          Eigen::Vector3f(normals->points[*pit].normal_x,
+                          normals->points[*pit].normal_y,
+                          normals->points[*pit].normal_z);
     }
 
     center /= it->indices.size();

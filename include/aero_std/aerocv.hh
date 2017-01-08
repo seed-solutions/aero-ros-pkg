@@ -16,6 +16,7 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/region_growing.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 #include "aero_std/colors.h"
 #include "aero_std/proc2d.h"
