@@ -314,6 +314,18 @@ std::pair<std::vector<aero::aerocv::objectarea>,
         ((rgb) & 0x0000ff, (rgb >> 8) & 0x0000ff, (rgb >> 16) & 0x0000ff);
     }
 
+    // create cv::Mat from cluster1d
+    cv::Mat cluster(_cloud->height, _cloud->width, CV_8U);
+    int at = 0;
+    for (unsigned int i = 0; i < cluster.rows; ++i)
+      for (unsigned int j = 0; j < cluster.cols; ++j)
+        cluster.at<uchar>(i, j) = cluster1d[at++];
+
+    // get bounding box of cluster
+    auto bb = cv::boundingRect(cluster);
+    obj->bounds2d =
+      cv::Rect(bb.x*w_scale, bb.y*h_scale, bb.width*w_scale, bb.height*h_scale);
+
     // get color information of cluster
     int quantize_amount = 4;
     std::vector<cv::Vec3b> dominant_colors(quantize_amount);
@@ -328,30 +340,20 @@ std::pair<std::vector<aero::aerocv::objectarea>,
           < distance_threshold)
         ++matches;
     if (matches >= expected_matches) { // if likely environment
+      if (_debug_folder != "")
+        aero::aerocv::drawPalette
+          (dominant_colors, _env_color, _debug_folder + "objectness_"
+           + std::to_string(obj->bounds2d.width) + "x"
+           + std::to_string(obj->bounds2d.height)); // give identical name
       env.push_back(*obj);
       it = clusters.erase(it);
       scene.erase(obj); // remove environment object(e.g. table) from scene
-      if (_debug_folder != "")
-        aero::aerocv::drawPalette
-          (dominant_colors, _env_color, _debug_folder + "objectness_");
       continue;
     }
 
     // from color palette, get best matched color names
     aero::aerocv::getColorNames
       (dominant_colors, obj->properties.colors, aero::aerocv::colorMap9);
-
-    // create cv::Mat from cluster1d
-    cv::Mat cluster(_cloud->height, _cloud->width, CV_8U);
-    int at = 0;
-    for (unsigned int i = 0; i < cluster.rows; ++i)
-      for (unsigned int j = 0; j < cluster.cols; ++j)
-        cluster.at<uchar>(i, j) = cluster1d[at++];
-
-    // get bounding box of cluster
-    auto bb = cv::boundingRect(cluster);
-    obj->bounds2d =
-      cv::Rect(bb.x*w_scale, bb.y*h_scale, bb.width*w_scale, bb.height*h_scale);
 
     ++it;
   }
