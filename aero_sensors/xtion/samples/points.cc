@@ -1,0 +1,30 @@
+#include <ros/ros.h>
+#include <chrono>
+#include "aero_sensors/XtionInterface.hh"
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "xtion_points_sample");
+  ros::NodeHandle nh;
+
+  xtion::interface::XtionInterfacePtr xtion
+    (new xtion::interface::XtionInterface(nh));
+
+  ros::Publisher points_publisher =
+    nh.advertise<sensor_msgs::PointCloud2>("/xtion/pointstream", 1);
+
+  ros::Rate r(1);
+  while (ros::ok()) {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    auto points = xtion->ReadPoints();
+
+    ROS_INFO("finished read points %f",
+             static_cast<float>
+             (std::chrono::duration_cast<std::chrono::milliseconds>
+              (std::chrono::high_resolution_clock::now() - start).count()));
+    points_publisher.publish(points);
+
+    r.sleep();
+  }
+}
