@@ -56,7 +56,6 @@ void Get3DdataFrom2DBounds(aero::aerocv::objectarea &obj,
     }
     if (center_count > 0) center /= center_count;
     if (normal_count > 0) normal.normalize();
-    std::cout << center.x() << ", " << center.y() << ", " << center.z() << std::endl;
     obj.center3d = center;
     obj.normal3d = normal;
   }
@@ -208,9 +207,10 @@ std::pair<std::vector<aero::aerocv::objectarea>,
       indices_without_label[static_cast<int>(it - _cloud->points.begin())] = 0;
 
   // binary cluster non-labeled regions
-  cv::Mat binary_img(_cloud->height, _cloud->width, CV_8U);
+  int bottom_row_cut = 5; // cut bottom of image as, usually NaN, and not reachable
+  cv::Mat binary_img = cv::Mat::zeros(_cloud->height, _cloud->width, CV_8U);
   int at = 0;
-  for (unsigned int i = 0; i < binary_img.rows; ++i)
+  for (unsigned int i = 0; i < binary_img.rows - bottom_row_cut; ++i)
     for (unsigned int j = 0; j < binary_img.cols; ++j)
       binary_img.at<uchar>(i, j) = indices_without_label[at++];
   cv::Mat labeled_image;
