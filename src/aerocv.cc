@@ -141,6 +141,11 @@ std::pair<std::vector<aero::aerocv::objectarea>,
     for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit)
       indices_without_label[*pit] = 0;
 
+  // depth cut
+  for (auto it = _cloud->points.begin(); it != _cloud->points.end(); ++it)
+    if (it->z > 1.2)
+      indices_without_label[static_cast<int>(it - _cloud->points.begin())] = 0;
+
   // binary cluster non-labeled regions
   cv::Mat binary_img(_cloud->height, _cloud->width, CV_8U);
   int at = 0;
@@ -167,8 +172,9 @@ std::pair<std::vector<aero::aerocv::objectarea>,
     // remove noise
     if (width * height < noise_threshold) continue;
     // remove region adjacent to the edge of image
-    // this removes floor, wall, and edge NaN noises all together
+    // this removes edge NaN noises all together
     // but will also remove some connected regions as well
+    // note, often the NaN edges do connect to objects through object NaN borders
     if (x == 0 || (x + width) == _cloud->width ||
         y == 0 || (y + height) == _cloud->height) {
       if (param[cv::ConnectedComponentsTypes::CC_STAT_AREA] > max_outmost_area) {
@@ -178,18 +184,51 @@ std::pair<std::vector<aero::aerocv::objectarea>,
       continue;
     }
 
+    // given region, conduct border suppression
+
+    // get roi
+    cv::Mat roi = binary_img(cv::Rect(x, y, width, height));
+
+    // find contours destroyes image, so clone
+    std::vector<std::vector<cv::Point> > contours;
+    cv::findContours(roi.clone(), contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+    // break region apart by suppressing contours
+    int suppress_margin = 6;
+    for (auto contour = contours.begin(); contour != contours.end(); ++contour)
+      cv::polylines(roi, *contour, true, cv::Scalar(0), suppress_margin);
+
+    // get new clusters
+    cv::Mat labeled_image;
+    cv::Mat stats;
+    cv::Mat centroids;
+    int n_labels =
+      cv::connectedComponentsWithStats(roi, labeled_image, stats, centroids, 4);
+
     // add object to scene
-    aero::aerocv::objectarea obj;
-    obj.indices3d.reserve(param[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
-    for (unsigned int i = 0; i < height; ++i)
-      for (unsigned int j = 0; j < width; ++j)
-        if (labeled_image.at<int>(y + i, x + j) == k)
-          obj.indices3d.push_back
-            (static_cast<int>((y + i) * labeled_image.cols + x + j));
-    obj.bounds2d =
-      cv::Rect(x*w_scale, y*h_scale, width*w_scale, height*h_scale);
-    obj.visible3d = false;
-    scene.push_back(obj);
+    int lower_noise_threshold = 10;
+    for (int k = 1; k < n_labels; ++k) {
+      int *param = stats.ptr<int>(k);
+      int x_k = x + param[cv::ConnectedComponentsTypes::CC_STAT_LEFT];
+      int y_k = y + param[cv::ConnectedComponentsTypes::CC_STAT_TOP];
+      int height_k = param[cv::ConnectedComponentsTypes::CC_STAT_HEIGHT];
+      int width_k = param[cv::ConnectedComponentsTypes::CC_STAT_WIDTH];
+
+      // remove noise
+      if (width_k * height_k < lower_noise_threshold) continue;
+
+      aero::aerocv::objectarea obj;
+      obj.indices3d.reserve(param[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
+      for (unsigned int i = 0; i < height_k; ++i)
+        for (unsigned int j = 0; j < width_k; ++j)
+          if (labeled_image.at<int>(y_k + i, x_k + j) == k)
+            obj.indices3d.push_back
+              (static_cast<int>((y_k + i) * labeled_image.cols + x_k + j));
+      obj.bounds2d =
+        cv::Rect(x_k*w_scale, y_k*h_scale, width_k*w_scale, height_k*h_scale);
+      obj.visible3d = false;
+      scene.push_back(obj);
+    }
   }
 
   // largest edge region usually has a complex over connection
@@ -259,43 +298,10 @@ std::pair<std::vector<aero::aerocv::objectarea>,
               (static_cast<int>((y + i) * labeled_image.cols + x + j));
           }
 
-      // conduct further division
-      cv::Mat divs;
-      cv::Mat divstats;
-      cv::Mat divcentroids;
-      int n_div =
-        aero::aerocv::cutComponentsWithStats(
-            blob, divs, divstats, divcentroids, _debug_folder + "objectness_");
-
-      // if no further division
-      if (n_div == 1) {
-        obj.bounds2d =
-          cv::Rect(x*w_scale, y*h_scale, width*w_scale, height*h_scale);
-        obj.visible3d = false;
-        scene.push_back(obj);
-        continue;
-      }
-
-      // if there was further division
-      for (int l = 1; l < n_div; ++l) {
-        int *bounds = divstats.ptr<int>(l);
-        int dx = bounds[cv::ConnectedComponentsTypes::CC_STAT_LEFT];
-        int dy = bounds[cv::ConnectedComponentsTypes::CC_STAT_TOP];
-        int dheight = bounds[cv::ConnectedComponentsTypes::CC_STAT_HEIGHT];
-        int dwidth = bounds[cv::ConnectedComponentsTypes::CC_STAT_WIDTH];
-
-        aero::aerocv::objectarea dobj;
-        dobj.indices3d.reserve(bounds[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
-        for (unsigned int i = 0; i < dheight; ++i)
-          for (unsigned int j = 0; j < dwidth; ++j)
-            if (divs.at<int>(dy + i, dx + j) == k)
-              dobj.indices3d.push_back
-                (static_cast<int>((y + dy + i) * labeled_image.cols + x + dx + j));
-        dobj.bounds2d =
-          cv::Rect((x+dx)*w_scale, (y+dy)*h_scale, dwidth*w_scale, dheight*h_scale);
-        dobj.visible3d = false;
-        scene.push_back(dobj);
-      }
+      obj.bounds2d =
+        cv::Rect(x*w_scale, y*h_scale, width*w_scale, height*h_scale);
+      obj.visible3d = false;
+      scene.push_back(obj);
     }
   }
 
