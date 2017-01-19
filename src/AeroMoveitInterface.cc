@@ -163,9 +163,9 @@ void aero::interface::AeroMoveitInterface::switchHeightOnly()
 
 void aero::interface::AeroMoveitInterface::setNamedTarget(std::string _move_group, std::string _target)
 {
-  // named-targetに目標値をセットします
+  // named-targetを目標値にセットします
   // named_targetはaero_moveit_config/config/AeroUpperRobot.srdfに記載されているgroup-stateです
-  // 初期姿勢は("upper_body", "reset-pose")です
+  // ロボットの初期姿勢は("upper_body", "reset-pose")です
   getMoveGroup(_move_group).setNamedTarget(_target);
 }
 
