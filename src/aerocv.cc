@@ -2,6 +2,67 @@
 #include "aero_std/time.h"
 
 //////////////////////////////////////////////////
+void Get3DdataFrom2DBounds(aero::aerocv::objectarea &obj,
+                           int x, int y, int width, int height, int k,
+                           cv::Mat &labeled_image,
+                           pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
+                           pcl::PointCloud<pcl::Normal>::Ptr normals) {
+  obj.indices3d.reserve(width * height);
+  obj.visible3d = false;
+
+  std::vector<std::pair<int, float> > centers;
+  for (unsigned int i = 0; i < height; ++i)
+    for (unsigned int j = 0; j < width; ++j)
+      if (labeled_image.at<int>(y + i, x + j) == k) {
+        int index = static_cast<int>((y + i) * labeled_image.cols + x + j);
+        // add depth point candidate if valid
+        if (!std::isnan(_cloud->points[index].x) && !std::isnan(_cloud->points[index].y)
+            && !std::isnan(_cloud->points[index].z))
+          centers.push_back({index, _cloud->points[index].z});
+      }
+
+  if (centers.size() > 0) { // we found some points with depth
+    // sort centers in distance order
+    std::sort(centers.begin(), centers.end(),
+              [&](std::pair<int, float> a, std::pair<int, float> b){
+                return a.second < b.second;
+              });
+
+    // make sure we are getting depth of the same object
+    float leap_threshold = 0.2;
+    Eigen::Vector3f center = {0.0, 0.0, 0.0};
+    Eigen::Vector3f normal = {0.0, 0.0, 0.0};
+    int center_count = 0;
+    int normal_count = 0;
+    for (auto it = centers.begin() + 1; it != centers.end(); ++it) {
+      if ((it->second - (it-1)->second) > leap_threshold)
+        break; // there was a jump in depth, likely not the same object
+      int index = (it-1)->first;
+      obj.indices3d.push_back(index);
+      center +=
+        Eigen::Vector3f(_cloud->points[index].x, _cloud->points[index].y,
+                        _cloud->points[index].z);
+      ++center_count;
+      if (!std::isnan(normals->points[index].normal_x) &&
+          !std::isnan(normals->points[index].normal_y) &&
+          !std::isnan(normals->points[index].normal_z)) {
+        normal +=
+          Eigen::Vector3f(normals->points[index].normal_x,
+                          normals->points[index].normal_y,
+                          normals->points[index].normal_z);
+        ++normal_count;
+        obj.visible3d = true;
+      }
+    }
+    if (center_count > 0) center /= center_count;
+    if (normal_count > 0) normal.normalize();
+    std::cout << center.x() << ", " << center.y() << ", " << center.z() << std::endl;
+    obj.center3d = center;
+    obj.normal3d = normal;
+  }
+};
+
+//////////////////////////////////////////////////
 std::pair<std::vector<aero::aerocv::objectarea>,
           std::vector<aero::aerocv::objectarea> > aero::aerocv::DetectObjectnessArea
 (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
@@ -218,15 +279,11 @@ std::pair<std::vector<aero::aerocv::objectarea>,
       if (width_k * height_k < lower_noise_threshold) continue;
 
       aero::aerocv::objectarea obj;
-      obj.indices3d.reserve(param[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
-      for (unsigned int i = 0; i < height_k; ++i)
-        for (unsigned int j = 0; j < width_k; ++j)
-          if (labeled_image.at<int>(y_k + i, x_k + j) == k)
-            obj.indices3d.push_back
-              (static_cast<int>((y_k + i) * labeled_image.cols + x_k + j));
+      // get 3d data
+      Get3DdataFrom2DBounds(obj, x_k, y_k, width_k, height_k, k,
+                            labeled_image, _cloud, normals);
       obj.bounds2d =
         cv::Rect(x_k*w_scale, y_k*h_scale, width_k*w_scale, height_k*h_scale);
-      obj.visible3d = false;
       scene.push_back(obj);
     }
   }
@@ -286,21 +343,11 @@ std::pair<std::vector<aero::aerocv::objectarea>,
           continue;
 
       aero::aerocv::objectarea obj;
-      obj.indices3d.reserve(param[cv::ConnectedComponentsTypes::CC_STAT_AREA]);
-
-      // get current cluster to check further division
-      cv::Mat blob = cv::Mat::zeros(height, width, CV_8U);
-      for (unsigned int i = 0; i < height; ++i)
-        for (unsigned int j = 0; j < width; ++j)
-          if (labeled_image.at<int>(y + i, x + j) == k) {
-            blob.at<uchar>(i, j) = 255;
-            obj.indices3d.push_back
-              (static_cast<int>((y + i) * labeled_image.cols + x + j));
-          }
-
+      // get current cluster and 3d data
+      Get3DdataFrom2DBounds(obj, x, y, width, height, k,
+                            labeled_image, _cloud, normals);
       obj.bounds2d =
         cv::Rect(x*w_scale, y*h_scale, width*w_scale, height*h_scale);
-      obj.visible3d = false;
       scene.push_back(obj);
     }
   }
@@ -402,8 +449,23 @@ std::pair<std::vector<aero::aerocv::objectarea>,
                  2, cv::Scalar(255, 255, 0), 2);
     }
 
-    for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it)
+    for (auto it = scene.begin() + clusters.size(); it != scene.end(); ++it) {
       cv::rectangle(_img, it->bounds2d, cv::Scalar(255, 0, 0), 2);
+      if (it->visible3d) {
+        // draw norm
+        float s = 10; // scale
+        cv::Point center(it->bounds2d.x + 0.5 * it->bounds2d.width,
+                         it->bounds2d.y + 0.5 * it->bounds2d.height);
+        // note: normal z value is likely negative
+        cv::Point normal(
+            s * static_cast<float>(it->normal3d.x()) / fabs(it->normal3d.z()),
+            s * static_cast<float>(it->normal3d.y()) / fabs(it->normal3d.z()));
+        cv::line(_img, center, cv::Point(center.x + normal.x, center.y + normal.y),
+                 cv::Scalar(255, 255, 0));
+        cv::circle(_img, cv::Point(center.x + normal.x, center.y + normal.y),
+                   2, cv::Scalar(255, 255, 0), 2);
+      }
+    }
 
     // show results
 
