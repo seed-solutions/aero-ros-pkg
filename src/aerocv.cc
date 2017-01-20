@@ -533,6 +533,17 @@ std::vector<int> aero::aerocv::FindTarget
 }
 
 //////////////////////////////////////////////////
+std::vector<aero::aerocv::objectarea> aero::aerocv::filter
+(std::vector<aero::aerocv::objectarea> _objects, std::vector<int> _indices)
+{
+  std::vector<aero::aerocv::objectarea> result;
+  for (auto it = _indices.begin(); it != _indices.end(); ++it)
+    if (*it >= 0 && *it < _objects.size())
+      result.push_back(_objects.at(*it));
+  return result;
+}
+
+//////////////////////////////////////////////////
 aero::aerocv::graspconfig aero::aerocv::ConfigurationFromLocal1DState
 (int _target, std::vector<aero::aerocv::objectarea> &_scene,
  pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img,

@@ -28,7 +28,7 @@ namespace aero
 
     /// @brief Identified information of object.
     struct objectproperties {
-      std::string name;
+      std::vector<std::string> name;
       /// @brief List of named colors with percentage information.
       std::vector<std::pair<std::string, float> > colors;
     };
@@ -73,6 +73,13 @@ namespace aero
     /// @return Indices (in vector _scene) of matched objects sorted by likeliness.
     std::vector<int> FindTarget
     (std::string _target_color, std::vector<objectarea> &_scene);
+
+    /// @brief Filters list of objects with given indices.
+    /// @param[in] _objects List of objects to filter.
+    /// @param[in] _indices The indices of objects to retrieve.
+    /// @return List of objects from applied indices.
+    std::vector<objectarea> filter
+    (std::vector<objectarea> _objects, std::vector<int> _indices);
 
     /// @brief Detect object information in relation to environment for grasping.
     /// @param[in] _target Id of target in vector _scene.
