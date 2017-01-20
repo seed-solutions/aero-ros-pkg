@@ -36,4 +36,5 @@ add_library(aero_interface
 
 add_library(aero_moveit_interface
   src/AeroMoveitInterface.cc
+  src/AeroInterface.cc
 )
