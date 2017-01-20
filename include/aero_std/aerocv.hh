@@ -57,11 +57,12 @@ namespace aero
     /// @param[in] _cloud Point cloud from sensor (low resolution for performance).
     /// @param[in] _img Image from sensor (for resolution ratio and drawing).
     /// @param[in] _env_color Color of environment to remove from object list.
+    /// @param[in] _color_thre Color distance threshold to label as background color.
     /// @param[in] _debug_folder Folder to save process images. No save if empty.
     /// @return {List of detected objects, List of detected environment}
     std::pair<std::vector<objectarea>, std::vector<objectarea> > DetectObjectnessArea
     (pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
-     cv::Mat &_img, cv::Vec3b _env_color, std::string _debug_folder="");
+     cv::Mat &_img, cv::Vec3b _env_color, float _color_thre, std::string _debug_folder="");
 
     /// @brief Sorts by color percentage and distance (best match comes first).
     ///   e.g. 100% blue is better match than 50% blue

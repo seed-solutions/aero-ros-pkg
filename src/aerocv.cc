@@ -64,8 +64,8 @@ void Get3DdataFrom2DBounds(aero::aerocv::objectarea &obj,
 //////////////////////////////////////////////////
 std::pair<std::vector<aero::aerocv::objectarea>,
           std::vector<aero::aerocv::objectarea> > aero::aerocv::DetectObjectnessArea
-(pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud,
- cv::Mat &_img, cv::Vec3b _env_color, std::string _debug_folder)
+(pcl::PointCloud<pcl::PointXYZRGB>::Ptr _cloud, cv::Mat &_img,
+ cv::Vec3b _env_color, float _color_thre, std::string _debug_folder)
 {
   auto begin = aero::time::now();
 
@@ -384,13 +384,12 @@ std::pair<std::vector<aero::aerocv::objectarea>,
     std::vector<cv::Vec3b> dominant_colors(quantize_amount);
     aero::aerocv::medianCut(colors1d, 0, 0, dominant_colors);
     // check how many colors match environment color information
-    float distance_threshold = 20;
     int expected_matches = 3;
     int matches = 0;
     for (auto c = dominant_colors.begin(); c != dominant_colors.end(); ++c)
       if (aero::aerocv::distance(aero::aerocv::rgb2lab(*c),
                                  aero::aerocv::rgb2lab(_env_color))
-          < distance_threshold)
+          < _color_thre)
         ++matches;
     if (matches >= expected_matches) { // if likely environment
       if (_debug_folder != "")
