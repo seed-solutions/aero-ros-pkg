@@ -47,7 +47,8 @@ replace_limits() {
     joint=$2
     lower=$3
     upper=$4
-    line=$(cat ${file}| grep -n -A 10  ${joint} | grep -m 1 upper | cut -d '-' -f1)
+    line=$(cat ${file}| grep -n -A 10  ${joint} | grep -m 1 limit | cut -d '-' -f1)
+    #echo "${1}: ${2} ${line}"
 
     lower_original=`echo "cat /robot/joint[@name=\"${joint}\"]/limit/@lower" | xmllint --shell ${file}  | grep "lower=" | sed 's/[^"]*"\([^"]*\)"[^"]*/\1/g'`
     upper_original=`echo "cat /robot/joint[@name=\"${joint}\"]/limit/@upper" | xmllint --shell ${file}  | grep "upper=" | sed 's/[^"]*"\([^"]*\)"[^"]*/\1/g'`
