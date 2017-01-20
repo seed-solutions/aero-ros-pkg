@@ -1,7 +1,7 @@
 #ifndef _AERO_PROCESS_FLOW_H_
 #define _AERO_PROCESS_FLOW_H_
 
-#include "aero_msgs/GraspIK.h"
+#include "aero_std/GraspRequest.hh"
 
 namespace aero
 {
@@ -9,8 +9,8 @@ namespace aero
     return T2();
   };
 
-  template<typename T> aero_msgs::GraspIK::Request MyGrasp(T _grasp) {
-    return aero_msgs::GraspIK::Request();
+  template<typename T> GraspRequest Grasp(T _grasp) {
+    return GraspRequest();
   };
 }
 

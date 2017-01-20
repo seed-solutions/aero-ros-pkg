@@ -1,6 +1,7 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
-aero::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd):
+aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd):
+  AeroInterface(_nh),
   larm("larm"),larm_with_torso("larm_with_torso"),larm_with_lifter("larm_with_lifter"),
   rarm("rarm"),rarm_with_torso("rarm_with_torso"),rarm_with_lifter("rarm_with_lifter"),
   lifter("lifter"),upper_body("upper_body"),torso("torso"),head("head")
@@ -42,22 +43,24 @@ aero::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string 
   display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
   planned_group_ = "";
   height_only_ = true;
+  trajectory_ = std::vector<std::vector<double>>();
+  trajectory_groups_ = std::vector<std::string>();
 
-  ROS_INFO("initialize finished");
+  ROS_INFO("AERO MOVEIT INTERFACE is initialized");
 }
 
-aero::AeroMoveitInterface::~AeroMoveitInterface()
+aero::interface::AeroMoveitInterface::~AeroMoveitInterface()
 {
 }
 
-bool aero::AeroMoveitInterface::plan(std::string _move_group){
+bool aero::interface::AeroMoveitInterface::plan(std::string _move_group){
   bool success = getMoveGroup(_move_group).plan(plan_);
   if (success) planned_group_ = _move_group;
   else planned_group_ = "";
   return success;
 }
 
-bool aero::AeroMoveitInterface::execute(){
+bool aero::interface::AeroMoveitInterface::execute(){
   if (planned_group_ == "") {
     ROS_WARN("execute error :: planned group not found");
     return false;
@@ -65,13 +68,15 @@ bool aero::AeroMoveitInterface::execute(){
   getMoveGroup(planned_group_).execute(plan_);
 }
 
-bool aero::AeroMoveitInterface::move(std::string _move_group){
+bool aero::interface::AeroMoveitInterface::move(std::string _move_group){
   bool success = plan(_move_group);
   if (!success) return false;
+  viewTrajectory();
   success = execute();
   return success;
 }
-bool aero::AeroMoveitInterface::solveIK(std::string _move_group, geometry_msgs::Pose _pose){
+
+bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geometry_msgs::Pose _pose){
   const robot_state::JointModelGroup* jmg_tmp;
   bool lifter_ik = false;
 
@@ -104,7 +109,7 @@ bool aero::AeroMoveitInterface::solveIK(std::string _move_group, geometry_msgs::
   return found_ik;
 }
 
-void aero::AeroMoveitInterface::viewTrajectory(){
+void aero::interface::AeroMoveitInterface::viewTrajectory(){
   if (planned_group_ == "") {
     ROS_WARN("view error :: planned group not found");
     return;
@@ -115,11 +120,11 @@ void aero::AeroMoveitInterface::viewTrajectory(){
   display_publisher_.publish(display_trajectory);
 }
 
-void aero::AeroMoveitInterface::setStartStateToCurrentState(std::string _move_group){
+void aero::interface::AeroMoveitInterface::setStartStateToCurrentState(std::string _move_group){
   getMoveGroup(_move_group).setStartStateToCurrentState();
 }
 
-moveit::planning_interface::MoveGroup &aero::AeroMoveitInterface::getMoveGroup(std::string _move_group){
+moveit::planning_interface::MoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(std::string _move_group){
   if (_move_group == "larm") {
     return this->larm;
   } else if (_move_group == "larm_with_torso") {
@@ -146,22 +151,25 @@ moveit::planning_interface::MoveGroup &aero::AeroMoveitInterface::getMoveGroup(s
   }
 }
 
-void aero::AeroMoveitInterface::switchOnPlane()
+void aero::interface::AeroMoveitInterface::switchOnPlane()
 {
   height_only_ = false;
 }
 
-void aero::AeroMoveitInterface::switchHeightOnly()
+void aero::interface::AeroMoveitInterface::switchHeightOnly()
 {
   height_only_ = true;
 }
 
-void aero::AeroMoveitInterface::setNamedTarget(std::string _move_group, std::string _target)
+void aero::interface::AeroMoveitInterface::setNamedTarget(std::string _move_group, std::string _target)
 {
+  // named-targetを目標値にセットします
+  // named_targetはaero_moveit_config/config/AeroUpperRobot.srdfに記載されているgroup-stateです
+  // ロボットの初期姿勢は("upper_body", "reset-pose")です
   getMoveGroup(_move_group).setNamedTarget(_target);
 }
 
-void aero::AeroMoveitInterface::moveWaist(double _x, double _z)
+void aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z)
 {
   std::vector<double> joint_values;
   kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
@@ -174,4 +182,108 @@ void aero::AeroMoveitInterface::moveWaist(double _x, double _z)
   bool success = plan("lifter");
   if (!success) return;
   success = execute();
+}
+
+bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
+{
+  std::vector<double> result_mid(1);
+  std::vector<double> av_ini;
+  getRobotStateVariables(av_ini);
+  std::string res_m = solveIKOneSequence(_grasp.arm, _grasp.mid_pose, _grasp.mid_ik_range, av_ini, result_mid);
+  if (res_m == "") return false;
+
+  std::vector<double> result_end(1);
+  std::vector<double> av_mid;
+  getRobotStateVariables(av_mid);
+  std::string res_e = solveIKOneSequence(_grasp.arm, _grasp.end_pose, _grasp.end_ik_range, av_mid, result_end);
+
+  if (res_e == "") return false;
+
+  trajectory_.clear();
+  trajectory_.reserve(2);
+  trajectory_.push_back(result_mid);
+  trajectory_.push_back(result_end);
+
+  trajectory_groups_.clear();
+  trajectory_groups_.reserve(2);
+  trajectory_groups_.push_back(res_m);
+  trajectory_groups_.push_back(res_e);
+  return true;
+}
+
+std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> _av_ini, std::vector<double> &_result)
+{
+  bool status;
+  std::string group = "larm";
+  std::string gname = "";
+  if (_arm == "right") group = "rarm";
+
+  kinematic_state->setVariablePositions(_av_ini);
+  status = solveIK(group, _pose);
+  if (status) {
+    getRobotStateVariables(_result);
+    gname =group;
+    return gname;
+  }
+  if (_ik_range == "arm") return gname;
+  status = solveIK(group + "_with_torso", _pose);
+  if (status) {
+    getRobotStateVariables(_result);
+    gname = group + "_with_torso";
+    return gname;
+  }
+  if (_ik_range == "torso") return gname;
+
+  status = solveIK(group + "_with_lifter", _pose);
+  if (status) {
+    getRobotStateVariables(_result);
+    gname = group + "_with_lifter";
+    return gname;
+  }  
+
+  if (height_only_) {
+    switchOnPlane();
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
+  } else {
+    switchHeightOnly();
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
+  }
+  status = solveIK(group + "with_lifter", _pose);
+  if (status) {
+    getRobotStateVariables(_result);
+    gname = group + "_with_lifter";
+    return gname;
+  }  
+
+  return gname;
+}
+
+bool aero::interface::AeroMoveitInterface::moveSequence()
+{
+  // trajectory_に保存されたik結果列を順に実行する
+  for (int i = 0; i < trajectory_.size(); ++i) {
+    kinematic_state->setVariablePositions(trajectory_[i]);
+    getMoveGroup(trajectory_groups_[i]).setJointValueTarget(*kinematic_state);
+    move(trajectory_groups_[i]);
+  }
+}
+
+
+void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<double> &_av)
+{
+  // kinematic_stateが持っているすべての関節値を引数の_avに保存します。
+  // solveIKを解くとkinematic_stateの角度列が変更されるので、それを取り出すのなどに使えます。
+  // kinematic_stateに代入する場合は、this.kinematic_state->setVariablePositions(_av);を実行してください。
+
+  double* tmp;
+  // Aeroには無いが多変数関節などもありうるので、関節数ではなく関節変数の数を取得
+  int num = static_cast<int>(kinematic_model->getVariableCount());
+  // double* が返ってくる
+  tmp = kinematic_state->getVariablePositions();
+  // std::vectorに入れる
+  _av.clear();
+  _av.reserve(num);
+  _av.assign(tmp, tmp + num);
 }
