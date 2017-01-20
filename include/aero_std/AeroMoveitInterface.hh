@@ -26,6 +26,10 @@ namespace aero
   {
   public:
     //explicit AeroMoveitInterface();
+
+    /// @brief constructor
+    /// @param _nh ros node handler
+    /// @param _rd robot_description's name, "_rd", "_rd_ho" and "_rd_op" will be loaded
     explicit AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd);
     ~AeroMoveitInterface();
     
