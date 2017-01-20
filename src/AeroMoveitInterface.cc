@@ -187,11 +187,15 @@ void aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z)
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
 {
   std::vector<double> result_mid(1);
-  std::string res_m = solveIKOneSequence(_grasp.arm, _grasp.mid_pose, _grasp.mid_ik_range, result_mid);
+  std::vector<double> av_ini;
+  getRobotStateVariables(av_ini);
+  std::string res_m = solveIKOneSequence(_grasp.arm, _grasp.mid_pose, _grasp.mid_ik_range, av_ini, result_mid);
   if (res_m == "") return false;
 
   std::vector<double> result_end(1);
-  std::string res_e = solveIKOneSequence(_grasp.arm, _grasp.end_pose, _grasp.end_ik_range, result_end);
+  std::vector<double> av_mid;
+  getRobotStateVariables(av_mid);
+  std::string res_e = solveIKOneSequence(_grasp.arm, _grasp.end_pose, _grasp.end_ik_range, av_mid, result_end);
 
   if (res_e == "") return false;
 
@@ -207,12 +211,14 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   return true;
 }
 
-std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> &_result)
+std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> _av_ini, std::vector<double> &_result)
 {
   bool status;
   std::string group = "larm";
   std::string gname = "";
   if (_arm == "right") group = "rarm";
+
+  kinematic_state->setVariablePositions(_av_ini);
   status = solveIK(group, _pose);
   if (status) {
     getRobotStateVariables(_result);

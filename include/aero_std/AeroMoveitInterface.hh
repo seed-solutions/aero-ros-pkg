@@ -87,9 +87,9 @@ namespace aero
 
     void moveWaist(double _x, double _z);
 
-    //
+    // for grasp
     bool solveIKSequence(aero::GraspRequest &_grasp);
-    std::string solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> &_result);
+    std::string solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> _av_ini, std::vector<double> &_result);
 
     bool moveSequence();
 
