@@ -17,15 +17,15 @@ namespace aero
 
 
   public: TopGrasp() :
-    arm("either"), object_position({0.0, 0.0, 0.0}), height(0.0),
+    arm(aero::arm::either), object_position({0.0, 0.0, 0.0}), height(0.0),
     offset_z_mid(0.0),offset_x_mid(0.0),
     offset_z_end(0.0),offset_x_end(0.0),
-    default_offset_z(0.2), default_offset_x(-0.20),
-    default_offset_z_mid(-0.1),
+    default_offset_z(0.0), default_offset_x(0.0),
+    default_offset_z_mid(0.1),
     maximum_grasp_width(0.15) {}
     
     // arm to grasp object, "left" or "right" or "either"
-  public: std::string arm;
+  public: aero::arm arm;
     
     // object position used to solve grasp pose , world coordinates
   public: Eigen::Vector3f object_position;
@@ -62,19 +62,21 @@ namespace aero
   GraspRequest Grasp<TopGrasp>(TopGrasp _grasp)
   {
     GraspRequest result;
-    if (_grasp.arm != "either") {
+    if (_grasp.arm != aero::arm::either) {
       result.arm = _grasp.arm;
     } else {
-      if (_grasp.object_position.y() > 0.0) result.arm = "left";
-      else result.arm = "right";
+      if (_grasp.object_position.y() > 0.0) result.arm = aero::arm::larm;
+      else result.arm = aero::arm::rarm;
     }
 
-    Eigen::Quaternionf ini_rot = Eigen::Quaternionf(0.707107, 0.0, -0.707107, 0.0); //reset-pose
+    result.eef = aero::eef::grasp;
+
+    Eigen::Quaternionf ini_rot = Eigen::Quaternionf(1.0, 0.0, 0.0, 0.0); //reset-pose
     Eigen::Quaternionf mid_rot =
       Eigen::Quaternionf(0.707107, 0.707107, 0.0, 0.0) * ini_rot;
     Eigen::Quaternionf end_rot = // rotate on axis Y by -M_PI/4 world
       Eigen::Quaternionf(0.92388, 0.0, 0.382683, 0.0) * mid_rot;
-    if (result.arm == "right") {
+    if (result.arm == aero::arm::rarm) {
       mid_rot =
         Eigen::Quaternionf(0.707107, -0.707107, 0.0, 0.0) * ini_rot;
       end_rot = // rotate on axis Y by M_PI/4 world

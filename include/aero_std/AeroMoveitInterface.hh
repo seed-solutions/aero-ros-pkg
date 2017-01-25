@@ -15,6 +15,7 @@
 #include <moveit/robot_state/robot_state.h>
 
 #include <aero_std/AeroInterface.hh>
+#include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
 
 
@@ -93,9 +94,17 @@ namespace aero
 
     // for grasp
     bool solveIKSequence(aero::GraspRequest &_grasp);
-    std::string solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> _av_ini, std::vector<double> &_result);
+    std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::vector<double> &_result);
 
     bool moveSequence();
+
+    bool openHand(bool _yes, aero::arm _arm);
+
+    bool openHand(bool _yes, aero::arm _arm, float _warn, float _fail);
+
+    bool openHand(float _angle, aero::arm _arm);
+
+    bool openHand(float _angle, aero::arm _arm, float _warn, float _fail);
 
   private:
     void getRobotStateVariables(std::vector<double> &_av);

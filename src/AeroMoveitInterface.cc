@@ -100,10 +100,12 @@ bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geom
     ROS_WARN("IK error :: move_group [%s] doesn't exist", _move_group.c_str());
     return false;
   }
-
+  std::cout << "ddd" << std::endl;
+  std::cout << _move_group << std::endl;
   bool found_ik;
+  found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, 10, 0.1);
 
-  found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, 10, 0.1);  
+  std::cout << "eee" << std::endl;
   if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
 
   return found_ik;
@@ -211,36 +213,59 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   return true;
 }
 
-std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string _arm, geometry_msgs::Pose _pose, std::string _ik_range, std::vector<double> _av_ini, std::vector<double> &_result)
+std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::vector<double> &_result)
 {
   bool status;
   std::string group = "larm";
   std::string gname = "";
-  if (_arm == "right") group = "rarm";
+  if (_arm == aero::arm::rarm) group = "rarm";
 
+  // ik with arm
+  std::cout << "ik" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
-  status = solveIK(group, _pose);
-  if (status) {
+  gname = group;
+  std::cout << "solve ik" << std::endl;
+  status = solveIK(gname, _pose);
+  std::cout << "solved ik" << std::endl;
+  if (status && plan(gname)) {
+    std::cout << "ccc" << std::endl;
     getRobotStateVariables(_result);
-    gname =group;
     return gname;
   }
-  if (_ik_range == "arm") return gname;
-  status = solveIK(group + "_with_torso", _pose);
-  if (status) {
-    getRobotStateVariables(_result);
-    gname = group + "_with_torso";
-    return gname;
-  }
-  if (_ik_range == "torso") return gname;
+  std::cout << "bbb" << std::endl;
+  if (_ik_range == aero::ikrange::arm) return "";
 
-  status = solveIK(group + "_with_lifter", _pose);
-  if (status) {
+  // ik with torso
+  std::cout << "tor" << std::endl;
+  kinematic_state->setVariablePositions(_av_ini);
+  gname = group + "_with_torso";
+  status = solveIK(gname, _pose);
+  if (status && plan(gname)) {
     getRobotStateVariables(_result);
-    gname = group + "_with_lifter";
+    return gname;
+  }
+  if (_ik_range == aero::ikrange::torso) return "";
+
+  // ik with lifter
+  std::cout << "lif" << std::endl;
+  kinematic_state->setVariablePositions(_av_ini);
+  gname = group + "_with_lifter";
+  if (height_only_) {
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
+  } else {
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
+  }
+  status = solveIK(group + "_with_lifter", _pose);
+  if (status && plan(gname)) {
+    getRobotStateVariables(_result);
     return gname;
   }  
 
+
+  kinematic_state->setVariablePositions(_av_ini);
+  gname = group + "_with_lifter";
   if (height_only_) {
     switchOnPlane();
     if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
@@ -250,14 +275,13 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string
     if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
     else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
   }
-  status = solveIK(group + "with_lifter", _pose);
-  if (status) {
+  status = solveIK(gname, _pose);
+  if (status && plan(gname)) {
     getRobotStateVariables(_result);
-    gname = group + "_with_lifter";
     return gname;
   }  
 
-  return gname;
+  return "";
 }
 
 bool aero::interface::AeroMoveitInterface::moveSequence()
@@ -287,3 +311,66 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<do
   _av.reserve(num);
   _av.assign(tmp, tmp + num);
 }
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm)
+{
+  return openHand(_yes, _arm, -0.9, 0.8);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm,
+                             float _warn, float _fail)
+{
+  aero_startup::AeroHandController srv;
+  srv.request.hand = ENUM_TO_STRING(_arm);
+  srv.request.thre_warn = _warn;
+  srv.request.thre_fail = _fail;
+  if (_yes) srv.request.command = "ungrasp";
+  else srv.request.command = "grasp";
+  
+  if (!hand_client_.call(srv)) {
+    ROS_ERROR("open/close hand failed service call");
+    return false;
+  }
+
+  if (srv.response.status.find("success") != std::string::npos) {
+    return true;
+  }
+
+  ROS_ERROR("%s", srv.response.status.c_str());
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm)
+{
+  return openHand(_angle, _arm, -0.9, 0.8);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm,
+                             float _warn, float _fail)
+{
+  aero_startup::AeroHandController srv;
+  srv.request.hand = ENUM_TO_STRING(_arm);
+  srv.request.thre_warn = _warn;
+  srv.request.thre_fail = _fail;
+  srv.request.command = "grasp-angle";
+  srv.request.larm_angle = _angle;
+  srv.request.rarm_angle = _angle;
+
+  if (!hand_client_.call(srv)) {
+    ROS_ERROR("open/close hand failed service call");
+    return false;
+  }
+
+  if (srv.response.status.find("success") != std::string::npos) {
+    return true;
+  }
+
+  ROS_ERROR("%s", srv.response.status.c_str());
+  return false;  
+}
+
+//////////////////////////////////////////////////

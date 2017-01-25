@@ -17,7 +17,7 @@ namespace aero
 
 
   public: SideGrasp() :
-    arm("either"), object_position({0.0, 0.0, 0.0}), height(0.0),
+    arm(aero::arm::either), object_position({0.0, 0.0, 0.0}), height(0.0),
     offset_z_mid(0.0),offset_x_mid(0.0),
     offset_z_end(0.0),offset_x_end(0.0),
     default_offset_z(0.1), default_offset_x(-0.05), default_offset_y(0.0),
@@ -26,7 +26,7 @@ namespace aero
     default_offset_y_end_left(0.1) {}
     
     // arm to grasp object, "left" or "right" or "either"
-  public: std::string arm;
+  public: aero::arm arm;
     
     // object position in world coordinates
   public: Eigen::Vector3f object_position;
@@ -64,25 +64,27 @@ namespace aero
   GraspRequest Grasp<SideGrasp>(SideGrasp _grasp)
   {
     GraspRequest result;
-    if (_grasp.arm != "either") {
+    if (_grasp.arm != aero::arm::either) {
       result.arm = _grasp.arm;
     } else {
-      if (_grasp.object_position.y() > 0.0) result.arm = "left";
-      else result.arm = "right";
+      if (_grasp.object_position.y() > 0.0) result.arm = aero::arm::larm;
+      else result.arm = aero::arm::rarm;
     }
+
+    result.grasp = pick;
 
     Eigen::Quaternionf ini_rot = Eigen::Quaternionf(0.707107, 0.0, -0.707107, 0.0); //reset-pose
     Eigen::Quaternionf mid_rot = ini_rot;
     Eigen::Quaternionf end_rot = // rotate on axis Z by -M_PI/4 world
       Eigen::Quaternionf(0.92388, 0.0, 0.0, -0.382683) * mid_rot;
-    if (result.arm == "right") {
+    if (result.arm == aero::arm::rarm) {
       //mid_rot = ini_rot;
       end_rot = // rotate on axis Y by M_PI/4 world
         Eigen::Quaternionf(0.92388, 0.0, 0.0, 0.382683) * mid_rot;
     }
 
     result.mid_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_mid + _grasp.default_offset_x_mid;
-    if (result.arm == "left") {
+    if (result.arm == aero::arm::larm) {
       result.mid_pose.position.y = _grasp.object_position.y() + _grasp.default_offset_y_mid_left;
     } else {
       result.mid_pose.position.y = _grasp.object_position.y() - _grasp.default_offset_y_mid_left;
@@ -94,7 +96,7 @@ namespace aero
     result.mid_pose.orientation.w = mid_rot.w();
 
     result.end_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_end;
-    if (result.arm == "left") {
+    if (result.arm == aero::arm::larm) {
     result.end_pose.position.y = _grasp.object_position.y() + _grasp.default_offset_y_end_left;
     } else { 
     result.end_pose.position.y = _grasp.object_position.y() - _grasp.default_offset_y_end_left;
