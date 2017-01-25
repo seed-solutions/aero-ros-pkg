@@ -46,6 +46,8 @@
         <link name="r_indexbase_link" />
         <link name="r_indexmid_link" />
         <link name="r_indexend_link" />
+        <link name="r_eef_grasp_link" />
+        <link name="r_eef_pick_link" />
     </group>
     <group name="lhand">
         <link name="l_hand_link" />
@@ -53,6 +55,8 @@
         <link name="l_indexbase_link" />
         <link name="l_indexmid_link" />
         <link name="l_indexend_link" />
+        <link name="l_eef_grasp_link" />
+        <link name="l_eef_pick_link" />
     </group>
     <group name="upper_body">
         <group name="rarm" />

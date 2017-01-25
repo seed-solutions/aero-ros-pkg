@@ -1,4 +1,12 @@
 link virtual_lifter_z_link
 link virtual_lifter_x_link
+link r_eef_grasp_link
+link r_eef_pick_link
+link l_eef_grasp_link
+link l_eef_pick_link
 joint virtual_lifter_z_joint
 joint virtual_lifter_x_joint
+joint r_eef_grasp_joint
+joint r_eef_pick_joint
+joint l_eef_grasp_joint
+joint l_eef_pick_joint
