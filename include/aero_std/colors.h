@@ -17,36 +17,36 @@ namespace aero
 
     //////////////////////////////////////////////////
     inline std::array<float, 3> rgb2lab(cv::Vec3b _color) // bgr
-    {
-      std::array<float, 3> adapt = {0.950467, 1.0, 1.088969};
+      {
+        std::array<float, 3> adapt = {0.950467, 1.0, 1.088969};
 
-      std::function<float(float)> g = [=](float _v) {
-        _v = _v * 0.003922;
-        if (_v <= 0.04045) return _v * 0.07739938;
-        else return std::pow((_v + 0.055) / 1.055, 2.4);
-      };
+        std::function<float(float)> g = [=](float _v) {
+          _v = _v * 0.003922;
+          if (_v <= 0.04045) return _v * 0.07739938;
+          else return std::pow((_v + 0.055) / 1.055, 2.4);
+        };
 
-      std::array<float, 3> rgb = {g(_color[2]), g(_color[1]), g(_color[0])};
+        std::array<float, 3> rgb = {g(_color[2]), g(_color[1]), g(_color[0])};
 
-      std::array<float, 3> xyz = {
-        0.412424 * rgb[0] + 0.357579 * rgb[1] + 0.180464 * rgb[2],
-        0.212656 * rgb[0] + 0.715158 * rgb[1] + 0.0721856 * rgb[2],
+        std::array<float, 3> xyz = {
+          0.412424 * rgb[0] + 0.357579 * rgb[1] + 0.180464 * rgb[2],
+          0.212656 * rgb[0] + 0.715158 * rgb[1] + 0.0721856 * rgb[2],
         0.0193324 * rgb[0] + 0.119193 * rgb[1] + 0.950444 * rgb[2]
-      };
+        };
 
-      std::function<float(float)> f = [=](float _v) {
-        if (_v > 0.008856) return std::pow(_v, 0.333333);
-        else return _v * 7.787 + 0.137931;
-      };
+        std::function<float(float)> f = [=](float _v) {
+          if (_v > 0.008856) return std::pow(_v, 0.333333);
+          else return _v * 7.787 + 0.137931;
+        };
 
-      std::array<float, 3> lab = {
-        116 * f(xyz[1] / adapt[1]) - 16,
-        500 * (f(xyz[0] / adapt[0]) - f(xyz[1] / adapt[1])),
-        200 * (f(xyz[1] / adapt[1]) - f(xyz[2] / adapt[2]))
-      };
+        std::array<float, 3> lab = {
+          116 * f(xyz[1] / adapt[1]) - 16,
+          500 * (f(xyz[0] / adapt[0]) - f(xyz[1] / adapt[1])),
+          200 * (f(xyz[1] / adapt[1]) - f(xyz[2] / adapt[2]))
+        };
 
-      return lab;
-    };
+        return lab;
+      };
 
     //////////////////////////////////////////////////
     inline float distance(std::array<float, 3> _color1, std::array<float, 3> _color2)
@@ -57,8 +57,8 @@ namespace aero
       float dL = _color1[0] - _color2[0];
 
       float C7 = std::pow(
-          (sqrt(_color1[1] * _color1[1] + _color1[2] * _color1[2]) +
-           sqrt(_color2[1] * _color2[1] + _color2[2] * _color2[2])) * 0.5, 7);
+                          (sqrt(_color1[1] * _color1[1] + _color1[2] * _color1[2]) +
+                           sqrt(_color2[1] * _color2[1] + _color2[2] * _color2[2])) * 0.5, 7);
       float sqC = sqrt(C7 / (C7 + 6103515625));
       float a1 = _color1[1] * (1.0 + 0.5 * (1 - sqC));
       float a2 = _color2[1] * (1.0 + 0.5 * (1 - sqC));
