@@ -250,7 +250,7 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(std::string
     if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
     else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
   }
-  status = solveIK(group + "with_lifter", _pose);
+  status = solveIK(group + "_with_lifter", _pose);
   if (status) {
     getRobotStateVariables(_result);
     gname = group + "_with_lifter";
