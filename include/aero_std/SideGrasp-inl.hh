@@ -71,7 +71,7 @@ namespace aero
       else result.arm = aero::arm::rarm;
     }
 
-    result.grasp = pick;
+    result.grasp = aero::eef::grasp;
 
     Eigen::Quaternionf ini_rot = Eigen::Quaternionf(0.707107, 0.0, -0.707107, 0.0); //reset-pose
     Eigen::Quaternionf mid_rot = ini_rot;

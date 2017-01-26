@@ -20,8 +20,8 @@ namespace aero
     arm(aero::arm::either), object_position({0.0, 0.0, 0.0}), height(0.0),
     offset_z_mid(0.0),offset_x_mid(0.0),
     offset_z_end(0.0),offset_x_end(0.0),
-    default_offset_z(0.0), default_offset_x(0.0),
-    default_offset_z_mid(0.1),
+    default_offset_z(0.05), default_offset_x(-0.05),
+    default_offset_x_mid(0.05),default_offset_z_mid(0.15),
     maximum_grasp_width(0.15) {}
     
     // arm to grasp object, "left" or "right" or "either"
@@ -51,6 +51,7 @@ namespace aero
 
 
     // default height difference from end to mid
+  public: float default_offset_x_mid;
   public: float default_offset_z_mid;
 
     // physical parameter from the degree of opening of hand
@@ -69,7 +70,8 @@ namespace aero
       else result.arm = aero::arm::rarm;
     }
 
-    result.eef = aero::eef::grasp;
+    // ik target select
+    result.eef = aero::eef::pick;
 
     Eigen::Quaternionf ini_rot = Eigen::Quaternionf(1.0, 0.0, 0.0, 0.0); //reset-pose
     Eigen::Quaternionf mid_rot =
@@ -83,7 +85,7 @@ namespace aero
         Eigen::Quaternionf(0.92388, 0.0, 0.382683, 0.0) * mid_rot;
     }
 
-    result.mid_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_mid;
+    result.mid_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_mid +  _grasp.default_offset_x_mid;
     result.mid_pose.position.y = _grasp.object_position.y();
     result.mid_pose.position.z = _grasp.object_position.z() + _grasp.height/2.0 + _grasp.default_offset_z + _grasp.default_offset_z_mid;
     result.mid_pose.orientation.x = mid_rot.x();
@@ -91,7 +93,7 @@ namespace aero
     result.mid_pose.orientation.z = mid_rot.z();
     result.mid_pose.orientation.w = mid_rot.w();
 
-    result.end_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_end+ _grasp.maximum_grasp_width;
+    result.end_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_end+ _grasp.maximum_grasp_width/2.0;
     result.end_pose.position.y = _grasp.object_position.y();
     result.end_pose.position.z = _grasp.object_position.z() + _grasp.default_offset_z;
     result.end_pose.orientation.x = end_rot.x();

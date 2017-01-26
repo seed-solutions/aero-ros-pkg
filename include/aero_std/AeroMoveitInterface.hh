@@ -76,7 +76,7 @@ namespace aero
 
     bool plan(std::string _move_group);
     bool execute();
-    bool solveIK(std::string _move_group, geometry_msgs::Pose _pose);
+    bool solveIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
     void viewTrajectory();
     void setStartStateToCurrentState(std::string _move_group);
     bool move(std::string _move_group);
@@ -94,7 +94,7 @@ namespace aero
 
     // for grasp
     bool solveIKSequence(aero::GraspRequest &_grasp);
-    std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::vector<double> &_result);
+    std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
 
     bool moveSequence();
 
@@ -109,6 +109,7 @@ namespace aero
   private:
     void getRobotStateVariables(std::vector<double> &_av);
 
+    ros::ServiceClient hand_grasp_client_;
     ros::Publisher display_publisher_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;

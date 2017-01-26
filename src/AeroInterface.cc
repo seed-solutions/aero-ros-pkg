@@ -41,7 +41,7 @@ AeroInterface::AeroInterface(ros::NodeHandle _nh) : nh_(_nh)
   ignore_count_ = 0;
 
   // don't remove the next line! it's not used but compile fails without it!
-  tf::TransformBroadcaster tmp;
+  //tf::TransformBroadcaster tmp;
 
   // robot status
 
