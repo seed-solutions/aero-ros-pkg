@@ -91,6 +91,7 @@ namespace aero
     void setNamedTarget(std::string _move_group, std::string _target);
 
     void moveWaist(double _x, double _z);
+    void moveWaistLocal(double _x, double _z);
 
     // for grasp
     bool solveIKSequence(aero::GraspRequest &_grasp);

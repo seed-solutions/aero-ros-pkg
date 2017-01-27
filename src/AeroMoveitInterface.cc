@@ -187,6 +187,21 @@ void aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z)
   success = execute();
 }
 
+void aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z)
+{
+  std::vector<double> joint_values;
+  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+
+  joint_values[0] = joint_values[0] + _x;
+  joint_values[1] = joint_values[1] + _z;
+  kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
+  lifter.setStartStateToCurrentState();
+  lifter.setJointValueTarget(*kinematic_state);
+  bool success = plan("lifter");
+  if (!success) return;
+  success = execute();
+}
+
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
 {
   std::vector<double> result_mid(1);
@@ -244,6 +259,20 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   std::string gname = "";
   if (_arm == aero::arm::rarm) group = "rarm";
 
+  if (_ik_range == aero::ikrange::on_plane) { // ik on plane only
+    kinematic_state->setVariablePositions(_av_ini);
+    gname = group + "_with_lifter";
+    switchOnPlane();
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
+    status = solveIK(gname, _pose, _eef_link);
+    if (status && plan(gname)) {
+      getRobotStateVariables(_result);
+      return gname;
+    }
+    return "";
+  }
+
   // ik with arm
   std::cout << "ik" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
@@ -275,11 +304,11 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   kinematic_state->setVariablePositions(_av_ini);
   gname = group + "_with_lifter";
   if (height_only_) {
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
-  } else {
     if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
     else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
+  } else {
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
   }
   status = solveIK(group + "_with_lifter", _pose, _eef_link);
   if (status && plan(gname)) {
@@ -292,12 +321,12 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   gname = group + "_with_lifter";
   if (height_only_) {
     switchOnPlane();
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
-  } else {
-    switchHeightOnly();
     if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
     else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
+  } else {
+    switchHeightOnly();
+    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
+    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
   }
   status = solveIK(gname, _pose, _eef_link);
   if (status && plan(gname)) {
