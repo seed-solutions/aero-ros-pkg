@@ -1,5 +1,5 @@
-#ifndef _DEMO_Side_GRASP_INL_H_
-#define _DEMO_Side_GRASP_INL_H_
+#ifndef _DEMO_SIDE_GRASP_INL_H_
+#define _DEMO_SIDE_GRASP_INL_H_
 
 #include "aero_std/ProcessFlow.h"
 
