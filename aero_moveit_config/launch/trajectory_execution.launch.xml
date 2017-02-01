@@ -12,6 +12,8 @@
 
   <param name="trajectory_execution/allowed_goal_duration_margin" value="2.0"/> <!-- default 0.5     aero_controller may delays until 2.0 sec-->
   
+  <param name="trajectory_execution/allowed_start_tolerance" value="0.0"/> <!--disable the joint start state check by setting it to 0.0 -->
+
   <!-- Load the robot specific controller manager; this sets the moveit_controller_manager ROS parameter -->
   <arg name="moveit_controller_manager" default="AeroUpperRobot" />
   <include file="$(find aero_moveit_config)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml" />
