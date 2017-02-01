@@ -5,6 +5,8 @@ using namespace interpolation;
 
 Interpolation::Interpolation(int id)
 {
+  id_ = id;
+
   switch (id) {
   case i_constant:
     initConstant();
@@ -59,6 +61,11 @@ Interpolation::Interpolation(int id)
 }
 
 Interpolation::~Interpolation() {
+}
+
+bool Interpolation::is(const int id)
+{
+  return (id_ == id);
 }
 
 void Interpolation::init(const int n)

@@ -152,9 +152,13 @@ void AeroControllerNode::JointTrajectoryThread(
       }
     mtx_threads_.unlock();
 
+    int k = static_cast<int>(it - _stroke_trajectory.begin());
+
     // from here, main process for trajectory it
     // any movement faster than 100ms(10cs) will not interpolate = linear
-    if (it->second < 10) {
+    if (it->second < 10
+	|| _interpolation.at(k)->is(aero::interpolation::i_constant)
+	) {
       mtx_upper_.lock();
       upper_.set_position(it->first, it->second - (it-1)->second);
       mtx_upper_.unlock();
@@ -163,7 +167,6 @@ void AeroControllerNode::JointTrajectoryThread(
     // find number of splits in this trajectory
     // time becomes slightly faster if not cleanly dividable
     int splits = static_cast<int>((it->second - (it-1)->second) / csec_per_frame);
-    int k = static_cast<int>(it - _stroke_trajectory.begin());
     // send splitted stroke
     for (size_t j = _split_start_from; j <= splits; ++j) {
       // check if any kill signal was provided to current thread
