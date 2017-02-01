@@ -107,17 +107,35 @@ namespace aero
 
     bool openHand(float _angle, aero::arm _arm, float _warn, float _fail);
 
-  private:
+    void sendAngleVector(std::string _move_group, std::vector<double> _av, int _time_ms);
+
+    void sendAngleVector(std::string _move_group, int _time_ms); // _av in kinematic_state is used
+
+    void sendAngleVector(std::vector<double> _av, int _time_ms); // includes lower body
+
+    void sendAngleVector(int _time_ms); // all angles from kinematic_state is published
+
+    void setRobotStateVariables(std::vector<double> &_av);
+
     void getRobotStateVariables(std::vector<double> &_av);
 
+    void setRobotStateToCurrentState();
+
+    void setRobotStateToNamedTarget(std::string _move_group, std::string _target);
+  private:
+    void sendAngleVector_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
+
+    void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
     ros::ServiceClient hand_grasp_client_;
     ros::Publisher display_publisher_;
+    ros::Publisher angle_vector_publisher_;
+    ros::Subscriber joint_states_subscriber_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
     bool height_only_;
     std::vector<std::vector<double>> trajectory_;
     std::vector<std::string> trajectory_groups_;
-
+    sensor_msgs::JointState joint_states_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }

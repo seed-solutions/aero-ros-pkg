@@ -41,13 +41,18 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
 
   display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+  angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/command", 1000);
   planned_group_ = "";
   height_only_ = true;
   trajectory_ = std::vector<std::vector<double>>();
   trajectory_groups_ = std::vector<std::string>();
+  joint_states_ = sensor_msgs::JointState();
 
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
+
+  joint_states_subscriber_ = nh_.subscribe
+    ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
 
   ROS_INFO("AERO MOVEIT INTERFACE is initialized");
 }
@@ -430,3 +435,84 @@ bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm
 }
 
 //////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector(std::string _move_group, std::vector<double> _av, int _time_ms)
+{
+  std::vector<double> av_original;
+  getRobotStateVariables(av_original);// save
+  std::vector<double> av_mg;
+  kinematic_state->copyJointGroupPositions(_move_group, av_mg);
+  setRobotStateVariables(av_original);// return
+
+  sendAngleVector_(av_mg, getMoveGroup(_move_group).getJointNames(), _time_ms);
+}
+
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector(std::string _move_group, int _time_ms)
+{
+  std::vector<double> av;
+  getRobotStateVariables(av);
+  sendAngleVector(_move_group, av, _time_ms);
+}
+
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector(std::vector<double> _av, int _time_ms)
+{
+  std::vector<double> joint_values;
+  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+
+  Eigen::Vector3f waist;
+  waist.x() = joint_values[0] * 1000;
+  waist.z() = joint_values[1] * 1000;
+  if(!MoveWaist(waist, "world")) ROS_INFO("move waist failed");
+  sendAngleVector("upper_body", _av, _time_ms);
+}
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms)
+{
+  std::vector<double> av;
+  getRobotStateVariables(av);
+  sendAngleVector(av, _time_ms);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setRobotStateVariables(std::vector<double> &_av)
+{
+  kinematic_state->setVariablePositions(_av);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()//doubtful
+{
+  ros::spinOnce();
+  kinematic_state->setVariablePositions(joint_states_.name, joint_states_.position);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::string _move_group, std::string _target)
+{
+  kinematic_state->setVariablePositions(getMoveGroup(_move_group).getNamedTargetValues(_target));
+}
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
+{
+  trajectory_msgs::JointTrajectory msg;
+  msg.points.resize(1);
+  msg.joint_names.resize(_av.size());
+  msg.joint_names = _joint_names;
+  msg.points[0].positions.resize(_av.size());
+  msg.points[0].positions = _av;
+  msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
+  usleep(1000 * 1000);
+  angle_vector_publisher_.publish(msg);
+
+}
+
+void aero::interface::AeroMoveitInterface::JointStateCallback(const sensor_msgs::JointState::ConstPtr& _msg)
+{
+  joint_states_ = *_msg;
+}
