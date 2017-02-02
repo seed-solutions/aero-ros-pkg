@@ -31,6 +31,8 @@ namespace aero
 
     public: ~Interpolation();
 
+    public: bool is(const int id);
+
     public: std::function<float(float)> interpolate;
 
     public: std::function<void(std::pair<float, float>, int)> set_points;
@@ -64,6 +66,8 @@ namespace aero
     private: void initCubicBezier();
     private: float CubicBezier(float t);
     private: void set_cubicbezier_p(std::pair<float, float> p, int at);
+
+    private: int id_;
 
     private: std::vector<std::pair<float, float> > points_;
     };
