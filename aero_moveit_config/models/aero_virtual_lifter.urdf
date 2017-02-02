@@ -6,9 +6,17 @@
 </link>
 <link name="r_eef_pick_link">
 </link>
+<link name="r_thumb_tip_link">
+</link>
+<link name="r_index_tip_link">
+</link>
 <link name="l_eef_grasp_link">
 </link>
 <link name="l_eef_pick_link">
+</link>
+<link name="l_thumb_tip_link">
+</link>
+<link name="l_index_tip_link">
 </link>
 <joint name="virtual_lifter_z_joint" type="prismatic">
   <parent  link="virtual_lifter_z_link"/>
@@ -36,6 +44,16 @@
   <child link="r_eef_pick_link"/>
   <origin xyz="0.0 0.07 -0.16" rpy="0 1.5708 0 "/>
 </joint>
+<joint name="r_thumb_tip_joint" type="fixed">
+  <parent  link="r_indexend_link"/>
+  <child link="r_thumb_tip_link"/>
+  <origin xyz="0.0 0.035 -0.085" rpy="0 0 0 "/>
+</joint>
+<joint name="r_index_tip_joint" type="fixed">
+  <parent  link="r_indexmid_link"/>
+  <child link="r_index_tip_link"/>
+  <origin xyz="0.0 0.02 0.0" rpy="0 0 0 "/>
+</joint>
 <joint name="l_eef_grasp_joint" type="fixed">
   <parent  link="l_hand_link"/>
   <child link="l_eef_grasp_link"/>
@@ -45,4 +63,14 @@
   <parent  link="l_hand_link"/>
   <child link="l_eef_pick_link"/>
   <origin xyz="0.0 -0.07 -0.16" rpy="0 1.5708 0 "/>
+</joint>
+<joint name="l_thumb_tip_joint" type="fixed">
+  <parent  link="l_indexend_link"/>
+  <child link="l_thumb_tip_link"/>
+  <origin xyz="0.0 -0.035 -0.085" rpy="0 0 0 "/>
+</joint>
+<joint name="l_index_tip_joint" type="fixed">
+  <parent  link="l_indexmid_link"/>
+  <child link="l_index_tip_link"/>
+  <origin xyz="0.0 -0.02 -0.0" rpy="0 0 0 "/>
 </joint>
