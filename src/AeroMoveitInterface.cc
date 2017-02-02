@@ -498,6 +498,52 @@ void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::strin
 }
 //////////////////////////////////////////////////
 
+void aero::interface::AeroMoveitInterface::setHandAngle(aero::arm _arm, float _angle)
+{
+  std::string rl;
+  if (_arm == aero::arm::rarm) rl = "r";
+  else rl = "l";
+  float rad = _angle * M_PI / 180.0;
+  kinematic_state->setVariablePosition(rl + "_thumb_joint", rad);
+  kinematic_state->setVariablePosition(rl + "_indexbase_joint", -rad);
+}
+
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::setHandRadian(aero::arm _arm, float _radian)
+{
+  std::string rl;
+  if (_arm == aero::arm::rarm) rl = "r";
+  else rl = "l";
+  kinematic_state->setVariablePosition(rl + "_thumb_joint", _radian);
+  kinematic_state->setVariablePosition(rl + "_indexbase_joint", -_radian);
+}
+/////////////////////////////////////////////////
+Eigen::Vector3d aero::interface::AeroMoveitInterface::getThumbPosition(aero::arm _arm)
+{
+  std::string link = aero::arm2LR(_arm);
+  link = link + "_thumb_tip_link";
+  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
+  return vec;
+
+}
+/////////////////////////////////////////////////
+Eigen::Vector3d aero::interface::AeroMoveitInterface::getIndexPosition(aero::arm _arm)
+{
+
+  std::string link = aero::arm2LR(_arm);
+  link = link + "_index_tip_link";
+  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
+  return vec;
+
+}
+/////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::updateLinkTransforms()
+{
+  kinematic_state->updateLinkTransforms();
+}
+/////////////////////////////////////////////////
+
 void aero::interface::AeroMoveitInterface::sendAngleVector_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
 {
   trajectory_msgs::JointTrajectory msg;

@@ -122,6 +122,17 @@ namespace aero
     void setRobotStateToCurrentState();
 
     void setRobotStateToNamedTarget(std::string _move_group, std::string _target);
+
+    void setHandAngle(aero::arm _arm, float _angle);// insert angle which is openhand's command degree
+
+    void setHandRadian(aero::arm _arm, float _radian);// insert actual joint angle from l,r_thumb_joint
+
+    Eigen::Vector3d getThumbPosition(aero::arm _arm);
+
+    Eigen::Vector3d getIndexPosition(aero::arm _arm);
+
+    void updateLinkTransforms();
+
   private:
     void sendAngleVector_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
 
