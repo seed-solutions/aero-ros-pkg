@@ -477,14 +477,42 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(std::string _move_gro
 
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, std::vector<double> _av, int _time_ms)
 {
-  sendAngleVector( aero::armAndRange2MoveGroup(_arm, _range), _av, _time_ms);
+
+  if (_range == aero::ikrange::lifter) {
+    std::vector<double> av_ini;
+    getRobotStateVariables(av_ini);
+    setRobotStateVariables(_av);
+    std::vector<double> joint_values;
+    kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+
+    Eigen::Vector3f waist;
+    waist.x() = joint_values[0] * 1000;
+    waist.z() = joint_values[1] * 1000;
+
+    setRobotStateVariables(av_ini);
+    sendAngleVector( aero::armAndRange2MoveGroup(_arm, aero::ikrange::torso), _av, _time_ms);
+  } else {
+    sendAngleVector( aero::armAndRange2MoveGroup(_arm, _range), _av, _time_ms);
+  }
 }
 
 //////////////////////////////////////////////////
 
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms)
 {
-  sendAngleVector( aero::armAndRange2MoveGroup(_arm, _range), _time_ms);
+
+  if (_range == aero::ikrange::lifter) {
+    std::vector<double> joint_values;
+    kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+
+    Eigen::Vector3f waist;
+    waist.x() = joint_values[0] * 1000;
+    waist.z() = joint_values[1] * 1000;
+    if (!MoveWaist(waist, "world")) ROS_INFO("move waist failed");
+    sendAngleVector( aero::armAndRange2MoveGroup(_arm, aero::ikrange::torso), _time_ms);
+  } else {
+    sendAngleVector( aero::armAndRange2MoveGroup(_arm, _range), _time_ms);
+  }
 }
 
 //////////////////////////////////////////////////
