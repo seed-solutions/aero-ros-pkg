@@ -77,11 +77,14 @@ namespace aero
     bool plan(std::string _move_group);
     bool execute();
     bool solveIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
+    bool solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
+    bool solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
     void viewTrajectory();
     void setStartStateToCurrentState(std::string _move_group);
     bool move(std::string _move_group);
 
     moveit::planning_interface::MoveGroup &getMoveGroup(std::string _move_group);
+    moveit::planning_interface::MoveGroup &getMoveGroup(aero::arm _arm, aero::ikrange _range);
 
     // change lifter mode
     void switchOnPlane();
@@ -110,6 +113,10 @@ namespace aero
     void sendAngleVector(std::string _move_group, std::vector<double> _av, int _time_ms);
 
     void sendAngleVector(std::string _move_group, int _time_ms); // _av in kinematic_state is used
+
+    void sendAngleVector(aero::arm _arm, aero::ikrange _range, std::vector<double> _av, int _time_ms);
+
+    void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
     void sendAngleVector(std::vector<double> _av, int _time_ms); // includes lower body
 

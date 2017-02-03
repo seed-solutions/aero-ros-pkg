@@ -117,6 +117,16 @@ bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geom
   return found_ik;
 }
 
+bool aero::interface::AeroMoveitInterface::solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link)
+{
+  return solveIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link);
+}
+
+bool aero::interface::AeroMoveitInterface::solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef)
+{
+  return solveIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef));
+}
+
 void aero::interface::AeroMoveitInterface::viewTrajectory(){
   if (planned_group_ == "") {
     ROS_WARN("view error :: planned group not found");
@@ -157,6 +167,13 @@ moveit::planning_interface::MoveGroup &aero::interface::AeroMoveitInterface::get
     ROS_WARN("error :: move_group [%s] doesn't exist", _move_group.c_str());
     ros::shutdown();
   }
+}
+
+moveit::planning_interface::MoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(aero::arm _arm, aero::ikrange _range)
+{
+  std::string gname =  aero::armAndRange2MoveGroup(_arm, _range);
+
+  return getMoveGroup(gname);
 }
 
 void aero::interface::AeroMoveitInterface::switchOnPlane()
@@ -454,6 +471,20 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(std::string _move_gro
   std::vector<double> av;
   getRobotStateVariables(av);
   sendAngleVector(_move_group, av, _time_ms);
+}
+
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, std::vector<double> _av, int _time_ms)
+{
+  sendAngleVector( aero::armAndRange2MoveGroup(_arm, _range), _av, _time_ms);
+}
+
+//////////////////////////////////////////////////
+
+void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms)
+{
+  sendAngleVector( aero::armAndRange2MoveGroup(_arm, _range), _time_ms);
 }
 
 //////////////////////////////////////////////////
