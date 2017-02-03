@@ -36,7 +36,7 @@ namespace aero
   {
     std::string mg = arm2LarmRarm(_arm);
     if (_range == aero::ikrange::torso) mg = mg + "_with_torso";
-    else if (_range == aero::ikrange::torso) mg = mg + "_with_lifter";
+    else if (_range == aero::ikrange::lifter) mg = mg + "_with_lifter";
 
     return mg;
   }
