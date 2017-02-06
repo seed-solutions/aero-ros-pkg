@@ -55,6 +55,7 @@ create_table_func_from_csv() {
     j=0
     while read line
     do
+        Angle[j]=$(echo "$line" | cut -d ',' -f1)
 	csv[j]=$(echo "$line" | cut -d ',' -f4)
 	csv_interval[j]=$(echo "$line" | cut -d ',' -f3)
 	j=$(($j + 1))
@@ -92,7 +93,7 @@ create_table_func_from_csv() {
 		fi
 	    fi
 	    bef_head=$head
-	    ntable[$head]="${ntable[$head]}{${idx}, ${val}, ${csv_interval[${idx}]}}, "
+	    ntable[$head]="${ntable[$head]}{${Angle[${idx}]}, ${val}, ${csv_interval[${idx}]}}, "
 	else # when stroke is positive
 	    # if +1 degree results to more than +1 stroke
 	    if [[ ${bef_head} != ""  ]]
@@ -104,7 +105,7 @@ create_table_func_from_csv() {
 	    fi
 	    bef_head=$head
 
-	    table[$head]="${table[$head]}{${idx}, ${val}, ${csv_interval[${idx}]}}, "
+	    table[$head]="${table[$head]}{${Angle[${idx}]}, ${val}, ${csv_interval[${idx}]}}, "
 	fi
 	idx=$(($idx + 1))
     done

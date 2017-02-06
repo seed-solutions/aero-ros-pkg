@@ -63,7 +63,8 @@ create_table_func_from_csv() {
     interval=()
     j=0
     while read line
-    do
+    do  
+        case_num[j]=$(echo "$line" | cut -d ',' -f1)
 	table[j]=$(echo "$line" | cut -d ',' -f4)
 	interval[j]=$(echo "$line" | cut -d ',' -f3)
 	j=$(($j + 1))
@@ -77,7 +78,7 @@ create_table_func_from_csv() {
     for e in "${table[@]}"
     do
 	val=$(echo "$2 + $e" | bc)
-	code="${code}${tab6}case ${idx}:\n"
+	code="${code}${tab6}case ${case_num[${idx}]}:\n"
 	code="${code}${tab8}stroke = ${val};\n"
 	code="${code}${tab8}interval = ${interval[${idx}]};\n"
 	code="${code}${tab8}break;\n"

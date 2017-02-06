@@ -62,6 +62,12 @@ void AeroUpperController::util_servo_off()
 }
 
 //////////////////////////////////////////////////
+void AeroUpperController::Hand_Script(uint16_t _sendnum, uint16_t _script) {
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+  seed_.AERO_Snd_Script(_sendnum, _script);
+}
+
+//////////////////////////////////////////////////
 AeroLowerController::AeroLowerController(const std::string& _port) :
     AeroControllerProto(_port, ID_LOWER)
 {

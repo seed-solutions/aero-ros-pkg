@@ -33,6 +33,7 @@
 #include <tf/transform_broadcaster.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Int16MultiArray.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 
@@ -130,6 +131,12 @@ namespace aero
     private: bool InterpolationCallback(
         aero_startup::AeroInterpolation::Request &_req,
         aero_startup::AeroInterpolation::Response &_res);
+
+        /// @brief subscribe hand script message
+        /// @param _msg true: grasp, false :ungrasp
+    private: void HandScriptCallback(
+          const std_msgs::Int16MultiArray::ConstPtr& _msg);
+
 
     private: AeroUpperController upper_;
 

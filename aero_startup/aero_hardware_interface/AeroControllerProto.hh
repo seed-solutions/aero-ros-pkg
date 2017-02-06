@@ -46,6 +46,10 @@ namespace aero
     public: void send_command(uint8_t _cmd, uint16_t _time,
 			      std::vector<uint8_t>& _send_data);
 
+      /// @brief send_executing script command
+    public: void AERO_Snd_Script(uint16_t sendnum,uint8_t scriptnum);
+
+
     /// @brief flush io buffer
     public: void flush();
 
