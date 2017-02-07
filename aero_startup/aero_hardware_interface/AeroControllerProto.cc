@@ -145,7 +145,7 @@ void SEED485Controller::send_data(std::vector<uint8_t>& _send_data)
 //////////////////////////////////////////////////
 AeroControllerProto::AeroControllerProto(const std::string& _port,
 					 uint8_t _id) :
-    seed_(_port, _id), verbose_(true)
+  seed_(_port, _id), verbose_(true), bad_status_(false)
 {
 }
 
@@ -214,9 +214,28 @@ int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
 }
 
 //////////////////////////////////////////////////
+bool AeroControllerProto::get_status()
+{
+  return bad_status_;
+}
+
+//////////////////////////////////////////////////
+bool AeroControllerProto::get_status(std::vector<bool>& _status_vector)
+{
+  // TODO: status_vector_(int16_t) -> _status_vector(bool)
+  return bad_status_;
+}
+
+//////////////////////////////////////////////////
 void AeroControllerProto::update_position()
 {
   get_command(CMD_GET_POS, stroke_cur_vector_);
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::update_status()
+{
+  get_command(0x52, status_vector_);
 }
 
 //////////////////////////////////////////////////
@@ -268,6 +287,14 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     }
   }
 
+  if (cmd == 0x14 || cmd == 0x52) {
+    uint8_t status0 = dat[RAW_HEADER_OFFSET + 60];
+    uint8_t status1 = dat[RAW_HEADER_OFFSET + 61];
+    if ((status0 >> 5) == 1 || (status1 >> 5) == 1)
+      bad_status_ = true;
+    else
+      bad_status_ = false;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -299,7 +326,7 @@ void AeroControllerProto::set_position(
   seed_.send_command(CMD_MOVE_ABS, _time, dat);
 
   // for ROS
-  usleep(0.02 * 1000 * 1000);
+  usleep(1000 * 20);
   get_data(stroke_cur_vector_);
 }
 

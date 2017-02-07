@@ -163,6 +163,8 @@ namespace aero
 
     private: ros::Publisher stroke_state_pub_;
 
+    private: ros::Publisher status_pub_;
+
     private: ros::ServiceServer interpolation_server_;
 
     private: ros::Timer timer_;

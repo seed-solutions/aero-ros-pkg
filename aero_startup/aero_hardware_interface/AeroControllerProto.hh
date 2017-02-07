@@ -102,9 +102,16 @@ namespace aero
 
     public: int32_t get_ordered_angle_id(std::string _name);
 
+    public: bool get_status();
+
+    public: bool get_status(std::vector<bool>& _status_vector);
+
     /// @brief get current position from seed_
     ///   to access position externally, use get_actual_stroke_vector
     public: void update_position();
+
+    /// @brief updates robot status (checks step out joints)
+    public: void update_status();
 
     /// @brief send Get_Cur command
     /// @param _stroke_vector stroke vector
@@ -166,6 +173,10 @@ namespace aero
     protected: std::vector<int16_t> stroke_cur_vector_;
 
     protected: std::vector<AJointIndex> stroke_joint_indices_;
+
+    protected: std::vector<int16_t> status_vector_;
+
+    protected: bool bad_status_;
 
     protected:
       std::unordered_map<std::string, int32_t> angle_joint_indices_;

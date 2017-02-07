@@ -22,6 +22,9 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
       nh_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
           "stroke_state", 10);
 
+  ROS_INFO(" create error publisher");
+  status_pub_ = nh_.advertise<std_msgs::Bool>("error", 10);
+
   // ROS_INFO(" create cmdvel sub");
   // cmdvel_sub_ =
   //     nh_.subscribe(
@@ -499,8 +502,17 @@ void AeroControllerNode::JointStateOnce()
   // when upper body is controlled, current position is auto-updated
   mtx_threads_.lock();
   if (registered_threads_.size() == 0) {
-    upper_.update_position();
-    lower_.update_position();
+    // commands take 20ms sleep, threading to save time
+    std::thread t1([&](){
+        upper_.update_position();
+        upper_.update_status();
+      });
+    std::thread t2([&](){
+        lower_.update_position();
+        lower_.update_status();
+      });
+    t1.join();
+    t2.join();
   }
   mtx_threads_.unlock();
 
@@ -574,6 +586,11 @@ void AeroControllerNode::JointStateOnce()
 
   // get joint names (auto-generated function)
   common::AngleJointNames(state.joint_names);
+
+  // get status
+  std_msgs::Bool status_flag;
+  status_flag.data = upper_.get_status() || lower_.get_status();
+  status_pub_.publish(status_flag);
 
   state_pub_.publish(state);
   stroke_state_pub_.publish(stroke_state);
