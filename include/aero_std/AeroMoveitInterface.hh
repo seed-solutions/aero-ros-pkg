@@ -92,9 +92,18 @@ namespace aero
 
     //
     void setNamedTarget(std::string _move_group, std::string _target);
+    void resetManipPose();
 
-    void moveWaist(double _x, double _z);
+    void moveWaist(double _x, double _z); // m
+    void moveWaist(int _x, int _z); // mm
     void moveWaistLocal(double _x, double _z);
+    void moveWaistLocal(int _x, int _z);
+
+    // set waist position of kinametic_state
+    void setWaist(double _x, double _z);
+    void setWaist(int _x, int _z);
+
+    std::vector<double> getWaistPosition();
 
     // for grasp
     bool solveIKSequence(aero::GraspRequest &_grasp);
@@ -123,16 +132,18 @@ namespace aero
     void sendAngleVector(int _time_ms); // all angles from kinematic_state is published
 
     void setRobotStateVariables(std::vector<double> &_av);
+    void setRobotStateVariables(std::map<std::string, double> &_map);
 
     void getRobotStateVariables(std::vector<double> &_av);
+    void getRobotStateVariables(std::map<std::string, double> &_map);
 
     void setRobotStateToCurrentState();
 
     void setRobotStateToNamedTarget(std::string _move_group, std::string _target);
 
-    void setHandAngle(aero::arm _arm, float _angle);// insert angle which is openhand's command degree
+    void setHand(aero::arm _arm, int _angle);// insert angle[deg] which is openhand's command degree
 
-    void setHandRadian(aero::arm _arm, float _radian);// insert actual joint angle from l,r_thumb_joint
+    void setHand(aero::arm _arm, float _radian);// insert actual joint angle[rad] from l,r_thumb_joint
 
     Eigen::Vector3d getThumbPosition(aero::arm _arm);
 

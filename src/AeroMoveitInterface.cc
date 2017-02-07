@@ -194,6 +194,12 @@ void aero::interface::AeroMoveitInterface::setNamedTarget(std::string _move_grou
   getMoveGroup(_move_group).setNamedTarget(_target);
 }
 
+void aero::interface::AeroMoveitInterface::resetManipPose()
+{
+  kinematic_state->setVariablePositions(getMoveGroup("upper_body").getNamedTargetValues("reset-pose"));
+  sendAngleVector("upper_body", 3000);
+}
+
 void aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z)
 {
   std::vector<double> joint_values;
@@ -209,6 +215,11 @@ void aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z)
   success = execute();
 }
 
+void aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z)
+{
+  moveWaist(static_cast<double>(_x/1000.0), static_cast<double>(_x/1000.0));
+}
+
 void aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z)
 {
   std::vector<double> joint_values;
@@ -222,6 +233,32 @@ void aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z)
   bool success = plan("lifter");
   if (!success) return;
   success = execute();
+}
+
+void aero::interface::AeroMoveitInterface::moveWaistLocal(int _x, int _z)
+{
+  moveWaistLocal(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
+}
+
+void aero::interface::AeroMoveitInterface::setWaist(double _x, double _z)
+{
+  std::vector<double> joint_values;
+  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+
+  joint_values[0] = _x;
+  joint_values[1] = _z;
+  kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
+}
+void aero::interface::AeroMoveitInterface::setWaist(int _x, int _z)
+{
+  setWaist(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
+}
+
+std::vector<double> aero::interface::AeroMoveitInterface::getWaistPosition()
+{
+  std::vector<double> joint_values;
+  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+  return joint_values;
 }
 
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
@@ -389,6 +426,22 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<do
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<std::string, double> &_map)
+{
+  double* tmp;
+  std::vector<std::string> names;
+  int num = static_cast<int>(kinematic_model->getVariableCount());
+  tmp = kinematic_state->getVariablePositions();
+  names = kinematic_state->getVariableNames();
+  _map.clear();
+
+  for (int i=0; i < num; i++) {
+    _map[names[i]] == tmp[i];
+  }
+}
+
+
+//////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm)
 {
   return openHand(_yes, _arm, -0.9, 0.8);
@@ -544,6 +597,12 @@ void aero::interface::AeroMoveitInterface::setRobotStateVariables(std::vector<do
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setRobotStateVariables(std::map<std::string, double> &_map)
+{
+  kinematic_state->setVariablePositions(_map);
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()//doubtful
 {
   ros::spinOnce();
@@ -557,7 +616,7 @@ void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::strin
 }
 //////////////////////////////////////////////////
 
-void aero::interface::AeroMoveitInterface::setHandAngle(aero::arm _arm, float _angle)
+void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, int _angle)
 {
   std::string rl;
   if (_arm == aero::arm::rarm) rl = "r";
@@ -569,7 +628,7 @@ void aero::interface::AeroMoveitInterface::setHandAngle(aero::arm _arm, float _a
 
 //////////////////////////////////////////////////
 
-void aero::interface::AeroMoveitInterface::setHandRadian(aero::arm _arm, float _radian)
+void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, float _radian)
 {
   std::string rl;
   if (_arm == aero::arm::rarm) rl = "r";
