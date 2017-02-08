@@ -20,9 +20,9 @@ namespace aero
       r_wrist_y,
       r_wrist_p,
       r_wrist_r,
-      l_shouldel_p,
-      l_shouldel_r,
-      l_shouldel_y,
+      l_shoulder_p,
+      l_shoulder_r,
+      l_shoulder_y,
       l_elbow,
       l_wrist_y,
       l_wrist_p,
@@ -45,20 +45,46 @@ namespace aero
     {aero::joint::r_wrist_y,"r_wrist_y_joint"},
     {aero::joint::r_wrist_p,"r_wrist_p_joint"},
     {aero::joint::r_wrist_r,"r_wrist_r_joint"},
-    {aero::joint::l_shouldel_p,"l_shouldel_p_joint"},
-    {aero::joint::l_shouldel_r,"l_shouldel_l_joint"},
-    {aero::joint::l_shouldel_y,"l_shouldel_y_joint"},
+    {aero::joint::l_shoulder_p,"l_shoulder_p_joint"},
+    {aero::joint::l_shoulder_r,"l_shoulder_r_joint"},
+    {aero::joint::l_shoulder_y,"l_shoulder_y_joint"},
     {aero::joint::l_elbow,"l_elbow_joint"},
     {aero::joint::l_wrist_y,"l_wrist_y_joint"},
     {aero::joint::l_wrist_p,"l_wrist_p_joint"},
-    {aero::joint::l_wrist_r,"l_wrist_l_joint"},
+    {aero::joint::l_wrist_r,"l_wrist_r_joint"},
     {aero::joint::waist_y,"waist_y_joint"},
     {aero::joint::waist_p,"waist_p_joint"},
     {aero::joint::waist_r,"waist_r_joint"},
     {aero::joint::neck_y,"neck_y_joint"},
-    {aero::joint::neck_y,"neck_y_joint"},
+    {aero::joint::neck_p,"neck_p_joint"},
+    {aero::joint::neck_r,"neck_r_joint"},
     {aero::joint::lifter_x,"virtual_lifter_x_joint"},
     {aero::joint::lifter_z,"virtual_lifter_z_joint"}
+  };
+
+  std::map<std::string, aero::joint> string_map = {
+    {"r_shoulder_p_joint", aero::joint::r_shoulder_p},
+    {"r_shoulder_r_joint", aero::joint::r_shoulder_r},
+    {"r_shoulder_y_joint" ,aero::joint::r_shoulder_y},
+    {"r_elbow_joint" ,aero::joint::r_elbow},
+    {"r_wrist_y_joint" ,aero::joint::r_wrist_y},
+    {"r_wrist_p_joint" ,aero::joint::r_wrist_p},
+    {"r_wrist_r_joint" ,aero::joint::r_wrist_r},
+    {"l_shoulder_p_joint" ,aero::joint::l_shoulder_p},
+    {"l_shoulder_r_joint" ,aero::joint::l_shoulder_r},
+    {"l_shoulder_y_joint" ,aero::joint::l_shoulder_y},
+    {"l_elbow_joint" ,aero::joint::l_elbow},
+    {"l_wrist_y_joint" ,aero::joint::l_wrist_y},
+    {"l_wrist_p_joint" ,aero::joint::l_wrist_p},
+    {"l_wrist_r_joint" ,aero::joint::l_wrist_r},
+    {"waist_y_joint" ,aero::joint::waist_y},
+    {"waist_p_joint" ,aero::joint::waist_p},
+    {"waist_r_joint" ,aero::joint::waist_r},
+    {"neck_y_joint" ,aero::joint::neck_y},
+    {"neck_p_joint" ,aero::joint::neck_p},
+    {"neck_r_joint" ,aero::joint::neck_r},
+    {"virtual_lifter_x_joint" ,aero::joint::lifter_x},
+    {"virtual_lifter_z_joint" ,aero::joint::lifter_z}
   };
 
   std::string arm2LR(aero::arm _arm)
@@ -103,6 +129,27 @@ namespace aero
   std::string joint2JointName(aero::joint _joint)
   {
     return aero::joint_map[_joint];
+  }
+
+  aero::joint jointName2Joint(std::string _joint_name)
+  {
+    return aero::string_map[_joint_name];
+  }
+
+  void jointMap2StringMap(std::map<aero::joint, double> &_j_map, std::map<std::string, double> &_s_map)
+  {
+    _s_map.clear();
+    for(auto it = _j_map.begin(); it != _j_map.end(); ++it) {
+      _s_map[joint2JointName(it->first)] = it->second;
+    }
+  }
+
+  void stringMap2JointMap(std::map<std::string, double> &_s_map, std::map<aero::joint, double> &_j_map)
+  {
+    _j_map.clear();
+    for(auto it = _s_map.begin(); it != _s_map.end(); ++it) {
+      _j_map[jointName2Joint(it->first)] = it->second;
+    }
   }
 }
 
