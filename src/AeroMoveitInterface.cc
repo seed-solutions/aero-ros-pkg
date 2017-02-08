@@ -113,12 +113,31 @@ bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geom
     ROS_WARN("IK error :: move_group [%s] doesn't exist", _move_group.c_str());
     return false;
   }
-  std::cout << _move_group << std::endl;
+
+  if (lifter_ik) kinematic_state->enforceBounds(jmg_tmp);
+
   bool found_ik;
   if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, 10, 0.1);
   else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, 10, 0.1);
   if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
+  if (found_ik || !lifter_ik) return found_ik;
 
+  // if with lifter and first ik failed, trying another lifter's limit
+  if (height_only_) switchOnPlane();
+  else switchHeightOnly();
+
+  if (_move_group == "larm_with_lifter") {
+    if (height_only_) jmg_tmp = jmg_larm_with_lifter_ho;
+    else jmg_tmp = jmg_larm_with_lifter_op;
+  } else if (_move_group == "rarm_with_lifter") {
+    if (height_only_) jmg_tmp = jmg_rarm_with_lifter_ho;
+    else jmg_tmp = jmg_rarm_with_lifter_op;
+  }
+
+  kinematic_state->enforceBounds(jmg_tmp);
+  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, 10, 0.1);
+  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, 10, 0.1);
+  if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
   return found_ik;
 }
 
@@ -355,20 +374,6 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   std::string gname = "";
   if (_arm == aero::arm::rarm) group = "rarm";
 
-  if (_ik_range == aero::ikrange::on_plane) { // ik on plane only
-    kinematic_state->setVariablePositions(_av_ini);
-    gname = group + "_with_lifter";
-    switchOnPlane();
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
-    status = solveIK(gname, _pose, _eef_link);
-    if (status && plan(gname)) {
-      getRobotStateVariables(_result);
-      return gname;
-    }
-    return "";
-  }
-
   // ik with arm
   std::cout << "ik" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
@@ -399,32 +404,7 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   std::cout << "lif" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
   gname = group + "_with_lifter";
-  if (height_only_) {
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
-  } else {
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
-  }
   status = solveIK(group + "_with_lifter", _pose, _eef_link);
-  if (status && plan(gname)) {
-    getRobotStateVariables(_result);
-    return gname;
-  }  
-
-
-  kinematic_state->setVariablePositions(_av_ini);
-  gname = group + "_with_lifter";
-  if (height_only_) {
-    switchOnPlane();
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_op);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_op);
-  } else {
-    switchHeightOnly();
-    if (group == "larm") kinematic_state->enforceBounds( jmg_larm_with_lifter_ho);
-    else kinematic_state->enforceBounds( jmg_rarm_with_lifter_ho);
-  }
-  status = solveIK(gname, _pose, _eef_link);
   if (status && plan(gname)) {
     getRobotStateVariables(_result);
     return gname;
