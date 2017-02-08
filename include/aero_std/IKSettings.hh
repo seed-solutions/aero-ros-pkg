@@ -120,7 +120,8 @@ namespace aero
   std::string armAndEEF2LinkName(aero::arm _arm, aero::eef _eef)
   {
     std::string ln = arm2LR(_arm);
-    if (_eef == aero::eef::grasp) ln = ln + "_eef_grasp_link";
+    if (_eef == aero::eef::hand) ln = ln + "_hand_link";
+    else if (_eef == aero::eef::grasp) ln = ln + "_eef_grasp_link";
     else if (_eef == aero::eef::pick) ln = ln + "_eef_pick_link";
 
     return ln;

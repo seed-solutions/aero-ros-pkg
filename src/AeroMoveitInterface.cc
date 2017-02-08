@@ -58,7 +58,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
     ("/aero_torso_controller");
 
   ROS_INFO("----------------------------------------");
-  ROS_INFO("AERO MOVEIT INTERFACE is initialized");
+  ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
   ROS_INFO("----------------------------------------");
 }
 
@@ -664,11 +664,21 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getIndexPosition(aero::arm
   return vec;
 
 }
+
+/////////////////////////////////////////////////
+Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
+{
+  std::string link = aero::armAndEEF2LinkName(_arm, _eef);
+  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
+  return vec;
+}
+
 /////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::updateLinkTransforms()
 {
   kinematic_state->updateLinkTransforms();
 }
+
 /////////////////////////////////////////////////
 
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
