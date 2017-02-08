@@ -603,10 +603,19 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<aero:
 
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()//doubtful
+void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 {
   ros::spinOnce();
-  kinematic_state->setVariablePositions(joint_states_.name, joint_states_.position);
+  std::map<std::string, double> map;
+  for (auto it = aero::string_map.begin(); it != aero::string_map.end(); ++it) {
+    auto itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), it->first);
+    if (itr == joint_states_.name.end()) continue;
+    map[it->first] = joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())];
+  }
+  kinematic_state->setVariablePositions(map);
+
+  setHandsFromJointStates_();
+  updateLinkTransforms();
 }
 
 //////////////////////////////////////////////////
@@ -628,7 +637,7 @@ void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, int _angle)
 
 //////////////////////////////////////////////////
 
-void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, float _radian)
+void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, double _radian)
 {
   std::string rl;
   if (_arm == aero::arm::rarm) rl = "r";
@@ -682,6 +691,16 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
   kinematic_state->copyJointGroupPositions(_move_group, av_mg);
 
   sendAngleVectorAsync_(av_mg, getMoveGroup(_move_group).getJointNames(), _time_ms);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
+{
+  auto itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), "r_thumb_joint");
+  setHand(aero::arm::rarm, joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())]);
+
+  itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), "l_thumb_joint");
+  setHand(aero::arm::larm, joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())]);
 }
 
 //////////////////////////////////////////////////

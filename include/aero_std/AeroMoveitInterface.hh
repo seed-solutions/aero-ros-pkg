@@ -150,7 +150,7 @@ namespace aero
 
     void setHand(aero::arm _arm, int _angle);// insert angle[deg] which is openhand's command degree
 
-    void setHand(aero::arm _arm, float _radian);// insert actual joint angle[rad] from l,r_thumb_joint
+    void setHand(aero::arm _arm, double _radian);// insert actual joint angle[rad] from l,r_thumb_joint
 
     Eigen::Vector3d getThumbPosition(aero::arm _arm);
 
@@ -161,6 +161,8 @@ namespace aero
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
+
+    void setHandsFromJointStates_();
 
     void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
     ros::ServiceClient hand_grasp_client_;
