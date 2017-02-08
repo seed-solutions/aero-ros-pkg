@@ -21,7 +21,7 @@
 #include "aero_msgs/MBasedLoaded.h"
 #include <mutex>
 
-#include <tf/transform_broadcaster.h>
+// #include <tf/transform_broadcaster.h>
 
 namespace aero
 {
@@ -49,6 +49,10 @@ namespace aero
     public: bool GoPos(float _x, float _y, float _theta);
 
     public: bool GoPos(float _x, float _y, float _theta, float _time_out);
+
+    public: void SetInterpolation(const int _intrpl_type);
+
+    public: void SetInterpolation(aero::interpolation::settings _intrpl);
 
     public: void SendAngleVector
     (aero_msgs::JointAngles _av, geometry_msgs::Vector3 _look_at,
