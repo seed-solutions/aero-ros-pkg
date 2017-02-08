@@ -92,7 +92,7 @@ namespace aero
 
     //
     void setNamedTarget(std::string _move_group, std::string _target);
-    void resetManipPose();
+    void resetManipPose(int _time_ms=0);
 
     bool moveWaist(double _x, double _z, int _time_ms=0); // m
     bool moveWaist(int _x, int _z, int _time_ms=0); // mm

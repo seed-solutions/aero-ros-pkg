@@ -215,11 +215,13 @@ void aero::interface::AeroMoveitInterface::setNamedTarget(std::string _move_grou
   getMoveGroup(_move_group).setNamedTarget(_target);
 }
 
-void aero::interface::AeroMoveitInterface::resetManipPose()
+void aero::interface::AeroMoveitInterface::resetManipPose(int _time_ms)
 {
+  int time = 3000;
+  if ( _time_ms != 0) time = _time_ms;
   setRobotStateToNamedTarget("upper_body", "reset-pose");
-  sendAngleVectorAsync_("upper_body", 3000);
-  usleep(3000 * 1000);
+  sendAngleVectorAsync_("upper_body", time);
+  usleep(time * 1000);
 }
 
 bool aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z, int _time_ms)
