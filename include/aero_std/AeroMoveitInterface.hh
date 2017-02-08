@@ -94,10 +94,15 @@ namespace aero
     void setNamedTarget(std::string _move_group, std::string _target);
     void resetManipPose();
 
-    void moveWaist(double _x, double _z); // m
-    void moveWaist(int _x, int _z); // mm
-    void moveWaistLocal(double _x, double _z);
-    void moveWaistLocal(int _x, int _z);
+    bool moveWaist(double _x, double _z, int _time_ms=0); // m
+    bool moveWaist(int _x, int _z, int _time_ms=0); // mm
+    bool moveWaistLocal(double _x, double _z, int _time_ms=0);
+    bool moveWaistLocal(int _x, int _z, int _time_ms=0);
+
+    bool moveWaistAsync(double _x, double _z, int _time_ms=0); // m
+    bool moveWaistAsync(int _x, int _z, int _time_ms=0); // mm
+    bool moveWaistLocalAsync(double _x, double _z, int _time_ms=0);
+    bool moveWaistLocalAsync(int _x, int _z, int _time_ms=0);
 
     // set waist position of kinametic_state
     void setWaist(double _x, double _z);
@@ -119,23 +124,25 @@ namespace aero
 
     bool openHand(float _angle, aero::arm _arm, float _warn, float _fail);
 
-    void sendAngleVector(std::string _move_group, std::vector<double> _av, int _time_ms);
-
-    void sendAngleVector(std::string _move_group, int _time_ms); // _av in kinematic_state is used
-
-    void sendAngleVector(aero::arm _arm, aero::ikrange _range, std::vector<double> _av, int _time_ms);
-
     void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
-    void sendAngleVector(std::vector<double> _av, int _time_ms); // includes lower body
+    void sendAngleVector(int _time_ms, bool _move_waist=false); // all angles from kinematic_state is published
 
-    void sendAngleVector(int _time_ms); // all angles from kinematic_state is published
+    void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
+
+    void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
+
+    void sendAngleVectorAsync(int _time_ms, bool _move_waist=false); // all angles from kinematic_state is published
+
+    void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
 
     void setRobotStateVariables(std::vector<double> &_av);
     void setRobotStateVariables(std::map<std::string, double> &_map);
+    void setRobotStateVariables(std::map<aero::joint, double> &_map);
 
     void getRobotStateVariables(std::vector<double> &_av);
     void getRobotStateVariables(std::map<std::string, double> &_map);
+    void getRobotStateVariables(std::map<aero::joint, double> &_map);
 
     void setRobotStateToCurrentState();
 
@@ -152,13 +159,15 @@ namespace aero
     void updateLinkTransforms();
 
   private:
-    void sendAngleVector_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
+    void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
+    void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
 
     void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
     ros::ServiceClient hand_grasp_client_;
     ros::Publisher display_publisher_;
     ros::Publisher angle_vector_publisher_;
     ros::Subscriber joint_states_subscriber_;
+    ros::ServiceClient waist_service_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
     bool height_only_;
