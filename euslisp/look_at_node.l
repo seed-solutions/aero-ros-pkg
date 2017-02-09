@@ -69,7 +69,7 @@
            (float-vector 
             (* 1000 (- (send *target* :x) (send *lifter* :x))) 
             (* 1000 (send *target* :y)) 
-            (* 1000 (- (send *target* :z) (+ (send *lifter* :z) 0.58))) )
+            (* 1000 (- (send *target* :z) (send *lifter* :z))) )
            )
      (send *head_msg* 
            :points 
