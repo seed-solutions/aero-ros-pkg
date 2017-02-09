@@ -136,6 +136,10 @@ namespace aero
 
     void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
 
+    void setLookAt(double _x, double _y, double _z);
+    void setLookAt(Eigen::Vector3d _target);
+    void resetLookAt();
+
     void setRobotStateVariables(std::vector<double> &_av);
     void setRobotStateVariables(std::map<std::string, double> &_map);
     void setRobotStateVariables(std::map<aero::joint, double> &_map);
@@ -170,6 +174,7 @@ namespace aero
     ros::ServiceClient hand_grasp_client_;
     ros::Publisher display_publisher_;
     ros::Publisher angle_vector_publisher_;
+    ros::Publisher look_at_publisher_;
     ros::Subscriber joint_states_subscriber_;
     ros::ServiceClient waist_service_;
     moveit::planning_interface::MoveGroup::Plan plan_;

@@ -42,6 +42,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/command", 1000);
+  look_at_publisher_ = _nh.advertise<geometry_msgs::Point>("/look_at/target", 1000);
   planned_group_ = "";
   height_only_ = false;
   trajectory_ = std::vector<std::vector<double>>();
@@ -551,6 +552,29 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::j
 {
   setRobotStateVariables(_av_map);
   sendAngleVectorAsync(_time_ms, _move_waist);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z)
+{
+  geometry_msgs::Point msg;
+  msg.x = _x;
+  msg.y = _y;
+  msg.z = _z;
+
+  look_at_publisher_.publish(msg);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target)
+{
+  setLookAt(_target.x(), _target.y(), _target.z());
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::resetLookAt()
+{
+  setLookAt(0.0, 0.0, 0.0);
 }
 
 //////////////////////////////////////////////////
