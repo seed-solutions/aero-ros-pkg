@@ -28,7 +28,7 @@ class LifterStatePublisher(object):
         
         msg_lifter = Point();
         msg_lifter.x = x*0.001
-        msg_lifter.z = z*0.001
+        msg_lifter.z = (z + self._l1 + self._l2)*0.001
         self._pub_lifter.publish(msg_lifter)
 
 if __name__ == '__main__':
