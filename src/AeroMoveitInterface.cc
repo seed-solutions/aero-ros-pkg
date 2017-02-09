@@ -259,7 +259,7 @@ bool aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z, 
 
 bool aero::interface::AeroMoveitInterface::moveWaistLocal(int _x, int _z, int _time_ms)
 {
-  Eigen::Vector3d pos = getWaistPosition();
+  std::vector<double> pos = getWaistPositionRelative();
   return moveWaist(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -296,7 +296,7 @@ bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(double _x, double
 
 bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(int _x, int _z, int _time_ms)
 {
-  Eigen::Vector3d pos = getWaistPosition();
+  std::vector<double> pos = getWaistPositionRelative();
   return moveWaistAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -319,6 +319,13 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
   std::string link = "base_link";
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
+}
+
+std::vector<double> aero::interface::AeroMoveitInterface::getWaistPositionRelative()
+{
+  std::vector<double> joint_values;// size = 2
+  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
+  return joint_values;
 }
 
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
@@ -520,7 +527,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 {
 
   if (_range == aero::ikrange::lifter) {
-    Eigen::Vector3d joint_values = getWaistPosition();
+    std::vector<double> joint_values = getWaistPositionRelative();
     if (!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
       {
         ROS_INFO("move waist failed");
@@ -537,7 +544,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bool _move_waist)
 {
   if (_move_waist) {
-    Eigen::Vector3d joint_values = getWaistPosition();
+    std::vector<double> joint_values = getWaistPositionRelative();
     if(!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
       {
       ROS_INFO("move waist failed");
