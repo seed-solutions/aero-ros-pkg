@@ -42,6 +42,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/command", 1000);
+  look_at_publisher_ = _nh.advertise<geometry_msgs::Point>("/look_at/target", 1000);
   planned_group_ = "";
   height_only_ = false;
   trajectory_ = std::vector<std::vector<double>>();
@@ -258,7 +259,7 @@ bool aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z, 
 
 bool aero::interface::AeroMoveitInterface::moveWaistLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPosition();
+  std::vector<double> pos = getWaistPositionRelative();
   return moveWaist(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -295,7 +296,7 @@ bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(double _x, double
 
 bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPosition();
+  std::vector<double> pos = getWaistPositionRelative();
   return moveWaistAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -313,9 +314,16 @@ void aero::interface::AeroMoveitInterface::setWaist(int _x, int _z)
   setWaist(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
 }
 
-std::vector<double> aero::interface::AeroMoveitInterface::getWaistPosition()
+Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {
-  std::vector<double> joint_values;
+  std::string link = "base_link";
+  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
+  return vec;
+}
+
+std::vector<double> aero::interface::AeroMoveitInterface::getWaistPositionRelative()
+{
+  std::vector<double> joint_values;// size = 2
   kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
   return joint_values;
 }
@@ -519,7 +527,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 {
 
   if (_range == aero::ikrange::lifter) {
-    std::vector<double> joint_values = getWaistPosition();
+    std::vector<double> joint_values = getWaistPositionRelative();
     if (!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
       {
         ROS_INFO("move waist failed");
@@ -536,7 +544,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bool _move_waist)
 {
   if (_move_waist) {
-    std::vector<double> joint_values = getWaistPosition();
+    std::vector<double> joint_values = getWaistPositionRelative();
     if(!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
       {
       ROS_INFO("move waist failed");
@@ -551,6 +559,29 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::j
 {
   setRobotStateVariables(_av_map);
   sendAngleVectorAsync(_time_ms, _move_waist);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z)
+{
+  geometry_msgs::Point msg;
+  msg.x = _x;
+  msg.y = _y;
+  msg.z = _z;
+
+  look_at_publisher_.publish(msg);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target)
+{
+  setLookAt(_target.x(), _target.y(), _target.z());
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::resetLookAt()
+{
+  setLookAt(0.0, 0.0, 0.0);
 }
 
 //////////////////////////////////////////////////
@@ -679,6 +710,12 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _
 void aero::interface::AeroMoveitInterface::updateLinkTransforms()
 {
   kinematic_state->updateLinkTransforms();
+}
+
+/////////////////////////////////////////////////
+Eigen::Affine3d aero::interface::AeroMoveitInterface::getCameraTransform()
+{
+  return kinematic_state->getGlobalLinkTransform("camera_link");
 }
 
 /////////////////////////////////////////////////

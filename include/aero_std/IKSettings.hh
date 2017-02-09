@@ -30,9 +30,6 @@ namespace aero
       waist_y,
       waist_p,
       waist_r,
-      neck_y,
-      neck_p,
-      neck_r,
       lifter_x,
       lifter_z
       };
@@ -55,9 +52,6 @@ namespace aero
     {aero::joint::waist_y,"waist_y_joint"},
     {aero::joint::waist_p,"waist_p_joint"},
     {aero::joint::waist_r,"waist_r_joint"},
-    {aero::joint::neck_y,"neck_y_joint"},
-    {aero::joint::neck_p,"neck_p_joint"},
-    {aero::joint::neck_r,"neck_r_joint"},
     {aero::joint::lifter_x,"virtual_lifter_x_joint"},
     {aero::joint::lifter_z,"virtual_lifter_z_joint"}
   };
@@ -80,9 +74,6 @@ namespace aero
     {"waist_y_joint" ,aero::joint::waist_y},
     {"waist_p_joint" ,aero::joint::waist_p},
     {"waist_r_joint" ,aero::joint::waist_r},
-    {"neck_y_joint" ,aero::joint::neck_y},
-    {"neck_p_joint" ,aero::joint::neck_p},
-    {"neck_r_joint" ,aero::joint::neck_r},
     {"virtual_lifter_x_joint" ,aero::joint::lifter_x},
     {"virtual_lifter_z_joint" ,aero::joint::lifter_z}
   };
