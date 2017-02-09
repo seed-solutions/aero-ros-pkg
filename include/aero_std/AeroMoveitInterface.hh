@@ -108,7 +108,7 @@ namespace aero
     void setWaist(double _x, double _z);
     void setWaist(int _x, int _z);
 
-    std::vector<double> getWaistPosition();
+    Eigen::Vector3d getWaistPosition();
 
     // for grasp
     bool solveIKSequence(aero::GraspRequest &_grasp);

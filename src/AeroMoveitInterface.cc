@@ -314,11 +314,11 @@ void aero::interface::AeroMoveitInterface::setWaist(int _x, int _z)
   setWaist(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
 }
 
-std::vector<double> aero::interface::AeroMoveitInterface::getWaistPosition()
+EigenVector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {
-  std::vector<double> joint_values;
-  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
-  return joint_values;
+  std::string link = "base_link";
+  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
+  return vec;
 }
 
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
