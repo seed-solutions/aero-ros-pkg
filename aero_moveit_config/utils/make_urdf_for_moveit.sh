@@ -5,6 +5,29 @@
 
 # generates : aero_description/models/aero_moveit.urdf
 
+make_model_from_template () {
+    template_urdf="$(rospack find aero_moveit_config)/models/aero_virtual_lifter.template"
+    template_camera="$(rospack find aero_moveit_config)/models/camera_link.template"
+    product_urdf="$(rospack find aero_moveit_config)/models/aero_virtual_lifter.urdf"
+    product_camera="$(rospack find aero_moveit_config)/models/camera_link.conf"
+
+    if [ -e $product_camera ]; then
+        echo "camera link file exists"
+    else
+        echo "making camera link file"
+        cp $template_camera $product_camera
+    fi
+
+    if [ -e $product_urdf ]; then
+        echo "remove last urdf"
+        rm $product_urdf
+    fi
+    cp $template_urdf $product_urdf
+    echo "" >> $product_urdf # \n
+    cat $product_camera >> $product_urdf
+}
+
+
 concatenate_urdf() {
 
     paste_to="$(rospack find aero_description)/models/aero.urdf"
@@ -68,6 +91,7 @@ remove_geometry() {
     sed -i '/geometry/c\<!---->' $file
 }
 
+make_model_from_template
 concatenate_urdf
 original="$(rospack find aero_description)/models/aero_moveit.urdf"
 file_mg="$(rospack find aero_description)/models/aero_moveit_limited.urdf"

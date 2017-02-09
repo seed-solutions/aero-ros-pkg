@@ -18,6 +18,8 @@
 </link>
 <link name="l_index_tip_link">
 </link>
+<link name="camera_link">
+</link>
 <joint name="virtual_lifter_z_joint" type="prismatic">
   <parent  link="virtual_lifter_z_link"/>
   <child link="base_link"/>
