@@ -164,6 +164,8 @@ namespace aero
 
     void updateLinkTransforms();
 
+    Eigen::Affine3d getCameraTransform();
+
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used

@@ -259,7 +259,7 @@ bool aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z, 
 
 bool aero::interface::AeroMoveitInterface::moveWaistLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPosition();
+  Eigen::Vector3d pos = getWaistPosition();
   return moveWaist(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -296,7 +296,7 @@ bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(double _x, double
 
 bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPosition();
+  Eigen::Vector3d pos = getWaistPosition();
   return moveWaistAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -314,7 +314,7 @@ void aero::interface::AeroMoveitInterface::setWaist(int _x, int _z)
   setWaist(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
 }
 
-EigenVector3d aero::interface::AeroMoveitInterface::getWaistPosition()
+Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {
   std::string link = "base_link";
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
@@ -520,7 +520,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 {
 
   if (_range == aero::ikrange::lifter) {
-    std::vector<double> joint_values = getWaistPosition();
+    Eigen::Vector3d joint_values = getWaistPosition();
     if (!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
       {
         ROS_INFO("move waist failed");
@@ -537,7 +537,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bool _move_waist)
 {
   if (_move_waist) {
-    std::vector<double> joint_values = getWaistPosition();
+    Eigen::Vector3d joint_values = getWaistPosition();
     if(!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
       {
       ROS_INFO("move waist failed");
@@ -703,6 +703,12 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _
 void aero::interface::AeroMoveitInterface::updateLinkTransforms()
 {
   kinematic_state->updateLinkTransforms();
+}
+
+/////////////////////////////////////////////////
+Eigen::Affine3d aero::interface::AeroMoveitInterface::getCameraTransform()
+{
+  return kinematic_state->getGlobalLinkTransform("camera_link");
 }
 
 /////////////////////////////////////////////////
