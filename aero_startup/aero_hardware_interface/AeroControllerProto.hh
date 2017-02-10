@@ -46,6 +46,9 @@ namespace aero
     public: void send_command(uint8_t _cmd, uint16_t _time,
 			      std::vector<uint8_t>& _send_data);
 
+    public: void send_command(uint8_t _cmd, uint8_t _sub, uint16_t _time,
+			      std::vector<uint8_t>& _send_data);
+
     /// @brief flush io buffer
     public: void flush();
 
@@ -113,6 +116,8 @@ namespace aero
     /// @brief updates robot status (checks step out joints)
     public: void update_status();
 
+    public: void reset_status();
+
     /// @brief send Get_Cur command
     /// @param _stroke_vector stroke vector
     public: void get_current(std::vector<int16_t>& _stroke_vector);
@@ -130,6 +135,9 @@ namespace aero
     /// @param _cmd command id
     /// @param _stroke_vector stroke vector
     protected: void get_command(uint8_t _cmd,
+				std::vector<int16_t>& _stroke_vector);
+
+    protected: void get_command(uint8_t _cmd, uint8_t _sub,
 				std::vector<int16_t>& _stroke_vector);
 
     /// @brief set position command

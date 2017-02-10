@@ -79,6 +79,14 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         &AeroControllerNode::InterpolationCallback,
         this);
 
+  ROS_INFO(" create status reset sub");
+  status_reset_sub_ =
+      nh_.subscribe(
+          "reset_status",
+          10,
+          &AeroControllerNode::StatusResetCallback,
+          this);
+
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
 
@@ -613,6 +621,20 @@ void AeroControllerNode::WheelServoCallback(
     lower_.servo_on();
   }
 
+  mtx_lower_.unlock();
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::StatusResetCallback(
+    const std_msgs::Empty::ConstPtr& _msg)
+{
+  mtx_upper_.lock();
+  mtx_lower_.lock();
+
+  upper_.reset_status();
+  lower_.reset_status();
+
+  mtx_upper_.unlock();
   mtx_lower_.unlock();
 }
 

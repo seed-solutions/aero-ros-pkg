@@ -31,6 +31,7 @@
 #include <ros/subscribe_options.h>
 
 #include <tf/transform_broadcaster.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <nav_msgs/Odometry.h>
@@ -131,6 +132,9 @@ namespace aero
         aero_startup::AeroInterpolation::Request &_req,
         aero_startup::AeroInterpolation::Response &_res);
 
+    private: void StatusResetCallback(
+	const std_msgs::Empty::ConstPtr& _msg);
+
     private: AeroUpperController upper_;
 
     private: AeroLowerController lower_;
@@ -164,6 +168,8 @@ namespace aero
     private: ros::Publisher stroke_state_pub_;
 
     private: ros::Publisher status_pub_;
+
+    private: ros::Subscriber status_reset_sub_;
 
     private: ros::ServiceServer interpolation_server_;
 
