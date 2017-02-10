@@ -504,6 +504,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero:
 {
   sendAngleVectorAsync(_arm, _range, _time_ms);
   usleep(_time_ms * 1000);
+
+  sleep(1); // guarantee action has finished
 }
 
 //////////////////////////////////////////////////
@@ -512,6 +514,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, bool _m
 {
   sendAngleVectorAsync(_time_ms, _move_waist);
   usleep(_time_ms * 1000);
+
+  sleep(1); // guarantee action has finished
 }
 
 //////////////////////////////////////////////////
@@ -519,6 +523,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint,
 {
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
   usleep(_time_ms * 1000);
+
+  sleep(1); // guarantee action has finished
 }
 
 //////////////////////////////////////////////////
