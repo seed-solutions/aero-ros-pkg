@@ -304,7 +304,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     }
   }
 
-  if (cmd == 0x14 || cmd == 0x52) {
+  if (cmd == 0x14 || cmd == 0x52 || cmd == 0x41) {
     uint8_t status0 = dat[RAW_HEADER_OFFSET + 60];
     uint8_t status1 = dat[RAW_HEADER_OFFSET + 61];
     if ((status0 >> 5) == 1 || (status1 >> 5) == 1)

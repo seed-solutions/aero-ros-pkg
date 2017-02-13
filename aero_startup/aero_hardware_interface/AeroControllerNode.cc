@@ -214,7 +214,8 @@ void AeroControllerNode::JointTrajectoryThread(
       mtx_upper_.lock();
       upper_.set_position(stroke, csec_per_frame + 10);
       mtx_upper_.unlock();
-      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
+      // 20ms sleep in set_position, subtract
+      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
     } // splits
     _split_start_from = 1;
   } // _stroke_trajectory
@@ -513,11 +514,9 @@ void AeroControllerNode::JointStateOnce()
     // commands take 20ms sleep, threading to save time
     std::thread t1([&](){
         upper_.update_position();
-        upper_.update_status();
       });
     std::thread t2([&](){
         lower_.update_position();
-        lower_.update_status();
       });
     t1.join();
     t2.join();
