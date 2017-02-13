@@ -97,8 +97,14 @@ function removePoseAero() {
 function loadPoseAero() {
     if [[ $1 == "" ]]
     then
-        echo "usage: savePoseAero [name-to-save]"
+        echo "usage: loadPoseAero [name-to-save]"
         return
+    fi
+
+    tsec=3
+    if [[ $2 != "" ]]
+    then
+        tsec=$2
     fi
 
     name="["$1"]"
@@ -126,7 +132,7 @@ points:
   velocities: [0]
   accelerations: [0]
   effort: [0]
-  time_from_start: {secs: 3, nsecs: 0}" 
+  time_from_start: {secs: $tsec, nsecs: 0}"
 
     )
 }
