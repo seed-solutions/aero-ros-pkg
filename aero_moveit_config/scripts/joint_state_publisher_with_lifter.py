@@ -21,8 +21,8 @@ class LifterStatePublisher(object):
         msg.position = list(state.position)
         hip = state.position[state.name.index("hip_joint")]
         knee = state.position[state.name.index("knee_joint")] 
-        z = self._l1 * (math.cos(hip) - 1.0) + self._l2 * (math.cos(knee - hip) - 1.0)
-        x = -self._l1 * math.sin(hip) + self._l2 * math.sin(knee - hip)
+        z = self._l1 * (math.cos(knee - hip) - 1.0) + self._l2 * (math.cos(hip) - 1.0)
+        x = -self._l1 * math.sin(knee - hip) + self._l2 * math.sin(hip)
         msg.position.extend([z*0.001, x*0.001])
         self._pub.publish(msg)
         
