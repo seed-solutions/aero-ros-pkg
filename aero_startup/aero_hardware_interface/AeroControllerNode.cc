@@ -22,6 +22,9 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
       nh_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
           "stroke_state", 10);
 
+  ROS_INFO(" create error publisher");
+  status_pub_ = nh_.advertise<std_msgs::Bool>("error", 10);
+
   // ROS_INFO(" create cmdvel sub");
   // cmdvel_sub_ =
   //     nh_.subscribe(
@@ -75,6 +78,14 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         "interpolation",
         &AeroControllerNode::InterpolationCallback,
         this);
+
+  ROS_INFO(" create status reset sub");
+  status_reset_sub_ =
+      nh_.subscribe(
+          "reset_status",
+          10,
+          &AeroControllerNode::StatusResetCallback,
+          this);
 
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
@@ -203,7 +214,8 @@ void AeroControllerNode::JointTrajectoryThread(
       mtx_upper_.lock();
       upper_.set_position(stroke, csec_per_frame + 10);
       mtx_upper_.unlock();
-      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0));
+      // 20ms sleep in set_position, subtract
+      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
     } // splits
     _split_start_from = 1;
   } // _stroke_trajectory
@@ -499,8 +511,15 @@ void AeroControllerNode::JointStateOnce()
   // when upper body is controlled, current position is auto-updated
   mtx_threads_.lock();
   if (registered_threads_.size() == 0) {
-    upper_.update_position();
-    lower_.update_position();
+    // commands take 20ms sleep, threading to save time
+    std::thread t1([&](){
+        upper_.update_position();
+      });
+    std::thread t2([&](){
+        lower_.update_position();
+      });
+    t1.join();
+    t2.join();
   }
   mtx_threads_.unlock();
 
@@ -575,6 +594,11 @@ void AeroControllerNode::JointStateOnce()
   // get joint names (auto-generated function)
   common::AngleJointNames(state.joint_names);
 
+  // get status
+  std_msgs::Bool status_flag;
+  status_flag.data = upper_.get_status() || lower_.get_status();
+  status_pub_.publish(status_flag);
+
   state_pub_.publish(state);
   stroke_state_pub_.publish(stroke_state);
 
@@ -596,6 +620,20 @@ void AeroControllerNode::WheelServoCallback(
     lower_.servo_on();
   }
 
+  mtx_lower_.unlock();
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::StatusResetCallback(
+    const std_msgs::Empty::ConstPtr& _msg)
+{
+  mtx_upper_.lock();
+  mtx_lower_.lock();
+
+  upper_.reset_status();
+  lower_.reset_status();
+
+  mtx_upper_.unlock();
   mtx_lower_.unlock();
 }
 

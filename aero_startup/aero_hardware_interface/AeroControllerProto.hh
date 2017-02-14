@@ -46,6 +46,9 @@ namespace aero
     public: void send_command(uint8_t _cmd, uint16_t _time,
 			      std::vector<uint8_t>& _send_data);
 
+    public: void send_command(uint8_t _cmd, uint8_t _sub, uint16_t _time,
+			      std::vector<uint8_t>& _send_data);
+
     /// @brief flush io buffer
     public: void flush();
 
@@ -102,9 +105,18 @@ namespace aero
 
     public: int32_t get_ordered_angle_id(std::string _name);
 
+    public: bool get_status();
+
+    public: bool get_status(std::vector<bool>& _status_vector);
+
     /// @brief get current position from seed_
     ///   to access position externally, use get_actual_stroke_vector
     public: void update_position();
+
+    /// @brief updates robot status (checks step out joints)
+    public: void update_status();
+
+    public: void reset_status();
 
     /// @brief send Get_Cur command
     /// @param _stroke_vector stroke vector
@@ -123,6 +135,9 @@ namespace aero
     /// @param _cmd command id
     /// @param _stroke_vector stroke vector
     protected: void get_command(uint8_t _cmd,
+				std::vector<int16_t>& _stroke_vector);
+
+    protected: void get_command(uint8_t _cmd, uint8_t _sub,
 				std::vector<int16_t>& _stroke_vector);
 
     /// @brief set position command
@@ -166,6 +181,10 @@ namespace aero
     protected: std::vector<int16_t> stroke_cur_vector_;
 
     protected: std::vector<AJointIndex> stroke_joint_indices_;
+
+    protected: std::vector<int16_t> status_vector_;
+
+    protected: bool bad_status_;
 
     protected:
       std::unordered_map<std::string, int32_t> angle_joint_indices_;

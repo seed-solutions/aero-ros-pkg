@@ -88,11 +88,18 @@ void SEED485Controller::read(std::vector<uint8_t>& _read_data)
 void SEED485Controller::send_command(
     uint8_t _cmd, uint16_t _time, std::vector<uint8_t>& _send_data)
 {
+  send_command(_cmd, 0x00, _time, _send_data);
+}
+
+//////////////////////////////////////////////////
+void SEED485Controller::send_command(
+    uint8_t _cmd, uint8_t _sub, uint16_t _time, std::vector<uint8_t>& _send_data)
+{
   _send_data[0] = 0xFD;
   _send_data[1] = 0xDF;
   _send_data[2] = 0x40;
   _send_data[3] = _cmd;
-  _send_data[4] = 0x00;
+  _send_data[4] = _sub;
 
   //  time (2 bytes)
   _send_data[65] = static_cast<uint8_t>(0xff & (_time >> 8));
@@ -145,7 +152,7 @@ void SEED485Controller::send_data(std::vector<uint8_t>& _send_data)
 //////////////////////////////////////////////////
 AeroControllerProto::AeroControllerProto(const std::string& _port,
 					 uint8_t _id) :
-    seed_(_port, _id), verbose_(true)
+  seed_(_port, _id), verbose_(true), bad_status_(false)
 {
 }
 
@@ -214,9 +221,37 @@ int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
 }
 
 //////////////////////////////////////////////////
+bool AeroControllerProto::get_status()
+{
+  return bad_status_;
+}
+
+//////////////////////////////////////////////////
+bool AeroControllerProto::get_status(std::vector<bool>& _status_vector)
+{
+  // TODO: status_vector_(int16_t) -> _status_vector(bool)
+  return bad_status_;
+}
+
+//////////////////////////////////////////////////
 void AeroControllerProto::update_position()
 {
+  seed_.flush();
   get_command(CMD_GET_POS, stroke_cur_vector_);
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::update_status()
+{
+  seed_.flush();
+  get_command(0x52, status_vector_);
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::reset_status()
+{
+  seed_.flush();
+  get_command(0x52, 0xff, status_vector_);
 }
 
 //////////////////////////////////////////////////
@@ -247,7 +282,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
   bvalue[1] = 0x00;
 
   if (header != 0xdffd) {
-    seed_.flush();
+    // seed_.flush();
     return;
   }
 
@@ -260,6 +295,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
       // uint8_t -> uint16_t
       _stroke_vector[aji.stroke_index] =
         decode_short_(&dat[RAW_HEADER_OFFSET + aji.raw_index * 2]);
+
       // check value
       if (_stroke_vector[aji.stroke_index] > 0x7fff)
         _stroke_vector[aji.stroke_index] -= std::pow(2, 16);
@@ -268,16 +304,31 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     }
   }
 
+  if (cmd == 0x14 || cmd == 0x52 || cmd == 0x41) {
+    uint8_t status0 = dat[RAW_HEADER_OFFSET + 60];
+    uint8_t status1 = dat[RAW_HEADER_OFFSET + 61];
+    if ((status0 >> 5) == 1 || (status1 >> 5) == 1)
+      bad_status_ = true;
+    else
+      bad_status_ = false;
+  }
 }
 
 //////////////////////////////////////////////////
 void AeroControllerProto::get_command(uint8_t _cmd,
                                       std::vector<int16_t>& _stroke_vector)
 {
+  get_command(_cmd, 0x00, _stroke_vector);
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::get_command(uint8_t _cmd, uint8_t _sub,
+                                      std::vector<int16_t>& _stroke_vector)
+{
   boost::mutex::scoped_lock lock(ctrl_mtx_);
 
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
-  seed_.send_command(_cmd, 0, dat);
+  seed_.send_command(_cmd, _sub, 0, dat);
   usleep(1000 * 20);  // wait
   get_data(_stroke_vector);
 }
@@ -296,10 +347,11 @@ void AeroControllerProto::set_position(
   // for seed
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
   stroke_to_raw_(_stroke_vector, dat);
+  seed_.flush();
   seed_.send_command(CMD_MOVE_ABS, _time, dat);
 
   // for ROS
-  usleep(0.02 * 1000 * 1000);
+  usleep(1000 * 20);
   get_data(stroke_cur_vector_);
 }
 
