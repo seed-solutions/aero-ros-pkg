@@ -1,0 +1,6 @@
+string[] joint_names
+trajectory_msgs/JointTrajectoryPoint points
+---
+string[] joint_names
+trajectory_msgs/JointTrajectoryPoint points
+bool status
