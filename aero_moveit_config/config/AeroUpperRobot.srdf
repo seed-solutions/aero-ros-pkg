@@ -46,6 +46,10 @@
         <link name="r_indexbase_link" />
         <link name="r_indexmid_link" />
         <link name="r_indexend_link" />
+        <link name="r_eef_grasp_link" />
+        <link name="r_eef_pick_link" />
+        <link name="r_thumb_tip_link" />
+        <link name="r_index_tip_link" />
     </group>
     <group name="lhand">
         <link name="l_hand_link" />
@@ -53,12 +57,15 @@
         <link name="l_indexbase_link" />
         <link name="l_indexmid_link" />
         <link name="l_indexend_link" />
+        <link name="l_eef_grasp_link" />
+        <link name="l_eef_pick_link" />
+        <link name="l_thumb_tip_link" />
+        <link name="l_index_tip_link" />
     </group>
     <group name="upper_body">
         <group name="rarm" />
         <group name="larm" />
         <group name="torso" />
-        <group name="head" />
     </group>
     <!--GROUP STATES: Purpose: Define a named state for a particular group, in terms of joint values. This is useful to define states like 'folded arms'-->
     <group_state name="reset-pose" group="upper_body">
@@ -69,9 +76,6 @@
         <joint name="l_wrist_p_joint" value="0" />
         <joint name="l_wrist_r_joint" value="0" />
         <joint name="l_wrist_y_joint" value="0" />
-        <joint name="neck_p_joint" value="0" />
-        <joint name="neck_r_joint" value="0" />
-        <joint name="neck_y_joint" value="0" />
         <joint name="r_elbow_joint" value="-2.3562" />
         <joint name="r_shoulder_p_joint" value="-0.2443" />
         <joint name="r_shoulder_r_joint" value="0" />

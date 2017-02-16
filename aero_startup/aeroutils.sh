@@ -47,3 +47,92 @@ function speakAero() {
 
     rostopic pub --once /windows/voice std_msgs/String "{data: $1}"
 }
+
+# save current aero's pose
+function savePoseAero() {
+    if [[ $1 == "" ]]
+    then
+        echo "usage: savePoseAero [name-to-save]"
+        return
+    fi
+
+    name="["$1"]"
+    (
+        roscd aero_startup/poses
+
+        if [ `cat pose_list.txt | grep -F $name` ]; then
+            echo $1" already exists"
+            return
+        fi
+        echo "new pose"
+
+        file_name="$1.txt"
+        rostopic echo -n 1 /aero_joint_states > $file_name
+        sed -i '/\-\-\-/d' $file_name
+
+        echo $name >> pose_list.txt
+    )
+}
+
+function removePoseAero() {
+    if [[ $1 == "" ]]
+    then
+        echo "usage: removePoseAero [name-to-remove]"
+        return
+    fi
+    name="["$1"]"
+    (
+        roscd aero_startup/poses
+
+        if [ -z `cat pose_list.txt | grep -F $name` ]; then
+            echo "$1 is not found"
+            return
+        fi
+
+        sed -i '/\['$1'\]/d' pose_list.txt
+        rm "$1.txt"
+    )
+}
+
+function loadPoseAero() {
+    if [[ $1 == "" ]]
+    then
+        echo "usage: loadPoseAero [name-to-save]"
+        return
+    fi
+
+    tsec=3
+    if [[ $2 != "" ]]
+    then
+        tsec=$2
+    fi
+
+    name="["$1"]"
+    (
+        roscd aero_startup/poses
+
+        if [ -z `cat pose_list.txt | grep -F $name` ]; then
+            echo "$1 is not found"
+            return
+        fi
+
+        file_name="$1.txt"
+
+        jn=`cat $file_name | grep name | sed -e 's/name\://'`
+        ps=`cat $file_name | grep position | sed -e 's/position\://'`
+        rostopic pub --once /aero_controller/command trajectory_msgs/JointTrajectory "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+joint_names: $jn
+points:
+- positions: $ps
+  velocities: [0]
+  accelerations: [0]
+  effort: [0]
+  time_from_start: {secs: $tsec, nsecs: 0}"
+
+    )
+}

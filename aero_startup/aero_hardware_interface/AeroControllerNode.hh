@@ -31,6 +31,7 @@
 #include <ros/subscribe_options.h>
 
 #include <tf/transform_broadcaster.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Int16MultiArray.h>
@@ -38,6 +39,7 @@
 #include <geometry_msgs/Twist.h>
 
 #include "aero_startup/AeroInterpolation.h"
+#include "aero_startup/AeroSendJoints.h"
 
 namespace aero
 {
@@ -132,11 +134,17 @@ namespace aero
         aero_startup::AeroInterpolation::Request &_req,
         aero_startup::AeroInterpolation::Response &_res);
 
-        /// @brief subscribe hand script message
-        /// @param _msg true: grasp, false :ungrasp
+      /// @brief subscribe hand script message
+      /// @param _msg true: grasp, false :ungrasp
     private: void HandScriptCallback(
           const std_msgs::Int16MultiArray::ConstPtr& _msg);
 
+    private: void StatusResetCallback(
+	const std_msgs::Empty::ConstPtr& _msg);
+
+    private: bool SendJointsCallback(
+        aero_startup::AeroSendJoints::Request &_req,
+        aero_startup::AeroSendJoints::Response &_res);
 
     private: AeroUpperController upper_;
 
@@ -170,7 +178,13 @@ namespace aero
 
     private: ros::Publisher stroke_state_pub_;
 
+    private: ros::Publisher status_pub_;
+
+    private: ros::Subscriber status_reset_sub_;
+
     private: ros::ServiceServer interpolation_server_;
+
+    private: ros::ServiceServer send_joints_server_;
 
     private: ros::Timer timer_;
 

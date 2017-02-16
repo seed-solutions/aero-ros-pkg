@@ -5,6 +5,29 @@
 
 # generates : aero_description/models/aero_moveit.urdf
 
+make_model_from_template () {
+    template_urdf="$(rospack find aero_moveit_config)/models/aero_virtual_lifter.template"
+    template_camera="$(rospack find aero_moveit_config)/models/camera_link.template"
+    product_urdf="$(rospack find aero_moveit_config)/models/aero_virtual_lifter.urdf"
+    product_camera="$(rospack find aero_moveit_config)/models/camera_link.conf"
+
+    if [ -e $product_camera ]; then
+        echo "camera link file exists"
+    else
+        echo "making camera link file"
+        cp $template_camera $product_camera
+    fi
+
+    if [ -e $product_urdf ]; then
+        echo "remove last urdf"
+        rm $product_urdf
+    fi
+    cp $template_urdf $product_urdf
+    echo "" >> $product_urdf # \n
+    cat $product_camera >> $product_urdf
+}
+
+
 concatenate_urdf() {
 
     paste_to="$(rospack find aero_description)/models/aero.urdf"
@@ -68,6 +91,7 @@ remove_geometry() {
     sed -i '/geometry/c\<!---->' $file
 }
 
+make_model_from_template
 concatenate_urdf
 original="$(rospack find aero_description)/models/aero_moveit.urdf"
 file_mg="$(rospack find aero_description)/models/aero_moveit_limited.urdf"
@@ -78,36 +102,36 @@ cp $original $file_mg
 cp $original $file_ho
 cp $original $file_op
 
-replace_limits $file_mg "l_wrist_p_joint" -0.04 0.04
-replace_limits $file_mg "r_wrist_p_joint" -0.04 0.04
+replace_limits $file_mg "l_wrist_p_joint" -0.017 0.017
+replace_limits $file_mg "r_wrist_p_joint" -0.017 0.017
 replace_limits $file_mg "l_wrist_y_joint" -1.5708 1.5708
 replace_limits $file_mg "r_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_mg "l_shoulder_y_joint" -1.5708 1.5708
-replace_limits $file_mg "r_shoulder_y_joint" -1.5708 1.5708
-replace_limits $file_mg "waist_r_joint" -0.03 0.03
-replace_limits $file_mg "waist_p_joint" 0.0 0.523599
+replace_limits $file_mg "l_shoulder_y_joint" -0.5236 1.5708
+replace_limits $file_mg "r_shoulder_y_joint" -0.5236 1.5708
+replace_limits $file_mg "waist_r_joint" -0.017 0.017
+replace_limits $file_mg "waist_p_joint" 0.0 0.4014 # 0 to 23
 replace_limits $file_mg "virtual_lifter_x_joint" -0.2 0.2
 replace_limits $file_mg "virtual_lifter_z_joint" -0.4 0.0
 
-replace_limits $file_ho "l_wrist_p_joint" -0.04 0.04
-replace_limits $file_ho "r_wrist_p_joint" -0.04 0.04
+replace_limits $file_ho "l_wrist_p_joint" -0.017 0.017
+replace_limits $file_ho "r_wrist_p_joint" -0.017 0.017
 replace_limits $file_ho "l_wrist_y_joint" -1.5708 1.5708
 replace_limits $file_ho "r_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_ho "l_shoulder_y_joint" -1.5708 1.5708
-replace_limits $file_ho "r_shoulder_y_joint" -1.5708 1.5708
-replace_limits $file_ho "waist_r_joint" -0.03 0.03
-replace_limits $file_ho "waist_p_joint" 0.0 0.523599
+replace_limits $file_ho "l_shoulder_y_joint" -0.5236 1.5708
+replace_limits $file_ho "r_shoulder_y_joint" -0.5236 1.5708
+replace_limits $file_ho "waist_r_joint" -0.017 0.017
+replace_limits $file_ho "waist_p_joint" 0.0 0.4014
 replace_limits $file_ho "virtual_lifter_x_joint" -0.0 0.0
 replace_limits $file_ho "virtual_lifter_z_joint" -0.4 0.0
 
-replace_limits $file_op "l_wrist_p_joint" -0.04 0.04
-replace_limits $file_op "r_wrist_p_joint" -0.04 0.04
+replace_limits $file_op "l_wrist_p_joint" -0.017 0.017
+replace_limits $file_op "r_wrist_p_joint" -0.017 0.017
 replace_limits $file_op "l_wrist_y_joint" -1.5708 1.5708
 replace_limits $file_op "r_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_op "l_shoulder_y_joint" -1.5708 1.5708
-replace_limits $file_op "r_shoulder_y_joint" -1.5708 1.5708
-replace_limits $file_op "waist_r_joint" -0.03 0.03
-replace_limits $file_op "waist_p_joint" 0.0 0.523599
+replace_limits $file_op "l_shoulder_y_joint" -0.5236 1.5708
+replace_limits $file_op "r_shoulder_y_joint" -0.5236 1.5708
+replace_limits $file_op "waist_r_joint" -0.017 0.017
+replace_limits $file_op "waist_p_joint" 0.0 0.4014
 replace_limits $file_op "virtual_lifter_x_joint" -0.2 0.2
 replace_limits $file_op "virtual_lifter_z_joint" -0.3 -0.08
 
