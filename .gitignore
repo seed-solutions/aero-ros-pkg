@@ -15,3 +15,4 @@ aero_startup/aero_hardware_interface/UnusedAngle2Stroke.hh
 aero_startup/aero_move_base/AeroBaseController.cc
 aero_moveit_config/models/aero_virtual_lifter.urdf
 aero_moveit_config/models/camera_link.conf
+aero_moveit_config/config/AeroUpperRobot.srdf
