@@ -1,5 +1,6 @@
 string[] joint_names
 trajectory_msgs/JointTrajectoryPoint points
+bool reset_status
 ---
 string[] joint_names
 trajectory_msgs/JointTrajectoryPoint points

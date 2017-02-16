@@ -829,12 +829,20 @@ bool AeroControllerNode::SendJointsCallback(
   uint16_t time_csec = static_cast<uint16_t>(time_sec * 100.0);
 
   std::thread t1([&](){
+      if (_req.reset_status) { // reset status if flag
+        upper_.reset_status();
+        usleep(20000); // 20ms sleep before next command
+      }
       if (upper_count > 0) {
         upper_.set_position(upper_stroke_vector, time_csec);
       }
     });
 
   std::thread t2([&](){
+      if (_req.reset_status) { // reset status if flag
+        lower_.reset_status();
+        usleep(20000); // 20ms sleep before next command
+      }
       if (lower_count > 0) {
         lower_.set_position(lower_stroke_vector, time_csec);
       }
@@ -843,12 +851,14 @@ bool AeroControllerNode::SendJointsCallback(
   t1.join();
   t2.join();
 
+  usleep(20000); // prevent service call overlap
+
   mtx_upper_.unlock();
   mtx_lower_.unlock();
 
   // wait for action to finish
-  usleep(time_csec * 10 * 1000 - 40000); // **
-  // ** 20ms sleep in set_position + 20ms sleep after mtx lock
+  usleep(time_csec * 10 * 1000 - 60000); // **
+  // ** 20ms sleep in set_position + 20ms sleep before/after mtx lock
 
   mtx_upper_.lock();
   mtx_lower_.lock();
