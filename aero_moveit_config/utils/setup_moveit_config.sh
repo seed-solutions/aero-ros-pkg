@@ -82,14 +82,22 @@ replace_limits() {
     #echo $upper_original
 }
 
-remove_mesh() {
+remove_collision() {
     file=$1
-    sed -i '/mesh/c\<!---->' $file
+    sed -i 's#<collision>#<!--#g' $file
+    sed -i 's#</collision>#-->#g' $file
 }
-remove_geometry() {
+remove_visual() {
     file=$1
-    sed -i '/geometry/c\<!---->' $file
+    sed -i 's#<visual>#<!--#g' $file
+    sed -i 's#</visual>#-->#g' $file
 }
+
+if [[ $1 == "" ]]; then
+    echo "without_srdf_ mode"
+    echo "if you want to make srdf, type like below"
+    echo "./setup_moveit_config.sh [typeC, typeF]"
+fi
 
 make_model_from_template
 concatenate_urdf
@@ -135,10 +143,37 @@ replace_limits $file_op "waist_p_joint" 0.0 0.4014
 replace_limits $file_op "virtual_lifter_x_joint" -0.2 0.2
 replace_limits $file_op "virtual_lifter_z_joint" -0.3 -0.08
 
-#remove_mesh $file_mg
-#remove_mesh $file_ho
-#remove_mesh $file_op
+remove_visual $file_mg
+remove_visual $file_ho
+remove_visual $file_op
 
-#remove_geometry $file_mg
-#remove_geometry $file_ho
-#remove_geometry $file_op
+remove_collision $file_mg
+remove_collision $file_ho
+remove_collision $file_op
+
+
+if [[ $1 == "" ]] ; then
+    echo "finished"
+    exit
+fi
+
+
+
+srdf_template="$(rospack find aero_moveit_config)/config/AeroUpperRobot.template"
+srdf_product="$(rospack find aero_moveit_config)/config/AeroUpperRobot.srdf"
+collision_file="$(rospack find aero_moveit_config)/config/collision_$1.xml"
+
+
+if [ -e $collision_file ]; then
+    echo "creating AeroUpperRobot.srdf with collision file for $1"
+else
+    echo "collision_$1.xml not found"
+    exit
+fi
+
+
+
+cp $srdf_template $srdf_product
+collision_line=$(grep -n -m 1 "COLLISIONINSERTLINE" $srdf_product | cut -d ':' -f1)
+cat $collision_file | sed -e 's/\//\\\//g; s/\"/\\\"/g' > /tmp/srdf_tmp
+sed '1!G;h;$!d' /tmp/srdf_tmp | xargs -I{} sed -i "${collision_line}i\{}" $srdf_product
