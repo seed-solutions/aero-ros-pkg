@@ -79,6 +79,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         &AeroControllerNode::InterpolationCallback,
         this);
 
+  ROS_INFO(" create send joints service");
+  send_joints_server_ =
+    nh_.advertiseService(
+        "send_joints",
+        &AeroControllerNode::SendJointsCallback,
+        this);
+
   ROS_INFO(" create status reset sub");
   status_reset_sub_ =
       nh_.subscribe(
@@ -725,6 +732,192 @@ bool AeroControllerNode::InterpolationCallback(
     ++i;
   }
   mtx_intrpl_.unlock();
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool AeroControllerNode::SendJointsCallback(
+    aero_startup::AeroSendJoints::Request &_req,
+    aero_startup::AeroSendJoints::Response &_res)
+{
+  mtx_upper_.lock();
+  mtx_lower_.lock();
+
+  int number_of_angle_joints =
+      upper_.get_number_of_angle_joints() +
+      lower_.get_number_of_angle_joints();
+
+  if (_req.joint_names.size() > number_of_angle_joints) {
+    // invalid number of joints from _req
+    mtx_upper_.unlock();
+    mtx_lower_.unlock();
+    return false;
+  }
+
+  // positions in _req are not ordered
+  std::vector<int32_t> id_in_req_to_ordered_id;
+  id_in_req_to_ordered_id.resize(_req.joint_names.size());
+
+  // if count is 0, commands will not go to robot
+  //   used for occasions such as controlling only the upper body
+  //   this way, controlling is safer
+  size_t upper_count = 0;
+  size_t lower_count = 0;
+
+  // check for unused joints
+  std::vector<bool> send_true(number_of_angle_joints, false);
+
+  for (size_t i = 0; i < _req.joint_names.size(); ++i) {
+    // try finding name from upper_
+    id_in_req_to_ordered_id[i] =
+        upper_.get_ordered_angle_id(_req.joint_names[i]);
+
+    // if finding name from upper_ failed
+    if (id_in_req_to_ordered_id[i] < 0) {
+      // try finding name from lower_
+      id_in_req_to_ordered_id[i] =
+        lower_.get_ordered_angle_id(_req.joint_names[i]);
+    } else {
+      ++upper_count;
+      send_true[id_in_req_to_ordered_id[i]] = true;
+      continue;
+    }
+
+    if (id_in_req_to_ordered_id[i] < 0) {
+      mtx_upper_.unlock();
+      mtx_lower_.unlock();
+      return false; // invalid name
+    }
+
+    ++lower_count;
+    send_true[id_in_req_to_ordered_id[i]] = true;
+  }
+
+  // from here, get ready to handle the _req positions
+
+  // this is a tmp variable that is reused
+  std::vector<double> ordered_positions(number_of_angle_joints);
+
+  // for each trajectory points,
+  std::fill(ordered_positions.begin(), ordered_positions.end(), 0.0);
+
+  // check for cancelling joints (NaN values)
+  std::vector<bool> send_true_with_cancel;
+  send_true_with_cancel.assign(send_true.begin(), send_true.end());
+
+  for (size_t j = 0; j < _req.points.positions.size(); ++j)
+    if (!std::isnan(_req.points.positions[j]))
+      ordered_positions[id_in_req_to_ordered_id[j]] =
+        _req.points.positions[j];
+    else
+      send_true_with_cancel[id_in_req_to_ordered_id[j]] = false;
+
+  std::vector<int16_t> strokes(AERO_DOF);
+  common::Angle2Stroke(strokes, ordered_positions);
+
+  // fill in unused joints to no-send
+  common::UnusedAngle2Stroke(strokes, send_true_with_cancel);
+
+  // split strokes into upper and lower
+  std::vector<int16_t> upper_stroke_vector(
+      strokes.begin(), strokes.begin() + AERO_DOF_UPPER);
+  std::vector<int16_t> lower_stroke_vector(
+      strokes.begin() + AERO_DOF_UPPER, strokes.end());
+
+  double time_sec = _req.points.time_from_start.toSec();
+  uint16_t time_csec = static_cast<uint16_t>(time_sec * 100.0);
+
+  std::thread t1([&](){
+      if (_req.reset_status) { // reset status if flag
+        upper_.reset_status();
+        usleep(20000); // 20ms sleep before next command
+      }
+      if (upper_count > 0) {
+        upper_.set_position(upper_stroke_vector, time_csec);
+      }
+    });
+
+  std::thread t2([&](){
+      if (_req.reset_status) { // reset status if flag
+        lower_.reset_status();
+        usleep(20000); // 20ms sleep before next command
+      }
+      if (lower_count > 0) {
+        lower_.set_position(lower_stroke_vector, time_csec);
+      }
+    });
+
+  t1.join();
+  t2.join();
+
+  usleep(20000); // prevent service call overlap
+
+  mtx_upper_.unlock();
+  mtx_lower_.unlock();
+
+  // wait for action to finish
+  usleep(time_csec * 10 * 1000 - 60000); // **
+  // ** 20ms sleep in set_position + 20ms sleep before/after mtx lock
+
+  mtx_upper_.lock();
+  mtx_lower_.lock();
+
+  usleep(20000); // prevent update failures
+
+  // commands take 20ms sleep, threading to save time
+  std::thread t3([&](){
+      upper_.update_position();
+    });
+  std::thread t4([&](){
+      lower_.update_position();
+    });
+  t3.join();
+  t4.join();
+
+  // get upper actual positions
+  std::vector<int16_t> upper_stroke_vector_ret =
+    upper_.get_actual_stroke_vector();
+
+  // get lower actual positions
+  std::vector<int16_t> lower_stroke_vector_ret =
+    lower_.get_actual_stroke_vector();
+
+  std::vector<double> actual_stroke_state(AERO_DOF);
+
+  if (upper_stroke_vector_ret.size() < AERO_DOF_UPPER)
+    for (size_t i = 0; i < AERO_DOF_UPPER; ++i)
+      actual_stroke_state[i] = 0.0;
+  else // usually should enter else, enters if when port is not activated
+    for (size_t i = 0; i < AERO_DOF_UPPER; ++i)
+      actual_stroke_state[i] =
+        static_cast<double>(upper_stroke_vector_ret[i]);
+
+  if (lower_stroke_vector_ret.size() < AERO_DOF_LOWER)
+    for (size_t i = 0; i < AERO_DOF_LOWER; ++i)
+      actual_stroke_state[i + AERO_DOF_UPPER] = 0.0;
+  else // usually should enter else, enters if when port is not activated
+    for (size_t i = 0; i < AERO_DOF_LOWER; ++i)
+      actual_stroke_state[i + AERO_DOF_UPPER] =
+        static_cast<double>(lower_stroke_vector_ret[i]);
+
+  _res.joint_names.resize(number_of_angle_joints);
+  _res.points.positions.resize(number_of_angle_joints);
+
+  // convert to actual angle positions
+  std::vector<int16_t> actual_strokes(actual_stroke_state.begin(),
+                                      actual_stroke_state.end());
+  common::Stroke2Angle(_res.points.positions, actual_strokes);
+
+  // get joint names (auto-generated function)
+  common::AngleJointNames(_res.joint_names);
+
+  // get status
+  std_msgs::Bool status_flag;
+  _res.status = upper_.get_status() || lower_.get_status();
+
+  mtx_upper_.unlock();
+  mtx_lower_.unlock();
 
   return true;
 }
