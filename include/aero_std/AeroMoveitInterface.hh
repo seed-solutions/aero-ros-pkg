@@ -161,6 +161,10 @@ namespace aero
 
     Eigen::Vector3d getIndexPosition(aero::arm _arm);
 
+    Eigen::Quaterniond getThumbOrientation(aero::arm _arm);
+
+    Eigen::Quaterniond getIndexOrientation(aero::arm _arm);
+
     Eigen::Vector3d getEEFPosition(aero::arm _arm, aero::eef _eef);
 
     void updateLinkTransforms();

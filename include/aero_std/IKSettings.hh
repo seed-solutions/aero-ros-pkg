@@ -114,7 +114,8 @@ namespace aero
     if (_eef == aero::eef::hand) ln = ln + "_hand_link";
     else if (_eef == aero::eef::grasp) ln = ln + "_eef_grasp_link";
     else if (_eef == aero::eef::pick) ln = ln + "_eef_pick_link";
-
+    else if (_eef == aero::eef::index) ln = ln + "_index_tip_link";
+    else if (_eef == aero::eef::thumb) ln = ln + "_thumb_tip_link";
     return ln;
   }
 

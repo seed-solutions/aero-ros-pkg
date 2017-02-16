@@ -705,6 +705,29 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getIndexPosition(aero::arm
   return vec;
 
 }
+/////////////////////////////////////////////////
+Eigen::Quaterniond aero::interface::AeroMoveitInterface::getThumbOrientation(aero::arm _arm)
+{
+  std::string link = aero::arm2LR(_arm);
+  link = link + "_thumb_tip_link";
+
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(link).rotation();
+  Eigen::Quaterniond vec(mat);
+  return vec;
+
+}
+/////////////////////////////////////////////////
+Eigen::Quaterniond aero::interface::AeroMoveitInterface::getIndexOrientation(aero::arm _arm)
+{
+
+  std::string link = aero::arm2LR(_arm);
+  link = link + "_index_tip_link";
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(link).rotation();
+  Eigen::Quaterniond vec(mat);
+  return vec;
+
+}
+
 
 /////////////////////////////////////////////////
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
