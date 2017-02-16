@@ -41,6 +41,10 @@ namespace aero
 
     /// @brief utility servo off command
     public: void util_servo_off();
+
+    /// @brief hand_script command
+    public: void Hand_Script(uint16_t _sendnum, uint16_t _script);
+
     };
 
   /// @brief Lower body controller

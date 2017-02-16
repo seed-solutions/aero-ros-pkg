@@ -117,6 +117,23 @@ void SEED485Controller::send_command(
 }
 
 //////////////////////////////////////////////////
+void SEED485Controller::AERO_Snd_Script(uint16_t sendnum,uint8_t scriptnum)
+{
+  std::vector<uint8_t> dat;
+  dat.resize(8);
+
+  dat[0] = 0xfd;  // header
+  dat[1] = 0xdf;  // header
+  dat[2] = 0x04;  // data length
+  dat[3] = 0x22;  // execute script
+  dat[4] = sendnum;  // sendnum
+  dat[5] = 0x00;  //
+  dat[6] = scriptnum;  // script No.
+  dat[7] = 0xbc;  // checksum
+  send_data(dat);
+}
+
+//////////////////////////////////////////////////
 void SEED485Controller::flush()
 {
   if (ser_.is_open()) {

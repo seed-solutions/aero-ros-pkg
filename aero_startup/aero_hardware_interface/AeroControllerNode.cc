@@ -79,6 +79,14 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         &AeroControllerNode::InterpolationCallback,
         this);
 
+  ROS_INFO(" create hand_control sub");
+  util_sub_ =
+      nh_.subscribe(
+          "hand_control",
+          10,
+          &AeroControllerNode::HandScriptCallback,
+          this);
+
   ROS_INFO(" create send joints service");
   send_joints_server_ =
     nh_.advertiseService(
@@ -734,6 +742,15 @@ bool AeroControllerNode::InterpolationCallback(
   mtx_intrpl_.unlock();
 
   return true;
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::HandScriptCallback(
+    const std_msgs::Int16MultiArray::ConstPtr& _msg)
+{
+  mtx_upper_.lock();
+    upper_.Hand_Script(_msg->data[0],_msg->data[1]);
+  mtx_upper_.unlock();
 }
 
 //////////////////////////////////////////////////
