@@ -40,6 +40,7 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     }
     srv.request.points.time_from_start = ros::Duration(0.5);
     client.call(srv);
+    float theta[2];
     theta[0] = srv.response.points.positions[13];
     theta[1] = srv.response.points.positions[27];
     std::string status_msg = "grasp success";
