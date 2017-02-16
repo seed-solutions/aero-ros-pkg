@@ -343,6 +343,8 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   if (_grasp.eef == aero::eef::hand) eef = eef + "_hand_link";
   else if(_grasp.eef == aero::eef::grasp) eef = eef + "_eef_grasp_link";
   else if(_grasp.eef == aero::eef::pick) eef = eef + "_eef_pick_link";
+  else if(_grasp.eef == aero::eef::index) eef = eef + "_index_tip_link";
+  else if(_grasp.eef == aero::eef::thumb) eef = eef + "_thumb_tip_link";
   else eef = "";
 
 

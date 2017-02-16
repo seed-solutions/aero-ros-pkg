@@ -11,7 +11,7 @@ namespace aero
 
   enum struct ikrange : int {arm, torso, lifter};
 
-  enum struct eef : int {hand, grasp, pick};
+  enum struct eef : int {hand, grasp, pick, index, thumb};
 
   enum struct joint : int {r_shoulder_p,
       r_shoulder_r,
