@@ -146,6 +146,10 @@ namespace aero
         aero_startup::AeroSendJoints::Request &_req,
         aero_startup::AeroSendJoints::Response &_res);
 
+    private: bool GetJointsCallback(
+        aero_startup::AeroSendJoints::Request &_req,
+        aero_startup::AeroSendJoints::Response &_res);
+
     private: AeroUpperController upper_;
 
     private: AeroLowerController lower_;
@@ -185,6 +189,8 @@ namespace aero
     private: ros::ServiceServer interpolation_server_;
 
     private: ros::ServiceServer send_joints_server_;
+
+    private: ros::ServiceServer get_joints_server_;
 
     private: ros::Timer timer_;
 

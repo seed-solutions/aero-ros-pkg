@@ -94,6 +94,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         &AeroControllerNode::SendJointsCallback,
         this);
 
+  ROS_INFO(" create get joints service");
+  get_joints_server_ =
+    nh_.advertiseService(
+        "get_joints",
+        &AeroControllerNode::GetJointsCallback,
+        this);
+
   ROS_INFO(" create status reset sub");
   status_reset_sub_ =
       nh_.subscribe(
@@ -881,6 +888,92 @@ bool AeroControllerNode::SendJointsCallback(
   mtx_lower_.lock();
 
   usleep(20000); // prevent update failures
+
+  // commands take 20ms sleep, threading to save time
+  std::thread t3([&](){
+      upper_.update_position();
+    });
+  std::thread t4([&](){
+      lower_.update_position();
+    });
+  t3.join();
+  t4.join();
+
+  // get upper actual positions
+  std::vector<int16_t> upper_stroke_vector_ret =
+    upper_.get_actual_stroke_vector();
+
+  // get lower actual positions
+  std::vector<int16_t> lower_stroke_vector_ret =
+    lower_.get_actual_stroke_vector();
+
+  std::vector<double> actual_stroke_state(AERO_DOF);
+
+  if (upper_stroke_vector_ret.size() < AERO_DOF_UPPER)
+    for (size_t i = 0; i < AERO_DOF_UPPER; ++i)
+      actual_stroke_state[i] = 0.0;
+  else // usually should enter else, enters if when port is not activated
+    for (size_t i = 0; i < AERO_DOF_UPPER; ++i)
+      actual_stroke_state[i] =
+        static_cast<double>(upper_stroke_vector_ret[i]);
+
+  if (lower_stroke_vector_ret.size() < AERO_DOF_LOWER)
+    for (size_t i = 0; i < AERO_DOF_LOWER; ++i)
+      actual_stroke_state[i + AERO_DOF_UPPER] = 0.0;
+  else // usually should enter else, enters if when port is not activated
+    for (size_t i = 0; i < AERO_DOF_LOWER; ++i)
+      actual_stroke_state[i + AERO_DOF_UPPER] =
+        static_cast<double>(lower_stroke_vector_ret[i]);
+
+  _res.joint_names.resize(number_of_angle_joints);
+  _res.points.positions.resize(number_of_angle_joints);
+
+  // convert to actual angle positions
+  std::vector<int16_t> actual_strokes(actual_stroke_state.begin(),
+                                      actual_stroke_state.end());
+  common::Stroke2Angle(_res.points.positions, actual_strokes);
+
+  // get joint names (auto-generated function)
+  common::AngleJointNames(_res.joint_names);
+
+  // get status
+  std_msgs::Bool status_flag;
+  _res.status = upper_.get_status() || lower_.get_status();
+
+  mtx_upper_.unlock();
+  mtx_lower_.unlock();
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool AeroControllerNode::GetJointsCallback(
+    aero_startup::AeroSendJoints::Request &_req,
+    aero_startup::AeroSendJoints::Response &_res)
+{
+  mtx_upper_.lock();
+  mtx_lower_.lock();
+
+  int number_of_angle_joints =
+      upper_.get_number_of_angle_joints() +
+      lower_.get_number_of_angle_joints();
+
+  std::thread t1([&](){
+      if (_req.reset_status) { // reset status if flag
+        upper_.reset_status();
+        usleep(20000); // 20ms sleep before next command
+      }
+    });
+
+  std::thread t2([&](){
+      if (_req.reset_status) { // reset status if flag
+        lower_.reset_status();
+        usleep(20000); // 20ms sleep before next command
+      }
+    });
+
+  t1.join();
+  t2.join();
 
   // commands take 20ms sleep, threading to save time
   std::thread t3([&](){
