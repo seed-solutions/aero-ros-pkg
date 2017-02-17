@@ -330,22 +330,14 @@ std::vector<double> aero::interface::AeroMoveitInterface::getWaistPositionRelati
 
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
 {
-  std::vector<double> result_mid(1);
+  // save initial angles
   std::vector<double> av_ini;
   getRobotStateVariables(av_ini);
 
   std::string eef;
+  eef = aero::armAndEEF2LinkName(_grasp.arm, _grasp.eef);
 
-
-  if (_grasp.arm == aero::arm::rarm) eef = "r";
-  else eef = "l";
-
-  if (_grasp.eef == aero::eef::hand) eef = eef + "_hand_link";
-  else if(_grasp.eef == aero::eef::grasp) eef = eef + "_eef_grasp_link";
-  else if(_grasp.eef == aero::eef::pick) eef = eef + "_eef_pick_link";
-  else eef = "";
-
-
+  std::vector<double> result_mid(1);
   std::string res_m = solveIKOneSequence(_grasp.arm, _grasp.mid_pose, _grasp.mid_ik_range, av_ini, eef, result_mid);
   if (res_m == "") {
     ROS_INFO("mid ik failed");
@@ -354,7 +346,7 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   }
 
   std::vector<double> result_end(1);
-  std::vector<double> av_mid;
+  std::vector<double> av_mid; // use av_mid as initial state for IK
   getRobotStateVariables(av_mid);
   std::string res_e = solveIKOneSequence(_grasp.arm, _grasp.end_pose, _grasp.end_ik_range, av_mid, eef, result_end);
 
@@ -374,57 +366,44 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   trajectory_groups_.push_back(res_m);
   trajectory_groups_.push_back(res_e);
 
-  kinematic_state->setVariablePositions(av_ini);
+  kinematic_state->setVariablePositions(av_ini);// return robot model to inital state
   return true;
 }
 
 std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result)
 {
   bool status;
-  std::string group = "larm";
-  std::string gname = "";
-  if (_arm == aero::arm::rarm) group = "rarm";
 
   // ik with arm
-  std::cout << "ik" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
-  gname = group;
-  std::cout << "solve ik" << std::endl;
-  status = solveIK(gname, _pose, _eef_link);
-  std::cout << "solved ik" << std::endl;
-  if (status && plan(gname)) {
-    std::cout << "ccc" << std::endl;
+  status = solveIK(_arm, aero::ikrange::arm, _pose, _eef_link);
+  if (status) {
     getRobotStateVariables(_result);
-    return gname;
+    return aero::armAndRange2MoveGroup(_arm, _ik_range);
   }
-  std::cout << "bbb" << std::endl;
   if (_ik_range == aero::ikrange::arm) return "";
 
   // ik with torso
-  std::cout << "tor" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
-  gname = group + "_with_torso";
-  status = solveIK(gname, _pose, _eef_link);
-  if (status && plan(gname)) {
+  status = solveIK(_arm, aero::ikrange::torso, _pose, _eef_link);
+  if (status) {
     getRobotStateVariables(_result);
-    return gname;
+    return aero::armAndRange2MoveGroup(_arm, _ik_range);
   }
   if (_ik_range == aero::ikrange::torso) return "";
 
   // ik with lifter
-  std::cout << "lif" << std::endl;
   kinematic_state->setVariablePositions(_av_ini);
-  gname = group + "_with_lifter";
-  status = solveIK(group + "_with_lifter", _pose, _eef_link);
-  if (status && plan(gname)) {
+  status = solveIK(_arm, aero::ikrange::lifter, _pose, _eef_link);
+  if (status) {
     getRobotStateVariables(_result);
-    return gname;
+    return aero::armAndRange2MoveGroup(_arm, _ik_range);
   }  
 
   return "";
 }
 
-bool aero::interface::AeroMoveitInterface::moveSequence()
+bool aero::interface::AeroMoveitInterface::sendSequence()
 {
   // trajectory_に保存されたik結果列を順に実行する
   for (int i = 0; i < trajectory_.size(); ++i) {
