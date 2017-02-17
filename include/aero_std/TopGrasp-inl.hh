@@ -21,14 +21,14 @@ namespace aero
     offset_z_mid(0.0),offset_x_mid(0.0),
     offset_z_end(0.0),offset_x_end(0.0),
     default_offset_z(0.05), default_offset_x(-0.05),
-    default_offset_x_mid(0.05),default_offset_z_mid(0.15),
+    default_offset_x_mid(0.05),default_offset_z_mid(0.10),
     maximum_grasp_width(0.15) {}
     
     // arm to grasp object, "left" or "right" or "either"
   public: aero::arm arm;
     
     // object position used to solve grasp pose , world coordinates
-  public: Eigen::Vector3f object_position;
+  public: Eigen::Vector3d object_position;
     
     // object parameter, object height
   public: float height;

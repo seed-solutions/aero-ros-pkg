@@ -403,14 +403,21 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   return "";
 }
 
-bool aero::interface::AeroMoveitInterface::sendSequence()
+bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 {
-  // trajectory_に保存されたik結果列を順に実行する
+  // send angles saved in trajectory_ to real robot
+  // information about arm and lifter is saved in trajectory_groups_
+
+  if (trajectory_.empty()) {
+    ROS_ERROR("no motion plan found");
+    return false;
+  }
+
   for (int i = 0; i < trajectory_.size(); ++i) {
-    kinematic_state->setVariablePositions(trajectory_[i]);
-    getMoveGroup(trajectory_groups_[i]).setJointValueTarget(*kinematic_state);
+    setRobotStateVariables(trajectory_[i]);
+    sendAngleVectorAsync_(trajectory_groups_[i], _msecs[i]);
+    usleep(_msecs[i] * 1000);
     sleep(1);
-    move(trajectory_groups_[i]);
   }
 }
 
