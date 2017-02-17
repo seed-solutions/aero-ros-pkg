@@ -338,6 +338,7 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   eef = aero::armAndEEF2LinkName(_grasp.arm, _grasp.eef);
 
   std::vector<double> result_mid(1);
+
   std::string res_m = solveIKOneSequence(_grasp.arm, _grasp.mid_pose, _grasp.mid_ik_range, av_ini, eef, result_mid);
   if (res_m == "") {
     ROS_INFO("mid ik failed");
@@ -670,25 +671,6 @@ void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, double _radia
   kinematic_state->setVariablePosition(rl + "_thumb_joint", _radian);
   kinematic_state->setVariablePosition(rl + "_indexbase_joint", -_radian);
 }
-/////////////////////////////////////////////////
-Eigen::Vector3d aero::interface::AeroMoveitInterface::getThumbPosition(aero::arm _arm)
-{
-  std::string link = aero::arm2LR(_arm);
-  link = link + "_thumb_tip_link";
-  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
-  return vec;
-
-}
-/////////////////////////////////////////////////
-Eigen::Vector3d aero::interface::AeroMoveitInterface::getIndexPosition(aero::arm _arm)
-{
-
-  std::string link = aero::arm2LR(_arm);
-  link = link + "_index_tip_link";
-  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
-  return vec;
-
-}
 
 /////////////////////////////////////////////////
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
@@ -696,6 +678,17 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _
   std::string link = aero::armAndEEF2LinkName(_arm, _eef);
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
+}
+
+/////////////////////////////////////////////////
+Eigen::Quaterniond aero::interface::AeroMoveitInterface::getEEFOrientation(aero::arm _arm, aero::eef _eef)
+{
+
+  std::string link = aero::armAndEEF2LinkName(_arm, _eef);
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(link).rotation();
+  Eigen::Quaterniond vec(mat);
+  return vec;
+
 }
 
 /////////////////////////////////////////////////

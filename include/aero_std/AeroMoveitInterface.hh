@@ -157,11 +157,8 @@ namespace aero
 
     void setHand(aero::arm _arm, double _radian);// insert actual joint angle[rad] from l,r_thumb_joint
 
-    Eigen::Vector3d getThumbPosition(aero::arm _arm);
-
-    Eigen::Vector3d getIndexPosition(aero::arm _arm);
-
     Eigen::Vector3d getEEFPosition(aero::arm _arm, aero::eef _eef);
+    Eigen::Quaterniond getEEFOrientation(aero::arm _arm, aero::eef _eef);
 
     void updateLinkTransforms();
 

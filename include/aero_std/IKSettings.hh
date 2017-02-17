@@ -11,7 +11,7 @@ namespace aero
 
   enum struct ikrange : int {arm, torso, lifter};
 
-  enum struct eef : int {hand, grasp, pick};
+  enum struct eef : int {hand, grasp, pick, index, thumb};
 
   enum struct joint : int {r_shoulder_p,
       r_shoulder_r,
@@ -114,7 +114,8 @@ namespace aero
     if (_eef == aero::eef::hand) ln = ln + "_hand_link";
     else if (_eef == aero::eef::grasp) ln = ln + "_eef_grasp_link";
     else if (_eef == aero::eef::pick) ln = ln + "_eef_pick_link";
-
+    else if (_eef == aero::eef::index) ln = ln + "_index_tip_link";
+    else if (_eef == aero::eef::thumb) ln = ln + "_thumb_tip_link";
     return ln;
   }
 
