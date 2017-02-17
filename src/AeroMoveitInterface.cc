@@ -738,6 +738,17 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _
 }
 
 /////////////////////////////////////////////////
+Eigen::Quaterniond aero::interface::AeroMoveitInterface::getEEFOrientation(aero::arm _arm, aero::eef _eef)
+{
+
+  std::string link = aero::armAndEEF2LinkName(_arm, _eef);
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(link).rotation();
+  Eigen::Quaterniond vec(mat);
+  return vec;
+
+}
+
+/////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::updateLinkTransforms()
 {
   kinematic_state->updateLinkTransforms();

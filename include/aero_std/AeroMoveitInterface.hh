@@ -166,6 +166,7 @@ namespace aero
     Eigen::Quaterniond getIndexOrientation(aero::arm _arm);
 
     Eigen::Vector3d getEEFPosition(aero::arm _arm, aero::eef _eef);
+    Eigen::Quaterniond getEEFOrientation(aero::arm _arm, aero::eef _eef);
 
     void updateLinkTransforms();
 
