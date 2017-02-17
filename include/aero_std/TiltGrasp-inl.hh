@@ -30,7 +30,7 @@ namespace aero
   public: aero::arm arm;
     
     // object position used to solve grasp pose , world coordinates
-  public: Eigen::Vector3f object_position;
+  public: Eigen::Vector3d object_position;
     
     // object parameter, object height
   public: float height;

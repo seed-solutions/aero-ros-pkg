@@ -29,7 +29,7 @@ namespace aero
   public: aero::arm arm;
     
     // object position in world coordinates
-  public: Eigen::Vector3f object_position;
+  public: Eigen::Vector3d object_position;
     
     // object parameter, object height, no use
   public: float height;
