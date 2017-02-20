@@ -637,13 +637,15 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<aero:
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 {
+  // get current joint states
   aero_startup::AeroSendJoints srv;
   if(!joint_states_client_.call(srv)) {
-    ROS_WARN("gitting joint states service failed");
+    ROS_WARN("getting joint states service failed");
     return;
   }
   srv.response;
 
+  // update upper body
   std::map<std::string, double> map;
   for (auto it = aero::string_map.begin(); it != aero::string_map.end(); ++it) {
     auto itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), it->first);
@@ -652,10 +654,25 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
   }
   kinematic_state->setVariablePositions(map);
 
+  // update hands
   auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "r_thumb_joint");
   setHand(aero::arm::rarm,srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())]);
   hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "l_thumb_joint");
   setHand(aero::arm::larm,srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())]);
+
+  // update lifter
+  auto hip_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "hip_joint");
+  auto knee_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "knee_joint");
+
+  double hip = srv.response.points.positions[static_cast<int>(hip_itr - srv.response.joint_names.begin())];
+  double knee = srv.response.points.positions[static_cast<int>(knee_itr - srv.response.joint_names.begin())];
+  double x = lifter_foreleg_link_ * sin(knee - hip)
+    + lifter_thigh_link_ * sin(hip);
+  double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
+    + lifter_thigh_link_ * (cos(hip) - 1.0);
+  setWaist(x, z);
+
+
   updateLinkTransforms();
 }
 
