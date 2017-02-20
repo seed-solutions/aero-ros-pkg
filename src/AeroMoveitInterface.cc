@@ -49,8 +49,14 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   trajectory_groups_ = std::vector<std::string>();
   joint_states_ = sensor_msgs::JointState();
 
+  lifter_thigh_link_ = 0.29009;
+  lifter_foreleg_link_ = 0.29009;
+
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
+
+  joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
+    ("/aero_controller/get_joints");
 
   joint_states_subscriber_ = nh_.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
@@ -631,16 +637,25 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<aero:
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 {
-  ros::spinOnce();
+  aero_startup::AeroSendJoints srv;
+  if(!joint_states_client_.call(srv)) {
+    ROS_WARN("gitting joint states service failed");
+    return;
+  }
+  srv.response;
+
   std::map<std::string, double> map;
   for (auto it = aero::string_map.begin(); it != aero::string_map.end(); ++it) {
-    auto itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), it->first);
-    if (itr == joint_states_.name.end()) continue;
-    map[it->first] = joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())];
+    auto itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), it->first);
+    if (itr == srv.response.joint_names.end()) continue;
+    map[it->first] = srv.response.points.positions[static_cast<int>(itr - srv.response.joint_names.begin())];
   }
   kinematic_state->setVariablePositions(map);
 
-  setHandsFromJointStates_();
+  auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "r_thumb_joint");
+  setHand(aero::arm::rarm,srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())]);
+  hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "l_thumb_joint");
+  setHand(aero::arm::larm,srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())]);
   updateLinkTransforms();
 }
 

@@ -17,6 +17,7 @@
 #include <aero_std/AeroInterface.hh>
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
+#include <aero_startup/AeroSendJoints.h>
 
 
 namespace aero
@@ -172,6 +173,7 @@ namespace aero
 
     void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
     ros::ServiceClient hand_grasp_client_;
+    ros::ServiceClient joint_states_client_;
     ros::Publisher display_publisher_;
     ros::Publisher angle_vector_publisher_;
     ros::Publisher look_at_publisher_;
@@ -183,6 +185,8 @@ namespace aero
     std::vector<std::vector<double>> trajectory_;
     std::vector<std::string> trajectory_groups_;
     sensor_msgs::JointState joint_states_;
+    double lifter_thigh_link_;// lifter's upper link
+    double lifter_foreleg_link_;// lifter's lower link
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }
