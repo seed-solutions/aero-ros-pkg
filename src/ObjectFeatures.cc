@@ -20,20 +20,26 @@ ObjectFeatures::~ObjectFeatures()
 }
 
 //////////////////////////////////////////////////
-Eigen::Vector3d ObjectFeatures::ConvertWorld(Eigen::Vector3d _pos)
+Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
 {
 
   interface_->setRobotStateToCurrentState();
 
   Eigen::Vector3d p_pos = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).translation();
-
+  ROS_INFO("body_link x:%f y:%f z:%f",p_pos.x() ,p_pos.y(), p_pos.z());
   Eigen::Matrix3d mat = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).rotation();
   Eigen::Quaterniond p_qua(mat);
 
   Eigen::Vector3d pos_tmp = camera_relative_orientation_ * _pos;
+  ROS_INFO("pos_tmp x:%f y:%f z:%f",pos_tmp.x() ,pos_tmp.y(), pos_tmp.z());
 
   return p_pos + p_qua * camera_relative_position_ + p_qua * pos_tmp;
-    //    p_pos + p_qua * camera_relative_position_ + p_qua * camera_relative_position_ * _pos;
+}
+
+//////////////////////////////////////////////////
+Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3f _pos)
+{
+  return convertWorld(Eigen::Vector3d(_pos.x(), _pos.y(), _pos.z()));
 }
 
 //////////////////////////////////////////////////
@@ -45,6 +51,46 @@ void ObjectFeatures::setCameraTransform(std::string _camera_parent_link, Eigen::
 }
 
 //////////////////////////////////////////////////
-int ObjectFeatures::setMarker(geometry_msgs::Point _position, int _id){
+int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _orientation, int _id){
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = "/virtual_lifter_x_link";
+  marker.header.stamp = ros::Time::now();
+  marker.ns = "aero_markers";
+  marker.id = _id;
+  marker.type = visualization_msgs::Marker::CUBE;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose.position.x = _position.x();
+  marker.pose.position.y = _position.y();
+  marker.pose.position.z = _position.z();
+  marker.pose.orientation.x = _orientation.x();
+  marker.pose.orientation.y = _orientation.y();
+  marker.pose.orientation.z = _orientation.z();
+  marker.pose.orientation.w = _orientation.w();
+  marker.scale.x = 0.05;
+  marker.scale.y = 0.05;
+  marker.scale.z = 0.05;
+  marker.color.r = 1.0f;
+  marker.color.g = 0.0f;
+  marker.color.b = 0.0f;
+  marker.color.a = 1.0;
+  marker.lifetime = ros::Duration();
+  marker_publisher_.publish(marker);
+
   return _id;
+}
+
+//////////////////////////////////////////////////
+int ObjectFeatures::setMarker(Eigen::Vector3d _position, int _id){
+  return setMarker(_position, Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0), _id);
+}
+
+
+//////////////////////////////////////////////////
+int ObjectFeatures::setMarker(Eigen::Vector3f _position, int _id){
+  return setMarker(Eigen::Vector3d(_position.x(), _position.y(), _position.z()), Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0), _id);
+}
+
+//////////////////////////////////////////////////
+int ObjectFeatures::setMarker(geometry_msgs::Pose _pose, int _id){
+  return setMarker(Eigen::Vector3d(_pose.position.x, _pose.position.y, _pose.position.z), Eigen::Quaterniond(_pose.orientation.w, _pose.orientation.x, _pose.orientation.y, _pose.orientation.z), _id);
 }

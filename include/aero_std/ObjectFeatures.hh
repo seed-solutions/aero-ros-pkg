@@ -17,11 +17,15 @@ namespace aero
     public: ~ObjectFeatures();
 
       // Convert vectors in camera coords to world coords.
-    public: Eigen::Vector3d ConvertWorld(Eigen::Vector3d _pos);
+    public: Eigen::Vector3d convertWorld(Eigen::Vector3d _pos);
+    public: Eigen::Vector3d convertWorld(Eigen::Vector3f _pos);
 
     public: void setCameraTransform(std::string _camera_parent_link, Eigen::Vector3d _position, Eigen::Quaterniond _orientation);
 
-    public: int setMarker(geometry_msgs::Point _position, int _id=1);
+    public: int setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _orientation, int _id=1);
+    public: int setMarker(Eigen::Vector3d _position, int _id=1);
+    public: int setMarker(Eigen::Vector3f _position, int _id=1);
+    public: int setMarker(geometry_msgs::Pose _pose, int _id=1);
 
     private: ros::NodeHandle nh_;
 
