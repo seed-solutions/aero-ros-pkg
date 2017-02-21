@@ -55,7 +55,7 @@ int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _ori
   marker.header.stamp = ros::Time::now();
   marker.ns = "aero_markers";
   marker.id = _id;
-  marker.type = visualization_msgs::Marker::CUBE;
+  marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
   marker.pose.position.x = _position.x();
   marker.pose.position.y = _position.y();
