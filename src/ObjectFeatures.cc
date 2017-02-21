@@ -26,12 +26,10 @@ Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
   interface_->setRobotStateToCurrentState();
 
   Eigen::Vector3d p_pos = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).translation();
-  ROS_INFO("body_link x:%f y:%f z:%f",p_pos.x() ,p_pos.y(), p_pos.z());
   Eigen::Matrix3d mat = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).rotation();
   Eigen::Quaterniond p_qua(mat);
 
   Eigen::Vector3d pos_tmp = camera_relative_orientation_ * _pos;
-  ROS_INFO("pos_tmp x:%f y:%f z:%f",pos_tmp.x() ,pos_tmp.y(), pos_tmp.z());
 
   return p_pos + p_qua * camera_relative_position_ + p_qua * pos_tmp;
 }
