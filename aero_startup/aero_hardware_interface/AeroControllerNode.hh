@@ -99,6 +99,9 @@ namespace aero
         int _trajectory_start_from,
         int _split_start_from);
 
+    private: void LowerTrajectoryThread(
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory);
+
       /// @brief subscribe joint tracjectory
       /// @param _msg joint trajectory
     private: void JointTrajectoryCallback(
