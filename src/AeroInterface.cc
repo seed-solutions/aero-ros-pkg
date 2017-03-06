@@ -253,6 +253,28 @@ void AeroInterface::Speak(std::string _speech, float _wait_sec)
 }
 
 //////////////////////////////////////////////////
+void AeroInterface::SetInterpolation(const int _intrpl_type)
+{
+  aero_startup::AeroInterpolation srv;
+  srv.request.type.push_back(_intrpl_type);
+
+  if (!interpolation_client_.call(srv)) {
+    ROS_WARN("interpolation failed service call");
+  }
+}
+
+//////////////////////////////////////////////////
+void AeroInterface::SetInterpolation(aero::interpolation::settings _intrpl)
+{
+  aero_startup::AeroInterpolation srv;
+  srv.request = _intrpl;
+
+  if (!interpolation_client_.call(srv)) {
+    ROS_WARN("interpolation failed service call");
+  }
+}
+
+//////////////////////////////////////////////////
 void AeroInterface::SendAngleVector
 (aero_msgs::JointAngles _av, geometry_msgs::Vector3 _look_at,
  int _time_ms, bool _wait_interpolation)
