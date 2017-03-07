@@ -584,6 +584,12 @@ void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target)
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
+{
+  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z);
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::resetLookAt()
 {
   setLookAt(0.0, 0.0, 0.0);
