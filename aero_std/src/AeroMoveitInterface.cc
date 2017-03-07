@@ -716,6 +716,15 @@ void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, double _radia
   kinematic_state->setVariablePosition(rl + "_indexbase_joint", -_radian);
 }
 
+//////////////////////////////////////////////////
+
+double aero::interface::AeroMoveitInterface::getHand(aero::arm _arm)
+{
+  std::string rl;
+  if (_arm == aero::arm::rarm) rl = "r";
+  else rl = "l";
+  return kinematic_state->getVariablePosition(rl + "_thumb_joint");
+}
 /////////////////////////////////////////////////
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
 {
