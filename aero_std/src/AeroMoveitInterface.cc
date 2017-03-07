@@ -231,12 +231,12 @@ void aero::interface::AeroMoveitInterface::resetManipPose(int _time_ms)
   usleep(time * 1000);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifter(double _x, double _z, int _time_ms)
 {
-  return moveWaist(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifter(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifter(int _x, int _z, int _time_ms)
 {
 
   aero_startup::AeroTorsoController srv;
@@ -250,7 +250,7 @@ bool aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z, int _time_m
   }
 
   if (srv.response.status == "success") {
-    setWaist(_x, _z);
+    setLifter(_x, _z);
     if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000);
     else usleep(_time_ms * 1000);
     return true;
@@ -258,23 +258,23 @@ bool aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z, int _time_m
   return false;
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocal(double _x, double _z, int _time_ms)
 {
-  return moveWaistLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifterLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocal(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPositionRelative();
-  return moveWaist(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  std::vector<double> pos = getLifter();
+  return moveLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistAsync(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterAsync(double _x, double _z, int _time_ms)
 {
-  return moveWaistAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifterAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistAsync(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterAsync(int _x, int _z, int _time_ms)
 {
 
   aero_startup::AeroTorsoController srv;
@@ -289,24 +289,24 @@ bool aero::interface::AeroMoveitInterface::moveWaistAsync(int _x, int _z, int _t
   }
 
   if (srv.response.status == "success") {
-    setWaist(_x, _z);
+    setLifter(_x, _z);
     return true;
   }
   return false;
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocalAsync(double _x, double _z, int _time_ms)
 {
-  return moveWaistLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifterLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPositionRelative();
-  return moveWaistAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  std::vector<double> pos = getLifter();
+  return moveLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
-void aero::interface::AeroMoveitInterface::setWaist(double _x, double _z)
+void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
 {
   std::vector<double> joint_values;
   kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
@@ -315,9 +315,9 @@ void aero::interface::AeroMoveitInterface::setWaist(double _x, double _z)
   joint_values[1] = _z;
   kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
 }
-void aero::interface::AeroMoveitInterface::setWaist(int _x, int _z)
+void aero::interface::AeroMoveitInterface::setLifter(int _x, int _z)
 {
-  setWaist(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
+  setLifter(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
 }
 
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
@@ -327,7 +327,7 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
   return vec;
 }
 
-std::vector<double> aero::interface::AeroMoveitInterface::getWaistPositionRelative()
+std::vector<double> aero::interface::AeroMoveitInterface::getLifter()
 {
   std::vector<double> joint_values;// size = 2
   kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
@@ -526,8 +526,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 {
 
   if (_range == aero::ikrange::lifter) {
-    std::vector<double> joint_values = getWaistPositionRelative();
-    if (!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
+    std::vector<double> joint_values = getLifter();
+    if (!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
       {
         ROS_INFO("move waist failed");
         return;
@@ -543,8 +543,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bool _move_waist)
 {
   if (_move_waist) {
-    std::vector<double> joint_values = getWaistPositionRelative();
-    if(!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
+    std::vector<double> joint_values = getLifter();
+    if(!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
       {
       ROS_INFO("move waist failed");
       return;
@@ -670,7 +670,7 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
     + lifter_thigh_link_ * sin(hip);
   double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
     + lifter_thigh_link_ * (cos(hip) - 1.0);
-  setWaist(x, z);
+  setLifter(x, z);
 
 
   updateLinkTransforms();
