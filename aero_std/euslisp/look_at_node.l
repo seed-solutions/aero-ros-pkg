@@ -8,6 +8,7 @@
 (ros::load-ros-manifest "roseus")
 (ros::load-ros-package "geometry_msgs")
 (ros::load-ros-package "trajectory_msgs")
+(ros::load-ros-package "std_srvs")
 
 (ros::roseus "look_at_node")
 
@@ -28,7 +29,7 @@
 (setq *reset-head-once-flag* t)
 (setq *target* (instance geometry_msgs::Point :init))
 (setq *lifter* (instance geometry_msgs::Point :init))
-
+(setq *active-tracking* nil)
 
 (defun look-at-node (msg)
   (setq *target* msg)
@@ -39,12 +40,22 @@
   (setq *lifter* msg)
 )
 
+(defun set_tracking_service (req)
+  (let (res (send req :response))
+    (
+     (setq *active-tracking* (send req :data))
+     (send res :success t)
+    res)
+)
 
 (ros::subscribe "/look_at/target"
                         geometry_msgs::Point #'look-at-node)
 (ros::subscribe "/lifter_position"
                         geometry_msgs::Point #'lifter-callback)
 (ros::advertise "/aero_controller/command" trajectory_msgs::JointTrajectory 1)
+
+(ros::advertise-service "/look_at/set_tracking" std_srvs::SetBool #'set_tracking_service)
+
 (unix::sleep 1);; sleep is needed when the time is short between creating publisher and publishing
 
 
@@ -62,7 +73,7 @@
                              :positions (list 0 0 0) 
                              :time_from_start (ros::time 1))))
        (setq *reset-head-once-flag* nil)
-       (ros::publish "/aero_controller/command" *head_msg*))
+       (when *active-tracking* (ros::publish "/aero_controller/command" *head_msg*)))
    (progn
      (send *aero* :angle-vector (send *ri* :actual-vector))
      (send *aero* :head :look-at 
@@ -81,7 +92,7 @@
                                   (max (min (deg2rad (send *aero* :head :neck-r :joint-angle)) 0.8) -0.8)) 
                       :time_from_start (ros::time 0.5)))
            )
-     (ros::publish "/aero_controller/command" *head_msg*)
+     (when *active-tracking* (ros::publish "/aero_controller/command" *head_msg*))
      (setq *reset-head-once-flag* t))
    )
  (unix::usleep (* 1000 500))

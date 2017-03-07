@@ -21,6 +21,7 @@
 #include <aero_startup/AeroHandController.h>
 #include <aero_startup/AeroTorsoController.h>
 #include <std_msgs/String.h>
+#include <std_srvs/SetBool.h>
 
 namespace aero
 {
@@ -195,6 +196,7 @@ namespace aero
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
     ros::ServiceClient interpolation_client_;
+    ros::ServiceClient activate_tracking_client_;
     ros::Publisher display_publisher_;
     ros::Publisher angle_vector_publisher_;
     ros::Publisher look_at_publisher_;

@@ -67,6 +67,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
     ("/aero_controller/interpolation");
 
+  activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
+    ("/look_at/set_tracking");
+
   speech_publisher_ = _nh.advertise<std_msgs::String>
     ("/windows/voice", 1000);
 
@@ -611,7 +614,9 @@ void aero::interface::AeroMoveitInterface::resetLookAt()
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
 {
-  tracking_mode_flag_ = _yes;
+  std_srvs::SetBool req;
+  req.request.data = _yes;
+  if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
 }
 
 //////////////////////////////////////////////////
@@ -792,6 +797,7 @@ bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
 {
+  ROS_INFO("speak: %s", _speech.c_str());
   std_msgs::String msg;
   msg.data = _speech;
   speech_publisher_.publish(msg);
@@ -800,6 +806,7 @@ void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wait_sec)
 {
+  ROS_INFO("speak: %s", _speech.c_str());
   std_msgs::String msg;
   msg.data = _speech;
   speech_publisher_.publish(msg);
@@ -848,6 +855,18 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
   msg.points[0].positions.resize(_av.size());
   msg.points[0].positions = _av;
   msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
+
+  if (!tracking_mode_flag_) {
+    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
+    msg.joint_names.push_back("neck_r_joint");
+
+    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
+    msg.joint_names.push_back("neck_p_joint");
+
+    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
+    msg.joint_names.push_back("neck_y_joint");
+  }
+
   angle_vector_publisher_.publish(msg);
 
 }
@@ -860,16 +879,6 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
   std::vector<std::string> j_names;
   j_names = getMoveGroup(_move_group).getJointNames();
 
-  if (!tracking_mode_flag_) {
-    av_mg.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
-    j_names.push_back("neck_r_joint");
-
-    av_mg.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
-    j_names.push_back("neck_p_joint");
-
-    av_mg.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
-    j_names.push_back("neck_y_joint");
-  }
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
