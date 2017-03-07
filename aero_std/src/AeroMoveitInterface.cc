@@ -60,6 +60,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
     ("/aero_controller/interpolation");
 
+  speech_publisher_ = _nh.advertise<std_msgs::String>
+    ("/windows/voice", 1000);
+
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
 
@@ -770,6 +773,23 @@ bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
   }
   
   return true;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
+{
+  std_msgs::String msg;
+  msg.data = _speech;
+  speech_publisher_.publish(msg);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wait_sec)
+{
+  std_msgs::String msg;
+  msg.data = _speech;
+  speech_publisher_.publish(msg);
+  usleep(static_cast<int>(_wait_sec * 1000) * 1000);
 }
 
 /////////////////////////////////////////////////

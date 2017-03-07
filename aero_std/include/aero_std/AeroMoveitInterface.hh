@@ -20,6 +20,7 @@
 #include <aero_startup/AeroSendJoints.h>
 #include <aero_startup/AeroHandController.h>
 #include <aero_startup/AeroTorsoController.h>
+#include <std_msgs/String.h>
 
 namespace aero
 {
@@ -171,6 +172,10 @@ namespace aero
 
     bool setInterpolation(int _i_type);
 
+    void speakAsync(std::string _speech);
+
+    void speak(std::string _speech, float _wait_sec);
+
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -184,6 +189,7 @@ namespace aero
     ros::Publisher display_publisher_;
     ros::Publisher angle_vector_publisher_;
     ros::Publisher look_at_publisher_;
+    ros::Publisher speech_publisher_;
     ros::Subscriber joint_states_subscriber_;
     ros::ServiceClient waist_service_;
     moveit::planning_interface::MoveGroup::Plan plan_;
