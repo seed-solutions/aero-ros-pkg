@@ -460,23 +460,29 @@ bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm,
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad)
 {
-  return openHand(_angle, _arm, -0.9, 0.8);
+  return openHand(_rad, _arm, -0.9, 0.8);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm,
-                             float _warn, float _fail)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad, float _warn, float _fail)
 {
+
+  if ( fabs(_rad) > 2.0) {
+    ROS_WARN("openHand failed");
+    ROS_WARN("specified angle is too large, please use double[rad]");
+    return false;
+  }
+
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
   srv.request.thre_warn = _warn;
   srv.request.thre_fail = _fail;
   srv.request.command = "grasp-angle";
-  srv.request.larm_angle = _angle;
-  srv.request.rarm_angle = _angle;
+  srv.request.larm_angle = _rad * 180.0 / M_PI;
+  srv.request.rarm_angle = _rad * 180.0 / M_PI;
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");

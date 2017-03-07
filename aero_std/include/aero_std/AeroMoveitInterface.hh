@@ -122,9 +122,9 @@ namespace aero
 
     bool openHand(bool _yes, aero::arm _arm, float _warn, float _fail);
 
-    bool openHand(float _angle, aero::arm _arm);
+    bool openHand(aero::arm _arm, double _rad);
 
-    bool openHand(float _angle, aero::arm _arm, float _warn, float _fail);
+    bool openHand(aero::arm _arm, double _rad, float _warn, float _fail);
 
     void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
