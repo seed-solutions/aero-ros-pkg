@@ -176,6 +176,12 @@ namespace aero
 
     void speak(std::string _speech, float _wait_sec);
 
+    void BeginListen();
+      
+    void EndListen();
+
+    std::string Listen();
+
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -183,6 +189,9 @@ namespace aero
     void setHandsFromJointStates_();
 
     void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
+
+    void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
+
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
     ros::ServiceClient interpolation_client_;
@@ -190,7 +199,9 @@ namespace aero
     ros::Publisher angle_vector_publisher_;
     ros::Publisher look_at_publisher_;
     ros::Publisher speech_publisher_;
+    ros::Publisher speech_detection_settings_publisher_;
     ros::Subscriber joint_states_subscriber_;
+    ros::Subscriber speech_listener_;
     ros::ServiceClient waist_service_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
@@ -200,6 +211,7 @@ namespace aero
     sensor_msgs::JointState joint_states_;
     double lifter_thigh_link_;// lifter's upper link
     double lifter_foreleg_link_;// lifter's lower link
+    std::string detected_speech_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }

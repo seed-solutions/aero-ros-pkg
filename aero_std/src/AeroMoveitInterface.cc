@@ -42,6 +42,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/command", 1000);
   look_at_publisher_ = _nh.advertise<geometry_msgs::Point>("/look_at/target", 1000);
+
+  speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>("/settings/speach", 1000);
+
   planned_group_ = "";
   height_only_ = false;
   trajectory_ = std::vector<std::vector<double>>();
@@ -50,6 +53,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   lifter_thigh_link_ = 0.29009;
   lifter_foreleg_link_ = 0.29009;
+
+  detected_speech_ = "";
 
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
@@ -65,6 +70,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
+
+  speech_listener_ = _nh.subscribe
+    ("/detected/speech/template",  1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
 
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
@@ -793,7 +801,28 @@ void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wai
 }
 
 /////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::BeginListen() {
+  std_msgs::String topic;
+  topic.data = "/template/on";
+  speech_detection_settings_publisher_.publish(topic);
+};
 
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::EndListen() {
+  std_msgs::String topic;
+  topic.data = "/template/off";
+  speech_detection_settings_publisher_.publish(topic);
+};
+
+//////////////////////////////////////////////////
+std::string aero::interface::AeroMoveitInterface::Listen() {
+  ros::spinOnce();
+  std::string result = detected_speech_;
+  detected_speech_ = "";
+  return result;
+};
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
 {
   trajectory_msgs::JointTrajectory msg;
@@ -830,4 +859,10 @@ void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
 void aero::interface::AeroMoveitInterface::JointStateCallback(const sensor_msgs::JointState::ConstPtr& _msg)
 {
   joint_states_ = *_msg;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::listenerCallBack_(const std_msgs::String::ConstPtr& _msg)
+{
+  detected_speech_ = _msg->data;
 }
