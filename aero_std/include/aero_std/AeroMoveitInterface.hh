@@ -120,13 +120,11 @@ namespace aero
 
     bool sendSequence(std::vector<int> _msecs={2000, 1000});
 
-    bool openHand(bool _yes, aero::arm _arm);
+    bool openHand(aero::arm _arm, bool _yes);
 
-    bool openHand(bool _yes, aero::arm _arm, float _warn, float _fail);
+    bool openHand(aero::arm _arm, bool _yes, float _warn, float _fail);
 
     bool openHand(aero::arm _arm, double _rad);
-
-    bool openHand(aero::arm _arm, double _rad, float _warn, float _fail);
 
     void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
@@ -144,6 +142,7 @@ namespace aero
     void setLookAt(Eigen::Vector3d _target);
     void setLookAt(geometry_msgs::Pose _pose);
     void resetLookAt();
+    void setTrackingMode(bool _yes);
 
     void setRobotStateVariables(std::vector<double> &_av);
     void setRobotStateVariables(std::map<std::string, double> &_map);
@@ -176,12 +175,11 @@ namespace aero
 
     void speak(std::string _speech, float _wait_sec);
 
-    void BeginListen();
-      
-    void EndListen();
+    void beginListen();
+    void endListen();
+    std::string listen();
 
-    std::string Listen();
-
+    void setNeck(double _r,double _p, double _y);
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -191,6 +189,8 @@ namespace aero
     void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
 
     void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
+
+    void lookAt_(double _x, double _y, double _z);
 
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
@@ -212,6 +212,7 @@ namespace aero
     double lifter_thigh_link_;// lifter's upper link
     double lifter_foreleg_link_;// lifter's lower link
     std::string detected_speech_;
+    bool tracking_mode_flag_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }

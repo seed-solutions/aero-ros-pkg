@@ -56,6 +56,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   detected_speech_ = "";
 
+  tracking_mode_flag_ = false;
+
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
 
@@ -442,13 +444,13 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes)
 {
-  return openHand(_yes, _arm, -0.9, 0.8);
+  return openHand(_arm, _yes, -0.9, 0.8);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm,
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes,
                              float _warn, float _fail)
 {
   aero_startup::AeroHandController srv;
@@ -475,12 +477,6 @@ bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm,
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad)
 {
-  return openHand(_rad, _arm, -0.9, 0.8);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad, float _warn, float _fail)
-{
 
   if ( fabs(_rad) > 2.0) {
     ROS_WARN("openHand failed");
@@ -491,8 +487,8 @@ bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad,
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
-  srv.request.thre_warn = _warn;
-  srv.request.thre_fail = _fail;
+  srv.request.thre_warn = 0.0;
+  srv.request.thre_fail = 0.0;
   srv.request.command = "grasp-angle";
   srv.request.larm_angle = _rad * 180.0 / M_PI;
   srv.request.rarm_angle = _rad * 180.0 / M_PI;
@@ -582,12 +578,16 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::j
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z)
 {
-  geometry_msgs::Point msg;
-  msg.x = _x;
-  msg.y = _y;
-  msg.z = _z;
-
-  look_at_publisher_.publish(msg);
+  if (tracking_mode_flag_) {
+    geometry_msgs::Point msg;
+    msg.x = _x;
+    msg.y = _y;
+    msg.z = _z;
+    
+    look_at_publisher_.publish(msg);
+  } else {
+    lookAt_(_x, _y, _z);
+  }
 }
 
 //////////////////////////////////////////////////
@@ -606,6 +606,12 @@ void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
 void aero::interface::AeroMoveitInterface::resetLookAt()
 {
   setLookAt(0.0, 0.0, 0.0);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
+{
+  tracking_mode_flag_ = _yes;
 }
 
 //////////////////////////////////////////////////
@@ -801,26 +807,36 @@ void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wai
 }
 
 /////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::BeginListen() {
+void aero::interface::AeroMoveitInterface::beginListen() {
   std_msgs::String topic;
   topic.data = "/template/on";
   speech_detection_settings_publisher_.publish(topic);
 };
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::EndListen() {
+void aero::interface::AeroMoveitInterface::endListen() {
   std_msgs::String topic;
   topic.data = "/template/off";
   speech_detection_settings_publisher_.publish(topic);
 };
 
 //////////////////////////////////////////////////
-std::string aero::interface::AeroMoveitInterface::Listen() {
+std::string aero::interface::AeroMoveitInterface::listen() {
   ros::spinOnce();
   std::string result = detected_speech_;
   detected_speech_ = "";
   return result;
 };
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _y)
+{
+  kinematic_state->setVariablePosition("neck_r_joint", _r);
+  kinematic_state->setVariablePosition("neck_p_joint", _p);
+  kinematic_state->setVariablePosition("neck_y_joint", _y);
+
+  kinematic_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+}
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
@@ -841,8 +857,20 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
 {
   std::vector<double> av_mg;
   kinematic_state->copyJointGroupPositions(_move_group, av_mg);
+  std::vector<std::string> j_names;
+  j_names = getMoveGroup(_move_group).getJointNames();
 
-  sendAngleVectorAsync_(av_mg, getMoveGroup(_move_group).getJointNames(), _time_ms);
+  if (!tracking_mode_flag_) {
+    av_mg.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
+    j_names.push_back("neck_r_joint");
+
+    av_mg.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
+    j_names.push_back("neck_p_joint");
+
+    av_mg.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
+    j_names.push_back("neck_y_joint");
+  }
+  sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
 //////////////////////////////////////////////////
@@ -865,4 +893,34 @@ void aero::interface::AeroMoveitInterface::JointStateCallback(const sensor_msgs:
 void aero::interface::AeroMoveitInterface::listenerCallBack_(const std_msgs::String::ConstPtr& _msg)
 {
   detected_speech_ = _msg->data;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double _z)
+{
+  Eigen::Vector3d obj;
+  obj.x() = _x;
+  obj.y() = _y;
+  obj.z() = _z;
+  double eye_height = 0.2; // from neck
+
+  std::string neck_link = "neck_link";
+  Eigen::Vector3d pos_neck = kinematic_state->getGlobalLinkTransform(neck_link).translation();
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(neck_link).rotation();
+  Eigen::Quaterniond qua_neck(mat);
+
+  Eigen::Vector3d pos_obj_rel = qua_neck.inverse() * (obj - pos_neck);
+
+  double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());;
+
+  double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
+                        + pos_obj_rel.y() * pos_obj_rel.y()
+                        + pos_obj_rel.z() * pos_obj_rel.z());
+  double theta = acos(eye_height / dis_obj);
+
+  double pitch_obj = atan2(- pos_obj_rel.y(), pos_obj_rel.x());
+
+  double pitch = 1.5708 + pitch_obj - theta;
+
+  setNeck(0.0, pitch, yaw);
 }
