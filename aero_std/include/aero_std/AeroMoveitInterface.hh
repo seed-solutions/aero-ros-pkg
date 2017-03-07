@@ -14,18 +14,18 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 
-#include <aero_std/AeroInterface.hh>
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
 #include <aero_std/interpolation_type.h>
 #include <aero_startup/AeroSendJoints.h>
-
+#include <aero_startup/AeroHandController.h>
+#include <aero_startup/AeroTorsoController.h>
 
 namespace aero
 {
   namespace interface
   {
-  class AeroMoveitInterface : public AeroInterface
+  class AeroMoveitInterface
   {
   public:
     //explicit AeroMoveitInterface();

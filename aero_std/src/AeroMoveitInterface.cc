@@ -1,7 +1,6 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
 aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd):
-  AeroInterface(_nh),
   larm("larm"),larm_with_torso("larm_with_torso"),larm_with_lifter("larm_with_lifter"),
   rarm("rarm"),rarm_with_torso("rarm_with_torso"),rarm_with_lifter("rarm_with_lifter"),
   lifter("lifter"),upper_body("upper_body"),torso("torso"),head("head")
@@ -61,10 +60,10 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
     ("/aero_controller/interpolation");
 
-  joint_states_subscriber_ = nh_.subscribe
+  joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
 
-  waist_service_ = nh_.serviceClient<aero_startup::AeroTorsoController>
+  waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
 
   ROS_INFO("----------------------------------------");
