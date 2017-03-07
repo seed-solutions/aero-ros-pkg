@@ -17,6 +17,7 @@
 #include <aero_std/AeroInterface.hh>
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
+#include <aero_std/interpolation_type.h>
 #include <aero_startup/AeroSendJoints.h>
 
 
@@ -168,6 +169,8 @@ namespace aero
 
     Eigen::Affine3d getCameraTransform();
 
+    bool setInterpolation(int _i_type);
+
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -177,6 +180,7 @@ namespace aero
     void JointStateCallback(const sensor_msgs::JointState::ConstPtr &_msg);
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
+    ros::ServiceClient interpolation_client_;
     ros::Publisher display_publisher_;
     ros::Publisher angle_vector_publisher_;
     ros::Publisher look_at_publisher_;

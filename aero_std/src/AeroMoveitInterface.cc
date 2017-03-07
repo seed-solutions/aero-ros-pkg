@@ -58,6 +58,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/aero_controller/get_joints");
 
+  interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
+    ("/aero_controller/interpolation");
+
   joint_states_subscriber_ = nh_.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
 
@@ -754,6 +757,20 @@ void aero::interface::AeroMoveitInterface::updateLinkTransforms()
 Eigen::Affine3d aero::interface::AeroMoveitInterface::getCameraTransform()
 {
   return kinematic_state->getGlobalLinkTransform("camera_link");
+}
+
+/////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
+{
+  aero_startup::AeroInterpolation srv;
+  srv.request.type.push_back(_i_type);
+
+  if (!interpolation_client_.call(srv)) {
+    ROS_WARN("interpolation service call failed");
+    return false;
+  }
+  
+  return true;
 }
 
 /////////////////////////////////////////////////
