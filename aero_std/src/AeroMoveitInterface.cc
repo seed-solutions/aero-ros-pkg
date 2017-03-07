@@ -340,6 +340,7 @@ void aero::interface::AeroMoveitInterface::setLifter(int _x, int _z)
 
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {
+  updateLinkTransforms();
   std::string link = "base_link";
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
@@ -752,6 +753,7 @@ double aero::interface::AeroMoveitInterface::getHand(aero::arm _arm)
 /////////////////////////////////////////////////
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
 {
+  updateLinkTransforms();
   std::string link = aero::armAndEEF2LinkName(_arm, _eef);
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
