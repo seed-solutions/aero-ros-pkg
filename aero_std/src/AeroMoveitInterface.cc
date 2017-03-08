@@ -923,17 +923,17 @@ void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double 
   obj.x() = _x;
   obj.y() = _y;
   obj.z() = _z;
-  double eye_height = 0.2; // from neck
+  double eye_height = 0.2 + 0.35; // from body
 
   updateLinkTransforms();
-  std::string neck_link = "neck_link";
+  std::string neck_link = "body_link";
   Eigen::Vector3d pos_neck = kinematic_state->getGlobalLinkTransform(neck_link).translation();
   Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(neck_link).rotation();
   Eigen::Quaterniond qua_neck(mat);
 
   Eigen::Vector3d pos_obj_rel = qua_neck.inverse() * (obj - pos_neck);
 
-  double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());;
+  double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
 
   double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
                         + pos_obj_rel.y() * pos_obj_rel.y()
