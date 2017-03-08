@@ -601,6 +601,12 @@ void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target)
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target)
+{
+  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()));
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
 {
   setLookAt(_pose.position.x, _pose.position.y, _pose.position.z);
@@ -609,7 +615,11 @@ void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::resetLookAt()
 {
-  setLookAt(0.0, 0.0, 0.0);
+  if (tracking_mode_flag_) {
+    setLookAt(0.0, 0.0, 0.0);
+  } else {
+    setNeck(0.0, 0.0, 0.0);
+  }
 }
 
 //////////////////////////////////////////////////

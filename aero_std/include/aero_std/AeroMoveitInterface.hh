@@ -141,6 +141,7 @@ namespace aero
 
     void setLookAt(double _x, double _y, double _z);
     void setLookAt(Eigen::Vector3d _target);
+    void setLookAt(Eigen::Vector3f _target);
     void setLookAt(geometry_msgs::Pose _pose);
     void resetLookAt();
     void setTrackingMode(bool _yes);
