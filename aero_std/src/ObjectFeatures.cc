@@ -78,6 +78,28 @@ int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _ori
 }
 
 //////////////////////////////////////////////////
+int ObjectFeatures::setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id){
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = "/virtual_lifter_x_link";
+  marker.header.stamp = ros::Time::now();
+  marker.ns = "aero_markers";
+  marker.id = _id;
+  marker.type = visualization_msgs::Marker::LINE_LIST;
+  marker.color.b = 1.0;
+  marker.color.a = 1.0;
+  marker.scale.x = 0.02;
+  geometry_msgs::Point p1;
+  p1.x = _pos1.x(); p1.y = _pos1.y(); p1.z = _pos1.z();
+  geometry_msgs::Point p2;
+  p2.x = _pos2.x(); p2.y = _pos2.y(); p2.z = _pos2.z();
+  marker.points.push_back(p1);
+  marker.points.push_back(p2);
+  marker_publisher_.publish(marker);
+
+  return _id;
+}
+
+//////////////////////////////////////////////////
 int ObjectFeatures::setMarker(Eigen::Vector3d _position, int _id){
   return setMarker(_position, Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0), _id);
 }

@@ -26,6 +26,7 @@ namespace aero
     public: int setMarker(Eigen::Vector3d _position, int _id=1);
     public: int setMarker(Eigen::Vector3f _position, int _id=1);
     public: int setMarker(geometry_msgs::Pose _pose, int _id=1);
+    public: int setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id=1);
 
     private: ros::NodeHandle nh_;
 
