@@ -93,6 +93,30 @@ void SEED485Controller::send_command(
 
 //////////////////////////////////////////////////
 void SEED485Controller::send_command(
+    uint8_t _cmd, uint8_t _num, uint16_t _data)
+{
+  std::vector<uint8_t> data(7);
+  data[0] = 0xFD;
+  data[1] = 0xDF;
+  data[2] = 0x04;
+  data[3] = _cmd;
+  data[4] = _num;
+  data[5] = static_cast<uint8_t>(0xff & (_data >> 8));
+  data[6] = static_cast<uint8_t>(0xff & _data);
+
+  // check sum
+  int32_t b_check_sum = 0;
+
+  for (size_t i = 2; i < data.size() - 1; ++i)
+    b_check_sum += data[i];
+  data[data.size() - 1] =
+    ~(reinterpret_cast<uint8_t*>(&b_check_sum)[0]);
+
+  send_data(data);
+}
+
+//////////////////////////////////////////////////
+void SEED485Controller::send_command(
     uint8_t _cmd, uint8_t _sub, uint16_t _time, std::vector<uint8_t>& _send_data)
 {
   _send_data[0] = 0xFD;
@@ -119,9 +143,7 @@ void SEED485Controller::send_command(
 //////////////////////////////////////////////////
 void SEED485Controller::AERO_Snd_Script(uint16_t sendnum,uint8_t scriptnum)
 {
-  std::vector<uint8_t> dat;
-  dat.resize(8);
-
+  std::vector<uint8_t> dat(8);
   dat[0] = 0xfd;  // header
   dat[1] = 0xdf;  // header
   dat[2] = 0x04;  // data length
@@ -370,6 +392,13 @@ void AeroControllerProto::set_position(
   // for ROS
   usleep(1000 * 20);
   get_data(stroke_cur_vector_);
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::set_max_single_current(int8_t _num, int16_t _dat)
+{
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+  seed_.send_command(CMD_MOTOR_CUR, _num, _dat);
 }
 
 //////////////////////////////////////////////////

@@ -79,13 +79,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         &AeroControllerNode::InterpolationCallback,
         this);
 
-  ROS_INFO(" create hand_control sub");
-  util_sub_ =
-      nh_.subscribe(
-          "hand_control",
-          10,
-          &AeroControllerNode::HandScriptCallback,
-          this);
+  // ROS_INFO(" create hand_control sub");
+  // util_sub_ =
+  //     nh_.subscribe(
+  //         "hand_control",
+  //         10,
+  //         &AeroControllerNode::HandScriptCallback,
+  //         this);
 
   ROS_INFO(" create send joints service");
   send_joints_server_ =
@@ -99,6 +99,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
     nh_.advertiseService(
         "get_joints",
         &AeroControllerNode::GetJointsCallback,
+        this);
+
+  ROS_INFO(" create grasp control service");
+  grasp_control_server_ =
+    nh_.advertiseService(
+        "grasp_control",
+        &AeroControllerNode::GraspControlCallback,
         this);
 
   ROS_INFO(" create status reset sub");
@@ -792,13 +799,35 @@ bool AeroControllerNode::InterpolationCallback(
   return true;
 }
 
+// //////////////////////////////////////////////////
+// void AeroControllerNode::HandScriptCallback(
+//     const std_msgs::Int16MultiArray::ConstPtr& _msg)
+// {
+//   mtx_upper_.lock();
+//     upper_.Hand_Script(_msg->data[0],_msg->data[1]);
+//   mtx_upper_.unlock();
+// }
+
 //////////////////////////////////////////////////
-void AeroControllerNode::HandScriptCallback(
-    const std_msgs::Int16MultiArray::ConstPtr& _msg)
+bool AeroControllerNode::GraspControlCallback(
+    aero_startup::AeroGraspController::Request& _req,
+    aero_startup::AeroGraspController::Response& _res)
 {
   mtx_upper_.lock();
-    upper_.Hand_Script(_msg->data[0],_msg->data[1]);
+  upper_.set_max_single_current(_req.script[0], _req.power);
   mtx_upper_.unlock();
+  usleep(200 * 1000);
+  mtx_upper_.lock();
+  upper_.Hand_Script(_req.script[0], _req.script[1]);
+  mtx_upper_.unlock();
+  usleep(200 * 1000);
+  mtx_upper_.lock();
+  upper_.update_position();
+  std::vector<int16_t> upper_stroke_vector_ret =
+    upper_.get_actual_stroke_vector();
+  mtx_upper_.unlock();
+  _res.angles[0] = upper_stroke_vector_ret[13];
+  _res.angles[1] = upper_stroke_vector_ret[27];
 }
 
 //////////////////////////////////////////////////
