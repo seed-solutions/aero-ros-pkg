@@ -1,7 +1,6 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
 aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd):
-  AeroInterface(_nh),
   larm("larm"),larm_with_torso("larm_with_torso"),larm_with_lifter("larm_with_lifter"),
   rarm("rarm"),rarm_with_torso("rarm_with_torso"),rarm_with_lifter("rarm_with_lifter"),
   lifter("lifter"),upper_body("upper_body"),torso("torso"),head("head")
@@ -43,6 +42,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/command", 1000);
   look_at_publisher_ = _nh.advertise<geometry_msgs::Point>("/look_at/target", 1000);
+
+  speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>("/settings/speach", 1000);
+
   planned_group_ = "";
   height_only_ = false;
   trajectory_ = std::vector<std::vector<double>>();
@@ -52,16 +54,32 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   lifter_thigh_link_ = 0.29009;
   lifter_foreleg_link_ = 0.29009;
 
+  detected_speech_ = "";
+
+  tracking_mode_flag_ = false;
+
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
 
   joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/aero_controller/get_joints");
 
-  joint_states_subscriber_ = nh_.subscribe
+  interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
+    ("/aero_controller/interpolation");
+
+  activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
+    ("/look_at/set_tracking");
+
+  speech_publisher_ = _nh.advertise<std_msgs::String>
+    ("/windows/voice", 1000);
+
+  joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
 
-  waist_service_ = nh_.serviceClient<aero_startup::AeroTorsoController>
+  speech_listener_ = _nh.subscribe
+    ("/detected/speech/template",  1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
+
+  waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
 
   ROS_INFO("----------------------------------------");
@@ -231,12 +249,12 @@ void aero::interface::AeroMoveitInterface::resetManipPose(int _time_ms)
   usleep(time * 1000);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaist(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifter(double _x, double _z, int _time_ms)
 {
-  return moveWaist(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifter(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifter(int _x, int _z, int _time_ms)
 {
 
   aero_startup::AeroTorsoController srv;
@@ -250,7 +268,7 @@ bool aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z, int _time_m
   }
 
   if (srv.response.status == "success") {
-    setWaist(_x, _z);
+    setLifter(_x, _z);
     if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000);
     else usleep(_time_ms * 1000);
     return true;
@@ -258,23 +276,23 @@ bool aero::interface::AeroMoveitInterface::moveWaist(int _x, int _z, int _time_m
   return false;
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocal(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocal(double _x, double _z, int _time_ms)
 {
-  return moveWaistLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifterLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocal(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPositionRelative();
-  return moveWaist(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  std::vector<double> pos = getLifter();
+  return moveLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistAsync(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterAsync(double _x, double _z, int _time_ms)
 {
-  return moveWaistAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifterAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistAsync(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterAsync(int _x, int _z, int _time_ms)
 {
 
   aero_startup::AeroTorsoController srv;
@@ -289,24 +307,24 @@ bool aero::interface::AeroMoveitInterface::moveWaistAsync(int _x, int _z, int _t
   }
 
   if (srv.response.status == "success") {
-    setWaist(_x, _z);
+    setLifter(_x, _z);
     return true;
   }
   return false;
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocalAsync(double _x, double _z, int _time_ms)
 {
-  return moveWaistLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return moveLifterLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveWaistLocalAsync(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::moveLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getWaistPositionRelative();
-  return moveWaistAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  std::vector<double> pos = getLifter();
+  return moveLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
-void aero::interface::AeroMoveitInterface::setWaist(double _x, double _z)
+void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
 {
   std::vector<double> joint_values;
   kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
@@ -315,19 +333,20 @@ void aero::interface::AeroMoveitInterface::setWaist(double _x, double _z)
   joint_values[1] = _z;
   kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
 }
-void aero::interface::AeroMoveitInterface::setWaist(int _x, int _z)
+void aero::interface::AeroMoveitInterface::setLifter(int _x, int _z)
 {
-  setWaist(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
+  setLifter(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
 }
 
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {
+  updateLinkTransforms();
   std::string link = "base_link";
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
 }
 
-std::vector<double> aero::interface::AeroMoveitInterface::getWaistPositionRelative()
+std::vector<double> aero::interface::AeroMoveitInterface::getLifter()
 {
   std::vector<double> joint_values;// size = 2
   kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
@@ -429,13 +448,13 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes)
 {
-  return openHand(_yes, _arm, -0.9, 0.8);
+  return openHand(_arm, _yes, -0.9, 0.8);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm,
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes,
                              float _warn, float _fail)
 {
   aero_startup::AeroHandController srv;
@@ -460,23 +479,23 @@ bool aero::interface::AeroMoveitInterface::openHand(bool _yes, aero::arm _arm,
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad)
 {
-  return openHand(_angle, _arm, -0.9, 0.8);
-}
 
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(float _angle, aero::arm _arm,
-                             float _warn, float _fail)
-{
+  if ( fabs(_rad) > 2.0) {
+    ROS_WARN("openHand failed");
+    ROS_WARN("specified angle is too large, please use double[rad]");
+    return false;
+  }
+
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
-  srv.request.thre_warn = _warn;
-  srv.request.thre_fail = _fail;
+  srv.request.thre_warn = 0.0;
+  srv.request.thre_fail = 0.0;
   srv.request.command = "grasp-angle";
-  srv.request.larm_angle = _angle;
-  srv.request.rarm_angle = _angle;
+  srv.request.larm_angle = _rad * 180.0 / M_PI;
+  srv.request.rarm_angle = _rad * 180.0 / M_PI;
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");
@@ -526,8 +545,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 {
 
   if (_range == aero::ikrange::lifter) {
-    std::vector<double> joint_values = getWaistPositionRelative();
-    if (!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
+    std::vector<double> joint_values = getLifter();
+    if (!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
       {
         ROS_INFO("move waist failed");
         return;
@@ -543,8 +562,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bool _move_waist)
 {
   if (_move_waist) {
-    std::vector<double> joint_values = getWaistPositionRelative();
-    if(!moveWaistAsync(joint_values[0], joint_values[1], _time_ms))
+    std::vector<double> joint_values = getLifter();
+    if(!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
       {
       ROS_INFO("move waist failed");
       return;
@@ -563,12 +582,16 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::j
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z)
 {
-  geometry_msgs::Point msg;
-  msg.x = _x;
-  msg.y = _y;
-  msg.z = _z;
-
-  look_at_publisher_.publish(msg);
+  if (tracking_mode_flag_) {
+    geometry_msgs::Point msg;
+    msg.x = _x;
+    msg.y = _y;
+    msg.z = _z;
+    
+    look_at_publisher_.publish(msg);
+  } else {
+    lookAt_(_x, _y, _z);
+  }
 }
 
 //////////////////////////////////////////////////
@@ -578,9 +601,33 @@ void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target)
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target)
+{
+  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()));
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
+{
+  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z);
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::resetLookAt()
 {
-  setLookAt(0.0, 0.0, 0.0);
+  if (tracking_mode_flag_) {
+    setLookAt(0.0, 0.0, 0.0);
+  } else {
+    setNeck(0.0, 0.0, 0.0);
+  }
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
+{
+  std_srvs::SetBool req;
+  req.request.data = _yes;
+  if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
 }
 
 //////////////////////////////////////////////////
@@ -670,7 +717,7 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
     + lifter_thigh_link_ * sin(hip);
   double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
     + lifter_thigh_link_ * (cos(hip) - 1.0);
-  setWaist(x, z);
+  setLifter(x, z);
 
 
   updateLinkTransforms();
@@ -704,9 +751,19 @@ void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, double _radia
   kinematic_state->setVariablePosition(rl + "_indexbase_joint", -_radian);
 }
 
+//////////////////////////////////////////////////
+
+double aero::interface::AeroMoveitInterface::getHand(aero::arm _arm)
+{
+  std::string rl;
+  if (_arm == aero::arm::rarm) rl = "r";
+  else rl = "l";
+  return kinematic_state->getVariablePosition(rl + "_thumb_joint");
+}
 /////////////////////////////////////////////////
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
 {
+  updateLinkTransforms();
   std::string link = aero::armAndEEF2LinkName(_arm, _eef);
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
@@ -736,7 +793,71 @@ Eigen::Affine3d aero::interface::AeroMoveitInterface::getCameraTransform()
 }
 
 /////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
+{
+  aero_startup::AeroInterpolation srv;
+  srv.request.type.push_back(_i_type);
 
+  if (!interpolation_client_.call(srv)) {
+    ROS_WARN("interpolation service call failed");
+    return false;
+  }
+  
+  return true;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
+{
+  ROS_INFO("speak: %s", _speech.c_str());
+  std_msgs::String msg;
+  msg.data = _speech;
+  speech_publisher_.publish(msg);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wait_sec)
+{
+  ROS_INFO("speak: %s", _speech.c_str());
+  std_msgs::String msg;
+  msg.data = _speech;
+  speech_publisher_.publish(msg);
+  usleep(static_cast<int>(_wait_sec * 1000) * 1000);
+}
+
+/////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::beginListen() {
+  std_msgs::String topic;
+  topic.data = "/template/on";
+  speech_detection_settings_publisher_.publish(topic);
+};
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::endListen() {
+  std_msgs::String topic;
+  topic.data = "/template/off";
+  speech_detection_settings_publisher_.publish(topic);
+};
+
+//////////////////////////////////////////////////
+std::string aero::interface::AeroMoveitInterface::listen() {
+  ros::spinOnce();
+  std::string result = detected_speech_;
+  detected_speech_ = "";
+  return result;
+};
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _y)
+{
+  kinematic_state->setVariablePosition("neck_r_joint", _r);
+  kinematic_state->setVariablePosition("neck_p_joint", _p);
+  kinematic_state->setVariablePosition("neck_y_joint", _y);
+
+  kinematic_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
 {
   trajectory_msgs::JointTrajectory msg;
@@ -746,6 +867,18 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
   msg.points[0].positions.resize(_av.size());
   msg.points[0].positions = _av;
   msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
+
+  if (!tracking_mode_flag_) {
+    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
+    msg.joint_names.push_back("neck_r_joint");
+
+    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
+    msg.joint_names.push_back("neck_p_joint");
+
+    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
+    msg.joint_names.push_back("neck_y_joint");
+  }
+
   angle_vector_publisher_.publish(msg);
 
 }
@@ -755,8 +888,10 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
 {
   std::vector<double> av_mg;
   kinematic_state->copyJointGroupPositions(_move_group, av_mg);
+  std::vector<std::string> j_names;
+  j_names = getMoveGroup(_move_group).getJointNames();
 
-  sendAngleVectorAsync_(av_mg, getMoveGroup(_move_group).getJointNames(), _time_ms);
+  sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
 //////////////////////////////////////////////////
@@ -773,4 +908,41 @@ void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
 void aero::interface::AeroMoveitInterface::JointStateCallback(const sensor_msgs::JointState::ConstPtr& _msg)
 {
   joint_states_ = *_msg;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::listenerCallBack_(const std_msgs::String::ConstPtr& _msg)
+{
+  detected_speech_ = _msg->data;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double _z)
+{
+  Eigen::Vector3d obj;
+  obj.x() = _x;
+  obj.y() = _y;
+  obj.z() = _z;
+  double eye_height = 0.2 + 0.35; // from body
+
+  updateLinkTransforms();
+  std::string neck_link = "body_link";
+  Eigen::Vector3d pos_neck = kinematic_state->getGlobalLinkTransform(neck_link).translation();
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(neck_link).rotation();
+  Eigen::Quaterniond qua_neck(mat);
+
+  Eigen::Vector3d pos_obj_rel = qua_neck.inverse() * (obj - pos_neck);
+
+  double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
+
+  double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
+                        + pos_obj_rel.y() * pos_obj_rel.y()
+                        + pos_obj_rel.z() * pos_obj_rel.z());
+  double theta = acos(eye_height / dis_obj);
+
+  double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
+
+  double pitch = 1.5708 + pitch_obj - theta;
+
+  setNeck(0.0, pitch, yaw);
 }

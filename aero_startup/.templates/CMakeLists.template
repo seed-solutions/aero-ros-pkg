@@ -44,7 +44,6 @@ catkin_package(
   trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs move_base_msgs
   DEPENDS
   INCLUDE_DIRS
-  LIBRARIES aero_hardware_interface
 )
 
 include_directories(${aero_startup_SOURCE_DIR})

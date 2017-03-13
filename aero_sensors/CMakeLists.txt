@@ -5,13 +5,14 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp sensor_msgs geometry_msgs)
 
 catkin_package(
-  INCLUDE_DIRS xtion/include
-  LIBRARIES aerosensors_xtion
+  INCLUDE_DIRS xtion/include kinect/include
+  LIBRARIES aerosensors_xtion aerosensors_rotatekinectaddon
   CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs
 )
 
 include_directories(
   xtion/include
+  kinect/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -20,6 +21,7 @@ add_definitions(-std=c++11)
 # xtion library
 
 add_library(aerosensors_xtion xtion/src/XtionInterface.cc)
+add_library(aerosensors_rotatekinectaddon kinect/src/RotateKinectAddon.cc)
 
 
 # examples

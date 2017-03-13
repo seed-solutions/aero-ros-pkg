@@ -37,6 +37,17 @@ function rotateKinect() {
     rostopic pub --once /kinect_controller/command std_msgs/Float32 "{data: $1}"
 }
 
+# change speed of kinect rotation from command line
+function speedKinect() {
+    if [[ $1 == "" ]]
+    then
+        echo "usage: speedKinect [speed 100~1000]"
+        return
+    fi
+
+    rostopic pub --once /kinect_controller/speed std_msgs/Int32 "{data: $1}"
+}
+
 # send speech from command line
 function speakAero() {
     if [[ $1 == "" ]]
