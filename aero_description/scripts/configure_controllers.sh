@@ -140,33 +140,33 @@ do
     write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
     write_to_line=$(($write_to_line + 1))
     echo "add_dependencies(aero_${executable_name}_controller_node \${PROJECT_NAME}_gencpp)" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-    # add srv files if required
-    check_for_srv=$(grep "@define srv" $copy_from_file)
-    if [[ "$check_for_srv" != "" ]]
-    then
-	# create srv file
-	srv_name=$(grep "<aero_startup/" $copy_from_file | cut -d '/' -f2 | cut -d '.' -f1)
-	srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
-	awk "/@define srv/,/\*\//" $copy_from_file > $srv_file
-	delete_to_line=$(grep -n -m 1 "\*/" $srv_file | cut -d ':' -f1)
-	sed -i "/@define/d" $srv_file
-	sed -i "/\*\//d" $srv_file
-	sed -i 's/^[ \t]*//' $srv_file
-	# delete srv definitions from output_file
-	delete_from_line=$(grep -n -m 1 "@define srv" $output_file | cut -d ':' -f1)
-	delete_from_line=$(($delete_from_line - 1))
-	delete_to_line=$(($delete_from_line + $delete_to_line))
-	sed -i "${delete_from_line},${delete_to_line}d" $output_file
-	# add srv generation to CMakeLists.txt
-	check_if_exists=$(grep "${srv_name}.srv" $cmake_file)
-	if [[ "$check_if_exists" == "" ]]
-	then
-	    sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
-	    write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
-	    write_to_line=$(($write_to_line + 3))
-	    echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
-	fi
-    fi
+    # # add srv files if required
+    # check_for_srv=$(grep "@define srv" $copy_from_file)
+    # if [[ "$check_for_srv" != "" ]]
+    # then
+    #     # create srv file
+    #     srv_name=$(grep "<aero_startup/" $copy_from_file | cut -d '/' -f2 | cut -d '.' -f1)
+    #     srv_file="$(rospack find aero_startup)/srv/${srv_name}.srv"
+    #     awk "/@define srv/,/\*\//" $copy_from_file > $srv_file
+    #     delete_to_line=$(grep -n -m 1 "\*/" $srv_file | cut -d ':' -f1)
+    #     sed -i "/@define/d" $srv_file
+    #     sed -i "/\*\//d" $srv_file
+    #     sed -i 's/^[ \t]*//' $srv_file
+    #     # delete srv definitions from output_file
+    #     delete_from_line=$(grep -n -m 1 "@define srv" $output_file | cut -d ':' -f1)
+    #     delete_from_line=$(($delete_from_line - 1))
+    #     delete_to_line=$(($delete_from_line + $delete_to_line))
+    #     sed -i "${delete_from_line},${delete_to_line}d" $output_file
+    #     # add srv generation to CMakeLists.txt
+    #     check_if_exists=$(grep "${srv_name}.srv" $cmake_file)
+    #     if [[ "$check_if_exists" == "" ]]
+    #     then
+    #         sed -i "s/set(GENERATE_SRV)/set(GENERATE_SRV 1)/g" $cmake_file
+    #         write_to_line=$(grep -n -m 1 "auto-add services" $cmake_file | cut -d ':' -f1)
+    #         write_to_line=$(($write_to_line + 3))
+    #         echo "${tab2}${tab2}${srv_name}.srv" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
+    #     fi
+    # fi
 
     # add to launch
     tab6=$'      '
