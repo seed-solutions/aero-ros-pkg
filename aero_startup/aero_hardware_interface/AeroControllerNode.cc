@@ -79,13 +79,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
         &AeroControllerNode::InterpolationCallback,
         this);
 
-  ROS_INFO(" create hand_control sub");
-  util_sub_ =
-      nh_.subscribe(
-          "hand_control",
-          10,
-          &AeroControllerNode::HandScriptCallback,
-          this);
+  // ROS_INFO(" create hand_control sub");
+  // util_sub_ =
+  //     nh_.subscribe(
+  //         "hand_control",
+  //         10,
+  //         &AeroControllerNode::HandScriptCallback,
+  //         this);
 
   ROS_INFO(" create send joints service");
   send_joints_server_ =
@@ -99,6 +99,13 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
     nh_.advertiseService(
         "get_joints",
         &AeroControllerNode::GetJointsCallback,
+        this);
+
+  ROS_INFO(" create grasp control service");
+  grasp_control_server_ =
+    nh_.advertiseService(
+        "grasp_control",
+        &AeroControllerNode::GraspControlCallback,
         this);
 
   ROS_INFO(" create status reset sub");
@@ -185,6 +192,15 @@ void AeroControllerNode::JointTrajectoryThread(
       }
     mtx_threads_.unlock();
 
+    // check if any collision happened during send trajectory
+    mtx_upper_.lock();
+    mtx_lower_.lock();
+    bool collision_status = upper_.get_status();
+    mtx_upper_.unlock();
+    mtx_lower_.unlock();
+    if (collision_status)
+      break;
+
     int k = static_cast<int>(it - _stroke_trajectory.begin());
 
     // from here, main process for trajectory it
@@ -252,6 +268,21 @@ void AeroControllerNode::JointTrajectoryThread(
   mtx_threads_.unlock();
 }
 
+/////////////////////////////////////////////////
+void AeroControllerNode::LowerTrajectoryThread(
+    std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory)
+{
+  for (auto it = _stroke_trajectory.begin() + 1;
+       it != _stroke_trajectory.end(); ++it) {
+    uint16_t csec_in_frame = it->second - (it-1)->second;
+    mtx_lower_.lock();
+    lower_.set_position(it->first, csec_in_frame  + 10);
+    mtx_lower_.unlock();
+    // 20ms sleep in set_position, subtract
+    usleep(static_cast<int32_t>(csec_in_frame * 10.0 * 1000.0 - 20000.0));
+  }
+}
+
 //////////////////////////////////////////////////
 void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& _msg)
@@ -312,6 +343,7 @@ void AeroControllerNode::JointTrajectoryCallback(
   // initiate trajectories
 
   std::vector<std::pair<std::vector<int16_t>, uint16_t> > upper_stroke_trajectory;
+  std::vector<std::pair<std::vector<int16_t>, uint16_t> > lower_stroke_trajectory;
 
   // note: only upper will have interpolation
   if (upper_count > 0) {
@@ -321,6 +353,13 @@ void AeroControllerNode::JointTrajectoryCallback(
     // fill in unused joints to no-send
     common::UnusedAngle2Stroke(ref_strokes, send_true);
     upper_stroke_trajectory.push_back({ref_strokes, 0});
+  }
+
+  if (lower_count > 0) {
+    lower_stroke_trajectory.reserve(_msg->points.size() + 1);
+    // get current stroke values, use reference for safety
+    std::vector<int16_t> ref_strokes = lower_.get_reference_stroke_vector();
+    lower_stroke_trajectory.push_back({ref_strokes, 0});
   }
 
   // from here, get ready to handle the _msg positions
@@ -362,14 +401,23 @@ void AeroControllerNode::JointTrajectoryCallback(
       upper_stroke_trajectory.push_back({upper_stroke_vector, time_csec});
     }
 
-    // only the first lower trajectory point is valid
-    if (lower_count > 0 && i == 0) {
+    if (lower_count > 0 && _msg->points.size() > 1) {
+      lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
+    } else if (lower_count > 0 && i == 0) { // to be removed in future
       lower_.set_position(lower_stroke_vector, time_csec);
     }
   }
 
   mtx_upper_.unlock();
   mtx_lower_.unlock();
+
+  if (lower_count > 0 && _msg->points.size() > 1) {
+    std::thread send_lower([&](
+      std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory) {
+        LowerTrajectoryThread(_stroke_trajectory);
+      }, lower_stroke_trajectory);
+    send_lower.detach();
+  }
 
   if (upper_count <= 0) return; // nothing more to do
 
@@ -751,13 +799,38 @@ bool AeroControllerNode::InterpolationCallback(
   return true;
 }
 
+// //////////////////////////////////////////////////
+// void AeroControllerNode::HandScriptCallback(
+//     const std_msgs::Int16MultiArray::ConstPtr& _msg)
+// {
+//   mtx_upper_.lock();
+//     upper_.Hand_Script(_msg->data[0],_msg->data[1]);
+//   mtx_upper_.unlock();
+// }
+
 //////////////////////////////////////////////////
-void AeroControllerNode::HandScriptCallback(
-    const std_msgs::Int16MultiArray::ConstPtr& _msg)
+bool AeroControllerNode::GraspControlCallback(
+    aero_startup::AeroGraspController::Request& _req,
+    aero_startup::AeroGraspController::Response& _res)
 {
   mtx_upper_.lock();
-    upper_.Hand_Script(_msg->data[0],_msg->data[1]);
+  upper_.set_max_single_current(_req.script[0], _req.power);
   mtx_upper_.unlock();
+  usleep(200 * 1000);
+  mtx_upper_.lock();
+  upper_.Hand_Script(_req.script[0], _req.script[1]);
+  mtx_upper_.unlock();
+  usleep(2000 * 1000); // wait 2 seconds
+  mtx_upper_.lock();
+  upper_.update_position();
+  std::vector<int16_t> upper_stroke_vector_ret =
+    upper_.get_actual_stroke_vector();
+  mtx_upper_.unlock();
+  _res.angles.resize(2);
+  _res.angles[0] = upper_stroke_vector_ret[13];
+  _res.angles[1] = upper_stroke_vector_ret[27];
+
+  return true;
 }
 
 //////////////////////////////////////////////////
@@ -854,6 +927,7 @@ bool AeroControllerNode::SendJointsCallback(
 
   std::thread t1([&](){
       if (_req.reset_status) { // reset status if flag
+        usleep(20000); // 20ms sleep before next command
         upper_.reset_status();
         usleep(20000); // 20ms sleep before next command
       }
@@ -864,6 +938,7 @@ bool AeroControllerNode::SendJointsCallback(
 
   std::thread t2([&](){
       if (_req.reset_status) { // reset status if flag
+        usleep(20000); // 20ms sleep before next command
         lower_.reset_status();
         usleep(20000); // 20ms sleep before next command
       }
@@ -960,6 +1035,7 @@ bool AeroControllerNode::GetJointsCallback(
 
   std::thread t1([&](){
       if (_req.reset_status) { // reset status if flag
+        usleep(20000); // 20ms sleep before next command
         upper_.reset_status();
         usleep(20000); // 20ms sleep before next command
       }
@@ -967,6 +1043,7 @@ bool AeroControllerNode::GetJointsCallback(
 
   std::thread t2([&](){
       if (_req.reset_status) { // reset status if flag
+        usleep(20000); // 20ms sleep before next command
         lower_.reset_status();
         usleep(20000); // 20ms sleep before next command
       }

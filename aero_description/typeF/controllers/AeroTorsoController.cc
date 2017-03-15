@@ -2,18 +2,6 @@
 #include <trajectory_msgs/JointTrajectory.h>
 #include <aero_startup/AeroTorsoController.h>
 
-/*
-  @define srv
-  float64 x
-  float64 z
-  string coordinate
-  ---
-  string status
-  float64 x
-  float64 z
-  float64 time_sec
-*/
-
 static const double link1_length = 290.09;
 static const double link2_length = 290.09;
 static const double x_origin = 0.0;
@@ -70,11 +58,33 @@ bool SolveIK(float goal_position_x, float goal_position_z,
   return true;
 }
 
+std::string ParseTimeSpecifiedMode(std::string &s, int &time)
+{
+  // check grammar
+  auto pos = s.find(":");
+  if (pos == std::string::npos || pos == (s.length() - 1))
+    return "";
+  // check if time is number
+  auto it = s.begin() + pos + 1;
+  while (it != s.end() && std::isdigit(*it)) ++it;
+  if (it != s.end())
+    return "";
+  // check if time is valid
+  time = std::stoi(std::string(s.begin() + pos + 1, s.end()));
+  if (time <= 0)
+    return "";
+  // return coordinate
+  return std::string(s.begin(), s.begin() + pos);
+}
+
+
 bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
 		     aero_startup::AeroTorsoController::Response &res)
 {
   float goal_position_x = 0.0;
   float goal_position_z = 0.0;
+
+  int time_ms = 0; // used if time specified mode
 
   if (req.coordinate == "world") {
     goal_position_x = x_origin + req.x;
@@ -83,8 +93,18 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
     goal_position_x = x_now + req.x;
     goal_position_z = z_now + req.z;
   } else {
-    res.status = "unexpected coordinate";
-    return true;
+    // time specified mode; world:1000, local:500
+    std::string coords = ParseTimeSpecifiedMode(req.coordinate, time_ms);
+    if (coords == "world") {
+      goal_position_x = x_origin + req.x;
+      goal_position_z = z_origin + req.z;
+    } else if (coords == "local") {
+      goal_position_x = x_now + req.x;
+      goal_position_z = z_now + req.z;
+    } else {
+      res.status = "unexpected coordinate";
+      return true;
+    }
   }
 
   double theta; // knee angle
@@ -97,7 +117,7 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   msg.joint_names = {"hip_joint", "knee_joint"};
   msg.points.resize(1);
 
-  if (z_now <= (z_origin - 200)) {
+  if (z_now <= (z_origin - 200) && time_ms == 0) {
     double theta0, phi0;
     if (!SolveIK(goal_position_x, z_now + 100, theta0, phi0, res)) {
       double try_x = static_cast<int>(goal_position_x / 10) * 10;
@@ -112,6 +132,10 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
     msg.points[0].positions = {theta - phi, theta};
     msg.points[0].time_from_start = ros::Duration(1.0); // max speed
     pub.publish(msg);
+  } else if (time_ms > 0) {
+    msg.points[0].positions = {theta - phi, theta};
+    msg.points[0].time_from_start = ros::Duration(time_ms / 1000.0);
+    pub.publish(msg);
   } else {
     msg.points[0].positions = {theta - phi, theta};
     msg.points[0].time_from_start = ros::Duration(1.0); // max speed
@@ -120,8 +144,11 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
 
   float goal_stroke_x = LegTable(180.0 / M_PI * phi);
   float goal_stroke_z = LegTable(180.0 / M_PI * (theta - phi));
-  res.time_sec = std::sqrt(std::pow(stroke_x_now - goal_stroke_x, 2) +
-      std::pow(stroke_z_now - goal_stroke_z, 2)) / stroke_per_sec;
+  if (time_ms > 0)
+    res.time_sec = time_ms / 1000.0;
+  else
+    res.time_sec = std::sqrt(std::pow(stroke_x_now - goal_stroke_x, 2) +
+        std::pow(stroke_z_now - goal_stroke_z, 2)) / stroke_per_sec;
 
   x_now = goal_position_x;
   z_now = goal_position_z;

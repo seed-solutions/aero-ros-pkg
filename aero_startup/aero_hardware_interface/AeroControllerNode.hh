@@ -40,6 +40,7 @@
 
 #include "aero_startup/AeroInterpolation.h"
 #include "aero_startup/AeroSendJoints.h"
+#include "aero_startup/AeroGraspController.h"
 
 namespace aero
 {
@@ -99,6 +100,9 @@ namespace aero
         int _trajectory_start_from,
         int _split_start_from);
 
+    private: void LowerTrajectoryThread(
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory);
+
       /// @brief subscribe joint tracjectory
       /// @param _msg joint trajectory
     private: void JointTrajectoryCallback(
@@ -134,10 +138,10 @@ namespace aero
         aero_startup::AeroInterpolation::Request &_req,
         aero_startup::AeroInterpolation::Response &_res);
 
-      /// @brief subscribe hand script message
-      /// @param _msg true: grasp, false :ungrasp
-    private: void HandScriptCallback(
-          const std_msgs::Int16MultiArray::ConstPtr& _msg);
+    //   /// @brief subscribe hand script message
+    //   /// @param _msg true: grasp, false :ungrasp
+    // private: void HandScriptCallback(
+    //       const std_msgs::Int16MultiArray::ConstPtr& _msg);
 
     private: void StatusResetCallback(
 	const std_msgs::Empty::ConstPtr& _msg);
@@ -149,6 +153,10 @@ namespace aero
     private: bool GetJointsCallback(
         aero_startup::AeroSendJoints::Request &_req,
         aero_startup::AeroSendJoints::Response &_res);
+
+    private: bool GraspControlCallback(
+        aero_startup::AeroGraspController::Request& _req,
+        aero_startup::AeroGraspController::Response& _res);
 
     private: AeroUpperController upper_;
 
@@ -191,6 +199,8 @@ namespace aero
     private: ros::ServiceServer send_joints_server_;
 
     private: ros::ServiceServer get_joints_server_;
+
+    private: ros::ServiceServer grasp_control_server_;
 
     private: ros::Timer timer_;
 

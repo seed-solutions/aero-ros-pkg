@@ -46,11 +46,17 @@ namespace aero
     public: void send_command(uint8_t _cmd, uint16_t _time,
 			      std::vector<uint8_t>& _send_data);
 
-      /// @brief send_executing script command
-    public: void AERO_Snd_Script(uint16_t sendnum,uint8_t scriptnum);
+      /// @brief send single command to SEED controller
+      /// @param _cmd Command ID
+      /// @param _num Send ID
+      /// @param _data data
+    public: void send_command(uint8_t _cmd, uint8_t _num, uint16_t _data);
 
     public: void send_command(uint8_t _cmd, uint8_t _sub, uint16_t _time,
 			      std::vector<uint8_t>& _send_data);
+
+      /// @brief send_executing script command
+    public: void AERO_Snd_Script(uint16_t sendnum, uint8_t scriptnum);
 
     /// @brief flush io buffer
     public: void flush();
@@ -152,6 +158,11 @@ namespace aero
     /// @brief send Motor_Cur command
     /// @param _stroke_vector stroke vector
     public: void set_max_current(std::vector<int16_t>& _stroke_vector);
+
+    /// @brief send Motor_Cur command
+    /// @param _num Send id
+    /// @param _dat data
+    public: void set_max_single_current(int8_t _num, int16_t _dat);
 
     /// @brief send Motor_Acc command
     /// @param _stroke_vector stroke vector
