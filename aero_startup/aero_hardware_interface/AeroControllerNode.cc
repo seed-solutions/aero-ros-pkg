@@ -820,14 +820,17 @@ bool AeroControllerNode::GraspControlCallback(
   mtx_upper_.lock();
   upper_.Hand_Script(_req.script[0], _req.script[1]);
   mtx_upper_.unlock();
-  usleep(200 * 1000);
+  usleep(2000 * 1000); // wait 2 seconds
   mtx_upper_.lock();
   upper_.update_position();
   std::vector<int16_t> upper_stroke_vector_ret =
     upper_.get_actual_stroke_vector();
   mtx_upper_.unlock();
+  _res.angles.resize(2);
   _res.angles[0] = upper_stroke_vector_ret[13];
   _res.angles[1] = upper_stroke_vector_ret[27];
+
+  return true;
 }
 
 //////////////////////////////////////////////////

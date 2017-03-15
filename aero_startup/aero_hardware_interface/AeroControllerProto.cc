@@ -95,7 +95,7 @@ void SEED485Controller::send_command(
 void SEED485Controller::send_command(
     uint8_t _cmd, uint8_t _num, uint16_t _data)
 {
-  std::vector<uint8_t> data(7);
+  std::vector<uint8_t> data(8);
   data[0] = 0xFD;
   data[1] = 0xDF;
   data[2] = 0x04;

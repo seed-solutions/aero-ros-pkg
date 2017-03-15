@@ -41,6 +41,8 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
 
     if (power != "")
       g_srv.request.power = (std::stoi(power) << 8) + 30;
+    else
+      g_srv.request.power = (100 << 8) + 30;
 
     g_client.call(g_srv);
     std::string status_msg = "grasp success";
@@ -61,8 +63,9 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
       executing_flg_left = 0;
     } else if (req.hand == "right") {
       g_srv.request.script = {Right, ungrasp};
-      executing_flg_right = 0; 
+      executing_flg_right = 0;
     }
+    g_srv.request.power = (100 << 8) + 30;
     g_client.call(g_srv);
     res.status = "ungrasp success";
   }
@@ -102,20 +105,10 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
   return true;
 };
 
-// void HandStateCallback(
-//     const pr2_controllers_msgs::JointTrajectoryControllerState::ConstPtr& _msg)
-// {
-//   theta[0] = _msg->actual.positions[13];
-//   theta[1] = _msg->actual.positions[27];
-// };
-
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "aero_hand_controller");
   ros::NodeHandle nh;
-
-  // theta[0] = 0.0;
-  // theta[1] = 0.0;
 
   ros::ServiceServer service = nh.advertiseService(
       "/aero_hand_controller", HandControl);
@@ -123,9 +116,6 @@ int main(int argc, char **argv)
       "/aero_controller/send_joints");
   g_client = nh.serviceClient<aero_startup::AeroGraspController>(
       "/aero_controller/grasp_control");
-
-  // ros::Subscriber sub = nh.subscribe(
-  //     "/aero_controller/state", 10, &HandStateCallback);
 
   ros::spin();
 
