@@ -247,6 +247,15 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
   usleep(_time_ms * 1000);
 }
 
+void aero::interface::AeroMoveitInterface::getResetManipPose(std::map<aero::joint, double> &_map)
+{
+  std::map<aero::joint, double> save;
+  getRobotStateVariables(save);
+  setRobotStateToNamedTarget("upper_body", "reset-pose");
+  getRobotStateVariables(_map);
+  setRobotStateVariables(save);  
+}
+
 bool aero::interface::AeroMoveitInterface::moveLifter(double _x, double _z, int _time_ms)
 {
   return moveLifter(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);

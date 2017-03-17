@@ -97,6 +97,7 @@ namespace aero
     //
     void setNamedTarget(std::string _move_group, std::string _target);
     void sendResetManipPose(int _time_ms=3000);
+    void getResetManipPose(std::map<aero::joint, double> &_map);
 
     bool moveLifter(double _x, double _z, int _time_ms=0); // m
     bool moveLifter(int _x, int _z, int _time_ms=0); // mm
