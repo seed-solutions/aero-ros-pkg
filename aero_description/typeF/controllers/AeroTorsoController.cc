@@ -77,9 +77,8 @@ std::string ParseTimeSpecifiedMode(std::string &s, int &time)
   return std::string(s.begin(), s.begin() + pos);
 }
 
-
-bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
-		     aero_startup::AeroTorsoController::Response &res)
+bool TorsoControl(aero_startup::AeroTorsoController::Request &req,
+                  aero_startup::AeroTorsoController::Response &res)
 {
   float goal_position_x = 0.0;
   float goal_position_z = 0.0;
@@ -147,8 +146,8 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   if (time_ms > 0)
     res.time_sec = time_ms / 1000.0;
   else
-    res.time_sec = std::sqrt(std::pow(stroke_x_now - goal_stroke_x, 2) +
-        std::pow(stroke_z_now - goal_stroke_z, 2)) / stroke_per_sec;
+    res.time_sec = std::max(fabs(stroke_x_now - goal_stroke_x),
+        fabs(stroke_z_now - goal_stroke_z)) / stroke_per_sec + 0.5;
 
   x_now = goal_position_x;
   z_now = goal_position_z;
@@ -158,6 +157,24 @@ bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
   res.status = "success";
   res.x = x_now - x_origin;
   res.z = z_now - z_origin;
+  return true;
+};
+
+bool TorsoKinematics(aero_startup::AeroTorsoController::Request &req,
+		     aero_startup::AeroTorsoController::Response &res)
+{
+  float goal_position_x = x_origin + req.x;
+  float goal_position_z = z_origin + req.z;
+
+  double theta; // knee angle
+  double phi; // ankle angle, should be > 0
+
+  if (!SolveIK(goal_position_x, goal_position_z, theta, phi, res))
+    return true; // failed ik
+
+  res.status = "success";
+  res.x = theta - phi; // hip_joint
+  res.z = theta; // knee_joint
   return true;
 };
 
@@ -173,7 +190,9 @@ int main(int argc, char **argv)
   stroke_z_now = LegTable(0.0);
 
   ros::ServiceServer service = nh.advertiseService(
-      "/aero_torso_controller", TorsoKinematics);
+      "/aero_torso_controller", TorsoControl);
+  ros::ServiceServer kinematics_service = nh.advertiseService(
+      "/aero_torso_kinematics", TorsoKinematics);
   pub = nh.advertise<trajectory_msgs::JointTrajectory>(
       "/aero_controller/command", 100);
 
