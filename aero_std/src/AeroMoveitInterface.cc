@@ -452,23 +452,13 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes)
-{
-  return openHand(_arm, _yes, -0.9, 0.8);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes,
-                             float _warn, float _fail)
+bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
-  srv.request.thre_warn = _warn;
-  srv.request.thre_fail = _fail;
-  if (_yes) srv.request.command = "ungrasp";
-  else srv.request.command = "grasp";
-  
+  srv.request.command = "grasp" + std::to_string(_power);
+
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");
     return false;
@@ -483,7 +473,28 @@ bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, bool _yes,
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, double _rad)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm)
+{
+  aero_startup::AeroHandController srv;
+  if (_arm == aero::arm::rarm)   srv.request.hand = "right";
+  else srv.request.hand = "left";
+  srv.request.command = "ungrasp";
+
+  if (!hand_grasp_client_.call(srv)) {
+    ROS_ERROR("open/close hand failed service call");
+    return false;
+  }
+
+  if (srv.response.status.find("success") != std::string::npos) {
+    return true;
+  }
+
+  ROS_ERROR("%s", srv.response.status.c_str());
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendHand(aero::arm _arm, double _rad)
 {
 
   if ( fabs(_rad) > 2.0) {

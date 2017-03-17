@@ -121,11 +121,11 @@ namespace aero
 
     bool sendSequence(std::vector<int> _msecs={2000, 1000});
 
-    bool openHand(aero::arm _arm, bool _yes);
+    bool sendGrasp(aero::arm _arm, int _power=100);
 
-    bool openHand(aero::arm _arm, bool _yes, float _warn, float _fail);
+    bool openHand(aero::arm _arm);
 
-    bool openHand(aero::arm _arm, double _rad);
+    bool sendHand(aero::arm _arm, double _rad);
 
     void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
