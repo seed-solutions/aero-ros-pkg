@@ -157,8 +157,6 @@ namespace aero
 
     void setRobotStateToNamedTarget(std::string _move_group, std::string _target);
 
-    void setHand(aero::arm _arm, int _angle);// insert angle[deg] which is openhand's command degree
-
     void setHand(aero::arm _arm, double _radian);// insert actual joint angle[rad] from l,r_thumb_joint
 
     double getHand(aero::arm _arm);

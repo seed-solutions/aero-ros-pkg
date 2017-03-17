@@ -725,17 +725,6 @@ void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::strin
 {
   kinematic_state->setVariablePositions(getMoveGroup(_move_group).getNamedTargetValues(_target));
 }
-//////////////////////////////////////////////////
-
-void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, int _angle)
-{
-  std::string rl;
-  if (_arm == aero::arm::rarm) rl = "r";
-  else rl = "l";
-  float rad = _angle * M_PI / 180.0;
-  kinematic_state->setVariablePosition(rl + "_thumb_joint", rad);
-  kinematic_state->setVariablePosition(rl + "_indexbase_joint", -rad);
-}
 
 //////////////////////////////////////////////////
 
