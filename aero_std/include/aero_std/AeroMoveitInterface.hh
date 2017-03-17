@@ -99,15 +99,15 @@ namespace aero
     void sendResetManipPose(int _time_ms=3000);
     void getResetManipPose(std::map<aero::joint, double> &_map);
 
-    bool moveLifter(double _x, double _z, int _time_ms=0); // m
-    bool moveLifter(int _x, int _z, int _time_ms=0); // mm
-    bool moveLifterLocal(double _x, double _z, int _time_ms=0);
-    bool moveLifterLocal(int _x, int _z, int _time_ms=0);
+    bool sendLifter(double _x, double _z, int _time_ms=0); // m
+    bool sendLifter(int _x, int _z, int _time_ms=0); // mm
+    bool sendLifterLocal(double _x, double _z, int _time_ms=0);
+    bool sendLifterLocal(int _x, int _z, int _time_ms=0);
 
-    bool moveLifterAsync(double _x, double _z, int _time_ms=0); // m
-    bool moveLifterAsync(int _x, int _z, int _time_ms=0); // mm
-    bool moveLifterLocalAsync(double _x, double _z, int _time_ms=0);
-    bool moveLifterLocalAsync(int _x, int _z, int _time_ms=0);
+    bool sendLifterAsync(double _x, double _z, int _time_ms=0); // m
+    bool sendLifterAsync(int _x, int _z, int _time_ms=0); // mm
+    bool sendLifterLocalAsync(double _x, double _z, int _time_ms=0);
+    bool sendLifterLocalAsync(int _x, int _z, int _time_ms=0);
 
     // set waist position of kinametic_state
     void setLifter(double _x, double _z);

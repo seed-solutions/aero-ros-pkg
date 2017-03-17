@@ -256,12 +256,12 @@ void aero::interface::AeroMoveitInterface::getResetManipPose(std::map<aero::join
   setRobotStateVariables(save);  
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifter(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int _time_ms)
 {
-  return moveLifter(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return sendLifter(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifter(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_ms)
 {
 
   aero_startup::AeroTorsoController srv;
@@ -283,23 +283,23 @@ bool aero::interface::AeroMoveitInterface::moveLifter(int _x, int _z, int _time_
   return false;
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifterLocal(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterLocal(double _x, double _z, int _time_ms)
 {
-  return moveLifterLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return sendLifterLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifterLocal(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterLocal(int _x, int _z, int _time_ms)
 {
   std::vector<double> pos = getLifter();
-  return moveLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  return sendLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifterAsync(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterAsync(double _x, double _z, int _time_ms)
 {
-  return moveLifterAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return sendLifterAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifterAsync(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterAsync(int _x, int _z, int _time_ms)
 {
 
   aero_startup::AeroTorsoController srv;
@@ -320,15 +320,15 @@ bool aero::interface::AeroMoveitInterface::moveLifterAsync(int _x, int _z, int _
   return false;
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifterLocalAsync(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, double _z, int _time_ms)
 {
-  return moveLifterLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  return sendLifterLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::moveLifterLocalAsync(int _x, int _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, int _time_ms)
 {
   std::vector<double> pos = getLifter();
-  return moveLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  return sendLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
 void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
@@ -550,7 +550,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 
   if (_range == aero::ikrange::lifter) {
     std::vector<double> joint_values = getLifter();
-    if (!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
+    if (!sendLifterAsync(joint_values[0], joint_values[1], _time_ms))
       {
         ROS_INFO("move waist failed");
         return;
@@ -567,7 +567,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bo
 {
   if (_move_waist) {
     std::vector<double> joint_values = getLifter();
-    if(!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
+    if(!sendLifterAsync(joint_values[0], joint_values[1], _time_ms))
       {
       ROS_INFO("move waist failed");
       return;
