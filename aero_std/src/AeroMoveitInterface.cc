@@ -333,10 +333,7 @@ void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
   joint_values[1] = _z;
   kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
 }
-void aero::interface::AeroMoveitInterface::setLifter(int _x, int _z)
-{
-  setLifter(static_cast<double>(_x/1000.0), static_cast<double>(_z/1000.0));
-}
+
 
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {

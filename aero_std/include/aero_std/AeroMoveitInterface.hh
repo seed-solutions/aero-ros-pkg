@@ -110,7 +110,6 @@ namespace aero
 
     // set waist position of kinametic_state
     void setLifter(double _x, double _z);
-    void setLifter(int _x, int _z);
 
     Eigen::Vector3d getWaistPosition();
     std::vector<double> getLifter();
