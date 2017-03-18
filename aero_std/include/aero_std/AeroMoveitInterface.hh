@@ -192,6 +192,8 @@ namespace aero
 
     void lookAt_(double _x, double _y, double _z);
 
+    bool lifter_ik_(double _x, double _z);
+
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
     ros::ServiceClient interpolation_client_;
@@ -204,6 +206,7 @@ namespace aero
     ros::Subscriber joint_states_subscriber_;
     ros::Subscriber speech_listener_;
     ros::ServiceClient waist_service_;
+    ros::ServiceClient lifter_ik_service_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
     bool height_only_;

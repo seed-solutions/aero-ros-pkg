@@ -82,6 +82,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
 
+lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
+    ("/aero_torso_kinematics");
+
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
   ROS_INFO("----------------------------------------");
@@ -949,4 +952,23 @@ void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double 
   double pitch = 1.5708 + pitch_obj - theta;
 
   setNeck(0.0, pitch, yaw);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z)
+{
+
+  aero_startup::AeroTorsoController srv;
+  srv.request.x = _x;
+  srv.request.z = _z;
+  if (!lifter_ik_service_.call(srv)) {
+    ROS_ERROR("lifter ik failed service call");
+    return false;
+  }
+
+  if (srv.response.status == "success") {
+    return true;
+  }
+  return false;
+
 }
