@@ -360,6 +360,17 @@ std::vector<double> aero::interface::AeroMoveitInterface::getLifter()
   return joint_values;
 }
 
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendGraspIK(aero::GraspRequest &_grasp)
+{
+  if (!solveIKSequence(_grasp)) {
+    ROS_INFO("grasp ik failed");
+    return false;
+  }
+  sendSequence();
+}
+
+//////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
 {
   // save initial angles

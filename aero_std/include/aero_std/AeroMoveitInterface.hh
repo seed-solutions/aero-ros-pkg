@@ -116,6 +116,7 @@ namespace aero
     std::vector<double> getLifter();
 
     // for grasp
+    bool sendGraspIK(aero::GraspRequest &_grasp);
     bool solveIKSequence(aero::GraspRequest &_grasp);
     std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
 
