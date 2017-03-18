@@ -192,7 +192,7 @@ namespace aero
 
     void lookAt_(double _x, double _y, double _z);
 
-    bool lifter_ik_(double _x, double _z);
+    bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
