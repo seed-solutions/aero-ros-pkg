@@ -892,7 +892,7 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _
 /////////////////////////////////////////////////
 Eigen::Quaterniond aero::interface::AeroMoveitInterface::getEEFOrientation(aero::arm _arm, aero::eef _eef)
 {
-
+  updateLinkTransforms();
   std::string link = aero::armAndEEF2LinkName(_arm, _eef);
   Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(link).rotation();
   Eigen::Quaterniond vec(mat);
@@ -1066,25 +1066,22 @@ void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double 
   obj.x() = _x;
   obj.y() = _y;
   obj.z() = _z;
-  double eye_height = 0.2 + 0.35; // from body
+  double eye_height = 0.2; // from body
+  double b_to_n = 0.35;
 
   updateLinkTransforms();
-  std::string neck_link = "body_link";
-  Eigen::Vector3d pos_neck = kinematic_state->getGlobalLinkTransform(neck_link).translation();
-  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(neck_link).rotation();
-  Eigen::Quaterniond qua_neck(mat);
+  std::string body_link = "body_link";
+  Eigen::Vector3d pos_body = kinematic_state->getGlobalLinkTransform(body_link).translation();
+  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
+  Eigen::Quaterniond qua_body(mat);
 
-  Eigen::Vector3d pos_obj_rel = qua_neck.inverse() * (obj - pos_neck);
-
+  Eigen::Vector3d pos_obj_rel = qua_body.inverse() * (obj - pos_body) - Eigen::Vector3d{0.0, 0.0, b_to_n};
   double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
-
   double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
                         + pos_obj_rel.y() * pos_obj_rel.y()
                         + pos_obj_rel.z() * pos_obj_rel.z());
   double theta = acos(eye_height / dis_obj);
-
   double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
-
   double pitch = 1.5708 + pitch_obj - theta;
 
   setNeck(0.0, pitch, yaw);
