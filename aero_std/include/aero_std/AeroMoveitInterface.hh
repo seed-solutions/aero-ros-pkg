@@ -81,9 +81,9 @@ namespace aero
 
     bool plan(std::string _move_group);
     bool execute();
-    bool solveIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
-    bool solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
-    bool solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
+    bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
+    bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
+    bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
     void viewTrajectory();
     void setStartStateToCurrentState(std::string _move_group);
     bool move(std::string _move_group);

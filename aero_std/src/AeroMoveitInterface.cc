@@ -117,7 +117,7 @@ bool aero::interface::AeroMoveitInterface::move(std::string _move_group){
   return success;
 }
 
-bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link){
+bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link){
   const robot_state::JointModelGroup* jmg_tmp;
   bool lifter_ik = false;
 
@@ -169,14 +169,14 @@ bool aero::interface::AeroMoveitInterface::solveIK(std::string _move_group, geom
   return found_ik;
 }
 
-bool aero::interface::AeroMoveitInterface::solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link)
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link)
 {
-  return solveIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link);
+  return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link);
 }
 
-bool aero::interface::AeroMoveitInterface::solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef)
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef)
 {
-  return solveIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef));
+  return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef));
 }
 
 void aero::interface::AeroMoveitInterface::viewTrajectory(){
@@ -420,7 +420,7 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
 
   // ik with arm
   kinematic_state->setVariablePositions(_av_ini);
-  status = solveIK(_arm, aero::ikrange::arm, _pose, _eef_link);
+  status = setFromIK(_arm, aero::ikrange::arm, _pose, _eef_link);
   if (status) {
     getRobotStateVariables(_result);
     return aero::armAndRange2MoveGroup(_arm, _ik_range);
@@ -429,7 +429,7 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
 
   // ik with torso
   kinematic_state->setVariablePositions(_av_ini);
-  status = solveIK(_arm, aero::ikrange::torso, _pose, _eef_link);
+  status = setFromIK(_arm, aero::ikrange::torso, _pose, _eef_link);
   if (status) {
     getRobotStateVariables(_result);
     return aero::armAndRange2MoveGroup(_arm, _ik_range);
@@ -438,7 +438,7 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
 
   // ik with lifter
   kinematic_state->setVariablePositions(_av_ini);
-  status = solveIK(_arm, aero::ikrange::lifter, _pose, _eef_link);
+  status = setFromIK(_arm, aero::ikrange::lifter, _pose, _eef_link);
   if (status) {
     getRobotStateVariables(_result);
     return aero::armAndRange2MoveGroup(_arm, _ik_range);
