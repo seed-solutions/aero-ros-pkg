@@ -367,7 +367,7 @@ bool aero::interface::AeroMoveitInterface::sendGraspIK(aero::GraspRequest &_gras
     ROS_INFO("grasp ik failed");
     return false;
   }
-  sendSequence();
+  return sendSequence();
 }
 
 //////////////////////////////////////////////////
@@ -463,6 +463,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
     usleep(_msecs[i] * 1000);
     sleep(1);
   }
+  return true;
 }
 
 //////////////////////////////////////////////////
