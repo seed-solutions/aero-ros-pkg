@@ -5,6 +5,50 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   rarm("rarm"),rarm_with_torso("rarm_with_torso"),rarm_with_lifter("rarm_with_lifter"),
   lifter("lifter"),upper_body("upper_body"),torso("torso"),head("head")
 {
+  // publishers
+  speech_publisher_ = _nh.advertise<std_msgs::String>
+    ("/windows/voice", 1000);
+
+  display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>
+    ("/move_group/display_planned_path", 1, true);
+
+  angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>
+    ("/aero_controller/command", 1000);
+
+  look_at_publisher_ = _nh.advertise<geometry_msgs::Point>
+    ("/look_at/target", 1000);
+
+  speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
+    ("/settings/speach", 1000);
+
+  // subscribers
+  joint_states_subscriber_ = _nh.subscribe
+    ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
+
+  speech_listener_ = _nh.subscribe
+    ("/detected/speech/template",  1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
+
+  waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
+    ("/aero_torso_controller");
+
+  // service clients
+  hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
+    ("/aero_hand_controller");
+
+  joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
+    ("/aero_controller/get_joints");
+
+  interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
+    ("/aero_controller/interpolation");
+
+  activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
+    ("/look_at/set_tracking");
+
+  lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
+    ("/aero_torso_kinematics");
+
+
+
   // load robot model
   ROS_INFO("start loading robot model");
   robot_model_loader = robot_model_loader::RobotModelLoader(_rd);
@@ -38,13 +82,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   jmg_rarm_with_lifter_op = kinematic_model_op->getJointModelGroup("rarm_with_lifter");
   jmg_lifter = kinematic_model->getJointModelGroup("lifter");
 
-
-  display_publisher_ = _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
-  angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/command", 1000);
-  look_at_publisher_ = _nh.advertise<geometry_msgs::Point>("/look_at/target", 1000);
-
-  speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>("/settings/speach", 1000);
-
+  //variables
   planned_group_ = "";
   height_only_ = false;
   trajectory_ = std::vector<std::vector<double>>();
@@ -58,32 +96,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   tracking_mode_flag_ = false;
 
-  hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
-    ("/aero_hand_controller");
-
-  joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
-    ("/aero_controller/get_joints");
-
-  interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
-    ("/aero_controller/interpolation");
-
-  activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
-    ("/look_at/set_tracking");
-
-  speech_publisher_ = _nh.advertise<std_msgs::String>
-    ("/windows/voice", 1000);
-
-  joint_states_subscriber_ = _nh.subscribe
-    ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
-
-  speech_listener_ = _nh.subscribe
-    ("/detected/speech/template",  1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
-
-  waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
-    ("/aero_torso_controller");
-
-lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
-    ("/aero_torso_kinematics");
 
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
