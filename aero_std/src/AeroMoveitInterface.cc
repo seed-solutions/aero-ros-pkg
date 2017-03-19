@@ -551,7 +551,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero:
 
 //////////////////////////////////////////////////
 
-void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, bool _move_waist)
+void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_time_ms, _move_waist);
   usleep(_time_ms * 1000);
@@ -560,7 +560,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, bool _m
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist)
+void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
   usleep(_time_ms * 1000);
@@ -577,7 +577,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, 
 
 //////////////////////////////////////////////////
 
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bool _move_waist)
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist)
 {
 
   std::vector<double> av_mg;
@@ -585,7 +585,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bo
   std::vector<std::string> j_names;
   j_names = getMoveGroup("upper_body").getJointNames();
 
-  if (_move_waist)
+  if (_move_waist == aero::ikrange::lifter)
     {
       auto av_lif = getLifter();
       av_mg.reserve(av_mg.size() + 2);
@@ -601,10 +601,100 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, bo
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist)
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
 {
   setRobotStateVariables(_av_map);
   sendAngleVectorAsync(_time_ms, _move_waist);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter)
+{
+  if (!sendTrajectoryAsync(_trajectory, _times, _move_lifter)) return false;
+  int time = std::accumulate(_times.begin(), _times.end(), 0);
+  usleep(time * 1000);
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
+{
+  if (!sendTrajectoryAsync(_trajectory, _time_ms, _move_lifter)) return false;
+  usleep(_time_ms * 1000);
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter)
+{
+  if (_trajectory.size() != _times.size()) {
+    ROS_WARN("trajectory length[%d] doesnt match with times length[%d]",
+             static_cast<int>(_trajectory.size()), static_cast<int>(_times.size()));
+    return false;
+  }
+
+  std::vector<std::vector<double>> xzs;
+  if (_move_lifter == aero::ikrange::lifter) {// lifter ik check
+    xzs.reserve(static_cast<int>(_trajectory.size()));
+    for (auto point : _trajectory) {
+      setRobotStateVariables(point);
+      auto lif = getLifter();
+      std::vector<double> xz;
+      if (!lifter_ik_(lif[0], lif[1], xz)) {
+        ROS_WARN("lifter_ik failed");
+        return false;
+      }
+      xzs.push_back(xz);
+    }
+  }
+
+  //get trajectory
+  std::vector<std::vector<double>> tra;
+  tra.reserve(_trajectory.size());
+  for (auto point : _trajectory) {
+    setRobotStateVariables(point);
+    std::vector<double> av;
+    kinematic_state->copyJointGroupPositions("upper_body", av);
+    tra.push_back(av);
+  }
+
+  //get joint names
+  std::vector<std::string> j_names;
+  j_names = getMoveGroup("upper_body").getJointNames();
+
+  //add lifter to trajectory
+  if (_move_lifter == aero::ikrange::lifter) {
+    j_names.reserve(static_cast<int>(j_names.size()) + 2);
+    j_names.push_back("hip_joint");
+    j_names.push_back("knee_joint");
+    for (int i = 0; i < static_cast<int>(tra.size()); ++i) {
+      tra[i].reserve(static_cast<int>(tra[i].size()) + 2);
+      tra[i].push_back(xzs[i][0]);
+      tra[i].push_back(xzs[i][1]);
+    }
+  }
+
+  trajectory_msgs::JointTrajectory msg;
+  msg.points.resize(tra.size());
+  msg.joint_names.resize(j_names.size());
+  msg.joint_names = j_names;
+  int ms_total = 0;
+  for (int i = 0; i < static_cast<int>(tra.size()); ++i) {
+    msg.points[i].positions.resize(static_cast<int>(tra[i].size()));
+    msg.points[i].positions = tra[i];
+    ms_total += _times[i];
+    msg.points[i].time_from_start = ros::Duration(static_cast<int>(ms_total/1000000000L), ms_total % 1000000000L);
+  }
+  angle_vector_publisher_.publish(msg);
+  return true;
+}
+
+//////////////////////////////////////////////////
+      bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
+{
+  int num = static_cast<int>(_trajectory.size());
+  std::vector<double> times(num, _time_ms/num);
+  return sendTrajectoryAsync(_trajectory, times, _move_lifter);
 }
 
 //////////////////////////////////////////////////

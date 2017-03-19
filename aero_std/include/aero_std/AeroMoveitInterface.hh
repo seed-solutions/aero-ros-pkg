@@ -25,6 +25,7 @@
 
 namespace aero
 {
+  typedef std::vector<std::map<aero::joint, double>> trajectory;
   namespace interface
   {
   class AeroMoveitInterface
@@ -130,15 +131,23 @@ namespace aero
 
     void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
-    void sendAngleVector(int _time_ms, bool _move_waist=false); // all angles from kinematic_state is published
+    void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
 
-    void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
+    void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
 
     void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
-    void sendAngleVectorAsync(int _time_ms, bool _move_waist=false); // all angles from kinematic_state is published
+    void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
 
-    void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
+    void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+
+    bool sendTrajectory(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
 
     void setLookAt(double _x, double _y, double _z);
     void setLookAt(Eigen::Vector3d _target);
