@@ -484,7 +484,7 @@ bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
-  srv.request.command = "grasp" + std::to_string(_power);
+  srv.request.command = "grasp:" + std::to_string(_power);
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");
