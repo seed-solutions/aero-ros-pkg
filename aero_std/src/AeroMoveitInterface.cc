@@ -715,11 +715,55 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
 }
 
 //////////////////////////////////////////////////
-      bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
+bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
 {
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
   return sendTrajectoryAsync(_trajectory, times, _move_lifter);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
+{
+  setInterpolation(aero::interpolation::i_linear);
+
+  trajectory_msgs::JointTrajectory msg;
+  float time_from_start = 0.0;
+
+  msg.joint_names.push_back("hip_joint");
+  msg.joint_names.push_back("knee_joint");
+
+  std::vector<std::vector<double>> xzs;
+  xzs.reserve(static_cast<int>(_trajectory.size()));
+  for (auto point : _trajectory) {
+    std::vector<double> xz;
+    if (!lifter_ik_(point.first, point.second, xz)) {
+      ROS_WARN("lifter_ik failed");
+      return false;
+    }
+    xzs.push_back(std::vector<double>{xz[0], xz[1]});
+  }  
+
+  for (int i=0; i < static_cast<int>(_trajectory.size()); ++i) {
+    trajectory_msgs::JointTrajectoryPoint p;
+    p.positions.push_back(xzs[i][0]);
+    p.positions.push_back(xzs[i][1]);
+    time_from_start += _times[i] * 0.001; // interval
+    p.time_from_start = ros::Duration(time_from_start);
+    msg.points.push_back(p);
+  }
+
+  angle_vector_publisher_.publish(msg);
+
+  setInterpolation(aero::interpolation::i_constant);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
+{
+  int num = static_cast<int>(_trajectory.size());
+  std::vector<int> times(num, _time_ms/num);
+  sendLifterTrajectory(_trajectory, times);
 }
 
 //////////////////////////////////////////////////

@@ -154,6 +154,9 @@ namespace aero
 
     bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
 
+    bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+    bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
+
     void setLookAt(double _x, double _y, double _z);
     void setLookAt(Eigen::Vector3d _target);
     void setLookAt(Eigen::Vector3f _target);
