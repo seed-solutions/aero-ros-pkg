@@ -3,6 +3,11 @@
 using namespace aero;
 using namespace navigation;
 
+static const float radius = 0.076;
+static const float Radius = 0.2974535;
+// static const float max_velocity = 450.0;  // rpm * 10
+static const float max_velocity = 15.0;  // rpm
+
 //////////////////////////////////////////////////
 class AeroMoveBase::AeroMoveBaseImpl
 {
@@ -22,7 +27,7 @@ void AeroMoveBase::Init()
 {
   impl_.reset(new AeroMoveBase::AeroMoveBaseImpl());
 
-  ros_rate_ = 0.2;
+  ros_rate_ = 0.05;
   num_of_wheels_ = 4;
   wheel_names_ =
     {"can_front_l_wheel", "can_front_r_wheel",
@@ -55,22 +60,18 @@ pose AeroMoveBase::dX(std::vector<double> _vels, float _dt)
   if (_vels.size() != 4) return {0.0, 0.0, 0.0};
 
   std::vector<float> velocities = // signal positive to move forward positive
-    {-_vels[0], _vels[1], -_vels[2], _vels[3]};
+      {-_vels[0], _vels[1], -_vels[2], _vels[3]};
 
   float Vx =
-    0.25 * 0.5 *
-    (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
+      0.25 * 0.5 *
+      (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
   float Vy =
-    0.25 * 0.5 *
-    (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
-
-  static const float radius = 50.0;
-  static const float max_velocity = 450.0;
-  static const float Radius = 254.56;
+      0.25 * 0.5 *
+      (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
 
   return {Vx * 2*M_PI * radius * _dt,
-      Vy * 2*M_PI * radius * _dt,
-      max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300)};
+        Vy * 2*M_PI * radius * _dt,
+        max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300)};
 }
 
 //////////////////////////////////////////////////
@@ -86,61 +87,57 @@ AeroMoveBase::AeroMoveBaseImpl::~AeroMoveBaseImpl()
 //////////////////////////////////////////////////
 wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
 {
-  static const float max_velocity = 450.0; // rpm * 10
-
   // front_left and rear_right
   std::function<float(float, float)> lambda_vel1 =
-    [=](float x, float y)
-    {
-      float result;
-
-      if (x > 0 && y > 0)
+      [=](float x, float y)
       {
-	float theta = atan(y / x);
-	result = max_velocity * 4/M_PI * (0.25*M_PI - theta);
-      }
-      else if (y >= 0 && x <= 0)
-	result = -max_velocity;
-      else if (y <= 0 && x >= 0)
-	result = max_velocity;
-      else
-      {
-	float theta = atan(y / x) - M_PI;
-	result = max_velocity * 4/M_PI * (theta + 0.75*M_PI);
-      }
+        float result;
 
-      return result;
-    };
+        if (x > 0 && y > 0)
+        {
+          float theta = atan(y / x);
+          result = max_velocity * 4/M_PI * (0.25*M_PI - theta);
+        }
+        else if (y >= 0 && x <= 0)
+          result = -max_velocity;
+        else if (y <= 0 && x >= 0)
+          result = max_velocity;
+        else
+        {
+          float theta = atan(y / x) - M_PI;
+          result = max_velocity * 4/M_PI * (theta + 0.75*M_PI);
+        }
+
+        return result;
+      };
 
   // front_right and rear_left
   std::function<float(float, float)> lambda_vel2 =
-    [=](float x, float y)
-    {
-      float result;
-
-      if (x >= 0 && y >= 0)
-	result = max_velocity;
-      else if (y > 0 && x < 0)
+      [=](float x, float y)
       {
-	float theta = M_PI - atan(y / x);
-	result = max_velocity * 4/M_PI * (0.75*M_PI - theta);
-      }
-      else if (y < 0 && x > 0)
-      {
-	float theta = atan(y / x);
-	result = max_velocity * 4/M_PI * (theta + 0.25*M_PI);
-      }
-      else
-	result = -max_velocity;
+        float result;
 
-      return result;
-    };
+        if (x >= 0 && y >= 0)
+          result = max_velocity;
+        else if (y > 0 && x < 0)
+        {
+          float theta = M_PI - atan(y / x);
+          result = max_velocity * 4/M_PI * (0.75*M_PI - theta);
+        }
+        else if (y < 0 && x > 0)
+        {
+          float theta = atan(y / x);
+          result = max_velocity * 4/M_PI * (theta + 0.25*M_PI);
+        }
+        else
+          result = -max_velocity;
+
+        return result;
+      };
 
   std::vector<float> velocities =
-    {lambda_vel1(_x, _y), lambda_vel2(_x, _y),
-     lambda_vel2(_x, _y), lambda_vel1(_x ,_y)};
-
-  static const float radius = 50.0;
+      {lambda_vel1(_x, _y), lambda_vel2(_x, _y),
+       lambda_vel2(_x, _y), lambda_vel1(_x ,_y)};
 
   // the wheel velocities are velocities[i]
   // the omni wheel direction is in the 45[deg] direction of the wheel
@@ -149,17 +146,25 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
   // velocities[i]/sqrt(2) * 1/sqrt(2) = 0.5 * velocities[i]
   // there is four wheels so the velocities are averaged with 0.25
   float Vx =
-    0.25 * 0.5 *
-    (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
+    // 0.25 * 0.5 *
+    0.25 * sqrt(2.0) * 0.5 *
+      (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
   float Vy =
-    0.25 * 0.5 *
-    (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
+    // 0.25 * 0.5 *
+    0.25 * sqrt(2.0) * 0.5 *
+      (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
+
+  float distance = sqrt(_x * _x + _y * _y);  // m
+  float velocity_radian =
+    (sqrt(Vx * Vx + Vy * Vy) / 60.0) * 2.0 * M_PI;  // rpm -> rad/s
+  float wheel_travel = velocity_radian * radius;  // m/s
 
   wheels wheel_data;
   wheel_data.velocities = // move forward positive to signal positive
     {velocities[0], -velocities[1], velocities[2], -velocities[3]};
   wheel_data.time =
-    sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
+    distance / wheel_travel / 1.4;
+    // sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
   // * 60 is rpm -> rps
 
   return wheel_data;
@@ -168,21 +173,25 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
 //////////////////////////////////////////////////
 wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
 {
-  static const float max_velocity = 450.0;
-  static const float radius = 50.0;
-  static const float Radius = 254.56;
-
   wheels wheel_data;
 
   if (_theta >= 0)
     wheel_data.velocities =
-      {-max_velocity, -max_velocity, -max_velocity, -max_velocity};
+        {-max_velocity, -max_velocity, -max_velocity, -max_velocity};
   else
     wheel_data.velocities =
-      {max_velocity, max_velocity, max_velocity, max_velocity};
+        {max_velocity, max_velocity, max_velocity, max_velocity};
 
-  wheel_data.time =
-    300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
+  float velocity_radian =
+    (max_velocity / 60.0) * 2.0 * M_PI;  // rpm -> rad/s
+  float wheel_travel =
+    radius * velocity_radian;  // rad/s -> m/s
+  float turn_radius =
+    Radius * fabs(_theta);  // rad -> m
+
+  // wheel_data.time =
+  //     300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
+  wheel_data.time = turn_radius / wheel_travel;
 
   return wheel_data;
 }
@@ -191,10 +200,6 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
 wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
 {
   // Note : drift rotates at half the speed of Rotate
-
-  static const float max_velocity = 450.0;
-  static const float radius = 50.0;
-  static const float Radius = 254.56;
 
   wheels wheel_data;
 
@@ -211,7 +216,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
   // By using the two equations and eliminating v_theta,
   // time can be expressed as the following.
   float time = theta * 600 / (M_PI * radius * max_velocity) *
-    (x / sin(theta) + sqrt(2) * Radius);
+      (x / sin(theta) + sqrt(2) * Radius);
   if (time == 0)
   {
     ROS_ERROR("unexpected time = 0");
@@ -226,7 +231,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
   // the sided difference is equavalent to
   // +v_theta/2 on one side, and -v_theta/2 on the other.
   float v_theta =
-    2 * theta * sqrt(2) * Radius / (radius * time * M_PI) * 300;
+      2 * theta * sqrt(2) * Radius / (radius * time * M_PI) * 300;
   // The actual command to send is V-v_theta,
   // v_turn_wheel is backward positive
   float v_turn_wheel = v_theta - max_velocity;
@@ -235,23 +240,23 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
   {
     if (_x >= 0)
       wheel_data.velocities =
-	{-v_turn_wheel, -max_velocity,
-	 -v_turn_wheel, -max_velocity};
+          {-v_turn_wheel, -max_velocity,
+           -v_turn_wheel, -max_velocity};
     else
       wheel_data.velocities =
-	{-max_velocity, -v_turn_wheel,
-	 -max_velocity, -v_turn_wheel};
+          {-max_velocity, -v_turn_wheel,
+           -max_velocity, -v_turn_wheel};
   }
   else
   {
     if (_x <= 0)
       wheel_data.velocities =
-	{v_turn_wheel, max_velocity,
-	 v_turn_wheel, max_velocity};
+          {v_turn_wheel, max_velocity,
+                v_turn_wheel, max_velocity};
     else
       wheel_data.velocities =
-	{max_velocity, v_turn_wheel,
-	 max_velocity, v_turn_wheel};
+          {max_velocity, v_turn_wheel,
+           max_velocity, v_turn_wheel};
   }
   wheel_data.time = time;
 
