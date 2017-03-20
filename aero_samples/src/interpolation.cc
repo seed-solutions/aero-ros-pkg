@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   interface->sendAngleVector(angles, 5000);
   interface->sendResetManipPose();
 
-  // --- bezier ---
+  // --- sigmoid ---
   ROS_INFO("type sigmoid");
   interface->setInterpolation(aero::interpolation::i_sigmoid);
   sleep(1);
