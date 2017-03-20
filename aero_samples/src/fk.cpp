@@ -3,7 +3,7 @@
 int main(int argc, char **argv)
 {
   // init ros
-  ros::init(argc, argv, "fk_saple_node");
+  ros::init(argc, argv, "fk_sample_node");
   ros::NodeHandle nh;
   
   // init robot interface
@@ -23,9 +23,9 @@ int main(int argc, char **argv)
   ROS_INFO("left elbow moves from %d to %d", joint_angles[aero::joint::l_elbow], l_elbow_to);
 
 
-  interface->sendAngleVectorAsync(joint_angles, 2000);// send to robot
   ROS_INFO("moveing left elbow");
-  sleep(5);
+  interface->sendAngleVector(joint_angles, 2000);// send to robot
+  sleep(1);
 
 
   ROS_INFO("reseting robot pose");

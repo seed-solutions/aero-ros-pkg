@@ -4,7 +4,7 @@
 int main(int argc, char **argv)
 {
   // init ros
-  ros::init(argc, argv, "trajectory_lifter_saple_node");
+  ros::init(argc, argv, "trajectory_lifter_sample_node");
   ros::NodeHandle nh;
   
   // init robot interface
