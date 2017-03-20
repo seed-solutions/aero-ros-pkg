@@ -11,29 +11,29 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 add_definitions(-std=c++11)
 
-add_executable(minimum_sample_node src/minimum.cpp)
+add_executable(minimum_sample_node src/minimum.cc)
 target_link_libraries(minimum_sample_node ${catkin_LIBRARIES})
 
-add_executable(fk_sample_node src/fk.cpp)
+add_executable(fk_sample_node src/fk.cc)
 target_link_libraries(fk_sample_node ${catkin_LIBRARIES})
 
-add_executable(ik_sample_node src/ik.cpp)
+add_executable(ik_sample_node src/ik.cc)
 target_link_libraries(ik_sample_node ${catkin_LIBRARIES})
 
-add_executable(interpolation_sample_node src/interpolation.cpp)
+add_executable(interpolation_sample_node src/interpolation.cc)
 target_link_libraries(interpolation_sample_node ${catkin_LIBRARIES})
 
-add_executable(hand_sample_node src/hand.cpp)
+add_executable(hand_sample_node src/hand.cc)
 target_link_libraries(hand_sample_node ${catkin_LIBRARIES})
 
-add_executable(look_at_sample_node src/look_at.cpp)
+add_executable(look_at_sample_node src/look_at.cc)
 target_link_libraries(look_at_sample_node ${catkin_LIBRARIES})
 
-add_executable(top_grasp_sample_node src/top_grasp.cpp)
+add_executable(top_grasp_sample_node src/top_grasp.cc)
 target_link_libraries(top_grasp_sample_node ${catkin_LIBRARIES})
 
-add_executable(side_grasp_sample_node src/side_grasp.cpp)
+add_executable(side_grasp_sample_node src/side_grasp.cc)
 target_link_libraries(side_grasp_sample_node ${catkin_LIBRARIES})
 
-add_executable(trajectory_lifter_sample_node src/trajectory_lifter.cpp)
+add_executable(trajectory_lifter_sample_node src/trajectory_lifter.cc)
 target_link_libraries(trajectory_lifter_sample_node ${catkin_LIBRARIES})
