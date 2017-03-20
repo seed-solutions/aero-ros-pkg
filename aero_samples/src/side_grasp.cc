@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
   interface->openHand(req.arm);
 
-  if (interface->sendGraspIK(req)) {
+  if (interface->sendPickIK(req)) {
     ROS_INFO("success");
     interface->sendGrasp(req.arm);
     sleep(3);

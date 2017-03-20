@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   req.mid_ik_range = aero::ikrange::torso;
   req.end_ik_range = aero::ikrange::torso;
 
-  if (interface->sendGraspIK(req)) {
+  if (interface->sendPickIK(req)) {
     ROS_INFO("success");
     sleep(1);
     interface->sendGrasp(req.arm);
