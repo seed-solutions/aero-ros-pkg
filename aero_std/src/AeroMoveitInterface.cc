@@ -756,6 +756,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
   angle_vector_publisher_.publish(msg);
 
   setInterpolation(aero::interpolation::i_constant);
+  return true;
 }
 
 //////////////////////////////////////////////////
@@ -763,7 +764,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 {
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
-  sendLifterTrajectory(_trajectory, times);
+  return sendLifterTrajectory(_trajectory, times);
 }
 
 //////////////////////////////////////////////////
