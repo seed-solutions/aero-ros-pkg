@@ -114,7 +114,7 @@ namespace aero
     void setLifter(double _x, double _z);
 
     Eigen::Vector3d getWaistPosition();
-    std::vector<double> getLifter();
+    void getLifter(std::vector<double>& _xz);
 
     // for grasp
     bool sendGraspIK(aero::GraspRequest &_grasp);
@@ -141,11 +141,11 @@ namespace aero
 
     void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
 
-    bool sendTrajectory(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+    bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
 
     bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
 
-    bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+    bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
 
     bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
 

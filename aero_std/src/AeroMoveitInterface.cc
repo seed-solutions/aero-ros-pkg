@@ -290,7 +290,7 @@ bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_
   }
 
   if (srv.response.status == "success") {
-    setLifter(_x, _z);
+    setLifter(_x/1000.0, _z/1000.0);
     if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000);
     else usleep(_time_ms * 1000);
     return true;
@@ -305,7 +305,8 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocal(double _x, double _z,
 
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getLifter();
+  std::vector<double> pos;
+  getLifter(pos);
   return sendLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -342,7 +343,8 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, doubl
 
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos = getLifter();
+  std::vector<double> pos;
+  getLifter(pos);
   return sendLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
 }
 
@@ -365,11 +367,14 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
   return vec;
 }
 
-std::vector<double> aero::interface::AeroMoveitInterface::getLifter()
+void aero::interface::AeroMoveitInterface::getLifter(std::vector<double>& _xz)
 {
-  std::vector<double> joint_values;// size = 2
-  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
-  return joint_values;
+  _xz.reserve(2);
+  std::vector<double> tmp;
+  kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
+  ROS_INFO("%f %f", tmp[0], tmp[1]);
+  _xz[0] = tmp[0];
+  _xz[1] = tmp[1];
 }
 
 //////////////////////////////////////////////////
@@ -600,7 +605,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, ae
 
   if (_move_waist == aero::ikrange::lifter)
     {
-      auto av_lif = getLifter();
+      std::vector<double> av_lif;
+      getLifter(av_lif);
       av_mg.reserve(av_mg.size() + 2);
       av_mg.push_back(av_lif[0]);
       av_mg.push_back(av_lif[1]);
@@ -621,7 +627,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::j
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter)
+bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
 {
   if (!sendTrajectoryAsync(_trajectory, _times, _move_lifter)) return false;
   int time = std::accumulate(_times.begin(), _times.end(), 0);
@@ -638,7 +644,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<double> _times, aero::ikrange _move_lifter)
+bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
 {
   if (_trajectory.size() != _times.size()) {
     ROS_WARN("trajectory length[%d] doesnt match with times length[%d]",
@@ -651,13 +657,17 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     xzs.reserve(static_cast<int>(_trajectory.size()));
     for (auto point : _trajectory) {
       setRobotStateVariables(point);
-      auto lif = getLifter();
+      std::vector<double> lif;
+      getLifter(lif);
+      ROS_INFO("x:%f z:%f",lif[0],lif[1]);
       std::vector<double> xz;
       if (!lifter_ik_(lif[0], lif[1], xz)) {
         ROS_WARN("lifter_ik failed");
         return false;
       }
-      xzs.push_back(xz);
+      xzs.push_back(std::vector<double>{xz[0], xz[1]});
+      ROS_INFO("x:%f z:%f",lif[0],lif[1]);
+      ROS_INFO("hip:%f knee %f",&std::end(xzs)[0],&std::end(xzs)[1]);
     }
   }
 
@@ -686,7 +696,6 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
       tra[i].push_back(xzs[i][1]);
     }
   }
-
   trajectory_msgs::JointTrajectory msg;
   msg.points.resize(tra.size());
   msg.joint_names.resize(j_names.size());
@@ -696,7 +705,8 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     msg.points[i].positions.resize(static_cast<int>(tra[i].size()));
     msg.points[i].positions = tra[i];
     ms_total += _times[i];
-    msg.points[i].time_from_start = ros::Duration(static_cast<int>(ms_total/1000000000L), ms_total % 1000000000L);
+    ROS_INFO("ms_total %d", ms_total);
+    msg.points[i].time_from_start = ros::Duration(static_cast<int>(ms_total/1000), (ms_total % 1000) * 1000000);
   }
   angle_vector_publisher_.publish(msg);
   return true;
@@ -706,7 +716,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
       bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
 {
   int num = static_cast<int>(_trajectory.size());
-  std::vector<double> times(num, _time_ms/num);
+  std::vector<int> times(num, _time_ms/num);
   return sendTrajectoryAsync(_trajectory, times, _move_lifter);
 }
 
@@ -1092,8 +1102,8 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 {
 
   aero_startup::AeroTorsoController srv;
-  srv.request.x = _x;
-  srv.request.z = _z;
+  srv.request.x = static_cast<int>(_x * 1000);
+  srv.request.z = static_cast<int>(_z * 1000);
   if (!lifter_ik_service_.call(srv)) {
     ROS_ERROR("lifter ik failed service call");
     return false;
