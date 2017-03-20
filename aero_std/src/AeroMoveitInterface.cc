@@ -380,7 +380,7 @@ void aero::interface::AeroMoveitInterface::getLifter(std::vector<double>& _xz)
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendGraspIK(aero::GraspRequest &_grasp)
+bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp)
 {
   if (!solveIKSequence(_grasp)) {
     ROS_INFO("grasp ik failed");
