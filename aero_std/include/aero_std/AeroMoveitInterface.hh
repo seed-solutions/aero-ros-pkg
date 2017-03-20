@@ -14,6 +14,11 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 
+#include <actionlib/client/simple_action_client.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <move_base_msgs/MoveBaseFeedback.h>
+#include <move_base_msgs/MoveBaseResult.h>
+
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
 #include <aero_std/interpolation_type.h>
@@ -190,6 +195,9 @@ namespace aero
     std::string listen();
 
     void setNeck(double _r,double _p, double _y);
+
+    bool goPos(double _x, double _y, double _rad);
+
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -217,6 +225,7 @@ namespace aero
     ros::Subscriber speech_listener_;
     ros::ServiceClient waist_service_;
     ros::ServiceClient lifter_ik_service_;
+    actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
     bool height_only_;

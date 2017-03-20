@@ -47,7 +47,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_kinematics");
 
-
+  // action client
+  ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
+    ("/move_base/goal", true);
 
   // load robot model
   ROS_INFO("start loading robot model");
@@ -985,6 +987,34 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
   kinematic_state->setVariablePosition("neck_y_joint", _y);
 
   kinematic_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad)
+{
+  geometry_msgs::Point p;
+  p.x = _x;
+  p.y = _y;
+  p.z = 0;
+
+  geometry_msgs::Quaternion q;
+  q.x = sin(_rad);
+  q.y = 0;
+  q.z = 0;
+  q.w = cos(_rad);
+
+  geometry_msgs::Pose pose;
+  pose.position = p;
+  pose.orientation = q;
+
+  geometry_msgs::PoseStamped pstamp;
+  pstamp.pose = pose;
+
+  move_base_msgs::MoveBaseGoal goal;
+  goal.target_pose = pstamp;
+
+  ac_->sendGoal(goal);
+  return ac_->waitForResult(ros::Duration(5.0));
 }
 
 //////////////////////////////////////////////////
