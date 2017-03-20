@@ -14,6 +14,11 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 
+#include <actionlib/client/simple_action_client.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <move_base_msgs/MoveBaseFeedback.h>
+#include <move_base_msgs/MoveBaseResult.h>
+
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
 #include <aero_std/interpolation_type.h>
@@ -25,6 +30,7 @@
 
 namespace aero
 {
+  typedef std::vector<std::map<aero::joint, double>> trajectory;
   namespace interface
   {
   class AeroMoveitInterface
@@ -80,9 +86,9 @@ namespace aero
 
     bool plan(std::string _move_group);
     bool execute();
-    bool solveIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
-    bool solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
-    bool solveIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
+    bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
+    bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
+    bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
     void viewTrajectory();
     void setStartStateToCurrentState(std::string _move_group);
     bool move(std::string _move_group);
@@ -96,48 +102,62 @@ namespace aero
 
     //
     void setNamedTarget(std::string _move_group, std::string _target);
-    void resetManipPose(int _time_ms=0);
+    void sendResetManipPose(int _time_ms=3000);
+    void getResetManipPose(std::map<aero::joint, double> &_map);
 
-    bool moveLifter(double _x, double _z, int _time_ms=0); // m
-    bool moveLifter(int _x, int _z, int _time_ms=0); // mm
-    bool moveLifterLocal(double _x, double _z, int _time_ms=0);
-    bool moveLifterLocal(int _x, int _z, int _time_ms=0);
+    bool sendLifter(double _x, double _z, int _time_ms=0); // m
+    bool sendLifter(int _x, int _z, int _time_ms=0); // mm
+    bool sendLifterLocal(double _x, double _z, int _time_ms=0);
+    bool sendLifterLocal(int _x, int _z, int _time_ms=0);
 
-    bool moveLifterAsync(double _x, double _z, int _time_ms=0); // m
-    bool moveLifterAsync(int _x, int _z, int _time_ms=0); // mm
-    bool moveLifterLocalAsync(double _x, double _z, int _time_ms=0);
-    bool moveLifterLocalAsync(int _x, int _z, int _time_ms=0);
+    bool sendLifterAsync(double _x, double _z, int _time_ms=0); // m
+    bool sendLifterAsync(int _x, int _z, int _time_ms=0); // mm
+    bool sendLifterLocalAsync(double _x, double _z, int _time_ms=0);
+    bool sendLifterLocalAsync(int _x, int _z, int _time_ms=0);
 
     // set waist position of kinametic_state
     void setLifter(double _x, double _z);
-    void setLifter(int _x, int _z);
 
     Eigen::Vector3d getWaistPosition();
-    std::vector<double> getLifter();
+    void getLifter(std::vector<double>& _xz);
 
     // for grasp
+    bool sendGraspIK(aero::GraspRequest &_grasp);
     bool solveIKSequence(aero::GraspRequest &_grasp);
     std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
 
     bool sendSequence(std::vector<int> _msecs={2000, 1000});
 
-    bool openHand(aero::arm _arm, bool _yes);
+    bool sendGrasp(aero::arm _arm, int _power=100);
 
-    bool openHand(aero::arm _arm, bool _yes, float _warn, float _fail);
+    bool openHand(aero::arm _arm);
 
-    bool openHand(aero::arm _arm, double _rad);
+    bool sendHand(aero::arm _arm, double _rad);
 
     void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
-    void sendAngleVector(int _time_ms, bool _move_waist=false); // all angles from kinematic_state is published
+    void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
 
-    void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
+    void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
 
     void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
 
-    void sendAngleVectorAsync(int _time_ms, bool _move_waist=false); // all angles from kinematic_state is published
+    void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
 
-    void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, bool _move_waist=false);
+    void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+
+    bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+    bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
+    bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+    bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
 
     void setLookAt(double _x, double _y, double _z);
     void setLookAt(Eigen::Vector3d _target);
@@ -157,8 +177,6 @@ namespace aero
     void setRobotStateToCurrentState();
 
     void setRobotStateToNamedTarget(std::string _move_group, std::string _target);
-
-    void setHand(aero::arm _arm, int _angle);// insert angle[deg] which is openhand's command degree
 
     void setHand(aero::arm _arm, double _radian);// insert actual joint angle[rad] from l,r_thumb_joint
 
@@ -182,6 +200,9 @@ namespace aero
     std::string listen();
 
     void setNeck(double _r,double _p, double _y);
+
+    bool goPos(double _x, double _y, double _rad);
+
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -193,6 +214,8 @@ namespace aero
     void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
 
     void lookAt_(double _x, double _y, double _z);
+
+    bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
@@ -206,6 +229,8 @@ namespace aero
     ros::Subscriber joint_states_subscriber_;
     ros::Subscriber speech_listener_;
     ros::ServiceClient waist_service_;
+    ros::ServiceClient lifter_ik_service_;
+    actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
     bool height_only_;

@@ -74,7 +74,6 @@ namespace aero
 
     // compute object yaw from robot's center
     double yaw = atan2(_grasp.object_position.y(), _grasp.object_position.x());
-    ROS_INFO("yaw: %f", yaw);
 
     // object's distance
     double distance = sqrt(_grasp.object_position.y() * _grasp.object_position.y()

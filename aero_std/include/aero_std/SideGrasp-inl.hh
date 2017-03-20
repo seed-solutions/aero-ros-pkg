@@ -73,40 +73,69 @@ namespace aero
 
     result.eef = aero::eef::grasp;
 
-    Eigen::Quaternionf ini_rot = Eigen::Quaternionf(1.0, 0.0, 0.0, 0.0); //reset-pose
-    Eigen::Quaternionf mid_rot = ini_rot;
-    Eigen::Quaternionf end_rot = // rotate on axis Z by -M_PI/4 world
-      Eigen::Quaternionf(0.92388, 0.0, 0.0, -0.382683) * mid_rot;
+    // compute object yaw from robot's center
+    double yaw = atan2(_grasp.object_position.y(), _grasp.object_position.x());
+
+    // object's distance
+    double distance = sqrt(_grasp.object_position.y() * _grasp.object_position.y()
+                           + _grasp.object_position.x() * _grasp.object_position.x());
+    // compute desired yaw when object is in front of arm
+    double arm_y;
+    if (result.arm == aero::arm::rarm) arm_y = -0.2;
+    else arm_y = 0.2;
+    double des_yaw = asin(arm_y / distance);
+
+    // rotate object forward
+    Eigen::Vector3d obj_tmp = Eigen::Quaterniond(cos((-yaw + des_yaw)/2.0), 0.0, 0.0, sin((-yaw + des_yaw)/2.0)) * _grasp.object_position;
+
+
+
+    Eigen::Quaterniond ini_rot_front = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0); //reset-pose
+    Eigen::Quaterniond mid_rot_front = ini_rot_front;
+    Eigen::Quaterniond end_rot_front = // rotate on axis Z by -M_PI/4 world
+      Eigen::Quaterniond(0.92388, 0.0, 0.0, -0.382683) * mid_rot_front;
     if (result.arm == aero::arm::rarm) {
       //mid_rot = ini_rot;
-      end_rot = // rotate on axis Y by M_PI/4 world
-        Eigen::Quaternionf(0.92388, 0.0, 0.0, 0.382683) * mid_rot;
+      end_rot_front = // rotate on axis Y by M_PI/4 world
+        Eigen::Quaterniond(0.92388, 0.0, 0.0, 0.382683) * mid_rot_front;
     }
 
-    result.mid_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_mid + _grasp.default_offset_x_mid;
-    if (result.arm == aero::arm::larm) {
-      result.mid_pose.position.y = _grasp.object_position.y() + _grasp.default_offset_y_mid_left;
-    } else {
-      result.mid_pose.position.y = _grasp.object_position.y() - _grasp.default_offset_y_mid_left;
-    }
-    result.mid_pose.position.z = _grasp.object_position.z();
+    // compute pose in front of robot
+    Eigen::Vector3d mid_pos_front;
+    Eigen::Vector3d end_pos_front;
+
+    mid_pos_front.x() = obj_tmp.x() + _grasp.default_offset_x + _grasp.offset_x_mid + _grasp.default_offset_x_mid;
+    if (result.arm == aero::arm::larm) mid_pos_front.y() = obj_tmp.y() + _grasp.default_offset_y_mid_left;
+    else mid_pos_front.y() = obj_tmp.y() - _grasp.default_offset_y_mid_left;
+    mid_pos_front.z() = obj_tmp.z();
+
+    end_pos_front.x() = obj_tmp.x() + _grasp.default_offset_x + _grasp.offset_x_end;
+    if (result.arm == aero::arm::larm) end_pos_front.y() = obj_tmp.y() + _grasp.default_offset_y_end_left;
+    else end_pos_front.y() = obj_tmp.y() - _grasp.default_offset_y_end_left;
+    end_pos_front.z() = obj_tmp.z();
+
+
+    Eigen::Quaterniond rot_to_original(cos((yaw - des_yaw)/2.0), 0.0, 0.0, sin((yaw - des_yaw)/2.0));
+    Eigen::Vector3d mid_pos = rot_to_original * mid_pos_front;
+    Eigen::Vector3d end_pos = rot_to_original * end_pos_front;
+    Eigen::Quaterniond mid_rot = rot_to_original * mid_rot_front;
+    Eigen::Quaterniond end_rot = rot_to_original * end_rot_front;
+
+    result.mid_pose.position.x = mid_pos.x();
+    result.mid_pose.position.y = mid_pos.y();
+    result.mid_pose.position.z = mid_pos.z();
+    result.mid_pose.orientation.w = mid_rot.w();
     result.mid_pose.orientation.x = mid_rot.x();
     result.mid_pose.orientation.y = mid_rot.y();
     result.mid_pose.orientation.z = mid_rot.z();
-    result.mid_pose.orientation.w = mid_rot.w();
 
-    result.end_pose.position.x = _grasp.object_position.x() + _grasp.default_offset_x + _grasp.offset_x_end;
-    if (result.arm == aero::arm::larm) {
-    result.end_pose.position.y = _grasp.object_position.y() + _grasp.default_offset_y_end_left;
-    } else { 
-    result.end_pose.position.y = _grasp.object_position.y() - _grasp.default_offset_y_end_left;
-    }
-    result.end_pose.position.z = _grasp.object_position.z();
+    result.end_pose.position.x = end_pos.x();
+    result.end_pose.position.y = end_pos.y();
+    result.end_pose.position.z = end_pos.z();
+    result.end_pose.orientation.w = end_rot.w();
     result.end_pose.orientation.x = end_rot.x();
     result.end_pose.orientation.y = end_rot.y();
     result.end_pose.orientation.z = end_rot.z();
-    result.end_pose.orientation.w = end_rot.w();
-
     return result;
     
   };
