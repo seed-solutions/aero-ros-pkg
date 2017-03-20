@@ -723,7 +723,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
+bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
 {
   setInterpolation(aero::interpolation::i_linear);
 
@@ -760,11 +760,32 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
 {
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
-  return sendLifterTrajectory(_trajectory, times);
+  return sendLifterTrajectoryAsync(_trajectory, times);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
+{
+  if(!sendLifterTrajectoryAsync(_trajectory, _times)) return false;
+  else {
+    int time = std::accumulate(_times.begin(), _times.end(), 0);
+    usleep(time * 1000);
+    return true;
+  }
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
+{
+  if(!sendLifterTrajectoryAsync(_trajectory, _time_ms)) return false;
+  else {
+    usleep(_time_ms * 1000);
+    return true;
+  }
 }
 
 //////////////////////////////////////////////////
