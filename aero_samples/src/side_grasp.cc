@@ -1,6 +1,5 @@
 #include <aero_std/AeroMoveitInterface.hh>
 #include <aero_std/SideGrasp-inl.hh>
-#include <aero_std/ObjectFeatures.hh>
 
 int main(int argc, char **argv)
 {
@@ -10,8 +9,6 @@ int main(int argc, char **argv)
   
   // init robot interface
   aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
-  //initiate features
-  aero::vision::ObjectFeaturesPtr features(new aero::vision::ObjectFeatures(nh, interface));
   interface->sendResetManipPose();
   sleep(1);
 
@@ -29,8 +26,6 @@ int main(int argc, char **argv)
   req.mid_ik_range = aero::ikrange::torso;
   req.end_ik_range = aero::ikrange::torso;
 
-  features->setMarker(obj, 1);
-  features->setMarker(req.end_pose, 2);
 
   interface->openHand(req.arm);
 
