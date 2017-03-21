@@ -91,8 +91,10 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   trajectory_groups_ = std::vector<std::string>();
   joint_states_ = sensor_msgs::JointState();
 
-  lifter_thigh_link_ = 0.250;
-  lifter_foreleg_link_ = 0.250;
+  // lifter_thigh_link_ = 0.250;
+  // lifter_foreleg_link_ = 0.250;
+  lifter_thigh_link_ = 0.235;
+  lifter_foreleg_link_ = 0.235;
 
   detected_speech_ = "";
 
