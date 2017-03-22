@@ -820,15 +820,34 @@ bool AeroControllerNode::GraspControlCallback(
   mtx_upper_.lock();
   upper_.Hand_Script(_req.script[0], _req.script[1]);
   mtx_upper_.unlock();
-  usleep(2000 * 1000); // wait 2 seconds
+
+  // return if cancel script
+  if (_req.script[1] == 4)
+    return true;
+
+  usleep(3000 * 1000); // wait 3 seconds, must be 3!
   mtx_upper_.lock();
   upper_.update_position();
   std::vector<int16_t> upper_stroke_vector_ret =
     upper_.get_actual_stroke_vector();
   mtx_upper_.unlock();
+
+  // get lower for angle conversion only (update not necessary)
+  mtx_lower_.lock();
+  std::vector<int16_t> lower_stroke_vector_ret =
+    lower_.get_actual_stroke_vector();
+  mtx_lower_.unlock();
+  upper_stroke_vector_ret.insert(upper_stroke_vector_ret.end(),
+      lower_stroke_vector_ret.begin(), lower_stroke_vector_ret.end());
+
+  // convert strokes to angles
+  std::vector<double> upper_angles(upper_.get_number_of_angle_joints()
+      + lower_.get_number_of_angle_joints());
+  common::Stroke2Angle(upper_angles, upper_stroke_vector_ret);
+
   _res.angles.resize(2);
-  _res.angles[0] = upper_stroke_vector_ret[13];
-  _res.angles[1] = upper_stroke_vector_ret[27];
+  _res.angles[0] = upper_angles[13];
+  _res.angles[1] = upper_angles[27];
 
   return true;
 }

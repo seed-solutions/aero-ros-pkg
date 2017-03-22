@@ -12,13 +12,45 @@
 ros::ServiceClient client;
 ros::ServiceClient g_client;
 
-int executing_flg_left = 1;
-int executing_flg_right = 1;
+// int executing_flg_left = 1;
+// int executing_flg_right = 1;
+
+void GraspAngle(std::string hand, float larm_angle, float rarm_angle)
+{
+  aero_startup::AeroSendJoints srv;
+  if (hand == "both") {
+    srv.request.joint_names = {"l_thumb_joint", "r_thumb_joint"};
+    srv.request.points.positions.resize(2);
+    srv.request.points.positions[0] = larm_angle * M_PI / 180;
+    srv.request.points.positions[1] = rarm_angle * M_PI / 180;
+  } else if (hand == "left") {
+    // if (executing_flg_left == 1) {
+    //   g_srv.request.script = {Left, cancel};
+    //   g_srv.request.power = (100 << 8) + 30;
+    //   g_client.call(g_srv);
+    //   executing_flg_left= 0;
+    // }
+    srv.request.joint_names = {"l_thumb_joint"};
+    srv.request.points.positions.resize(1);
+    srv.request.points.positions[0] = larm_angle * M_PI / 180;
+  } else if (hand == "right") {
+    // if (executing_flg_right == 1) {
+    //   g_srv.request.script = {Right, cancel};
+    //   g_srv.request.power = (100 << 8) + 30;
+    //   g_client.call(g_srv);
+    //   executing_flg_right = 0;
+    // }
+    srv.request.joint_names = {"r_thumb_joint"};
+    srv.request.points.positions.resize(1);
+    srv.request.points.positions[0] = rarm_angle * M_PI / 180;
+  }
+  srv.request.points.time_from_start = ros::Duration(0.5);
+  client.call(srv);
+};
 
 bool HandControl(aero_startup::AeroHandController::Request &req,
 		 aero_startup::AeroHandController::Response &res)
 {
-  aero_startup::AeroSendJoints srv;
   aero_startup::AeroGraspController g_srv;
 
   std::string cmd = req.command;
@@ -31,12 +63,15 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
   }
 
   if (cmd == "grasp") {
+    // because grasp is really really slow, first grasp-angle
+    GraspAngle(req.hand, 0.0, 0.0);
+
     if (req.hand == "left") {
       g_srv.request.script = {Left, grasp};
-      executing_flg_left = 1; //executing_grasp_script
+      // executing_flg_left = 1; //executing_grasp_script
     } else if (req.hand == "right") {
       g_srv.request.script = {Right, grasp};
-      executing_flg_right = 1; //executing_grasp_script
+      // executing_flg_right = 1; //executing_grasp_script
     }
 
     if (power != "")
@@ -48,10 +83,18 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     std::string status_msg = "grasp success";
     if (req.hand == "left") {
       if (g_srv.response.angles[0] < req.thre_warn) status_msg = "grasp bad";
-      if (g_srv.response.angles[1] > req.thre_fail) status_msg = "grasp failed";
+      if (g_srv.response.angles[0] > req.thre_fail) status_msg = "grasp failed";
+      // cancel grasp script
+      g_srv.request.script = {Left, cancel};
+      g_srv.request.power = (100 << 8) + 30;
+      g_client.call(g_srv);
     } else if (req.hand == "right") {
       if (g_srv.response.angles[1] > -req.thre_warn) status_msg = "grasp bad";
       if (g_srv.response.angles[1] < -req.thre_fail) status_msg = "grasp failed";
+      // cancel grasp script
+      g_srv.request.script = {Right, cancel};
+      g_srv.request.power = (100 << 8) + 30;
+      g_client.call(g_srv);
     }
 
     res.status = status_msg;
@@ -60,10 +103,10 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
   else if (cmd == "ungrasp") {
     if (req.hand == "left") {
       g_srv.request.script = {Left, ungrasp};
-      executing_flg_left = 0;
+      // executing_flg_left = 0;
     } else if (req.hand == "right") {
       g_srv.request.script = {Right, ungrasp};
-      executing_flg_right = 0;
+      // executing_flg_right = 0;
     }
     g_srv.request.power = (100 << 8) + 30;
     g_client.call(g_srv);
@@ -71,34 +114,7 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
   }
 
   else if (cmd == "grasp-angle") {
-    if (req.hand == "both") {
-      srv.request.joint_names = {"l_thumb_joint", "r_thumb_joint"};
-      srv.request.points.positions.resize(2);
-      srv.request.points.positions[0] = req.larm_angle * M_PI / 180;
-      srv.request.points.positions[1] = req.rarm_angle * M_PI / 180;
-    } else if (req.hand == "left") {
-      if (executing_flg_left == 1) {
-        g_srv.request.script = {Left, cancel};
-        g_srv.request.power = (100 << 8) + 30;
-        g_client.call(g_srv);
-        executing_flg_left= 0;
-      }
-      srv.request.joint_names = {"l_thumb_joint"};
-      srv.request.points.positions.resize(1);
-      srv.request.points.positions[0] = req.larm_angle * M_PI / 180;
-    } else if (req.hand == "right") {
-      if (executing_flg_right == 1) {
-        g_srv.request.script = {Right, cancel};
-        g_srv.request.power = (100 << 8) + 30;
-        g_client.call(g_srv);
-        executing_flg_right = 0;
-      }
-      srv.request.joint_names = {"r_thumb_joint"};
-      srv.request.points.positions.resize(1);
-      srv.request.points.positions[0] = req.rarm_angle * M_PI / 180;
-    }
-    srv.request.points.time_from_start = ros::Duration(0.5);
-    client.call(srv);
+    GraspAngle(req.hand, req.larm_angle, req.rarm_angle);
     res.status = "grasp-angle success";
   }
 
