@@ -48,6 +48,14 @@ else()
   set(FOUND_OpenCV 1)
 endif()
 
+include(CheckIncludeFileCXX)
+check_include_file_cxx(opencv2/saliency.hpp FOUND_OpenCV_CONTRIB)
+if(NOT FOUND_OpenCV_CONTRIB)
+  message(WARNING "opencv contrib not found, disabled")
+else()
+  message(STATUS "found opencv contrib")
+endif()
+
 # xtion examples
 
 add_executable(points_sample
@@ -71,7 +79,7 @@ add_executable(image_sample
 target_link_libraries(image_sample
   ${catkin_LIBRARIES})
 
-if (FOUND_OpenCV)
+if (FOUND_OpenCV AND FOUND_OpenCV_CONTRIB)
   add_executable(image_centers_sample
     xtion/samples/image_centers.cc
     xtion/src/XtionInterface.cc
