@@ -18,11 +18,10 @@ namespace aero
 
   public: TopGrasp() :
     arm(aero::arm::either), object_position({0.0, 0.0, 0.0}), height(0.0),
-    offset_z_mid(0.0),offset_x_mid(0.0),
-    offset_z_end(0.0),offset_x_end(0.0),
+    offset_z_mid(0.0),offset_x_mid(-0.05),
     default_offset_z(0.0), default_offset_x(0.0),
     default_offset_x_mid(0.0),default_offset_z_mid(0.0),
-    maximum_grasp_width(0.15) {}
+    maximum_grasp_width(0.0) {}
     
     // arm to grasp object, "left" or "right" or "either"
   public: aero::arm arm;
@@ -96,7 +95,7 @@ namespace aero
     Eigen::Quaterniond ini_rot_front = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0); //reset-pose
     Eigen::Quaterniond mid_rot_front =
       Eigen::Quaterniond(0.707107, 0.707107, 0.0, 0.0) * ini_rot_front;
-    Eigen::Quaterniond end_rot_front = // rotate on axis Y by -M_PI/4 world
+    Eigen::Quaterniond end_rot_front = // rotate on axis Y by M_PI/4 world
       Eigen::Quaterniond(0.92388, 0.0, 0.382683, 0.0) * mid_rot_front;
     if (result.arm == aero::arm::rarm) {
       mid_rot_front =
