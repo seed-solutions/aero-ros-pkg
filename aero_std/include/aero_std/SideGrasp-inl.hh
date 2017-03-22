@@ -100,6 +100,12 @@ namespace aero
         Eigen::Quaterniond(0.92388, 0.0, 0.0, 0.382683) * mid_rot_front;
     }
 
+    if (_grasp.object_position.z() < 0.6) { // lower object is hard to grasp
+      Eigen::Quaterniond rot_y_20(Eigen::Matrix3d(Eigen::AngleAxisd(M_PI/9.0, Eigen::Vector3d::UnitY())));
+      mid_rot_front = rot_y_20 * mid_rot_front;
+      end_rot_front = rot_y_20 * end_rot_front;
+    }
+
     // compute pose in front of robot
     Eigen::Vector3d mid_pos_front;
     Eigen::Vector3d end_pos_front;
