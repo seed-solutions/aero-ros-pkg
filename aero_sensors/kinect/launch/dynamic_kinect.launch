@@ -1,0 +1,6 @@
+<launch>
+  <node name="dynamic_kinect_frame_publisher" pkg="aero_sensors"
+        type="dynamic_kinect_frame_publisher" output="screen"/>
+  <node name="dynamic_kinect_controller" pkg="aero_sensors"
+        type="dynamic_kinect_controller.py" output="screen"/>
+</launch>
