@@ -430,8 +430,8 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
   ROS_INFO("making trajectory");
   aero::trajectory trajectory;
   std::vector<int> times;
-  int mid_time = 5000;
-  int end_time = 10000;
+  int mid_time = 4000;
+  int end_time = 2000;
   int num = 5;
   trajectory.reserve(num+1);
   times.reserve(num+1);
@@ -593,13 +593,17 @@ bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
   srv.request.command = "grasp:" + std::to_string(_power);
+  srv.request.thre_warn = -0.9;
+  srv.request.thre_fail = 0.0;
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");
     return false;
   }
 
-  if (srv.response.status.find("success") != std::string::npos) {
+  if (srv.response.status.find("success") != std::string::npos || 
+      srv.response.status.find("bad") != std::string::npos) {
+    ROS_INFO("%s", srv.response.status.c_str());
     return true;
   }
 
