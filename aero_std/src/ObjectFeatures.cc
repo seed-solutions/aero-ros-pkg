@@ -24,7 +24,7 @@ Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
 {
 
   interface_->setRobotStateToCurrentState();
-
+  interface_->updateLinkTransforms();
   Eigen::Vector3d p_pos = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).translation();
   Eigen::Matrix3d mat = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).rotation();
   Eigen::Quaterniond p_qua(mat);
