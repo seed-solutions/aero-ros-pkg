@@ -48,7 +48,7 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
     std::string status_msg = "grasp success";
     if (req.hand == "left") {
       if (g_srv.response.angles[0] < req.thre_warn) status_msg = "grasp bad";
-      if (g_srv.response.angles[1] > req.thre_fail) status_msg = "grasp failed";
+      if (g_srv.response.angles[0] > req.thre_fail) status_msg = "grasp failed";
     } else if (req.hand == "right") {
       if (g_srv.response.angles[1] > -req.thre_warn) status_msg = "grasp bad";
       if (g_srv.response.angles[1] < -req.thre_fail) status_msg = "grasp failed";
