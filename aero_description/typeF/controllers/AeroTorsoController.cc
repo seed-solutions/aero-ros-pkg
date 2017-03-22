@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <aero_startup/AeroTorsoController.h>
+#include <aero_startup/AeroSendJoints.h>
 
 //static const double link1_length = 250.0;
 //static const double link2_length = 250.0;
@@ -11,12 +12,8 @@ static const double x_origin = 0.0;
 static const double z_origin = 470.0;
 static const double stroke_per_sec = 20.0; // mm/sec
 
-double x_now;
-double z_now;
-double stroke_x_now;
-double stroke_z_now;
-
 ros::Publisher pub;
+ros::ServiceClient get_joints;
 
 float LegTable(float _angle);
 
@@ -88,6 +85,19 @@ bool TorsoControl(aero_startup::AeroTorsoController::Request &req,
 
   int time_ms = 0; // used if time specified mode
 
+  // update x_now and z_now
+  aero_startup::AeroSendJoints srv;
+  srv.request.reset_status = false;
+  get_joints.call(srv);
+  float hip_ref = srv.response.points.positions.at(29);
+  float knee_ref = srv.response.points.positions.at(30);
+  float x_now =
+    link1_length * sin(hip_ref) - link2_length * sin(knee_ref - hip_ref);
+  float z_now =
+    link1_length * cos(hip_ref) + link2_length * cos(knee_ref - hip_ref);
+  float stroke_x_now = LegTable(180.0 / M_PI * knee_ref);
+  float stroke_z_now = LegTable(180.0 / M_PI * (knee_ref - hip_ref));
+
   if (req.coordinate == "world") {
     goal_position_x = x_origin + req.x;
     goal_position_z = z_origin + req.z;
@@ -152,14 +162,9 @@ bool TorsoControl(aero_startup::AeroTorsoController::Request &req,
     res.time_sec = std::max(fabs(stroke_x_now - goal_stroke_x),
         fabs(stroke_z_now - goal_stroke_z)) / stroke_per_sec + 0.5;
 
-  x_now = goal_position_x;
-  z_now = goal_position_z;
-  stroke_x_now = goal_stroke_x;
-  stroke_z_now = goal_stroke_z;
-
   res.status = "success";
-  res.x = x_now - x_origin;
-  res.z = z_now - z_origin;
+  res.x = goal_position_x - x_origin;
+  res.z = goal_position_z - z_origin;
   return true;
 };
 
@@ -186,16 +191,14 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "aero_torso_controller");
   ros::NodeHandle nh;
 
-  x_now = 0.0;
-  z_now = z_origin;
-
-  stroke_x_now = LegTable(0.0);
-  stroke_z_now = LegTable(0.0);
-
   ros::ServiceServer service = nh.advertiseService(
       "/aero_torso_controller", TorsoControl);
   ros::ServiceServer kinematics_service = nh.advertiseService(
       "/aero_torso_kinematics", TorsoKinematics);
+
+  get_joints = nh.serviceClient<aero_startup::AeroSendJoints>(
+      "/aero_controller/get_joints");
+
   pub = nh.advertise<trajectory_msgs::JointTrajectory>(
       "/aero_controller/command", 100);
 
