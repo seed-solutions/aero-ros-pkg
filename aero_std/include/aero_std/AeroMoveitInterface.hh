@@ -126,7 +126,7 @@ namespace aero
     bool solveIKSequence(aero::GraspRequest &_grasp);
     std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
 
-    bool sendSequence(std::vector<int> _msecs={2000, 1000});
+    bool sendSequence(std::vector<int> _msecs={5000, 5000});
 
     bool sendGrasp(aero::arm _arm, int _power=100);
 
@@ -230,6 +230,7 @@ namespace aero
     ros::Subscriber speech_listener_;
     ros::ServiceClient waist_service_;
     ros::ServiceClient lifter_ik_service_;
+    ros::ServiceClient send_angle_service_;
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;

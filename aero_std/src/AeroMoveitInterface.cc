@@ -47,6 +47,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_kinematics");
 
+  send_angle_service_ = _nh.serviceClient<aero_startup::AeroSendJoints>
+    ("/aero_controller/send_joints");
+
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
     ("/move_base/goal", true);
@@ -262,7 +265,24 @@ void aero::interface::AeroMoveitInterface::setNamedTarget(std::string _move_grou
 void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 {
   setRobotStateToNamedTarget("upper_body", "reset-pose");
-  sendAngleVectorAsync_("upper_body", _time_ms);
+
+  std::vector<std::string> j_names;
+  j_names = getMoveGroup("upper_body").getJointNames();
+
+  std::vector<double> av_mg;
+  kinematic_state->copyJointGroupPositions("upper_body", av_mg);
+
+  aero_startup::AeroSendJoints srv;
+  srv.request.joint_names = j_names;
+  srv.request.points.positions.resize(j_names.size());
+  srv.request.points.positions = av_mg;
+  srv.request.points.time_from_start = ros::Duration(_time_ms * 0.001);
+
+  if (!send_angle_service_.call(srv)) {
+    ROS_ERROR("sendJoints failed service call");
+    return;
+  }
+
   usleep(_time_ms * 1000);
 }
 
@@ -376,7 +396,6 @@ void aero::interface::AeroMoveitInterface::getLifter(std::vector<double>& _xz)
   _xz.reserve(2);
   std::vector<double> tmp;
   kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
-  ROS_INFO("%f %f", tmp[0], tmp[1]);
   _xz[0] = tmp[0];
   _xz[1] = tmp[1];
 }
@@ -384,11 +403,91 @@ void aero::interface::AeroMoveitInterface::getLifter(std::vector<double>& _xz)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp)
 {
-  if (!solveIKSequence(_grasp)) {
-    ROS_INFO("grasp ik failed");
+  // save initial angles
+  std::map<aero::joint, double> av_ini;
+  getRobotStateVariables(av_ini);
+
+  std::map<aero::joint, double> av_mid,av_end;
+
+  ROS_INFO("solving IK");
+  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, _grasp.mid_pose, _grasp.eef)) {
+    ROS_INFO("mid ik failed");
+    setRobotStateVariables(av_ini);
     return false;
   }
-  return sendSequence();
+  getRobotStateVariables(av_mid);//save mid
+
+
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, _grasp.end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_end);//save end
+
+  ROS_INFO("grasping IKs succeeded");
+
+  ROS_INFO("making trajectory");
+  aero::trajectory trajectory;
+  std::vector<int> times;
+  int mid_time = 5000;
+  int end_time = 10000;
+  int num = 5;
+  trajectory.reserve(num+1);
+  times.reserve(num+1);
+  trajectory.push_back(av_mid);
+  times.push_back(mid_time);
+
+  setRobotStateVariables(av_mid);
+  geometry_msgs::Pose tmp, diff;
+  tmp = _grasp.mid_pose;
+  diff.position.x = (_grasp.end_pose.position.x - _grasp.mid_pose.position.x) / num;
+  diff.position.y = (_grasp.end_pose.position.y - _grasp.mid_pose.position.y) / num;
+  diff.position.z = (_grasp.end_pose.position.z - _grasp.mid_pose.position.z) / num;
+  Eigen::Quaterniond qua_mid{_grasp.mid_pose.orientation.w,
+      _grasp.mid_pose.orientation.x ,_grasp.mid_pose.orientation.y ,_grasp.mid_pose.orientation.z};
+  Eigen::Quaterniond qua_end{_grasp.end_pose.orientation.w,
+      _grasp.end_pose.orientation.x ,_grasp.end_pose.orientation.y ,_grasp.end_pose.orientation.z};
+  int last_solved_num = -1;
+  ROS_INFO("mid pose %f %f %f, %f %f %f %f",
+           _grasp.mid_pose.position.x ,_grasp.mid_pose.position.y ,_grasp.mid_pose.position.z
+           ,_grasp.mid_pose.orientation.w,_grasp.mid_pose.orientation.x ,_grasp.mid_pose.orientation.y ,_grasp.mid_pose.orientation.z);
+  for (int i=0; i < num - 1; ++i) {
+    tmp.position.x += diff.position.x;
+    tmp.position.y += diff.position.y;
+    tmp.position.z += diff.position.z;
+    Eigen::Quaterniond qua_path = qua_mid.slerp( static_cast<double>(i+1)/num, qua_end);
+    tmp.orientation.w = qua_path.w();
+    tmp.orientation.x = qua_path.x();
+    tmp.orientation.y = qua_path.y();
+    tmp.orientation.z = qua_path.z();
+
+    ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
+             tmp.position.x ,tmp.position.y ,tmp.position.z
+             ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
+
+    if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
+    std::map<aero::joint, double> av_inner;
+    getRobotStateVariables(av_inner);
+    trajectory.push_back(av_inner);
+    times.push_back((end_time / num) * (i - last_solved_num));
+    last_solved_num = i;
+  }
+
+  trajectory.push_back(av_end);
+  times.push_back((end_time / num) * (4 - last_solved_num));
+  ROS_INFO("end pose %f %f %f, %f %f %f %f",
+           _grasp.end_pose.position.x ,_grasp.end_pose.position.y ,_grasp.end_pose.position.z
+           ,_grasp.end_pose.orientation.w,_grasp.end_pose.orientation.x ,_grasp.end_pose.orientation.y ,_grasp.end_pose.orientation.z);
+
+  ROS_INFO("trajectory: %d relay points", static_cast<int>(times.size()) - 2);
+
+
+  openHand(_grasp.arm);
+  sleep(1);
+
+
+  return sendTrajectory(trajectory, times, _grasp.end_ik_range);;
 }
 
 //////////////////////////////////////////////////
@@ -663,15 +762,12 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
       setRobotStateVariables(point);
       std::vector<double> lif;
       getLifter(lif);
-      ROS_INFO("x:%f z:%f",lif[0],lif[1]);
       std::vector<double> xz;
       if (!lifter_ik_(lif[0], lif[1], xz)) {
         ROS_WARN("lifter_ik failed");
         return false;
       }
       xzs.push_back(std::vector<double>{xz[0], xz[1]});
-      ROS_INFO("x:%f z:%f",lif[0],lif[1]);
-      ROS_INFO("hip:%f knee %f",&std::end(xzs)[0],&std::end(xzs)[1]);
     }
   }
 
@@ -710,7 +806,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     msg.points[i].positions = tra[i];
     ms_total += _times[i];
     ROS_INFO("ms_total %d", ms_total);
-    msg.points[i].time_from_start = ros::Duration(static_cast<int>(ms_total/1000), (ms_total % 1000) * 1000000);
+    msg.points[i].time_from_start = ros::Duration(ms_total * 0.001);
   }
   angle_vector_publisher_.publish(msg);
   return true;
@@ -924,7 +1020,7 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 
   double hip = srv.response.points.positions[static_cast<int>(hip_itr - srv.response.joint_names.begin())];
   double knee = srv.response.points.positions[static_cast<int>(knee_itr - srv.response.joint_names.begin())];
-  double x = lifter_foreleg_link_ * sin(knee - hip)
+  double x = -lifter_foreleg_link_ * sin(knee - hip)
     + lifter_thigh_link_ * sin(hip);
   double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
     + lifter_thigh_link_ * (cos(hip) - 1.0);
