@@ -28,6 +28,8 @@
 #include <std_msgs/String.h>
 #include <std_srvs/SetBool.h>
 
+#include <thread>
+
 namespace aero
 {
   typedef std::vector<std::map<aero::joint, double>> trajectory;
@@ -123,6 +125,7 @@ namespace aero
 
     // for grasp
     bool sendPickIK(aero::GraspRequest &_grasp);
+    bool sendPlaceIK(aero::GraspRequest &_grasp, double _push_height=0.03);
     bool solveIKSequence(aero::GraspRequest &_grasp);
     std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
 
@@ -145,6 +148,8 @@ namespace aero
     void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
 
     void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+
+    void waitSendAngleVectorAsync();
 
     bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
 
@@ -242,6 +247,9 @@ namespace aero
     double lifter_foreleg_link_;// lifter's lower link
     std::string detected_speech_;
     bool tracking_mode_flag_;
+    std::thread send_angle_thread_;
+    bool is_thread_joined_;
+    aero_startup::AeroSendJoints send_joints_srv_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }
