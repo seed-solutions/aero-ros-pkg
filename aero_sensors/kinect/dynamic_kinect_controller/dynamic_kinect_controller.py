@@ -43,7 +43,7 @@ class position_callback(threading.Thread):
 
     def run(self):
 
-        while True:
+        while not rospy.is_shutdown():
 
             mutex.acquire()
             try:
