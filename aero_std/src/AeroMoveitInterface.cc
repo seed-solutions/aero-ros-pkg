@@ -469,6 +469,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
+    if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
     trajectory.push_back(av_inner);
     times.push_back((end_time / num) * (i - last_solved_num));
     last_solved_num = i;
@@ -537,8 +538,8 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   aero::trajectory trajectory;
   std::vector<int> times;
   int mid_time = 4000;
-  int end_time = 10000;
-  int place_time = 10000;
+  int end_time = 2000;
+  int place_time = 1000;
   int num = 5;
   trajectory.reserve(num+1);
   times.reserve(num+1);
@@ -576,6 +577,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
+    if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
     trajectory.push_back(av_inner);
     times.push_back((end_time / num) * (i - last_solved_num));
     last_solved_num = i;
@@ -1452,4 +1454,16 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
   }
   return false;
 
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end)
+{
+  for (auto it=_path.begin(); it != _path.end(); ++it) {
+    double angle = it->second;
+    double max = std::max(_begin[it->first],_end[it->first]);
+    double min = std::min(_begin[it->first],_end[it->first]);
+    if (angle < min || angle > max) return false;
+  }
+  return true;
 }

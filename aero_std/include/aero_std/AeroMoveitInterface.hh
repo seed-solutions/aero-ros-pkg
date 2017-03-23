@@ -222,6 +222,8 @@ namespace aero
 
     bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
+    bool isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end);
+
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
     ros::ServiceClient interpolation_client_;
