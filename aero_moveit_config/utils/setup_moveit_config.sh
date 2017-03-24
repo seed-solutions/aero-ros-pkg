@@ -112,10 +112,10 @@ cp $original $file_op
 
 replace_limits $file_mg "l_wrist_p_joint" -0.017 0.017
 replace_limits $file_mg "r_wrist_p_joint" -0.017 0.017
-replace_limits $file_mg "l_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_mg "r_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_mg "l_shoulder_y_joint" -1.5708 0.785398
-replace_limits $file_mg "r_shoulder_y_joint" -0.785398 1.5708
+replace_limits $file_mg "l_wrist_y_joint" -1.5707 1.5707
+replace_limits $file_mg "r_wrist_y_joint" -1.5707 1.5707
+replace_limits $file_mg "l_shoulder_y_joint" -1.5707 0.785398
+replace_limits $file_mg "r_shoulder_y_joint" -0.785398 1.5707
 replace_limits $file_mg "waist_r_joint" -0.017 0.017
 replace_limits $file_mg "waist_p_joint" 0.0 0.4014 # 0 to 23
 replace_limits $file_mg "virtual_lifter_x_joint" -0.2 0.2
@@ -123,10 +123,10 @@ replace_limits $file_mg "virtual_lifter_z_joint" -0.4 0.0
 
 replace_limits $file_ho "l_wrist_p_joint" -0.017 0.017
 replace_limits $file_ho "r_wrist_p_joint" -0.017 0.017
-replace_limits $file_ho "l_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_ho "r_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_ho "l_shoulder_y_joint" -1.5708 0.785398
-replace_limits $file_ho "r_shoulder_y_joint" -0.785398 1.5708
+replace_limits $file_ho "l_wrist_y_joint" -1.5707 1.5707
+replace_limits $file_ho "r_wrist_y_joint" -1.5707 1.5707
+replace_limits $file_ho "l_shoulder_y_joint" -1.5707 0.785398
+replace_limits $file_ho "r_shoulder_y_joint" -0.785398 1.5707
 replace_limits $file_ho "waist_r_joint" -0.017 0.017
 replace_limits $file_ho "waist_p_joint" 0.0 0.4014
 replace_limits $file_ho "virtual_lifter_x_joint" -0.0 0.0
@@ -134,10 +134,10 @@ replace_limits $file_ho "virtual_lifter_z_joint" -0.4 0.0
 
 replace_limits $file_op "l_wrist_p_joint" -0.017 0.017
 replace_limits $file_op "r_wrist_p_joint" -0.017 0.017
-replace_limits $file_op "l_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_op "r_wrist_y_joint" -1.5708 1.5708
-replace_limits $file_op "l_shoulder_y_joint" -1.5708 0.785398
-replace_limits $file_op "r_shoulder_y_joint" -0.785398 1.5708
+replace_limits $file_op "l_wrist_y_joint" -1.5707 1.5707
+replace_limits $file_op "r_wrist_y_joint" -1.5707 1.5707
+replace_limits $file_op "l_shoulder_y_joint" -1.5707 0.785398
+replace_limits $file_op "r_shoulder_y_joint" -0.785398 1.5707
 replace_limits $file_op "waist_r_joint" -0.017 0.017
 replace_limits $file_op "waist_p_joint" 0.0 0.4014
 replace_limits $file_op "virtual_lifter_x_joint" -0.16 0.16

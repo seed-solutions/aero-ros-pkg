@@ -119,10 +119,11 @@ namespace aero
     void setLifter(double _x, double _z);
 
     Eigen::Vector3d getWaistPosition();
-    void getLifter(std::vector<double>& _xz);
+    void getLifter(std::map<aero::joint, double>& _xz);
 
     // for grasp
     bool sendPickIK(aero::GraspRequest &_grasp);
+    bool sendPlaceIK(aero::GraspRequest &_grasp, double _push_height=0.03);
     bool solveIKSequence(aero::GraspRequest &_grasp);
     std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
 
@@ -217,6 +218,8 @@ namespace aero
 
     bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
+    bool isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end);
+
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
     ros::ServiceClient interpolation_client_;
@@ -242,6 +245,7 @@ namespace aero
     double lifter_foreleg_link_;// lifter's lower link
     std::string detected_speech_;
     bool tracking_mode_flag_;
+    aero_startup::AeroSendJoints send_joints_srv_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }

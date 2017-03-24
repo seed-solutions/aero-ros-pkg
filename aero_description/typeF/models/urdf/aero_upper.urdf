@@ -665,7 +665,7 @@
     <child  link="WAIST_LINK2"/>
     <origin xyz="0 0 0.1355" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
+    <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="WAIST_P_trans" >
@@ -697,7 +697,7 @@
     <child  link="LARM_LINK1"/>
     <origin xyz="-0.01815 0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 -0.173648"/>
-    <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
+    <limit lower="-1.5707" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="LARM_SHOULDER_P_trans" >
@@ -713,7 +713,7 @@
     <child  link="LARM_LINK2"/>
     <origin xyz="0 0.05978 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="0" upper="1.5708" effort="100" velocity="0.5" />
+    <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="LARM_SHOULDER_R_trans" >
@@ -921,7 +921,7 @@
     <child  link="RARM_LINK1"/>
     <origin xyz="-0.01815 -0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 0.173648"/>
-    <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
+    <limit lower="-1.5707" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="RARM_SHOULDER_P_trans" >
@@ -937,7 +937,7 @@
     <child  link="RARM_LINK2"/>
     <origin xyz="0 -0.059778 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-1.5708" upper="0" effort="100" velocity="0.5" />
+    <limit lower="-1.5707" upper="0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="RARM_SHOULDER_R_trans" >

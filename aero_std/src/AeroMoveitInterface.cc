@@ -329,9 +329,9 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocal(double _x, double _z,
 
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos;
+  std::map<aero::joint,double> pos;
   getLifter(pos);
-  return sendLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  return sendLifter(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
 }
 
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(double _x, double _z, int _time_ms)
@@ -367,9 +367,9 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, doubl
 
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos;
+  std::map<aero::joint, double> pos;
   getLifter(pos);
-  return sendLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  return sendLifterAsync(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
 }
 
 void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
@@ -391,13 +391,12 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
   return vec;
 }
 
-void aero::interface::AeroMoveitInterface::getLifter(std::vector<double>& _xz)
+void aero::interface::AeroMoveitInterface::getLifter(std::map<aero::joint, double>& _xz)
 {
-  _xz.reserve(2);
   std::vector<double> tmp;
   kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
-  _xz[0] = tmp[0];
-  _xz[1] = tmp[1];
+  _xz[aero::joint::lifter_x] = tmp[0];
+  _xz[aero::joint::lifter_z] = tmp[1];
 }
 
 //////////////////////////////////////////////////
@@ -431,7 +430,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
   aero::trajectory trajectory;
   std::vector<int> times;
   int mid_time = 4000;
-  int end_time = 2000;
+  int end_time = 4000;
   int num = 5;
   trajectory.reserve(num+1);
   times.reserve(num+1);
@@ -469,6 +468,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
+    if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
     trajectory.push_back(av_inner);
     times.push_back((end_time / num) * (i - last_solved_num));
     last_solved_num = i;
@@ -488,6 +488,162 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
 
 
   return sendTrajectory(trajectory, times, _grasp.end_ik_range);;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_grasp, double _push_height)
+{
+  // save initial angles
+  std::map<aero::joint, double> av_ini;
+  getRobotStateVariables(av_ini);
+
+  std::map<aero::joint, double> av_mid,av_end,av_place;
+
+  geometry_msgs::Pose mid_pose,end_pose,place_pose;
+  mid_pose = _grasp.mid_pose;
+  mid_pose.position.z += _push_height;
+  end_pose = _grasp.end_pose;
+  end_pose.position.z += _push_height;
+  place_pose = _grasp.end_pose;
+
+
+  ROS_INFO("solving IK");
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_end);//save end
+
+  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, mid_pose, _grasp.eef)) {
+    ROS_INFO("mid ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_mid);//save mid
+
+
+  setRobotStateVariables(av_end);
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, place_pose, _grasp.eef)) {
+    ROS_INFO("place ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_place);//save end
+
+  ROS_INFO("grasping IKs succeeded");
+
+
+  ROS_INFO("making trajectory");
+  aero::trajectory trajectory;
+  std::vector<int> times;
+  int mid_time = 4000;
+  int end_time = 8000;
+  int place_time = 2000;
+  int num = 10;
+  trajectory.reserve(num+1);
+  times.reserve(num+1);
+  trajectory.push_back(av_mid);
+  times.push_back(mid_time);
+
+  setRobotStateVariables(av_mid);
+  geometry_msgs::Pose tmp, diff;
+  tmp = mid_pose;
+  diff.position.x = (end_pose.position.x - mid_pose.position.x) / num;
+  diff.position.y = (end_pose.position.y - mid_pose.position.y) / num;
+  diff.position.z = (end_pose.position.z - mid_pose.position.z) / num;
+  Eigen::Quaterniond qua_mid{mid_pose.orientation.w,
+      mid_pose.orientation.x ,mid_pose.orientation.y ,mid_pose.orientation.z};
+  Eigen::Quaterniond qua_end{end_pose.orientation.w,
+      end_pose.orientation.x ,end_pose.orientation.y ,end_pose.orientation.z};
+  int last_solved_num = -1;
+  ROS_INFO("mid pose %f %f %f, %f %f %f %f",
+           mid_pose.position.x ,mid_pose.position.y ,mid_pose.position.z
+           ,mid_pose.orientation.w,mid_pose.orientation.x ,mid_pose.orientation.y ,mid_pose.orientation.z);
+  aero::ikrange range =  _grasp.end_ik_range;
+  double lif_x_mid;
+  double lif_z_mid;
+  double lif_x_end;
+  double lif_z_end;
+  if (range == aero::ikrange::lifter) {
+    range = aero::ikrange::torso;
+    lif_x_mid = av_mid[aero::joint::lifter_x];
+    lif_z_mid = av_end[aero::joint::lifter_z];
+    lif_x_end = av_mid[aero::joint::lifter_x];
+    lif_z_end = av_end[aero::joint::lifter_z];
+  }
+  for (int i=0; i < num - 1; ++i) {
+    tmp.position.x += diff.position.x;
+    tmp.position.y += diff.position.y;
+    tmp.position.z += diff.position.z;
+    Eigen::Quaterniond qua_path = qua_mid.slerp( static_cast<double>(i+1)/num, qua_end);
+    tmp.orientation.w = qua_path.w();
+    tmp.orientation.x = qua_path.x();
+    tmp.orientation.y = qua_path.y();
+    tmp.orientation.z = qua_path.z();
+
+    ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
+             tmp.position.x ,tmp.position.y ,tmp.position.z
+             ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
+    if (_grasp.end_ik_range == aero::ikrange::lifter) {
+      double lif_x = lif_x_mid + (lif_x_end - lif_x_mid) * (i + 1);
+      double lif_z = lif_z_mid + (lif_z_end - lif_z_mid) * (i + 1);
+      setLifter(lif_x, lif_z);
+    }
+    continue;
+    if (!setFromIK(_grasp.arm, range, tmp, _grasp.eef)) continue;
+    std::map<aero::joint, double> av_inner;
+    getRobotStateVariables(av_inner);
+    if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
+    trajectory.push_back(av_inner);
+    times.push_back((end_time / num) * (i - last_solved_num));
+    last_solved_num = i;
+  }
+
+  trajectory.push_back(av_end);
+  times.push_back((end_time / num) * (4 - last_solved_num));
+  ROS_INFO("end pose %f %f %f, %f %f %f %f",
+           end_pose.position.x ,end_pose.position.y ,end_pose.position.z
+           ,end_pose.orientation.w,end_pose.orientation.x ,end_pose.orientation.y ,end_pose.orientation.z);
+
+  trajectory.push_back(av_place);
+  times.push_back((place_time / num) * (4 - last_solved_num));
+  ROS_INFO("place pose %f %f %f, %f %f %f %f",
+           place_pose.position.x ,place_pose.position.y ,place_pose.position.z
+           ,place_pose.orientation.w,place_pose.orientation.x ,place_pose.orientation.y ,place_pose.orientation.z);
+
+
+
+  ROS_INFO("trajectory: %d relay points", static_cast<int>(times.size()) - 2);
+
+
+  if (!sendTrajectory(trajectory, times, _grasp.end_ik_range)) {
+    ROS_WARN("lifter ik failed, why???????");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+
+  openHand(_grasp.arm);
+  sleep(1);
+
+  aero::trajectory trajectory_return;
+  std::vector<int> times_return;
+  int trajectory_size = static_cast<int>(trajectory.size());
+  int return_size = trajectory_size - 1;
+  trajectory_return.reserve(return_size);
+  times_return.reserve(return_size);
+  for (int i = 0; i < return_size; ++i) {
+    trajectory_return.push_back(trajectory[trajectory_size - 2 - i]);
+    times_return.push_back(times[trajectory_size - 1 - i]);
+  }
+
+  if (!sendTrajectory(trajectory_return, times_return, _grasp.end_ik_range)) {
+    ROS_WARN("lifter ik failed, why???????");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+
+  return true;
 }
 
 //////////////////////////////////////////////////
@@ -589,6 +745,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
+  return true;
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
@@ -712,11 +869,11 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, ae
 
   if (_move_waist == aero::ikrange::lifter)
     {
-      std::vector<double> av_lif;
+      std::map<aero::joint, double> av_lif;
       getLifter(av_lif);
       av_mg.reserve(av_mg.size() + 2);
-      av_mg.push_back(av_lif[0]);
-      av_mg.push_back(av_lif[1]);
+      av_mg.push_back(av_lif[aero::joint::lifter_x]);
+      av_mg.push_back(av_lif[aero::joint::lifter_z]);
       std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
       j_names.reserve(j_names.size() + 2);
       j_names.push_back(j_lif[0]);
@@ -764,10 +921,10 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     xzs.reserve(static_cast<int>(_trajectory.size()));
     for (auto point : _trajectory) {
       setRobotStateVariables(point);
-      std::vector<double> lif;
+      std::map<aero::joint, double> lif;
       getLifter(lif);
       std::vector<double> xz;
-      if (!lifter_ik_(lif[0], lif[1], xz)) {
+      if (!lifter_ik_(lif[aero::joint::lifter_x], lif[aero::joint::lifter_z], xz)) {
         ROS_WARN("lifter_ik failed");
         return false;
       }
@@ -1166,10 +1323,10 @@ bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _ra
   p.z = 0;
 
   geometry_msgs::Quaternion q;
-  q.x = sin(_rad);
+  q.x = sin(_rad/ 2.0);
   q.y = 0;
   q.z = 0;
-  q.w = cos(_rad);
+  q.w = cos(_rad/ 2.0);
 
   geometry_msgs::Pose pose;
   pose.position = p;
@@ -1315,4 +1472,17 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
   }
   return false;
 
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end)
+{
+  return true;//this code seems not to do well
+  for (auto it=_path.begin(); it != _path.end(); ++it) {
+    double angle = it->second;
+    double max = std::max(_begin[it->first],_end[it->first]);
+    double min = std::min(_begin[it->first],_end[it->first]);
+    if (angle < min || angle > max) return false;
+  }
+  return true;
 }
