@@ -28,8 +28,6 @@
 #include <std_msgs/String.h>
 #include <std_srvs/SetBool.h>
 
-#include <thread>
-
 namespace aero
 {
   typedef std::vector<std::map<aero::joint, double>> trajectory;
