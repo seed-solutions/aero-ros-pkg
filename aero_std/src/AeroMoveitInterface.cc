@@ -431,7 +431,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
   aero::trajectory trajectory;
   std::vector<int> times;
   int mid_time = 4000;
-  int end_time = 2000;
+  int end_time = 4000;
   int num = 5;
   trajectory.reserve(num+1);
   times.reserve(num+1);
@@ -538,9 +538,9 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   aero::trajectory trajectory;
   std::vector<int> times;
   int mid_time = 4000;
-  int end_time = 2000;
-  int place_time = 1000;
-  int num = 5;
+  int end_time = 8000;
+  int place_time = 2000;
+  int num = 10;
   trajectory.reserve(num+1);
   times.reserve(num+1);
   trajectory.push_back(av_mid);
@@ -573,7 +573,6 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
              tmp.position.x ,tmp.position.y ,tmp.position.z
              ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
-
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
@@ -728,6 +727,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
+  return true;
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
@@ -1305,10 +1305,10 @@ bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _ra
   p.z = 0;
 
   geometry_msgs::Quaternion q;
-  q.x = sin(_rad);
+  q.x = sin(_rad/ 2.0);
   q.y = 0;
   q.z = 0;
-  q.w = cos(_rad);
+  q.w = cos(_rad/ 2.0);
 
   geometry_msgs::Pose pose;
   pose.position = p;
@@ -1459,6 +1459,7 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end)
 {
+  return true;//this code seems not to do well
   for (auto it=_path.begin(); it != _path.end(); ++it) {
     double angle = it->second;
     double max = std::max(_begin[it->first],_end[it->first]);
