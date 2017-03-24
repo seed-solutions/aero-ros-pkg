@@ -149,8 +149,6 @@ namespace aero
 
     void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
 
-    void waitSendAngleVectorAsync();
-
     bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
 
     bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
@@ -249,8 +247,6 @@ namespace aero
     double lifter_foreleg_link_;// lifter's lower link
     std::string detected_speech_;
     bool tracking_mode_flag_;
-    std::thread send_angle_thread_;
-    bool is_thread_joined_;
     aero_startup::AeroSendJoints send_joints_srv_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
