@@ -329,9 +329,9 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocal(double _x, double _z,
 
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos;
+  std::map<aero::joint,double> pos;
   getLifter(pos);
-  return sendLifter(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  return sendLifter(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
 }
 
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(double _x, double _z, int _time_ms)
@@ -367,9 +367,9 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, doubl
 
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::vector<double> pos;
+  std::map<aero::joint, double> pos;
   getLifter(pos);
-  return sendLifterAsync(static_cast<int>(pos[0] * 1000) + _x, static_cast<int>(pos[1] * 1000) + _z, _time_ms);
+  return sendLifterAsync(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
 }
 
 void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
@@ -391,13 +391,12 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
   return vec;
 }
 
-void aero::interface::AeroMoveitInterface::getLifter(std::vector<double>& _xz)
+void aero::interface::AeroMoveitInterface::getLifter(std::map<aero::joint, double>& _xz)
 {
-  _xz.reserve(2);
   std::vector<double> tmp;
   kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
-  _xz[0] = tmp[0];
-  _xz[1] = tmp[1];
+  _xz[aero::joint::lifter_x] = tmp[0];
+  _xz[aero::joint::lifter_z] = tmp[1];
 }
 
 //////////////////////////////////////////////////
@@ -870,11 +869,11 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, ae
 
   if (_move_waist == aero::ikrange::lifter)
     {
-      std::vector<double> av_lif;
+      std::map<aero::joint, double> av_lif;
       getLifter(av_lif);
       av_mg.reserve(av_mg.size() + 2);
-      av_mg.push_back(av_lif[0]);
-      av_mg.push_back(av_lif[1]);
+      av_mg.push_back(av_lif[aero::joint::lifter_x]);
+      av_mg.push_back(av_lif[aero::joint::lifter_z]);
       std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
       j_names.reserve(j_names.size() + 2);
       j_names.push_back(j_lif[0]);
@@ -922,10 +921,10 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     xzs.reserve(static_cast<int>(_trajectory.size()));
     for (auto point : _trajectory) {
       setRobotStateVariables(point);
-      std::vector<double> lif;
+      std::map<aero::joint, double> lif;
       getLifter(lif);
       std::vector<double> xz;
-      if (!lifter_ik_(lif[0], lif[1], xz)) {
+      if (!lifter_ik_(lif[aero::joint::lifter_x], lif[aero::joint::lifter_z], xz)) {
         ROS_WARN("lifter_ik failed");
         return false;
       }

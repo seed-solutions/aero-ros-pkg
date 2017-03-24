@@ -121,7 +121,7 @@ namespace aero
     void setLifter(double _x, double _z);
 
     Eigen::Vector3d getWaistPosition();
-    void getLifter(std::vector<double>& _xz);
+    void getLifter(std::map<aero::joint, double>& _xz);
 
     // for grasp
     bool sendPickIK(aero::GraspRequest &_grasp);
