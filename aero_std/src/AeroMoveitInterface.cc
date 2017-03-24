@@ -509,6 +509,13 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
 
 
   ROS_INFO("solving IK");
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_end);//save end
+
   if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, mid_pose, _grasp.eef)) {
     ROS_INFO("mid ik failed");
     setRobotStateVariables(av_ini);
@@ -517,13 +524,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   getRobotStateVariables(av_mid);//save mid
 
 
-  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, end_pose, _grasp.eef)) {
-    ROS_INFO("end ik failed");
-    setRobotStateVariables(av_ini);
-    return false;
-  }
-  getRobotStateVariables(av_end);//save end
-
+  setRobotStateVariables(av_end);
   if (!setFromIK(_grasp.arm, _grasp.end_ik_range, place_pose, _grasp.eef)) {
     ROS_INFO("place ik failed");
     setRobotStateVariables(av_ini);
@@ -560,6 +561,18 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   ROS_INFO("mid pose %f %f %f, %f %f %f %f",
            mid_pose.position.x ,mid_pose.position.y ,mid_pose.position.z
            ,mid_pose.orientation.w,mid_pose.orientation.x ,mid_pose.orientation.y ,mid_pose.orientation.z);
+  aero::ikrange range =  _grasp.end_ik_range;
+  double lif_x_mid;
+  double lif_z_mid;
+  double lif_x_end;
+  double lif_z_end;
+  if (range == aero::ikrange::lifter) {
+    range = aero::ikrange::torso;
+    lif_x_mid = av_mid[aero::joint::lifter_x];
+    lif_z_mid = av_end[aero::joint::lifter_z];
+    lif_x_end = av_mid[aero::joint::lifter_x];
+    lif_z_end = av_end[aero::joint::lifter_z];
+  }
   for (int i=0; i < num - 1; ++i) {
     tmp.position.x += diff.position.x;
     tmp.position.y += diff.position.y;
@@ -573,7 +586,13 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
              tmp.position.x ,tmp.position.y ,tmp.position.z
              ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
-    if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
+    if (_grasp.end_ik_range == aero::ikrange::lifter) {
+      double lif_x = lif_x_mid + (lif_x_end - lif_x_mid) * (i + 1);
+      double lif_z = lif_z_mid + (lif_z_end - lif_z_mid) * (i + 1);
+      setLifter(lif_x, lif_z);
+    }
+    continue;
+    if (!setFromIK(_grasp.arm, range, tmp, _grasp.eef)) continue;
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
     if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
