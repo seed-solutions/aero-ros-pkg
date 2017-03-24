@@ -116,7 +116,7 @@ namespace aero
     bool sendLifterLocalAsync(int _x, int _z, int _time_ms=0);
 
     // set waist position of kinametic_state
-    void setLifter(double _x, double _z);
+    bool setLifter(double _x, double _z, bool _check_solvable=false);
 
     Eigen::Vector3d getWaistPosition();
     void getLifter(std::map<aero::joint, double>& _xz);

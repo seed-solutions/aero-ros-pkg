@@ -372,14 +372,22 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, 
   return sendLifterAsync(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
 }
 
-void aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
+bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool _check_solvable)
 {
-  std::vector<double> joint_values;
-  kinematic_state->copyJointGroupPositions(jmg_lifter, joint_values);
 
-  joint_values[0] = _x;
-  joint_values[1] = _z;
+  std::vector<double> ans_xz;
+  if (_check_solvable) {
+    if (!lifter_ik_(_x, _z, ans_xz)) {
+      return false;
+    }
+  }
+
+  std::vector<double> joint_values;
+  joint_values.push_back(_x);
+  joint_values.push_back(_z);
   kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
+
+  return true;
 }
 
 
