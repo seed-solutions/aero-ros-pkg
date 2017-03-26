@@ -20,7 +20,8 @@ namespace aero
     arm(aero::arm::either), object_position({0.0, 0.0, 0.0}), height(0.0),
     offset_z_mid(0.0),offset_x_mid(0.0),
     default_offset_z(0.0), default_offset_x(0.0),
-    default_offset_x_mid(-0.05),default_offset_z_mid(0.0),
+    default_offset_x_mid(-0.05),default_offset_z_mid(0.05),
+    default_offset_x_end(0.0),default_offset_z_end(-0.1),
     maximum_grasp_width(0.0) {}
     
     // arm to grasp object, "left" or "right" or "either"
@@ -52,6 +53,9 @@ namespace aero
     // default height difference from end to mid
   public: float default_offset_x_mid;
   public: float default_offset_z_mid;
+
+  public: float default_offset_x_end;
+  public: float default_offset_z_end;
 
     // physical parameter from the degree of opening of hand
   public: float maximum_grasp_width;
@@ -116,7 +120,7 @@ namespace aero
 
     end_pos_front.x() = obj_tmp.x() + _grasp.default_offset_x + _grasp.offset_x_end+ _grasp.maximum_grasp_width/2.0;
     end_pos_front.y() = obj_tmp.y();
-    end_pos_front.z() = obj_tmp.z() + _grasp.default_offset_z;
+    end_pos_front.z() = obj_tmp.z()  + _grasp.height/2.0 + _grasp.default_offset_z_end + _grasp.default_offset_z;
 
 
     Eigen::Quaterniond rot_to_original(cos((yaw - des_yaw)/2.0), 0.0, 0.0, sin((yaw - des_yaw)/2.0));

@@ -753,7 +753,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
-  return true;
+  //return true;
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
