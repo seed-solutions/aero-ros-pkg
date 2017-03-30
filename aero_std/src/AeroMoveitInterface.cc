@@ -423,6 +423,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(_grasp.end_pose);
   getRobotStateVariables(av_end);//save end
 
   if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, _grasp.mid_pose, _grasp.eef)) {
@@ -430,6 +431,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(_grasp.mid_pose);
   getRobotStateVariables(av_mid);//save mid
 
 
@@ -475,6 +477,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
              ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
 
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
+    setLookAt(tmp);
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
     if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
@@ -522,6 +525,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(end_pose);
   getRobotStateVariables(av_end);//save end
 
   if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, mid_pose, _grasp.eef)) {
@@ -529,6 +533,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(mid_pose);
   getRobotStateVariables(av_mid);//save mid
 
 
