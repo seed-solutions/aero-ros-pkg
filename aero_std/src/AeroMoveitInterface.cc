@@ -278,6 +278,17 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
   srv.request.points.positions = av_mg;
   srv.request.points.time_from_start = ros::Duration(_time_ms * 0.001);
 
+  if (!tracking_mode_flag_) {
+    srv.request.points.positions.push_back(0.0);
+    srv.request.joint_names.push_back("neck_r_joint");
+
+    srv.request.points.positions.push_back(0.0);
+    srv.request.joint_names.push_back("neck_p_joint");
+
+    srv.request.points.positions.push_back(0.0);
+    srv.request.joint_names.push_back("neck_y_joint");
+  }
+
   if (!send_angle_service_.call(srv)) {
     ROS_ERROR("sendJoints failed service call");
     return;
