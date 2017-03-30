@@ -417,13 +417,6 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
   std::map<aero::joint, double> av_mid,av_end;
 
   ROS_INFO("solving IK");
-  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, _grasp.mid_pose, _grasp.eef)) {
-    ROS_INFO("mid ik failed");
-    setRobotStateVariables(av_ini);
-    return false;
-  }
-  getRobotStateVariables(av_mid);//save mid
-
 
   if (!setFromIK(_grasp.arm, _grasp.end_ik_range, _grasp.end_pose, _grasp.eef)) {
     ROS_INFO("end ik failed");
@@ -431,6 +424,14 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     return false;
   }
   getRobotStateVariables(av_end);//save end
+
+  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, _grasp.mid_pose, _grasp.eef)) {
+    ROS_INFO("mid ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_mid);//save mid
+
 
   ROS_INFO("grasping IKs succeeded");
 
@@ -947,12 +948,23 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     setRobotStateVariables(point);
     std::vector<double> av;
     kinematic_state->copyJointGroupPositions("upper_body", av);
+    if (!tracking_mode_flag_) {
+      av.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
+      av.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
+      av.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
+    }
     tra.push_back(av);
   }
 
   //get joint names
   std::vector<std::string> j_names;
   j_names = getMoveGroup("upper_body").getJointNames();
+  if (!tracking_mode_flag_) {
+    j_names.push_back("neck_r_joint");
+    j_names.push_back("neck_p_joint");
+    j_names.push_back("neck_y_joint");
+  }
+
 
   //add lifter to trajectory
   if (_move_lifter == aero::ikrange::lifter) {
