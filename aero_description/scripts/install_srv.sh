@@ -5,6 +5,8 @@ cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
 
 # create CMakeLists.txt if not exist
 # clean or overwrite if exists
+echo "create CMakeLists.txt..."
+echo " target: ${cmake_file}"
 
 if [[ $(find $(rospack find aero_description)/../aero_startup -name "CMakeLists.txt" | grep aero_startup/CMakeLists.txt) == "" ]]
 then
@@ -23,11 +25,18 @@ else
     esac
 fi
 
-# add srvs to CMakeLists.txt
+echo "done."
+
+
+echo "add srvs to CMakeLists.txt..."
+echo " target: ${srv_dir}"
 
 ls_srv=$(ls $srv_dir | tr '\n' ' ')
 num_of_srvs=$(ls $srv_dir | wc -l)
 tab2=$'  '
+
+echo "  srvs: ${ls_srv}"
+echo "  num of srvs: ${num_of_srvs}"
 
 for (( num=1; num<=$num_of_srvs; num++))
 do
@@ -41,3 +50,5 @@ do
         echo "${tab2}${tab2}${target}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $cmake_file
     fi
 done
+
+echo "done."
