@@ -82,6 +82,9 @@ else
     ./scripts/configure_controllers.sh $dir
 fi
 
+printf "\nbuild aero_startup ...\n"
 catkin b aero_startup
+build_result=$?
 
 printf "\nfinished.\n"
+exit $build_result
