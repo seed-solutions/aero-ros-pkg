@@ -141,7 +141,7 @@ replace_limits $file_op "r_shoulder_y_joint" -0.785398 1.5707
 replace_limits $file_op "waist_r_joint" -0.017 0.017
 replace_limits $file_op "waist_p_joint" 0.0 0.4014
 replace_limits $file_op "virtual_lifter_x_joint" -0.16 0.16
-replace_limits $file_op "virtual_lifter_z_joint" -0.25 -0.075
+replace_limits $file_op "virtual_lifter_z_joint" -0.235 -0.075
 
 remove_visual $file_mg
 remove_visual $file_ho
