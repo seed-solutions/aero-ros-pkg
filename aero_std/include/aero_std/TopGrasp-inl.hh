@@ -18,7 +18,7 @@ namespace aero
 
   public: TopGrasp() :
     arm(aero::arm::either), object_position({0.0, 0.0, 0.0}), height(0.0),
-    offset_z_mid(0.0),offset_x_mid(0.0),
+    offset_z_mid(0.0),offset_x_mid(0.0), offset_x_end(0.0),
     default_offset_z(0.0), default_offset_x(0.0),
     default_offset_x_mid(-0.05),default_offset_z_mid(0.05),
     default_offset_x_end(0.0),default_offset_z_end(-0.1),
