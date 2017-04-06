@@ -108,6 +108,8 @@ namespace aero
 
     public: std::vector<int16_t> get_actual_stroke_vector();
 
+    public: std::vector<int16_t> get_status_vec();
+
     public: std::string get_stroke_joint_name(size_t _idx);
 
     public: int get_number_of_angle_joints();

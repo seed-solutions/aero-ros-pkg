@@ -156,6 +156,9 @@ void AeroControllerNode::JointTrajectoryThread(
     int _trajectory_start_from,
     int _split_start_from)
 {
+  ROS_INFO("starting upper joint trajectory thread");
+  auto start_time = aero::time::now();
+
   uint16_t csec_per_frame = 10; // 10 fps
   uint this_id;
 
@@ -170,6 +173,8 @@ void AeroControllerNode::JointTrajectoryThread(
   mtx_threads_.unlock();
 
   // main process starts here
+
+  ROS_INFO("upper joint trajectory thread: starting!");
 
   for (auto it = _stroke_trajectory.begin() + _trajectory_start_from;
        it != _stroke_trajectory.end(); ++it) {
@@ -186,6 +191,7 @@ void AeroControllerNode::JointTrajectoryThread(
           // remove this thread info
           registered_threads_.erase(th);
           mtx_threads_.unlock();
+	  ROS_WARN("upper joint trajectory thread: detected kill signal during trajectory!");
           return;
         }
         break;
@@ -198,8 +204,10 @@ void AeroControllerNode::JointTrajectoryThread(
     bool collision_status = upper_.get_status();
     mtx_upper_.unlock();
     mtx_lower_.unlock();
-    if (collision_status)
+    if (collision_status) {
+      ROS_ERROR("upper joint trajectory thread: abort trajectory collision!");
       break;
+    }
 
     int k = static_cast<int>(it - _stroke_trajectory.begin());
 
@@ -232,6 +240,7 @@ void AeroControllerNode::JointTrajectoryThread(
             // remove this thread info
             registered_threads_.erase(th);
             mtx_threads_.unlock();
+	    ROS_WARN("upper joint trajectory thread: detected kill signal during interpolation!");
             return;
           }
           break;
@@ -266,12 +275,18 @@ void AeroControllerNode::JointTrajectoryThread(
       break;
     }
   mtx_threads_.unlock();
+
+  ROS_INFO("finished upper joint trajectory thread %f",
+	   aero::time::ms(aero::time::now() - start_time));
 }
 
 /////////////////////////////////////////////////
 void AeroControllerNode::LowerTrajectoryThread(
     std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory)
 {
+  ROS_INFO("starting lower joint trajectory thread");
+  auto start_time = aero::time::now();
+
   for (auto it = _stroke_trajectory.begin() + 1;
        it != _stroke_trajectory.end(); ++it) {
     uint16_t csec_in_frame = it->second - (it-1)->second;
@@ -281,12 +296,17 @@ void AeroControllerNode::LowerTrajectoryThread(
     // 20ms sleep in set_position, subtract
     usleep(static_cast<int32_t>(csec_in_frame * 10.0 * 1000.0 - 20000.0));
   }
+
+  ROS_INFO("finished lower joint trajectory thread %f",
+	   aero::time::ms(aero::time::now() - start_time));
 }
 
 //////////////////////////////////////////////////
 void AeroControllerNode::JointTrajectoryCallback(
     const trajectory_msgs::JointTrajectory::ConstPtr& _msg)
 {
+  ROS_INFO("----start joint trajectory callback----");
+
   mtx_upper_.lock();
   mtx_lower_.lock();
 
@@ -298,8 +318,11 @@ void AeroControllerNode::JointTrajectoryCallback(
     // invalid number of joints from _msg
     mtx_upper_.unlock();
     mtx_lower_.unlock();
+    ROS_ERROR("----too many joints, finishing up----");
     return;
   }
+
+  ROS_INFO("----all %d angle joints are valid----", _msg->joint_names.size());
 
   // positions in _msg are not ordered
   std::vector<int32_t> id_in_msg_to_ordered_id;
@@ -313,6 +336,8 @@ void AeroControllerNode::JointTrajectoryCallback(
 
   // check for unused joints
   std::vector<bool> send_true(number_of_angle_joints, false);
+
+  ROS_INFO("----find index by names----");
 
   for (size_t i = 0; i < _msg->joint_names.size(); ++i) {
     // try finding name from upper_
@@ -333,12 +358,15 @@ void AeroControllerNode::JointTrajectoryCallback(
     if (id_in_msg_to_ordered_id[i] < 0) {
       mtx_upper_.unlock();
       mtx_lower_.unlock();
+      ROS_ERROR("----found bad joint name, finishing up----");
       return; // invalid name
     }
 
     ++lower_count;
     send_true[id_in_msg_to_ordered_id[i]] = true;
   }
+
+  ROS_INFO("----initiate trajectory----");
 
   // initiate trajectories
 
@@ -361,6 +389,8 @@ void AeroControllerNode::JointTrajectoryCallback(
     std::vector<int16_t> ref_strokes = lower_.get_reference_stroke_vector();
     lower_stroke_trajectory.push_back({ref_strokes, 0});
   }
+
+  ROS_INFO("----parse msg----");
 
   // from here, get ready to handle the _msg positions
 
@@ -419,7 +449,10 @@ void AeroControllerNode::JointTrajectoryCallback(
     send_lower.detach();
   }
 
-  if (upper_count <= 0) return; // nothing more to do
+  if (upper_count <= 0) {
+    ROS_WARN("----only lower trajectory, finishing up----");
+    return; // nothing more to do
+  }
 
   std::vector<aero::interpolation::InterpolationPtr> interpolation;
   interpolation.reserve(upper_stroke_trajectory.size());
@@ -447,9 +480,12 @@ void AeroControllerNode::JointTrajectoryCallback(
       JointTrajectoryThread(_interpolation, _stroke_trajectory, 1, 1);
     }, interpolation, upper_stroke_trajectory);
     send_av.detach();
+    ROS_INFO("----no other thread is running, finishing up----");
     return;
   }
   mtx_threads_.unlock();
+
+  ROS_WARN("----another thread is running----");
 
   // check if any of current joint is already running in one of the threads
   std::vector<std::pair<int, uint> > conflict_joints;
@@ -475,8 +511,11 @@ void AeroControllerNode::JointTrajectoryCallback(
       JointTrajectoryThread(_interpolation, _stroke_trajectory, 1, 1);
     }, interpolation, upper_stroke_trajectory);
     send_av.detach();
+    ROS_INFO("----no conflict in threads, finishing up----");
     return;
   }
+
+  ROS_WARN("----confict in threads----");
 
   // if there is a thread conflict, thread remapping must be conducted
   // find and count the threads to be killed
@@ -557,6 +596,8 @@ void AeroControllerNode::JointTrajectoryCallback(
   // start threads
   std::for_each(
       new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
+
+  ROS_INFO("----finishing joint trajectory callback----");
 }
 
 //////////////////////////////////////////////////
@@ -1080,6 +1121,14 @@ bool AeroControllerNode::GetJointsCallback(
     });
   t3.join();
   t4.join();
+
+  // print status for debug
+  // upper_.update_status();
+  // std::vector<int16_t> stat = upper_.get_status_vec();
+  // for (unsigned int i = 0; i < stat.size(); ++i)
+  //   std::cout << static_cast<int>(i) << ": " << static_cast<int>(stat.at(i)) << ", ";
+  // std::cout << std::endl;
+
 
   // get upper actual positions
   std::vector<int16_t> upper_stroke_vector_ret =
