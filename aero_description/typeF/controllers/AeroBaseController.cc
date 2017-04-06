@@ -59,19 +59,19 @@ pose AeroMoveBase::dX(std::vector<double> _vels, float _dt)
 {
   if (_vels.size() != 4) return {0.0, 0.0, 0.0};
 
-  std::vector<float> velocities = // signal positive to move forward positive
+  std::vector<double> velocities = // signal positive to move forward positive
       {-_vels[0], _vels[1], -_vels[2], _vels[3]};
 
   float Vx =
       0.25 * 0.5 *
-      (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
+      static_cast<float>(velocities[0] + velocities[1] + velocities[2] + velocities[3]);
   float Vy =
       0.25 * 0.5 *
-      (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
+      static_cast<float>(-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
 
-  return {Vx * 2*M_PI * radius * _dt,
-        Vy * 2*M_PI * radius * _dt,
-        max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300)};
+  return {static_cast<float>(Vx * 2*M_PI * radius * _dt),
+      static_cast<float>(Vy * 2*M_PI * radius * _dt),
+      static_cast<float>(max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300))};
 }
 
 //////////////////////////////////////////////////

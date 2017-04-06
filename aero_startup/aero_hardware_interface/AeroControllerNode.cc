@@ -186,7 +186,7 @@ void AeroControllerNode::JointTrajectoryThread(
           // save info of killing thread
           mtx_thread_graveyard_.lock();
           thread_graveyard_.push_back({_stroke_trajectory, _interpolation,
-                it - _stroke_trajectory.begin(), 1, this_id});
+                static_cast<int>(it - _stroke_trajectory.begin()), 1, this_id});
           mtx_thread_graveyard_.unlock();
           // remove this thread info
           registered_threads_.erase(th);
@@ -235,7 +235,7 @@ void AeroControllerNode::JointTrajectoryThread(
             // save info of killing thread
             mtx_thread_graveyard_.lock();
             thread_graveyard_.push_back({_stroke_trajectory,
-                  _interpolation, k, j, this_id});
+                  _interpolation, k, static_cast<int>(j), this_id});
             mtx_thread_graveyard_.unlock();
             // remove this thread info
             registered_threads_.erase(th);
@@ -322,7 +322,7 @@ void AeroControllerNode::JointTrajectoryCallback(
     return;
   }
 
-  ROS_INFO("----all %d angle joints are valid----", _msg->joint_names.size());
+  ROS_INFO("----all %d angle joints are valid----", static_cast<int>(_msg->joint_names.size()));
 
   // positions in _msg are not ordered
   std::vector<int32_t> id_in_msg_to_ordered_id;
