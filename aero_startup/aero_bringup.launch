@@ -17,7 +17,7 @@
 
   <include file="$(find aero_moveit_config)/launch/moveit_planning_execution.launch"/>
 
-  <inlude file="$(find aero_sensors)/kinect/launch/dynamic_kinect.launch"
+  <include file="$(find aero_sensors)/kinect/launch/dynamic_kinect.launch"
           if="$(arg DYNAMIC_KINECT)"/>
 
   <node name="aero_move_base" pkg="aero_startup"
