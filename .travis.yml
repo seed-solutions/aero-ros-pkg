@@ -112,7 +112,7 @@ script:
   - catkin build aero_description
   - source devel/setup.bash
   - cd src/aero-ros-pkg-prerelease/aero_description
-  - ./setup.sh aero_wheels
+  - ./setup.sh typeF
 
   # Run the tests, ensuring the path is set correctly.
 #  - source devel/setup.bash
