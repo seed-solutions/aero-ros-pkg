@@ -1430,10 +1430,25 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _move_group, int _time_ms)
 {
+  bool lifter = true;
+  std::string move_group = _move_group;
+  if (_move_group == "rarm_with_lifter") move_group = "rarm_with_torso";
+  else if (_move_group == "larm_with_lifter") move_group = "larm_with_torso";
+  else lifter = false;
+
+  if (lifter) {
+    std::vector<double> joint_values = getLifter();
+    if (!moveLifterAsync(joint_values[0], joint_values[1], _time_ms))
+      {
+        ROS_INFO("move waist failed");
+        return;
+      }
+  }
+
   std::vector<double> av_mg;
-  kinematic_state->copyJointGroupPositions(_move_group, av_mg);
+  kinematic_state->copyJointGroupPositions(move_group, av_mg);
   std::vector<std::string> j_names;
-  j_names = getMoveGroup(_move_group).getJointNames();
+  j_names = getMoveGroup(move_group).getJointNames();
 
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
