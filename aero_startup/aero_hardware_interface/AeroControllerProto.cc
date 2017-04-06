@@ -7,7 +7,7 @@ using namespace controller;
 //////////////////////////////////////////////////
 SEED485Controller::SEED485Controller(
     const std::string& _port, uint8_t _id) :
-  ser_(io_), verbose_(true), id_(_id)
+  ser_(io_), verbose_(false), id_(_id)
 {
   if (_port == "") {
     std::cerr << "empty serial port name: entering debug mode...\n";
@@ -191,7 +191,7 @@ void SEED485Controller::send_data(std::vector<uint8_t>& _send_data)
 //////////////////////////////////////////////////
 AeroControllerProto::AeroControllerProto(const std::string& _port,
 					 uint8_t _id) :
-  seed_(_port, _id), verbose_(true), bad_status_(false)
+  seed_(_port, _id), verbose_(false), bad_status_(false)
 {
 }
 
@@ -263,6 +263,12 @@ int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
 bool AeroControllerProto::get_status()
 {
   return bad_status_;
+}
+
+//////////////////////////////////////////////////
+std::vector<int16_t> AeroControllerProto::get_status_vec()
+{
+  return status_vector_;
 }
 
 //////////////////////////////////////////////////
@@ -343,7 +349,8 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     }
   }
 
-  if (cmd == 0x14 || cmd == 0x52 || cmd == 0x41) {
+  // if (cmd == 0x14 || cmd == 0x52 || cmd == 0x41) {
+  if (cmd == 0x52) {
     uint8_t status0 = dat[RAW_HEADER_OFFSET + 60];
     uint8_t status1 = dat[RAW_HEADER_OFFSET + 61];
     if ((status0 >> 5) == 1 || (status1 >> 5) == 1)
@@ -351,6 +358,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     else
       bad_status_ = false;
   }
+
 }
 
 //////////////////////////////////////////////////

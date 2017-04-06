@@ -278,6 +278,17 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
   srv.request.points.positions = av_mg;
   srv.request.points.time_from_start = ros::Duration(_time_ms * 0.001);
 
+  if (!tracking_mode_flag_) {
+    srv.request.points.positions.push_back(0.0);
+    srv.request.joint_names.push_back("neck_r_joint");
+
+    srv.request.points.positions.push_back(0.0);
+    srv.request.joint_names.push_back("neck_p_joint");
+
+    srv.request.points.positions.push_back(0.0);
+    srv.request.joint_names.push_back("neck_y_joint");
+  }
+
   if (!send_angle_service_.call(srv)) {
     ROS_ERROR("sendJoints failed service call");
     return;
@@ -417,20 +428,23 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
   std::map<aero::joint, double> av_mid,av_end;
 
   ROS_INFO("solving IK");
-  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, _grasp.mid_pose, _grasp.eef)) {
-    ROS_INFO("mid ik failed");
-    setRobotStateVariables(av_ini);
-    return false;
-  }
-  getRobotStateVariables(av_mid);//save mid
-
 
   if (!setFromIK(_grasp.arm, _grasp.end_ik_range, _grasp.end_pose, _grasp.eef)) {
     ROS_INFO("end ik failed");
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(_grasp.end_pose);
   getRobotStateVariables(av_end);//save end
+
+  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, _grasp.mid_pose, _grasp.eef)) {
+    ROS_INFO("mid ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(_grasp.mid_pose);
+  getRobotStateVariables(av_mid);//save mid
+
 
   ROS_INFO("grasping IKs succeeded");
 
@@ -474,6 +488,7 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
              ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
 
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
+    setLookAt(tmp);
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
     if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
@@ -521,6 +536,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(end_pose);
   getRobotStateVariables(av_end);//save end
 
   if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, mid_pose, _grasp.eef)) {
@@ -528,6 +544,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     setRobotStateVariables(av_ini);
     return false;
   }
+  setLookAt(mid_pose);
   getRobotStateVariables(av_mid);//save mid
 
 
@@ -753,7 +770,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
-  return true;
+  //return true;
   aero_startup::AeroHandController srv;
   if (_arm == aero::arm::rarm)   srv.request.hand = "right";
   else srv.request.hand = "left";
@@ -947,12 +964,23 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     setRobotStateVariables(point);
     std::vector<double> av;
     kinematic_state->copyJointGroupPositions("upper_body", av);
+    if (!tracking_mode_flag_) {
+      av.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
+      av.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
+      av.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
+    }
     tra.push_back(av);
   }
 
   //get joint names
   std::vector<std::string> j_names;
   j_names = getMoveGroup("upper_body").getJointNames();
+  if (!tracking_mode_flag_) {
+    j_names.push_back("neck_r_joint");
+    j_names.push_back("neck_p_joint");
+    j_names.push_back("neck_y_joint");
+  }
+
 
   //add lifter to trajectory
   if (_move_lifter == aero::ikrange::lifter) {

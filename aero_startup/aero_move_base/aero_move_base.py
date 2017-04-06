@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     pub = rospy.Publisher('/aero_controller/wheel_command', JointTrajectory, queue_size=10)
     power = rospy.Publisher('/aero_controller/wheel_servo', Bool, queue_size=10)
-    sub = rospy.Subscriber('/y_velocity_pub', Twist, Callback)
+    sub = rospy.Subscriber('/cmd_vel', Twist, Callback)
 
     wheel_on = False
     timestamp = datetime.datetime.now()

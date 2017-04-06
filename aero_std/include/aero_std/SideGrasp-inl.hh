@@ -21,9 +21,9 @@ namespace aero
     offset_z_mid(0.0),offset_x_mid(0.0),
     offset_z_end(0.0),offset_x_end(0.0),
     default_offset_z(0.0), default_offset_x(0.05), default_offset_y(0.0),
-    default_offset_x_mid(-0.15),
+    default_offset_x_mid(-0.1),
     default_offset_y_mid_left(0.1),
-    default_offset_y_end_left(0.0) {}
+    default_offset_y_end_left(-0.05) {}
     
     // arm to grasp object, "left" or "right" or "either"
   public: aero::arm arm;
@@ -116,11 +116,11 @@ namespace aero
     end_pos_front.z() = obj_tmp.z();
 
     if (_grasp.object_position.z() < 0.6) { // lower object is hard to grasp
-      Eigen::Quaterniond rot_y_20(Eigen::Matrix3d(Eigen::AngleAxisd(M_PI/9.0, Eigen::Vector3d::UnitY())));
-      mid_rot_front = rot_y_20 * mid_rot_front;
-      end_rot_front = rot_y_20 * end_rot_front;
-      mid_pos_front.z() = mid_pos_front.z() + 0.03;
-      end_pos_front.z() = end_pos_front.z() + 0.03;
+      Eigen::Quaterniond rot_y_10(Eigen::Matrix3d(Eigen::AngleAxisd(M_PI/18.0, Eigen::Vector3d::UnitY())));
+      mid_rot_front = rot_y_10 * mid_rot_front;
+      end_rot_front = rot_y_10 * end_rot_front;
+      mid_pos_front.z() = mid_pos_front.z();
+      end_pos_front.z() = end_pos_front.z();
     }
 
     Eigen::Quaterniond rot_to_original(cos((yaw - des_yaw)/2.0), 0.0, 0.0, sin((yaw - des_yaw)/2.0));
