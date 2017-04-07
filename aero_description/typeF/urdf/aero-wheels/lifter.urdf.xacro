@@ -46,6 +46,7 @@
     </gazebo>
     <link name="leg_thigh_link">
       <visual>
+        <!--origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/-->
         <origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/>
         <geometry>
           <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
@@ -69,7 +70,8 @@
     </gazebo>
     <link name="leg_foreleg_link">
       <visual>
-        <origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/>
+        <!--origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/-->
+        <origin xyz="0.0 0.0 0.235" rpy="0 -0 0"/>
         <geometry>
           <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
         </geometry>
@@ -96,12 +98,14 @@
     <joint name="lifter_top_connector" type="fixed">
       <parent link="leg_base_link"/>
       <child  link="lifter_top_link"/>
-      <origin xyz="-0.01591 0.0 0.05" rpy="0 -0 0 "/>
+      <!--origin xyz="-0.01591 0.0 0.05" rpy="0 -0 0 "/-->
+      <origin xyz="-0.01591 0.0 0.10509" rpy="0 -0 0 "/>
     </joint>
     <joint name="hip_joint" type="revolute">
       <parent link="leg_thigh_link"/>
       <child  link="leg_base_link"/>
-      <origin xyz="0 0 0.29009" rpy="0 -0 0 "/>
+      <!--origin xyz="0 0 0.29009" rpy="0 -0 0 "/-->
+      <origin xyz="0 0 0.235" rpy="0 -0 0 "/>
       <axis   xyz="0 -1 0"/>
       <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
@@ -117,7 +121,8 @@
     <joint name="knee_joint" type="revolute">
       <parent link="leg_foreleg_link"/>
       <child  link="leg_thigh_link"/>
-      <origin xyz="0.0 0.0 0.29009" rpy="0 -0 0 "/>
+      <!--origin xyz="0 0 0.29009" rpy="0 -0 0 "/-->
+      <origin xyz="0 0 0.235" rpy="0 -0 0 "/>
       <axis   xyz="0 1 0"/>
       <limit lower="0" upper="3.14159" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
@@ -133,7 +138,8 @@
     <joint name="ankle_joint" type="revolute">
       <parent link="${base_link}"/>
       <child  link="leg_foreleg_link"/>
-      <origin xyz="0.0 0.0 0.07" rpy="0 -0 0 "/>
+      <!--origin xyz="0.0 0.0 0.07" rpy="0 -0 0 "/-->
+      <origin xyz="0.0 0.0 0.12509" rpy="0 -0 0 "/>
       <axis   xyz="0 -1 0"/>
       <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
