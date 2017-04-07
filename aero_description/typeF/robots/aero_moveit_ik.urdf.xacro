@@ -13,7 +13,7 @@
   <xacro:include filename="$(find aero_description)/urdf/aero-wheels/aero-wheels.urdf.xacro" />
   <!-- Now we can start using the macros included above to define the actual aero -->
 
-  <xacro:aero_upper base_link="waist_link"/>
+  <xacro:aero_upper base_link="waist_link" disable_mesh="true"/>
 
   <joint name="upper_lower_connector" type="fixed">
     <parent link="lifter_top_link"/>
