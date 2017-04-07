@@ -18,13 +18,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -41,13 +41,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -75,13 +75,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -98,13 +98,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="-0.174532925 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="-0.174532925 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -121,13 +121,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -144,13 +144,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -167,13 +167,13 @@
     <visual>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -190,13 +190,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -224,13 +224,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -247,13 +247,13 @@
     <visual>
       <origin xyz="0 -0.013 0.115" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 -0.013 0.115" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -270,13 +270,13 @@
     <visual>
       <origin xyz="0 0.015754 0.149615" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0.015754 0.149615" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -293,13 +293,13 @@
     <visual>
       <origin xyz="0 0.03747 0.162972" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0.03747 0.162972" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -316,13 +316,13 @@
     <visual>
       <origin xyz="0 0.022355 0.079645" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0.022355 0.079645" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -339,13 +339,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -362,13 +362,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -385,13 +385,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -408,13 +408,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0.174532925 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -431,13 +431,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -454,13 +454,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -477,13 +477,13 @@
     <visual>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="-0.035 0 -0.070" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -500,13 +500,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -534,13 +534,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -557,13 +557,13 @@
     <visual>
       <origin xyz="0 0.013 0.115" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0.013 0.115" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -580,13 +580,13 @@
     <visual>
       <origin xyz="0 -0.015754 0.149615" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 -0.015754 0.149615" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -603,13 +603,13 @@
     <visual>
       <origin xyz="0 -0.03747 0.162972" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 -0.03747 0.162972" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>
@@ -626,13 +626,13 @@
     <visual>
       <origin xyz="0 -0.022355 0.079645" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 -0.022355 0.079645" rpy="0 -0 0 "/>
       <geometry>
-        <mesh filename="package://aero_description/models/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision>
     <inertial>

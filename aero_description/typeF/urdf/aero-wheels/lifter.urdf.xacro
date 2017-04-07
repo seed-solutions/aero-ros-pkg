@@ -25,13 +25,13 @@
 <!--      <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -48,13 +48,13 @@
       <visual>
         <origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -71,13 +71,13 @@
       <visual>
         <origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>

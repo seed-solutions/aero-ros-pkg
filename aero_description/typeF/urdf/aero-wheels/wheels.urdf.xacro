@@ -25,13 +25,13 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/models/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>

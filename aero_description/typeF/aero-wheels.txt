@@ -1,7 +1,3 @@
-link WAIST_LINK0 base_link
-link WAIST_LINK1 leg_base_link
-link LEG_LINK1 leg_thigh_link
-link LEG_LINK2 leg_foreleg_link
-joint WAIST_Y upper_lower_connector
-joint LEG_HIP hip_joint
-joint LEG_KNEE knee_joint
+hip_joint
+knee_joint
+ankle_joint
