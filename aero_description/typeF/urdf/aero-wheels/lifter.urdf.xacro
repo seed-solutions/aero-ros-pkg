@@ -116,7 +116,7 @@
       <mechanicalReduction>1</mechanicalReduction>
     </transmission>
     <gazebo reference="hip_joint">
-      <cfmDamping>0.4</cfmDamping>
+      <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
     <joint name="knee_joint" type="revolute">
       <parent link="leg_foreleg_link"/>
@@ -133,7 +133,7 @@
       <mechanicalReduction>1</mechanicalReduction>
     </transmission>
     <gazebo reference="knee_joint">
-      <cfmDamping>0.4</cfmDamping>
+      <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
     <joint name="ankle_joint" type="revolute">
       <parent link="${base_link}"/>
@@ -150,7 +150,7 @@
       <mechanicalReduction>1</mechanicalReduction>
     </transmission>
     <gazebo reference="hip_joint">
-      <cfmDamping>0.4</cfmDamping>
+      <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
 
   </xacro:macro>
