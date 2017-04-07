@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!-- XML namespaces -->
+<robot xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:gazebo="http://playerstage.sourceforge.net/gazebo/xmlschema/#gz"
+       xmlns:model="http://playerstage.sourceforge.net/gazebo/xmlschema/#model"
+       xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:body="http://playerstage.sourceforge.net/gazebo/xmlschema/#body"
+       xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
+       xmlns:joint="http://playerstage.sourceforge.net/gazebo/xmlschema/#joint"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:rendering="http://playerstage.sourceforge.net/gazebo/xmlschema/#rendering"
+       xmlns:renderable="http://playerstage.sourceforge.net/gazebo/xmlschema/#renderable"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+  
+  <xacro:macro name="wheels" params="base_link">
+    
+    <link name="${base_link}" />
+
+    <link name="wheels_body_link">
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/models/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/models/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="10" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+
+    <link name="wheels_top_link" />
+
+    <joint name="wheels_base_to_body_connector" type="fixed">
+      <parent  link="${base_link}"/>
+      <child link="wheels_body_link"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/>
+    </joint>
+
+    <joint name="wheels_body_to_top_connector" type="fixed">
+      <parent  link="wheels_body_link"/>
+      <child link="wheels_top_link"/>
+      <origin xyz="0.0 0.0 0.17" rpy="0 0 0 "/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>
