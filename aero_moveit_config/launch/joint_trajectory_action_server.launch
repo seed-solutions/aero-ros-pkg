@@ -1,5 +1,6 @@
 <launch>
 
+  <!--joint_state_publisher translating lifter angles to lifter position-->
   <node name="joint_state_publisher_with_lifter" pkg="aero_moveit_config" type="joint_state_publisher_with_lifter.py"  output="screen">
   </node>
 
