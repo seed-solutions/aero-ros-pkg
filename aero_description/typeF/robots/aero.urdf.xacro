@@ -21,7 +21,9 @@
     <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/> 
   </joint>
 
-  <xacro:aero-wheels base_link="base_link">
-  </xacro:aero-wheels>
+  <xacro:aero-wheels base_link="base_link"/>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so"/>
+  <gazebo>
+  </gazebo>
 
 </robot>
