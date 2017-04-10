@@ -19,26 +19,48 @@
   
   <xacro:macro name="lifter" params="base_link">
     
-    <link name="${base_link}" />
-
-    <link name="leg_base_link">
-<!--      <visual>
+    <link name="${base_link}">
+      <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
         <mass value="7.64604" />
         <origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
         <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
-      </inertial> -->
+      </inertial>
+    </link>
+    <gazebo reference="${base_link}">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
+
+    <link name="leg_base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top_connector.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top_connector.dae" scale="1 1 1" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="7.64604" />
+        <origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
+        <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
+      </inertial>
     </link>
     <gazebo reference="leg_base_link">
       <mu1>0.9</mu1>
@@ -93,7 +115,29 @@
       <mu2>0.9</mu2>
     </gazebo>
     
-    <link name="lifter_top_link"/>
+    <link name="lifter_top_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top.dae" scale="1 1 1" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="7.64604" />
+        <origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
+        <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
+      </inertial>
+    </link>
+    <gazebo reference="lifter_top_link">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
 
     <joint name="lifter_top_connector" type="fixed">
       <parent link="leg_base_link"/>
