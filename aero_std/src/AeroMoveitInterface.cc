@@ -405,7 +405,7 @@ bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool 
 Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 {
   updateLinkTransforms();
-  std::string link = "base_link";
+  std::string link = "waist_link";
   Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
 }
