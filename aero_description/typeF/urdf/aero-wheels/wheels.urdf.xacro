@@ -69,7 +69,7 @@
     </gazebo>
 
     <joint name="wheels_body_to_top_connector" type="fixed">
-      <parent  link="wheels_body_link"/>
+      <parent  link="${base_link}"/>
       <child link="wheels_top_link"/>
       <origin xyz="0.0 0.0 0.17" rpy="0 0 0 "/>
     </joint>
