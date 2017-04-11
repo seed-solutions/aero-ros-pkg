@@ -19,9 +19,7 @@
   
   <xacro:macro name="wheels" params="base_link">
     
-    <link name="${base_link}"/>
-
-    <link name="wheels_body_link">
+    <link name="${base_link}">
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
@@ -36,10 +34,15 @@
       </collision>
       <inertial>
         <mass value="10" />
-        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <origin xyz="0 0 0" rpy="0 -0 0.09"/>
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
+    <gazebo reference="${base_link}">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
+
 
     <link name="wheels_top_link">
       <visual>
@@ -60,12 +63,10 @@
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
-
-    <joint name="wheels_base_to_body_connector" type="fixed">
-      <parent  link="${base_link}"/>
-      <child link="wheels_body_link"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/>
-    </joint>
+    <gazebo reference="wheels_top_link">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
 
     <joint name="wheels_body_to_top_connector" type="fixed">
       <parent  link="wheels_body_link"/>

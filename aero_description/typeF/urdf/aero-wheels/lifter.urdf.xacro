@@ -188,12 +188,12 @@
       <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
     </joint>
-    <transmission type="pr2_mechanism_model/SimpleTransmission" name="hip_joint_trans" >
-      <actuator name="hip_joint_motor" />
-      <joint name="hip_joint" />
+    <transmission type="pr2_mechanism_model/SimpleTransmission" name="ankle_joint_trans" >
+      <actuator name="ankle_joint_motor" />
+      <joint name="ankle_joint" />
       <mechanicalReduction>1</mechanicalReduction>
     </transmission>
-    <gazebo reference="hip_joint">
+    <gazebo reference="ankle_joint">
       <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
 
