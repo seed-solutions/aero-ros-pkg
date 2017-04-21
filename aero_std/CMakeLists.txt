@@ -21,7 +21,7 @@ find_package(Eigen REQUIRED)
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES aero_interface aero_moveit_interface object_features
+ LIBRARIES aero_moveit_interface object_features
  CATKIN_DEPENDS
  geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs
  moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs
@@ -37,14 +37,8 @@ include_directories(
 
 add_definitions(-std=c++11)
 
-add_library(aero_interface
-  src/AeroInterface.cc
-)
-target_link_libraries(aero_interface ${catkin_LIBRARIES})
-
 add_library(aero_moveit_interface
   src/AeroMoveitInterface.cc
-  src/AeroInterface.cc
 )
 target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
 
