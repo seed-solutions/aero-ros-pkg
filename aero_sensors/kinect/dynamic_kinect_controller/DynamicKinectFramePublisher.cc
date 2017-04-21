@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         tf::Quaternion(1.570796, 0, 1.570796) * tf::Quaternion(angle, 0, 0));
 
     br.sendTransform(tf::StampedTransform(
-	transform, ros::Time::now(), "base_link", "dynamic_kinect_frame"));
+	transform, ros::Time::now(), "waist_link", "dynamic_kinect_frame"));
 
     // base to eye
     geometry_msgs::Pose msg;

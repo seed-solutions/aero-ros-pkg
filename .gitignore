@@ -1,6 +1,9 @@
 *~
 *.pyc
 aero_description/models
+aero_description/robots
+aero_description/meshes
+aero_description/urdf
 aero_startup/CMakeLists.txt
 aero_startup/generated_controllers.launch
 aero_startup/aero_controller_manager/AeroJointStatePublisher.cc

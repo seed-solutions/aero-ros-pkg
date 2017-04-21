@@ -51,7 +51,7 @@ void ObjectFeatures::setCameraTransform(std::string _camera_parent_link, Eigen::
 //////////////////////////////////////////////////
 int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _orientation, int _id){
   visualization_msgs::Marker marker;
-  marker.header.frame_id = "/virtual_lifter_x_link";
+  marker.header.frame_id = "/base_link";
   marker.header.stamp = ros::Time::now();
   marker.ns = "aero_markers";
   marker.id = _id;
@@ -80,7 +80,7 @@ int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _ori
 //////////////////////////////////////////////////
 int ObjectFeatures::setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id){
   visualization_msgs::Marker marker;
-  marker.header.frame_id = "/virtual_lifter_x_link";
+  marker.header.frame_id = "/base_link";
   marker.header.stamp = ros::Time::now();
   marker.ns = "aero_markers";
   marker.id = _id;

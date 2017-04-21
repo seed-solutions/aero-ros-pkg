@@ -16,7 +16,7 @@
         <chain base_link="body_link" tip_link="l_hand_link" />
     </group>
     <group name="torso">
-        <chain base_link="base_link" tip_link="body_link" />
+        <chain base_link="waist_link" tip_link="body_link" />
     </group>
     <group name="rarm_with_torso">
         <group name="rarm" />
@@ -27,7 +27,7 @@
         <group name="torso" />
     </group>
     <group name="lifter">
-        <chain base_link="virtual_lifter_x_link" tip_link="base_link" />
+        <chain base_link="virtual_lifter_x_link" tip_link="waist_link" />
     </group>
     <group name="rarm_with_lifter">
         <group name="rarm_with_torso" />
@@ -119,7 +119,7 @@
     <end_effector name="right_eef" parent_link="r_hand_link" group="rhand" parent_group="rarm" />
     <end_effector name="left_eef" parent_link="l_hand_link" group="lhand" parent_group="larm" />
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
-    <virtual_joint name="virtual_joint" type="planar" parent_frame="odom_combined" child_link="virtual_lifter_x_link" />
+    <virtual_joint name="virtual_joint" type="planar" parent_frame="odom_combined" child_link="base_link" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <!-- COLLISIONINSERTLINE  -->
 </robot>

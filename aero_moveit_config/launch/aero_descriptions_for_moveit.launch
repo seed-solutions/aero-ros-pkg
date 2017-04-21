@@ -1,28 +1,28 @@
 <launch>
-  <param name="robot_description_limited" command="cat $(find aero_description)/models/aero_moveit_limited.urdf"/>
-  <param name="robot_description_limited_semantic" textfile="$(find aero_moveit_config)/config/AeroUpperRobot.srdf" />
-  <group ns="robot_description_limited_planning">
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find aero_description)/robots/aero_moveit_ik.urdf.xacro'"/>
+  <param name="robot_description_semantic" textfile="$(find aero_moveit_config)/config/AeroUpperRobot.srdf" />
+  <group ns="robot_description_planning">
     <rosparam command="load" file="$(find aero_moveit_config)/config/joint_limits.yaml"/>
   </group>
-  <group ns="robot_description_limited_kinematics">
+  <group ns="robot_description_kinematics">
     <rosparam command="load" file="$(find aero_moveit_config)/config/kinematics.yaml"/>
   </group>
 
-  <param name="robot_description_limited_height_only" command="cat $(find aero_description)/models/aero_moveit_limited_height_only.urdf"/>
-  <param name="robot_description_limited_height_only_semantic" textfile="$(find aero_moveit_config)/config/AeroUpperRobot.srdf" />
-  <group ns="robot_description_limited_height_only_planning">
+  <param name="robot_description_height_only" command="$(find xacro)/xacro.py '$(find aero_description)/robots/aero_moveit_ik_ho.urdf.xacro'"/>
+  <param name="robot_description_height_only_semantic" textfile="$(find aero_moveit_config)/config/AeroUpperRobot.srdf" />
+  <group ns="robot_description_height_only_planning">
     <rosparam command="load" file="$(find aero_moveit_config)/config/joint_limits.yaml"/>
   </group>
-  <group ns="robot_description_limited_height_only_kinematics">
+  <group ns="robot_description_height_only_kinematics">
     <rosparam command="load" file="$(find aero_moveit_config)/config/kinematics.yaml"/>
   </group>
 
-  <param name="robot_description_limited_on_plane" command="cat $(find aero_description)/models/aero_moveit_limited_on_plane.urdf"/>
-  <param name="robot_description_limited_on_plane_semantic" textfile="$(find aero_moveit_config)/config/AeroUpperRobot.srdf" />
-  <group ns="robot_description_limited_on_plane_planning">
+  <param name="robot_description_on_plane" command="$(find xacro)/xacro.py '$(find aero_description)/robots/aero_moveit_ik_op.urdf.xacro'"/>
+  <param name="robot_description_on_plane_semantic" textfile="$(find aero_moveit_config)/config/AeroUpperRobot.srdf" />
+  <group ns="robot_description_on_plane_planning">
     <rosparam command="load" file="$(find aero_moveit_config)/config/joint_limits.yaml"/>
   </group>
-  <group ns="robot_description_limited_on_plane_kinematics">
+  <group ns="robot_description_on_plane_kinematics">
     <rosparam command="load" file="$(find aero_moveit_config)/config/kinematics.yaml"/>
   </group>
 </launch>

@@ -1,7 +1,9 @@
 <launch>
-  <param name="aero_description" command="cat $(find aero_description)/models/aero.urdf"/>
-  <param name="robot_description" command="cat $(find aero_description)/models/aero_moveit.urdf"/>
+  <param name="aero_description" command="$(find xacro)/xacro.py '$(find aero_description)/robots/aero.urdf.xacro'"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find aero_description)/robots/aero_moveit_ik.urdf.xacro'"/>
   <node name="aero_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+    <remap from="robot_description" to="aero_description"/>
+    <remap from="joint_states" to="aero_joint_states"/>
   </node>
   <node name="aero_joint_state_publisher" pkg="aero_startup" type="aero_joint_state_publisher"/>
 
