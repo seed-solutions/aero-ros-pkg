@@ -37,14 +37,8 @@ include_directories(
 
 add_definitions(-std=c++11)
 
-add_library(aero_interface
-  src/AeroInterface.cc
-)
-target_link_libraries(aero_interface ${catkin_LIBRARIES})
-
 add_library(aero_moveit_interface
   src/AeroMoveitInterface.cc
-  src/AeroInterface.cc
 )
 target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
 
