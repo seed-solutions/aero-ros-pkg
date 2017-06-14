@@ -678,7 +678,7 @@
     <child  link="hip_center"/>
     <origin xyz="0 0 0.1355" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
+    <limit lower="0" upper="0.4014" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_p_joint_trans" >
@@ -694,7 +694,7 @@
     <child  link="body_link"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.122173" upper="0.122173" effort="100" velocity="0.5" />
+    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_r_joint_trans" >
@@ -774,7 +774,7 @@
     <child  link="l_forearm_link"/>
     <origin xyz="-0.035 0 -0.070" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <limit lower="-1.5708" upper="1.5708" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_y_joint_trans" >
@@ -790,7 +790,7 @@
     <child  link="l_wrist_center"/>
     <origin xyz="0 0 -0.1955" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-0.349066" upper="0.349066" effort="100" velocity="0.5" />
+    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_p_joint_trans" >
@@ -887,7 +887,7 @@
     <child  link="head_base_link"/>
     <origin xyz="0 0 0.1045" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="0" upper="1.04667" effort="100" velocity="0.5" />
+    <limit lower="0" upper="0.610864" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_p_joint_trans" >
@@ -983,7 +983,7 @@
     <child  link="r_forearm_link"/>
     <origin xyz="-0.035 0 -0.070" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <limit lower="-1.5708" upper="1.5708" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_y_joint_trans" >
@@ -999,7 +999,7 @@
     <child  link="r_wrist_center"/>
     <origin xyz="0 0 -0.1955" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-0.349066" upper="0.349066" effort="100" velocity="0.5" />
+    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_p_joint_trans" >
