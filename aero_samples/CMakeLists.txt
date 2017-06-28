@@ -38,6 +38,9 @@ target_link_libraries(side_grasp_sample_node ${catkin_LIBRARIES})
 add_executable(trajectory_lifter_sample_node src/trajectory_lifter.cc)
 target_link_libraries(trajectory_lifter_sample_node ${catkin_LIBRARIES})
 
+add_executable(fullbody_test_sample_node src/fullbody_test.cc)
+target_link_libraries(fullbody_test_sample_node ${catkin_LIBRARIES})
+
 # tests
 
 add_executable(stoa_atos_test_node tests/stoa_atos.cc)
