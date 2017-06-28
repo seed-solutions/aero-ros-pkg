@@ -11,11 +11,12 @@ int main(int argc, char **argv)
   aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
   interface->sendResetManipPose();
-  sleep(1);
 
+  const double z = -0.2;
 
   // prepare
-  interface->sendLifter(-0.2, -0.1);
+  interface->sendLifter(-0.2, z);
+  usleep(1000 * 1000);
 
   //
   std::vector<int> times;
@@ -27,13 +28,15 @@ int main(int argc, char **argv)
   for (int i=0; i < 10; ++i) {
     x = -0.2 + 0.04 * (i + 1.0);
     times.push_back(1000);// [ms]
-    tra.push_back(std::pair<double, double>(x, -0.1));
+    tra.push_back(std::pair<double, double>(x, z));
   }
 
   ROS_INFO("starting trajectory");
   if (!interface->sendLifterTrajectory(tra, times)) {
     ROS_INFO("lifter ik failed");
   } else {
+    ROS_INFO("lifter ik succeeded");
+    usleep(1000 * 1000);
     interface->sendLifter(0.0,0.0);
   }
 
