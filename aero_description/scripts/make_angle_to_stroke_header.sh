@@ -119,10 +119,11 @@ create_table_func_from_csv() {
 create_rp_table_func_from_csv() {
     joint_name_a=$1
     joint_name_b=$2
-    # offset=$2
     output_file=$3
     function_name=$4
-    template_file=$6
+    offset_p=$5
+    offset_r=$6
+    template_file=$7
 
     # parse joint_name_a
     file=''
@@ -136,11 +137,13 @@ create_rp_table_func_from_csv() {
     fi
 
     # load roll csv
+    case_num_r=()
     table_r=()
     interval_r=()
     j=0
     while read line
     do
+	case_num_r[j]=$(echo "$line" | cut -d ',' -f1)
 	table_r[j]=$(echo "$line" | cut -d ',' -f4)
 	interval_r[j]=$(echo "$line" | cut -d ',' -f3)
 	j=$(($j + 1))
@@ -158,11 +161,13 @@ create_rp_table_func_from_csv() {
     fi
 
     # load pitch csv
+    case_num_p=()
     table_p=()
     interval_p=()
     j=0
     while read line
     do
+	case_num_p[j]=$(echo "$line" | cut -d ',' -f1)
 	table_p[j]=$(echo "$line" | cut -d ',' -f4)
 	interval_p[j]=$(echo "$line" | cut -d ',' -f3)
 	j=$(($j + 1))
@@ -175,19 +180,9 @@ create_rp_table_func_from_csv() {
     idx=0
     for e in "${table_p[@]}"
     do
-	if [[ ${idx} -ne 0 ]]
-	then
-	    if [[ ${5} -eq 1 ]]
-	    then
-		val=$(echo "-1 * $e" | bc)
-		code="${code}${tab6}case -${idx}:\n"
-		code="${code}${tab8}stroke2 = ${val};\n"
-		code="${code}${tab8}interval2 = ${interval[${idx}]};\n"
-		code="${code}${tab8}break;\n"
-	    fi
-	fi
-	code="${code}${tab6}case ${idx}:\n"
-	code="${code}${tab8}stroke2 = ${e};\n"
+	val_p=$(echo "$offset_p + $e" | bc)
+	code="${code}${tab6}case ${case_num_p[${idx}]}:\n"
+	code="${code}${tab8}stroke2 = ${val_p};\n"
 	code="${code}${tab8}interval2 = ${interval[${idx}]};\n"
 	code="${code}${tab8}break;\n"
 	idx=$(($idx + 1))
@@ -222,18 +217,12 @@ create_rp_table_func_from_csv() {
 
     idx=0
     code=''
+
     for e in "${table_r[@]}"
     do
-	if [[ ${idx} -ne 0 ]]
-	then
-	    val=$(echo "-1 * $e" | bc)
-	    code="${code}${tab6}case -${idx}:\n"
-	    code="${code}${tab8}stroke1 = ${val};\n"
-	    code="${code}${tab8}interval1 = ${interval[${idx}]};\n"
-	    code="${code}${tab8}break;\n"
-	fi
-	code="${code}${tab6}case ${idx}:\n"
-	code="${code}${tab8}stroke1 = ${e};\n"
+	val_r=$(echo "$offset_r + $e" | bc)
+	code="${code}${tab6}case ${case_num_r[${idx}]}:\n"
+	code="${code}${tab8}stroke1 = ${val_r};\n"
 	code="${code}${tab8}interval1 = ${interval[${idx}]};\n"
 	code="${code}${tab8}break;\n"
 	idx=$(($idx + 1))
@@ -273,8 +262,9 @@ do
     else
 	csv1=$(echo "${line}" | awk '{print $4}')
 	csv2=$(echo "${line}" | awk '{print $5}')
-	symmetry=$(echo "${line}" | awk '{print $7}')
-	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $symmetry $template_file
+	offset_p=$(echo "${line}" | awk '{print $7}')
+	offset_r=$(echo "${line}" | awk '{print $9}')
+	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $offset_p $offset_r $template_file
     fi
 done
 
