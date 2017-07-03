@@ -29,7 +29,7 @@
     <joint name="wheel_lifter_connector" type="fixed">
       <parent  link="wheels_top_link"/>
       <child link="lifter_base_link"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/> 
+      <origin xyz="0.0 0.0 0.005" rpy="0 0 0 "/> 
    </joint>
 
    <xacro:unless value="${virtual_lifter}">
