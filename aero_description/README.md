@@ -67,8 +67,12 @@ upper and lower body.
 When running `make_contrllers.sh`,
 joint information will be written into `AngleJointNames.hh`.
 
+Also `configure_controller.sh` will generate additional controllers,
+which are defined in `controllers.cfg`.
+Syntax of configuration is:
 
-
+- `&` : MERGE into controller class
+- `+` : ADD standalone node into CMakeLists.txt and launch file
 
 
 ### Angle <-> Stroke
@@ -150,8 +154,3 @@ The configuration directory MUST contain followings.
 - aero_upper.txt
 - aero{$LOWER}.txt
 - controllers.cfg
-
-### Syntax of controllers.cfg
-
-- `&` : MERGE into controller class
-- `+` : ADD standalone node into CMakeLists.txt and launch file
