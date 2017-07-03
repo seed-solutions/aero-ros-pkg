@@ -64,6 +64,12 @@ upper and lower body.
 - DOF of each upper / lower part
 - Indices of each actuators in stroke and raw commands
 
+When running `make_contrllers.sh`,
+joint information will be written into `AngleJointNames.hh`.
+
+
+
+
 
 ### Angle <-> Stroke
 
