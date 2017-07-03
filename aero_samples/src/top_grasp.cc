@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 
   // grasp object from top
   Eigen::Vector3d obj;// target object's position
-  obj << 0.5, 0.2, 0.7;
+  obj << 0.7, 0.2, 1.0;
 
   aero::TopGrasp top;// grasping information
   top.arm = aero::arm::either;

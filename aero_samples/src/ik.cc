@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   geometry_msgs::Pose pose1;// target pose
   pose1.position.x = 0.57;
   pose1.position.y = -0.15;
-  pose1.position.z = 0.73;
+  pose1.position.z = 1.1;
   pose1.orientation.w = 1.0;
   pose1.orientation.x = 0.0;
   pose1.orientation.y = 0.0;
