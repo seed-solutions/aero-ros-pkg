@@ -57,6 +57,8 @@ else followings will run after these.
 
 The robot structure is assumed to have 2 SEED controllers,
 upper and lower body.
+`AeroControllerNode` has `AeroUpperController` and `AeroLowerController`,
+both controllers are inherited from `AEROControllerProto` and `SEED485Controller`.
 
 `headers/Constants.hh` is a configuration file including;
 
