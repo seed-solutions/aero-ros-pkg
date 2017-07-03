@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
   // grasp object from side
   Eigen::Vector3d obj;// target object's position
-  obj << 0.5, 0.0, 0.8;
+  obj << 0.5, 0.0, 1.1;
 
   aero::SideGrasp side;// grasping information
   side.arm = aero::arm::either;
