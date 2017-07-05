@@ -20,7 +20,7 @@ int main(int argc, char **argv)
   sleep(3);
 
   ROS_INFO("looking left");
-  interface->setNeck(0.0, 0.0, 100.0);// too much value is redued to joint limit
+  interface->setNeck(0.0, 0.0, 100.0);// too much value is reduced to joint limit
   interface->sendAngleVector(2000);
   sleep(3);
 
