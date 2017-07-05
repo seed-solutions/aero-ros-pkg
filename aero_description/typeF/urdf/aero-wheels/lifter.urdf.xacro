@@ -43,41 +43,65 @@
       <mu2>0.9</mu2>
     </gazebo>
 
-    <link name="leg_base_link">
+    <link name="leg_foreleg_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top_connector.dae" scale="1 1 1" />
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 -0 0"/>
-        <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top_connector.dae" scale="1 1 1" />
-        </geometry>
-      </collision>
-      <inertial>
-        <mass value="7.64604" />
-        <origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
-        <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
-      </inertial>
-    </link>
-    <gazebo reference="leg_base_link">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
-    <link name="leg_thigh_link">
-      <visual>
-        <!--origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/-->
-        <origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/>
-        <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_upper_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="2.06679" />
+        <origin xyz="0.081713 0.000812 -0.146934" rpy="0 -0 0"/>
+        <inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
+      </inertial>
+    </link>
+    <gazebo reference="leg_foreleg_link">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
+
+    <link name="leg_knee_link">
+      <visual>
+        <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_knee.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_knee.dae" scale="1 1 1" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="2.06679" />
+        <origin xyz="0.081713 0.000812 -0.146934" rpy="0 -0 0"/>
+        <inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
+      </inertial>
+    </link>
+    <gazebo reference="leg_knee_link">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
+
+    <link name="leg_thigh_link">
+      <visual>
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -90,27 +114,27 @@
       <mu1>0.9</mu1>
       <mu2>0.9</mu2>
     </gazebo>
-    <link name="leg_foreleg_link">
+
+    <link name="leg_base_link">
       <visual>
-        <!--origin xyz="0.0 0.0 0.29009" rpy="0 -0 0"/-->
-        <origin xyz="0.0 0.0 0.235" rpy="0 -0 0"/>
+        <origin xyz="0 0 0.05" rpy="3.1415920 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheel_lower_mesh.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
-        <mass value="2.06679" />
-        <origin xyz="0.081713 0.000812 -0.146934" rpy="0 -0 0"/>
-        <inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
+        <mass value="7.64604" />
+        <origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
+        <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
       </inertial>
     </link>
-    <gazebo reference="leg_foreleg_link">
+    <gazebo reference="leg_base_link">
       <mu1>0.9</mu1>
       <mu2>0.9</mu2>
     </gazebo>
@@ -142,14 +166,12 @@
     <joint name="lifter_top_connector" type="fixed">
       <parent link="leg_base_link"/>
       <child  link="lifter_top_link"/>
-      <!--origin xyz="-0.01591 0.0 0.05" rpy="0 -0 0 "/-->
-      <origin xyz="-0.01591 0.0 0.10509" rpy="0 -0 0 "/>
+      <origin xyz="0 0 0.055" rpy="0 0 0"/>
     </joint>
     <joint name="hip_joint" type="revolute">
       <parent link="leg_thigh_link"/>
-      <child  link="leg_base_link"/>
-      <!--origin xyz="0 0 0.29009" rpy="0 -0 0 "/-->
-      <origin xyz="0 0 0.235" rpy="0 -0 0 "/>
+      <child link="leg_base_link"/>
+      <origin xyz="0 0 0.25" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
       <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
@@ -162,11 +184,11 @@
     <gazebo reference="hip_joint">
       <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
+<!--
     <joint name="knee_joint" type="revolute">
       <parent link="leg_foreleg_link"/>
-      <child  link="leg_thigh_link"/>
-      <!--origin xyz="0 0 0.29009" rpy="0 -0 0 "/-->
-      <origin xyz="0 0 0.235" rpy="0 -0 0 "/>
+      <child  link="leg_knee_link"/>
+      <origin xyz="0 0 0.25" rpy="0 0 0"/>
       <axis   xyz="0 1 0"/>
       <limit lower="0" upper="3.14159" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
@@ -179,11 +201,11 @@
     <gazebo reference="knee_joint">
       <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
+-->
     <joint name="ankle_joint" type="revolute">
       <parent link="${base_link}"/>
       <child  link="leg_foreleg_link"/>
-      <!--origin xyz="0.0 0.0 0.07" rpy="0 -0 0 "/-->
-      <origin xyz="0.0 0.0 0.12509" rpy="0 -0 0 "/>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
       <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
@@ -196,6 +218,57 @@
     <gazebo reference="ankle_joint">
       <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
+
+<!--- mimic joints -->
+<!-- requried -->
+    <joint name="knee_joint_foreleg_dummy" type="continuous">
+      <parent link="leg_foreleg_link"/>
+      <child  link="leg_knee_link"/>
+      <origin xyz="0 0 0.25" rpy="0 0 0"/>
+      <axis   xyz="0 -1 0"/>
+      <mimic joint="ankle_joint" multiplier="-1" offset="0" />
+    </joint>
+
+    <joint name="knee_joint_thigh_dummy" type="continuous">
+      <parent link="leg_knee_link"/>
+      <child  link="leg_thigh_link"/>
+      <origin xyz="0 0 0.12" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <mimic joint="hip_joint" multiplier="-1" offset="0" />
+    </joint>
+
+<!-- redundant -->
+    <link name="leg_foreleg_link_dummy">
+      <visual>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone_dummy.dae" scale="1 1 1" />
+        </geometry>
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
+      </visual>
+    </link>
+    <link name="leg_thigh_link_dummy">
+      <visual>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone_dummy.dae" scale="1 1 1" />
+        </geometry>
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
+      </visual>
+    </link>
+
+    <joint name="ankle_joint_dummy" type="continuous">
+      <parent link="${base_link}"/>
+      <child link="leg_foreleg_link_dummy"/>
+      <origin xyz="0.03182 0 0.08182" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <mimic joint="ankle_joint" multiplier="1" offset="0" />
+    </joint>
+    <joint name="hip_joint_dummy" type="continuous">
+      <parent link="leg_knee_link"/>
+      <child link="leg_thigh_link_dummy"/>
+      <origin xyz="0.03182 0 0.08818" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <mimic joint="hip_joint" multiplier="1" offset="0" />
+    </joint>
 
   </xacro:macro>
 

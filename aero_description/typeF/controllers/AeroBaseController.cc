@@ -6,7 +6,7 @@ using namespace navigation;
 static const float radius = 0.076;
 static const float Radius = 0.2974535;
 // static const float max_velocity = 450.0;  // rpm * 10
-static const float max_velocity = 15.0;  // rpm
+static const float max_velocity = 90.0;  // deg/s
 
 //////////////////////////////////////////////////
 class AeroMoveBase::AeroMoveBaseImpl
@@ -156,7 +156,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
 
   float distance = sqrt(_x * _x + _y * _y);  // m
   float velocity_radian =
-    (sqrt(Vx * Vx + Vy * Vy) / 60.0) * 2.0 * M_PI;  // rpm -> rad/s
+    sqrt(Vx * Vx + Vy * Vy) * M_PI / 180;  // deg/s -> rad/s
   float wheel_travel = velocity_radian * radius;  // m/s
 
   wheels wheel_data;
@@ -183,7 +183,7 @@ wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
         {max_velocity, max_velocity, max_velocity, max_velocity};
 
   float velocity_radian =
-    (max_velocity / 60.0) * 2.0 * M_PI;  // rpm -> rad/s
+    max_velocity * M_PI / 180;  // deg/s -> rad/s
   float wheel_travel =
     radius * velocity_radian;  // rad/s -> m/s
   float turn_radius =
