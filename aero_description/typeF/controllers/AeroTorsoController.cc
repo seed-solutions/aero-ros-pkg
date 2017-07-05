@@ -5,11 +5,11 @@
 
 //static const double link1_length = 250.0;
 //static const double link2_length = 250.0;
-static const double link1_length = 235.0;
-static const double link2_length = 235.0;
+static const double link1_length = 250.0;
+static const double link2_length = 250.0;
 static const double x_origin = 0.0;
 //static const double z_origin = 500.0;
-static const double z_origin = 470.0;
+static const double z_origin = 500.0;
 static const double stroke_per_sec = 10.0; // mm/sec
 
 ros::Publisher pub;
