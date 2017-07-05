@@ -7,8 +7,8 @@ from geometry_msgs.msg import Point
 
 class LifterStatePublisher(object):
     def __init__(self):
-        self._l1 = 235.0
-        self._l2 = 235.0
+        self._l1 = 250.0
+        self._l2 = 250.0
         self._pub = rospy.Publisher("/joint_states", JointState, queue_size=1)
         self._sub = rospy.Subscriber("/aero_joint_states", JointState, self.state_cb, queue_size=1)
 
@@ -18,8 +18,9 @@ class LifterStatePublisher(object):
         msg.name = state.name
         hip_id = state.name.index("hip_joint")
         knee_id = state.name.index("knee_joint")
-        ankle_id = state.name.index("ankle_joint")
-        msg.position = list(state.position)
+        if "ankle_joint" in state.name :
+            ankle_id = state.name.index("ankle_joint")
+            msg.position = list(state.position)
         hip = state.position[state.name.index("hip_joint")]
         knee = state.position[state.name.index("knee_joint")] 
         z = self._l1 * (math.cos(knee - hip) - 1.0) + self._l2 * (math.cos(hip) - 1.0)

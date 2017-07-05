@@ -53,7 +53,7 @@
       <parent link="leg_base_link"/>
       <child  link="lifter_top_link"/>
       <!--origin xyz="-0.01591 0.0 0.05" rpy="0 -0 0 "/-->
-      <origin xyz="-0.01591 0.0 0.10509" rpy="0 -0 0 "/>
+      <origin xyz="0.0 0.0 0.055" rpy="0 -0 0 "/>
     </joint>
 
     <joint name="virtual_lifter_z_joint" type="prismatic">
@@ -69,7 +69,7 @@
       <parent link="virtual_lifter_x_link"/>
       <child  link="virtual_lifter_z_link"/>
       <!--origin xyz="0.0 0.0 0.58018" rpy="0 -0 0 "/-->
-      <origin xyz="0.0 0.0 0.47" rpy="0 -0 0 "/>
+      <origin xyz="0.0 0.0 0.5" rpy="0 -0 0 "/>
       <axis   xyz="1 0 0"/>
       <limit lower="${x_min}" upper="${x_max}" effort="100" velocity="0.1" />
       <dynamics damping="0.2" friction="0" />
@@ -79,7 +79,7 @@
       <parent link="${base_link}"/>
       <child  link="virtual_lifter_x_link"/>
       <!--origin xyz="0.0 0.0 0.07" rpy="0 -0 0 "/-->
-      <origin xyz="0.0 0.0 0.12509" rpy="0 -0 0 "/>
+      <origin xyz="0.0 0.0 0.17" rpy="0 -0 0 "/>
       <axis   xyz="0 -1 0"/>
     </joint>
 
