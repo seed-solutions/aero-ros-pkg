@@ -19,9 +19,10 @@
 
   <include file="$(find aero_sensors)/kinect/launch/dynamic_kinect.launch"
           if="$(arg DYNAMIC_KINECT)"/>
-
+<!--
   <node name="aero_move_base" pkg="aero_startup"
         type="aero_move_base.py"/>
+-->
   <!--ps4eye sensor-->
   <!--include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
   <node pkg="topic_tools" type="throttle" name="ps4eye_throttle"
