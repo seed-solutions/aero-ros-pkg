@@ -1,264 +1,123 @@
-#include "aero_move_base/AeroMoveBase.hh"
+#include <ros/ros.h>
+#include <trajectory_msgs/JointTrajectory.h>
+#include <geometry_msgs/Twist.h>
+#include <std_msgs/Bool.h>
 
-using namespace aero;
-using namespace navigation;
+#include <math.h>
 
-static const float radius = 0.076;
-static const float Radius = 0.2974535;
-// static const float max_velocity = 450.0;  // rpm * 10
-static const float max_velocity = 90.0;  // deg/s
+//////////////////////////////
+class WheelController{
+public:
+  WheelController(ros::NodeHandle _nh);
+  void SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel);
+  void SafetyCheckCallback(const ros::TimerEvent& _event);
 
-//////////////////////////////////////////////////
-class AeroMoveBase::AeroMoveBaseImpl
-{
-public: AeroMoveBaseImpl();
+private:
+  //set_action
+  std::vector<double> cur_vel_;
+  float dx_,dy_,dtheta_,theta_,v1_,v2_,v3_,v4_;
+  int16_t FR_wheel,RR_wheel,FL_wheel,RL_wheel;
+  float ros_rate_;
 
-public: ~AeroMoveBaseImpl();
+  ros::Publisher wheel_pub_;
+  trajectory_msgs::JointTrajectory wheel_cmd_;
+  ros::NodeHandle nh_;
+  ros::Subscriber cmd_vel_sub_;
 
-public: wheels Translate(float _x, float _y);
-
-public: wheels Rotate(float _theta);
-
-public: wheels Drift(float _x, float _theta);
+  //safety_check
+  std_msgs::Bool servo_;
+  ros::Publisher servo_pub_;
+  ros::Timer timer_;
+  ros::Time time_stamp_;
 };
+//-----------------------
 
-//////////////////////////////////////////////////
-void AeroMoveBase::Init()
-{
-  impl_.reset(new AeroMoveBase::AeroMoveBaseImpl());
+WheelController::WheelController(ros::NodeHandle _nh)
+  : dx_(0.0),dy_(0.0),dtheta_(0.0),theta_(0.0),v1_(0.0),v2_(0.0),v3_(0.0),v4_(0.0),
+    FR_wheel(0),RR_wheel(0),FL_wheel(0),RL_wheel(0){
 
-  ros_rate_ = 0.05;
-  num_of_wheels_ = 4;
-  wheel_names_ =
+  nh_ = _nh;
+  wheel_pub_ = nh_.advertise<trajectory_msgs::JointTrajectory>("/aero_controller/wheel_command", 10);
+  servo_pub_ = nh_.advertise<std_msgs::Bool>("/aero_controller/wheel_servo", 10);
+  cmd_vel_sub_ = nh_.subscribe("/cmd_vel",1, &WheelController::SetAction,this);
+  timer_ = nh_.createTimer(ros::Duration(0.01), &WheelController::SafetyCheckCallback, this);
+
+  ros_rate_ = 0.05;   //not meaning
+  wheel_cmd_.joint_names = 
     {"can_front_l_wheel", "can_front_r_wheel",
      "can_rear_l_wheel", "can_rear_r_wheel"};
+
+  cur_vel_.resize(4);
+  wheel_cmd_.points.resize(1);
+
+  servo_.data = false;
+
 }
+//-----------------------
 
-//////////////////////////////////////////////////
-wheels AeroMoveBase::Translate(float _x, float _y, float _theta)
-{
-  wheels wheel_data;
+void WheelController::SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel){
 
-  if (fabs(_theta) < 0.0001) // if translate
-  {
-    wheel_data = this->impl_->Translate(_x , _y);
-  }
-  else // if has rotate
-  {
-    if (fabs(_x) < 0.0001) // only rotate
-      wheel_data = this->impl_->Rotate(_theta);
-    else
-      wheel_data = this->impl_->Drift(_x, _theta);
+  //check servo state
+  if (servo_.data == false){
+    servo_.data = true;
+    servo_pub_.publish(servo_);
   }
 
-  return wheel_data;
+  //change dy and dx, because of between ROS and vehicle direction
+  dy_ = (_cmd_vel->linear.x * cos(theta_) - _cmd_vel->linear.y * sin(theta_));
+  dx_ = (_cmd_vel->linear.x * sin(theta_) +_cmd_vel->linear.y * cos(theta_));
+  dtheta_ = _cmd_vel->angular.z;                  //desirede angular velocity
+
+  //calculate wheel velocity
+  v1_ = -5.54420*dtheta_ + 13.1579*((-cos(theta_)+sin(theta_))*dx_ + (-cos(theta_)-sin(theta_))*dy_);
+  v2_ = -5.54420*dtheta_ + 13.1579*((-cos(theta_)-sin(theta_))*dx_ + (cos(theta_)-sin(theta_))*dy_);
+  v3_ = -5.54420*dtheta_ + 13.1579*((cos(theta_)-sin(theta_))*dx_ + (cos(theta_)+sin(theta_))*dy_);
+  v4_ = -5.54420*dtheta_ + 13.1579*((cos(theta_)+sin(theta_))*dx_ + (-cos(theta_)+sin(theta_))*dy_);
+
+
+  //[rad/sec] -> [deg/sec]
+  FR_wheel = static_cast<int16_t>(v1_*(180/M_PI));
+  RR_wheel = static_cast<int16_t>(v4_*(180/M_PI));
+  FL_wheel = static_cast<int16_t>(v2_*(180/M_PI));
+  RL_wheel = static_cast<int16_t>(v3_*(180/M_PI));
+
+  cur_vel_[0] = FL_wheel;
+  cur_vel_[1] = FR_wheel;
+  cur_vel_[2] = RL_wheel;
+  cur_vel_[3] = RR_wheel;
+
+  wheel_cmd_.points[0].positions = cur_vel_;
+  wheel_cmd_.points[0].time_from_start = ros::Duration(ros_rate_);
+  wheel_pub_.publish(wheel_cmd_);
+
+  //update time_stamp_
+  time_stamp_ = ros::Time::now();
 }
+//---------------------------
 
-//////////////////////////////////////////////////
-pose AeroMoveBase::dX(std::vector<double> _vels, float _dt)
-{
-  if (_vels.size() != 4) return {0.0, 0.0, 0.0};
+void WheelController::SafetyCheckCallback(const ros::TimerEvent& _event){
+  if( ((ros::Time::now() - time_stamp_).toSec() >= 1) && (servo_.data == true) ){
+    cur_vel_[0] = 0;
+    cur_vel_[1] = 0;
+    cur_vel_[2] = 0;
+    cur_vel_[3] = 0;
 
-  std::vector<double> velocities = // signal positive to move forward positive
-      {-_vels[0], _vels[1], -_vels[2], _vels[3]};
+    wheel_cmd_.points[0].positions = cur_vel_;
+    wheel_cmd_.points[0].time_from_start = ros::Duration(ros_rate_);
+    wheel_pub_.publish(wheel_cmd_);
 
-  float Vx =
-      0.25 * 0.5 *
-      static_cast<float>(velocities[0] + velocities[1] + velocities[2] + velocities[3]);
-  float Vy =
-      0.25 * 0.5 *
-      static_cast<float>(-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
-
-  return {static_cast<float>(Vx * 2*M_PI * radius * _dt),
-      static_cast<float>(Vy * 2*M_PI * radius * _dt),
-      static_cast<float>(max_velocity * radius * M_PI * _dt / (sqrt(2) * Radius * 300))};
-}
-
-//////////////////////////////////////////////////
-AeroMoveBase::AeroMoveBaseImpl::AeroMoveBaseImpl()
-{
-}
-
-//////////////////////////////////////////////////
-AeroMoveBase::AeroMoveBaseImpl::~AeroMoveBaseImpl()
-{
-}
-
-//////////////////////////////////////////////////
-wheels AeroMoveBase::AeroMoveBaseImpl::Translate(float _x, float _y)
-{
-  // front_left and rear_right
-  std::function<float(float, float)> lambda_vel1 =
-      [=](float x, float y)
-      {
-        float result;
-
-        if (x > 0 && y > 0)
-        {
-          float theta = atan(y / x);
-          result = max_velocity * 4/M_PI * (0.25*M_PI - theta);
-        }
-        else if (y >= 0 && x <= 0)
-          result = -max_velocity;
-        else if (y <= 0 && x >= 0)
-          result = max_velocity;
-        else
-        {
-          float theta = atan(y / x) - M_PI;
-          result = max_velocity * 4/M_PI * (theta + 0.75*M_PI);
-        }
-
-        return result;
-      };
-
-  // front_right and rear_left
-  std::function<float(float, float)> lambda_vel2 =
-      [=](float x, float y)
-      {
-        float result;
-
-        if (x >= 0 && y >= 0)
-          result = max_velocity;
-        else if (y > 0 && x < 0)
-        {
-          float theta = M_PI - atan(y / x);
-          result = max_velocity * 4/M_PI * (0.75*M_PI - theta);
-        }
-        else if (y < 0 && x > 0)
-        {
-          float theta = atan(y / x);
-          result = max_velocity * 4/M_PI * (theta + 0.25*M_PI);
-        }
-        else
-          result = -max_velocity;
-
-        return result;
-      };
-
-  std::vector<float> velocities =
-      {lambda_vel1(_x, _y), lambda_vel2(_x, _y),
-       lambda_vel2(_x, _y), lambda_vel1(_x ,_y)};
-
-  // the wheel velocities are velocities[i]
-  // the omni wheel direction is in the 45[deg] direction of the wheel
-  // therefore, the actual speed of the robot is velocities[i]/sqrt(2)
-  // decomposing the actual speed to the X and Y direction results to
-  // velocities[i]/sqrt(2) * 1/sqrt(2) = 0.5 * velocities[i]
-  // there is four wheels so the velocities are averaged with 0.25
-  float Vx =
-    // 0.25 * 0.5 *
-    0.25 * sqrt(2.0) * 0.5 *
-      (velocities[0] + velocities[1] + velocities[2] + velocities[3]);
-  float Vy =
-    // 0.25 * 0.5 *
-    0.25 * sqrt(2.0) * 0.5 *
-      (-velocities[0] + velocities[1] + velocities[2] - velocities[3]);
-
-  float distance = sqrt(_x * _x + _y * _y);  // m
-  float velocity_radian =
-    sqrt(Vx * Vx + Vy * Vy) * M_PI / 180;  // deg/s -> rad/s
-  float wheel_travel = velocity_radian * radius;  // m/s
-
-  wheels wheel_data;
-  wheel_data.velocities = // move forward positive to signal positive
-    {velocities[0], -velocities[1], velocities[2], -velocities[3]};
-  wheel_data.time =
-    distance / wheel_travel / 1.4;
-    // sqrt(_x*_x + _y*_y) / (sqrt(Vx*Vx + Vy*Vy) * M_PI * radius) * 300;
-  // * 60 is rpm -> rps
-
-  return wheel_data;
-}
-
-//////////////////////////////////////////////////
-wheels AeroMoveBase::AeroMoveBaseImpl::Rotate(float _theta)
-{
-  wheels wheel_data;
-
-  if (_theta >= 0)
-    wheel_data.velocities =
-        {-max_velocity, -max_velocity, -max_velocity, -max_velocity};
-  else
-    wheel_data.velocities =
-        {max_velocity, max_velocity, max_velocity, max_velocity};
-
-  float velocity_radian =
-    max_velocity * M_PI / 180;  // deg/s -> rad/s
-  float wheel_travel =
-    radius * velocity_radian;  // rad/s -> m/s
-  float turn_radius =
-    Radius * fabs(_theta);  // rad -> m
-
-  // wheel_data.time =
-  //     300 * sqrt(2) * Radius * fabs(_theta) / (M_PI * radius * max_velocity);
-  wheel_data.time = turn_radius / wheel_travel;
-
-  return wheel_data;
-}
-
-//////////////////////////////////////////////////
-wheels AeroMoveBase::AeroMoveBaseImpl::Drift(float _x, float _theta)
-{
-  // Note : drift rotates at half the speed of Rotate
-
-  wheels wheel_data;
-
-  float x = fabs(_x);
-  float theta = fabs(_theta);
-  // moving forward and turning more than 90 degrees is not possible
-  if (theta > (M_PI * 0.5)) theta = M_PI * 0.5;
-
-  // Time calculated from x movement is equal to
-  // time calculated from theta movement.
-  // Note, because of the rotation,
-  // the x movement is the integral of V*cos(theta)dt.
-  // Thus, time from x is expressed with sin(theta)/theta.
-  // By using the two equations and eliminating v_theta,
-  // time can be expressed as the following.
-  float time = theta * 600 / (M_PI * radius * max_velocity) *
-      (x / sin(theta) + sqrt(2) * Radius);
-  if (time == 0)
-  {
-    ROS_ERROR("unexpected time = 0");
-    return {{0.0, 0.0, 0.0, 0.0}, 0.0};
+    servo_.data = false;
+    servo_pub_.publish(servo_);
   }
 
-  // When left or right side wheels move at speed V,
-  // the other side moves at V-v_theta,
-  // which means, the robot moves forward at V-v_theta
-  // and the difference between the wheels create the rotation.
-  // The rotation velocity is equal to v_theta/2, because
-  // the sided difference is equavalent to
-  // +v_theta/2 on one side, and -v_theta/2 on the other.
-  float v_theta =
-      2 * theta * sqrt(2) * Radius / (radius * time * M_PI) * 300;
-  // The actual command to send is V-v_theta,
-  // v_turn_wheel is backward positive
-  float v_turn_wheel = v_theta - max_velocity;
+} 
 
-  if (_theta >= 0)
-  {
-    if (_x >= 0)
-      wheel_data.velocities =
-          {-v_turn_wheel, -max_velocity,
-           -v_turn_wheel, -max_velocity};
-    else
-      wheel_data.velocities =
-          {-max_velocity, -v_turn_wheel,
-           -max_velocity, -v_turn_wheel};
-  }
-  else
-  {
-    if (_x <= 0)
-      wheel_data.velocities =
-          {v_turn_wheel, max_velocity,
-                v_turn_wheel, max_velocity};
-    else
-      wheel_data.velocities =
-          {max_velocity, v_turn_wheel,
-           max_velocity, v_turn_wheel};
-  }
-  wheel_data.time = time;
+/////////////////////////////////////////////////
+int main( int argc, char** argv) {
+  ros::init(argc, argv, "wheel_controller");
+  ros::NodeHandle nh;
 
-  return wheel_data;
+  WheelController wc(nh);
+
+  ros::spin();
 }
