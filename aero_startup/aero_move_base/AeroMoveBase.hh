@@ -14,143 +14,191 @@
 #include <move_base_msgs/MoveBaseFeedback.h>
 #include <move_base_msgs/MoveBaseResult.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Twist.h>
+#include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
 
 namespace aero
 {
-  namespace navigation
-  {
+namespace navigation
+{
 
-  /// @brief wheel velocities and goal time
-    struct wheels
-    {
-      std::vector<float> velocities;
+/// @brief wheel velocities and goal time
+struct wheels
+{
+  std::vector<float> velocities;
 
-      float time;
-    };
+  float time;
+};
 
-  /// @brief 2D pose
-    struct pose
-    {
-      float x;
+/// @brief 2D pose
+struct pose
+{
+  float x;
 
-      float y;
+  float y;
 
-      float theta;
-    };
+  float theta;
+};
 
-    struct goal
-    {
-      std::vector<float> max_vel;
+struct goal
+{
+  std::vector<float> max_vel;
 
-      std::vector<float> wheel_dV;
+  std::vector<float> wheel_dV;
 
-      float run_time;
+  float run_time;
 
-      float warm_up_time;
-    };
+  float warm_up_time;
+};
 
-    struct states
-    {
-      std::vector<double> cur_vel;
+struct states
+{
+  std::vector<double> cur_vel;
 
-      float cur_time;
+  float cur_time;
 
-      pose moved_distance;
+  pose moved_distance;
 
-      bool wheel_on;
-    };
+  bool wheel_on;
+};
 
-  /// @brief Base class of base movement
+/// @brief Base class of base movement
+///
+/// This class provides prototype of move base functions for
+/// vehicle-type base.
+/// Implementations of each hardwares must locate under
+/// aero_description/{hardware_type}.
+/// aero_description/aero_wheels/controllers/AeroBaseControllers.cc
+/// is sample of implementation.
+class AeroMoveBase
+{
+ public: explicit AeroMoveBase(const ros::NodeHandle& _nh);
+
+ public: ~AeroMoveBase();
+
+  /// @brief ABSTRACT function, initialize wheel properties.
   ///
-  /// This class provides prototype of move base functions for
-  /// vehicle-type base.
-  /// Implementations of each hardwares must locate under
-  /// aero_description/{hardware_type}.
-  /// aero_description/aero_wheels/controllers/AeroBaseControllers.cc
-  /// is sample of implementation.
-    class AeroMoveBase
-    {
-    public: explicit AeroMoveBase(const ros::NodeHandle& _nh);
+  /// This function depends on hardware construction and
+  /// MUST be implemented in subclass.
+ private: void Init();
 
-    public: ~AeroMoveBase();
+ private: void MoveBase(const ros::TimerEvent& _event);
 
-      /// @brief ABSTRACT function, initialize wheel properties.
-      ///
-      /// This function depends on hardware construction and
-      /// MUST be implemented in subclass.
-    private: void Init();
+ private: bool MoveBaseOnce();
 
-    private: void MoveBase(const ros::TimerEvent& _event);
+  /// @brief ABSTRACT function,
+  /// returns command for each wheels from x, y, theta.
+  ///
+  /// This function depends on hardware construction and
+  /// MUST be implemented in subclass.
+ private: wheels Translate(float _x, float _y, float _theta);
 
-    private: bool MoveBaseOnce();
+  /// @brief ABSTRACT function,
+  /// returns position from wheel velocities and dt
+  ///
+  /// This function depends on hardware construction and
+  /// MUST be implemented in subclass.
+ private: pose dX(std::vector<double> _vels, float _dt);
 
-      /// @brief ABSTRACT function,
-      /// returns command for each wheels from x, y, theta.
-      ///
-      /// This function depends on hardware construction and
-      /// MUST be implemented in subclass.
-    private: wheels Translate(float _x, float _y, float _theta);
+ private: void SetSimpleGoal(
+     const geometry_msgs::PoseStamped::ConstPtr& _msg);
 
-      /// @brief ABSTRACT function,
-      /// returns position from wheel velocities and dt
-      ///
-      /// This function depends on hardware construction and
-      /// MUST be implemented in subclass.
-    private: pose dX(std::vector<double> _vels, float _dt);
+ private: void SetActionGoal();
 
-    private: void SetSimpleGoal(
-        const geometry_msgs::PoseStamped::ConstPtr& _msg);
+ private: void CancelGoal();
 
-    private: void SetActionGoal();
+ private: void FinishMove();
 
-    private: void CancelGoal();
+ private: void SetGoal(float _x, float _y, float _theta);
 
-    private: void FinishMove();
+ private: void SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
-    private: void SetGoal(float _x, float _y, float _theta);
+ private: void SafetyCheckCallback(const ros::TimerEvent& _event);
 
-    private: std::vector<std::string> wheel_names_;
+ private: void CmdvelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
-    private: float ros_rate_;
+ private: void CalculateOdometry(const ros::TimerEvent& _event);
 
-    private: int num_of_wheels_;
+ private: std::vector<std::string> wheel_names_;
 
-    private: float warm_up_time_;
+ private: float ros_rate_;
 
-    private: unsigned int wait_for_servo_usec_;
+ private: int num_of_wheels_;
 
-    private: float move_coefficient_x;
+ private: float warm_up_time_;
 
-    private: float move_coefficient_y;
+ private: unsigned int wait_for_servo_usec_;
 
-    private: float move_coefficient_theta;
+ private: float move_coefficient_x;
 
-    private: goal goal_;
+ private: float move_coefficient_y;
 
-    private: states states_;
+ private: float move_coefficient_theta;
 
-    private: ros::NodeHandle nh_;
+ private: goal goal_;
 
-    private: actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> as_;
+ private: states states_;
 
-    private: move_base_msgs::MoveBaseFeedback feedback_;
+ private: ros::NodeHandle nh_;
 
-    private: ros::Publisher wheel_pub_;
+ private: actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> as_;
 
-    private: ros::Publisher servo_pub_;
+ private: move_base_msgs::MoveBaseFeedback feedback_;
 
-    private: ros::Subscriber simple_goal_sub_;
+  // @param wheel control publisher
+ private: ros::Publisher wheel_pub_;
 
-    private: ros::Timer timer_;
+ private: std::vector<double> cur_vel_;
 
-    private: class AeroMoveBaseImpl;
+ private: float dx_,dy_,dtheta_,theta_,v1_,v2_,v3_,v4_;
 
-    private: std::shared_ptr<AeroMoveBaseImpl> impl_;
-    };
+ private: int16_t FR_wheel,RR_wheel,FL_wheel,RL_wheel;
 
-    typedef std::shared_ptr<AeroMoveBase> AeroMoveBasePtr;
+ private: trajectory_msgs::JointTrajectory wheel_cmd_;
 
-  }
-}
+ private: ros::Subscriber cmd_vel_sub_;
+
+ private: double vx_,vy_,vth_,x_,y_,th_;
+
+ private: double dt_,delta_x_,delta_y_,delta_th_;
+
+ private: ros::Time current_time_, last_time_;
+
+ private: geometry_msgs::Quaternion odom_quat_;
+
+ private: tf::TransformBroadcaster odom_broadcaster_;
+
+ private: geometry_msgs::TransformStamped odom_trans_;
+
+ private: nav_msgs::Odometry odom_;
+
+ private: ros::Publisher odom_pub_;
+
+  /// @param servo status
+ private: std_msgs::Bool servo_;
+
+  /// @param servo control publisher
+ private: ros::Publisher servo_pub_;
+
+ private: ros::Subscriber simple_goal_sub_;
+
+ private: ros::Timer timer_;
+
+ private: ros::Timer safe_timer_;
+
+ private: ros::Timer odom_timer_;
+
+ private: ros::Time time_stamp_;
+
+ private: class AeroMoveBaseImpl;
+
+ private: std::shared_ptr<AeroMoveBaseImpl> impl_;
+};
+
+typedef std::shared_ptr<AeroMoveBase> AeroMoveBasePtr;
+
+}  // navigation
+}  // aero
 
 #endif
