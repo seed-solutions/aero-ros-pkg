@@ -112,12 +112,16 @@ class AeroMoveBase
 
  private: void SetGoal(float _x, float _y, float _theta);
 
+  /// @brief control with cmd_vel
  private: void SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
+  /// @brief safety stopper when msg is not reached for a while
  private: void SafetyCheckCallback(const ros::TimerEvent& _event);
 
+  /// @brief save cmd_vel
  private: void CmdvelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
+  /// @brief odometry publisher
  private: void CalculateOdometry(const ros::TimerEvent& _event);
 
  private: std::vector<std::string> wheel_names_;
@@ -151,17 +155,12 @@ class AeroMoveBase
 
  private: std::vector<double> cur_vel_;
 
- private: float dx_,dy_,dtheta_,theta_,v1_,v2_,v3_,v4_;
-
- private: int16_t FR_wheel,RR_wheel,FL_wheel,RL_wheel;
-
  private: trajectory_msgs::JointTrajectory wheel_cmd_;
 
  private: ros::Subscriber cmd_vel_sub_;
 
+  /// @param current (x, y, theta) (vx, vy, vtheta)
  private: double vx_,vy_,vth_,x_,y_,th_;
-
- private: double dt_,delta_x_,delta_y_,delta_th_;
 
  private: ros::Time current_time_, last_time_;
 

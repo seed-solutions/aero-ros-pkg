@@ -9,11 +9,7 @@ using namespace navigation;
 AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   nh_(_nh),
   as_(nh_, "move_base/goal", false),
-  dx_(0.0), dy_(0.0), dtheta_(0.0), theta_(0.0),
-  v1_(0.0), v2_(0.0), v3_(0.0), v4_(0.0),
-  FR_wheel(0), RR_wheel(0), FL_wheel(0), RL_wheel(0),
-  vx_(0),vy_(0),vth_(0),x_(0),y_(0),th_(0),
-  dt_(0),delta_x_(0),delta_y_(0),delta_th_(0)
+  vx_(0),vy_(0),vth_(0),x_(0),y_(0),th_(0)
 {
   this->Init();
 
@@ -313,31 +309,39 @@ void AeroMoveBase::FinishMove()
 
 void AeroMoveBase::SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel)
 {
+  float dx, dy, dtheta, theta;
+  float v1, v2, v3, v4;
+  int16_t FR_wheel, RR_wheel, FL_wheel, RL_wheel;
+
   CmdvelCallback(_cmd_vel);
 
   //check servo state
-  if (servo_.data == false){
+  if (!servo_.data){
     servo_.data = true;
     servo_pub_.publish(servo_);
   }
 
   //change dy and dx, because of between ROS and vehicle direction
-  dy_ = (_cmd_vel->linear.x * cos(theta_) - _cmd_vel->linear.y * sin(theta_));
-  dx_ = (_cmd_vel->linear.x * sin(theta_) +_cmd_vel->linear.y * cos(theta_));
-  dtheta_ = _cmd_vel->angular.z;                  //desirede angular velocity
+  dy = (_cmd_vel->linear.x * cos(theta) - _cmd_vel->linear.y * sin(theta));
+  dx = (_cmd_vel->linear.x * sin(theta) + _cmd_vel->linear.y * cos(theta));
+  dtheta = _cmd_vel->angular.z;  //desirede angular velocity
 
   //calculate wheel velocity
-  v1_ = -5.54420*dtheta_ + 13.1579*((-cos(theta_)+sin(theta_))*dx_ + (-cos(theta_)-sin(theta_))*dy_);
-  v2_ = -5.54420*dtheta_ + 13.1579*((-cos(theta_)-sin(theta_))*dx_ + (cos(theta_)-sin(theta_))*dy_);
-  v3_ = -5.54420*dtheta_ + 13.1579*((cos(theta_)-sin(theta_))*dx_ + (cos(theta_)+sin(theta_))*dy_);
-  v4_ = -5.54420*dtheta_ + 13.1579*((cos(theta_)+sin(theta_))*dx_ + (-cos(theta_)+sin(theta_))*dy_);
+  v1 = -5.54420*dtheta +
+      13.1579*((-cos(theta)+sin(theta))*dx + (-cos(theta)-sin(theta))*dy);
+  v2 = -5.54420*dtheta +
+      13.1579*((-cos(theta)-sin(theta))*dx + (cos(theta)-sin(theta))*dy);
+  v3 = -5.54420*dtheta +
+      13.1579*((cos(theta)-sin(theta))*dx + (cos(theta)+sin(theta))*dy);
+  v4 = -5.54420*dtheta +
+      13.1579*((cos(theta)+sin(theta))*dx + (-cos(theta)+sin(theta))*dy);
 
 
   //[rad/sec] -> [deg/sec]
-  FR_wheel = static_cast<int16_t>(v1_*(180/M_PI));
-  RR_wheel = static_cast<int16_t>(v4_*(180/M_PI));
-  FL_wheel = static_cast<int16_t>(v2_*(180/M_PI));
-  RL_wheel = static_cast<int16_t>(v3_*(180/M_PI));
+  FR_wheel = static_cast<int16_t>(v1 * (180 / M_PI));
+  RR_wheel = static_cast<int16_t>(v4 * (180 / M_PI));
+  FL_wheel = static_cast<int16_t>(v2 * (180 / M_PI));
+  RL_wheel = static_cast<int16_t>(v3 * (180 / M_PI));
 
   cur_vel_[0] = FL_wheel;
   cur_vel_[1] = FR_wheel;
@@ -379,14 +383,16 @@ void AeroMoveBase::CmdvelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 void AeroMoveBase::CalculateOdometry(const ros::TimerEvent& _event)
 {
   current_time_ = ros::Time::now();
-  dt_ = (current_time_ - last_time_).toSec();
-  delta_x_ = (vx_ * cos(th_) - vy_ * sin(th_)) * dt_;
-  delta_y_ = (vx_ * sin(th_) + vy_ * cos(th_)) * dt_;
-  delta_th_ = vth_ * dt_;
 
-  x_ += delta_x_;
-  y_ += delta_y_;
-  th_ += delta_th_;
+  double dt, delta_x, delta_y, delta_th;
+  dt = (current_time_ - last_time_).toSec();
+  delta_x = (vx_ * cos(th_) - vy_ * sin(th_)) * dt;
+  delta_y = (vx_ * sin(th_) + vy_ * cos(th_)) * dt;
+  delta_th = vth_ * dt;
+
+  x_ += delta_x;
+  y_ += delta_y;
+  th_ += delta_th;
 
   // odometry is 6DOF so we'll need a quaternion created from yaw
   odom_quat_ = tf::createQuaternionMsgFromYaw(th_);
