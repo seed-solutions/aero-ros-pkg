@@ -39,7 +39,7 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   servo_.data = false;
 
   current_time_ = ros::Time::now();
-  last_time_ = ros::Time::now();
+  last_time_ = current_time_;
 
 
   wheel_pub_ =
@@ -49,26 +49,30 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   servo_pub_ =
       nh_.advertise<std_msgs::Bool>("/aero_controller/wheel_servo", 10);
 
+  // for cmd_vel
   cmd_vel_sub_ =
       nh_.subscribe("/cmd_vel",1, &AeroMoveBase::CmdVelCallback, this);
 
+  // for odometory
   odom_pub_ = nh_.advertise<nav_msgs::Odometry>("odom", 1);
 
   odom_timer_ = nh_.createTimer(ros::Duration(odom_rate_),
                                 &AeroMoveBase::CalculateOdometry, this);
 
-  simple_goal_sub_ =
-      nh_.subscribe("move_base_simple/goal",
-                    10, &AeroMoveBase::SetSimpleGoal, this);
-
-  timer_ =
-      nh_.createTimer(ros::Duration(ros_rate_),
-                      &AeroMoveBase::MoveBase, this);
-
+  // for safety check
   safe_timer_ =
       nh_.createTimer(ros::Duration(safe_rate_),
                       &AeroMoveBase::SafetyCheckCallback, this);
 
+
+  simple_goal_sub_ =
+      nh_.subscribe("move_base_simple/goal",
+                    10, &AeroMoveBase::SetSimpleGoal, this);
+
+  // for move base action
+  timer_ =
+      nh_.createTimer(ros::Duration(ros_rate_),
+                      &AeroMoveBase::MoveBase, this);
 
   as_.registerGoalCallback(boost::bind(&AeroMoveBase::SetActionGoal, this));
   as_.registerPreemptCallback(boost::bind(&AeroMoveBase::CancelGoal, this));
@@ -305,6 +309,8 @@ void AeroMoveBase::FinishMove()
   // does not reset here for future references
 }
 
+//////////////////////////////////////////////////
+/// @brief control with cmd_vel
 void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 {
   vx_ = _cmd_vel->linear.x;
@@ -328,6 +334,9 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
   time_stamp_ = ros::Time::now();
 }
 
+//////////////////////////////////////////////////
+/// @brief safety stopper when msg is not reached
+///  for more than `safe_duration_` [s]
 void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
 {
   if((ros::Time::now() - time_stamp_).toSec() >= safe_duration_ &&
@@ -345,6 +354,8 @@ void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
   }
 }
 
+//////////////////////////////////////////////////
+/// @brief odometry publisher
 void AeroMoveBase::CalculateOdometry(const ros::TimerEvent& _event)
 {
   current_time_ = ros::Time::now();
@@ -360,39 +371,42 @@ void AeroMoveBase::CalculateOdometry(const ros::TimerEvent& _event)
   th_ += delta_th;
 
   // odometry is 6DOF so we'll need a quaternion created from yaw
-  odom_quat_ = tf::createQuaternionMsgFromYaw(th_);
+  geometry_msgs::Quaternion odom_quat
+      = tf::createQuaternionMsgFromYaw(th_);
 
   // first, we'll publish the transform over tf
-  odom_trans_.header.stamp = current_time_;
-  odom_trans_.header.frame_id = "odom";
-  odom_trans_.child_frame_id = "base_link";
+  geometry_msgs::TransformStamped odom_trans;
+  odom_trans.header.stamp = current_time_;
+  odom_trans.header.frame_id = "odom";
+  odom_trans.child_frame_id = "base_link";
 
-  odom_trans_.transform.translation.x = x_;
-  odom_trans_.transform.translation.y = y_;
-  odom_trans_.transform.translation.z = 0.0;
-  odom_trans_.transform.rotation = odom_quat_;
+  odom_trans.transform.translation.x = x_;
+  odom_trans.transform.translation.y = y_;
+  odom_trans.transform.translation.z = 0.0;
+  odom_trans.transform.rotation = odom_quat;
 
   // send the transform
-  odom_broadcaster_.sendTransform(odom_trans_);
+  odom_broadcaster_.sendTransform(odom_trans);
 
   // next, we'll publish the odometry message over ROS
-  odom_.header.stamp = current_time_;
-  odom_.header.frame_id = "odom";
+  nav_msgs::Odometry odom;
+  odom.header.stamp = current_time_;
+  odom.header.frame_id = "odom";
 
   // set the position
-  odom_.pose.pose.position.x = x_;
-  odom_.pose.pose.position.y = y_;
-  odom_.pose.pose.position.z = 0.0;
-  odom_.pose.pose.orientation = odom_quat_;
+  odom.pose.pose.position.x = x_;
+  odom.pose.pose.position.y = y_;
+  odom.pose.pose.position.z = 0.0;
+  odom.pose.pose.orientation = odom_quat;
 
   // set the velocity
-  odom_.child_frame_id = "base_link";
-  odom_.twist.twist.linear.x = vx_;
-  odom_.twist.twist.linear.y = vy_;
-  odom_.twist.twist.angular.z = vth_;
+  odom.child_frame_id = "base_link";
+  odom.twist.twist.linear.x = vx_;
+  odom.twist.twist.linear.y = vy_;
+  odom.twist.twist.angular.z = vth_;
 
   // publish the message
-  odom_pub_.publish(odom_);
+  odom_pub_.publish(odom);
 
   last_time_ = current_time_;
 }
