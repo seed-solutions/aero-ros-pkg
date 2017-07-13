@@ -9,7 +9,6 @@ using namespace navigation;
 AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   nh_(_nh),
   as_(nh_, "move_base/goal", false),
-  odom_rate_(0.02), safe_rate_(0.01),  // temporary
   vx_(0), vy_(0), vth_(0), x_(0), y_(0), th_(0)
 {
   this->Init();
@@ -329,47 +328,10 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
   time_stamp_ = ros::Time::now();
 }
 
-// v temporary
-void AeroMoveBase::VelocityToWheel(
-    const geometry_msgs::TwistConstPtr& _cmd_vel,
-    std::vector<double>& _wheel_vel)
-{
-  float dx, dy, dtheta, theta;
-  float v1, v2, v3, v4;
-  int16_t FR_wheel, RR_wheel, FL_wheel, RL_wheel;
-  theta = 0.0;
-
-  //change dy and dx, because of between ROS and vehicle direction
-  dy = (_cmd_vel->linear.x * cos(theta) - _cmd_vel->linear.y * sin(theta));
-  dx = (_cmd_vel->linear.x * sin(theta) + _cmd_vel->linear.y * cos(theta));
-  dtheta = _cmd_vel->angular.z;  //desirede angular velocity
-
-  //calculate wheel velocity
-  v1 = -5.54420*dtheta +
-      13.1579*((-cos(theta)+sin(theta))*dx + (-cos(theta)-sin(theta))*dy);
-  v2 = -5.54420*dtheta +
-      13.1579*((-cos(theta)-sin(theta))*dx + (cos(theta)-sin(theta))*dy);
-  v3 = -5.54420*dtheta +
-      13.1579*((cos(theta)-sin(theta))*dx + (cos(theta)+sin(theta))*dy);
-  v4 = -5.54420*dtheta +
-      13.1579*((cos(theta)+sin(theta))*dx + (-cos(theta)+sin(theta))*dy);
-
-  //[rad/sec] -> [deg/sec]
-  FR_wheel = static_cast<int16_t>(v1 * (180 / M_PI));
-  RR_wheel = static_cast<int16_t>(v4 * (180 / M_PI));
-  FL_wheel = static_cast<int16_t>(v2 * (180 / M_PI));
-  RL_wheel = static_cast<int16_t>(v3 * (180 / M_PI));
-
-  _wheel_vel[0] = FL_wheel;
-  _wheel_vel[1] = FR_wheel;
-  _wheel_vel[2] = RL_wheel;
-  _wheel_vel[3] = RR_wheel;
-}
-// ^ temporary
-
 void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
 {
-  if( ((ros::Time::now() - time_stamp_).toSec() >= 1) && servo_.data){
+  if((ros::Time::now() - time_stamp_).toSec() >= safe_duration_ &&
+     servo_.data) {
     for (size_t i = 0; i < num_of_wheels_; i++) {
       cur_vel_[i] = 0;
     }

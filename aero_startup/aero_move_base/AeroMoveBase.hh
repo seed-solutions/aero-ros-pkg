@@ -196,6 +196,8 @@ class AeroMoveBase
 
  private: float safe_rate_;
 
+ private: float safe_duration_;
+
  private: ros::Time time_stamp_;
 
  private: class AeroMoveBaseImpl;
