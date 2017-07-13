@@ -9,7 +9,8 @@ using namespace navigation;
 AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   nh_(_nh),
   as_(nh_, "move_base/goal", false),
-  vx_(0),vy_(0),vth_(0),x_(0),y_(0),th_(0)
+  odom_rate_(0.02), safe_rate_(0.01),  // temporary
+  vx_(0), vy_(0), vth_(0), x_(0), y_(0), th_(0)
 {
   this->Init();
 
@@ -31,11 +32,9 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   goal_.max_vel.resize(num_of_wheels_);
   states_.cur_vel.resize(num_of_wheels_);
 
-  wheel_cmd_.joint_names =
-    {"can_front_l_wheel", "can_front_r_wheel",
-     "can_rear_l_wheel", "can_rear_r_wheel"};
+  wheel_cmd_.joint_names = wheel_names_;
 
-  cur_vel_.resize(4);
+  cur_vel_.resize(num_of_wheels_);
   wheel_cmd_.points.resize(1);
 
   servo_.data = false;
@@ -52,11 +51,11 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
       nh_.advertise<std_msgs::Bool>("/aero_controller/wheel_servo", 10);
 
   cmd_vel_sub_ =
-      nh_.subscribe("/cmd_vel",1, &AeroMoveBase::SetAction,this);
+      nh_.subscribe("/cmd_vel",1, &AeroMoveBase::CmdVelCallback, this);
 
   odom_pub_ = nh_.advertise<nav_msgs::Odometry>("odom", 1);
 
-  odom_timer_ = nh_.createTimer(ros::Duration(0.02),
+  odom_timer_ = nh_.createTimer(ros::Duration(odom_rate_),
                                 &AeroMoveBase::CalculateOdometry, this);
 
   simple_goal_sub_ =
@@ -68,7 +67,7 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
                       &AeroMoveBase::MoveBase, this);
 
   safe_timer_ =
-      nh_.createTimer(ros::Duration(0.01),
+      nh_.createTimer(ros::Duration(safe_rate_),
                       &AeroMoveBase::SafetyCheckCallback, this);
 
 
@@ -307,19 +306,38 @@ void AeroMoveBase::FinishMove()
   // does not reset here for future references
 }
 
-void AeroMoveBase::SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel)
+void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 {
-  float dx, dy, dtheta, theta;
-  float v1, v2, v3, v4;
-  int16_t FR_wheel, RR_wheel, FL_wheel, RL_wheel;
-
-  CmdvelCallback(_cmd_vel);
+  vx_ = _cmd_vel->linear.x;
+  vy_ = _cmd_vel->linear.y;
+  vth_ = _cmd_vel->angular.z;
 
   //check servo state
   if (!servo_.data){
     servo_.data = true;
     servo_pub_.publish(servo_);
   }
+
+  // convert velocity to wheel
+  this->VelocityToWheel(_cmd_vel, cur_vel_);
+
+  wheel_cmd_.points[0].positions = cur_vel_;
+  wheel_cmd_.points[0].time_from_start = ros::Duration(ros_rate_);
+  wheel_pub_.publish(wheel_cmd_);
+
+  //update time_stamp_
+  time_stamp_ = ros::Time::now();
+}
+
+// v temporary
+void AeroMoveBase::VelocityToWheel(
+    const geometry_msgs::TwistConstPtr& _cmd_vel,
+    std::vector<double>& _wheel_vel)
+{
+  float dx, dy, dtheta, theta;
+  float v1, v2, v3, v4;
+  int16_t FR_wheel, RR_wheel, FL_wheel, RL_wheel;
+  theta = 0.0;
 
   //change dy and dx, because of between ROS and vehicle direction
   dy = (_cmd_vel->linear.x * cos(theta) - _cmd_vel->linear.y * sin(theta));
@@ -336,33 +354,25 @@ void AeroMoveBase::SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel)
   v4 = -5.54420*dtheta +
       13.1579*((cos(theta)+sin(theta))*dx + (-cos(theta)+sin(theta))*dy);
 
-
   //[rad/sec] -> [deg/sec]
   FR_wheel = static_cast<int16_t>(v1 * (180 / M_PI));
   RR_wheel = static_cast<int16_t>(v4 * (180 / M_PI));
   FL_wheel = static_cast<int16_t>(v2 * (180 / M_PI));
   RL_wheel = static_cast<int16_t>(v3 * (180 / M_PI));
 
-  cur_vel_[0] = FL_wheel;
-  cur_vel_[1] = FR_wheel;
-  cur_vel_[2] = RL_wheel;
-  cur_vel_[3] = RR_wheel;
-
-  wheel_cmd_.points[0].positions = cur_vel_;
-  wheel_cmd_.points[0].time_from_start = ros::Duration(ros_rate_);
-  wheel_pub_.publish(wheel_cmd_);
-
-  //update time_stamp_
-  time_stamp_ = ros::Time::now();
+  _wheel_vel[0] = FL_wheel;
+  _wheel_vel[1] = FR_wheel;
+  _wheel_vel[2] = RL_wheel;
+  _wheel_vel[3] = RR_wheel;
 }
+// ^ temporary
 
 void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
 {
   if( ((ros::Time::now() - time_stamp_).toSec() >= 1) && servo_.data){
-    cur_vel_[0] = 0;
-    cur_vel_[1] = 0;
-    cur_vel_[2] = 0;
-    cur_vel_[3] = 0;
+    for (size_t i = 0; i < num_of_wheels_; i++) {
+      cur_vel_[i] = 0;
+    }
 
     wheel_cmd_.points[0].positions = cur_vel_;
     wheel_cmd_.points[0].time_from_start = ros::Duration(ros_rate_);
@@ -371,13 +381,6 @@ void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
     servo_.data = false;
     servo_pub_.publish(servo_);
   }
-}
-
-void AeroMoveBase::CmdvelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
-{
-  vx_ = _cmd_vel->linear.x;
-  vy_ = _cmd_vel->linear.y;
-  vth_ = _cmd_vel->angular.z;
 }
 
 void AeroMoveBase::CalculateOdometry(const ros::TimerEvent& _event)

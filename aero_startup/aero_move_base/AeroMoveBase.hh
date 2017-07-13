@@ -101,6 +101,12 @@ class AeroMoveBase
   /// MUST be implemented in subclass.
  private: pose dX(std::vector<double> _vels, float _dt);
 
+  /// @brief ABSTRACT function,
+  /// convert velocity to wheel velocity (v0, ... vn)
+ private: void VelocityToWheel(
+     const geometry_msgs::TwistConstPtr& _cmd_vel,
+     std::vector<double>& _wheel_vel);
+
  private: void SetSimpleGoal(
      const geometry_msgs::PoseStamped::ConstPtr& _msg);
 
@@ -113,13 +119,10 @@ class AeroMoveBase
  private: void SetGoal(float _x, float _y, float _theta);
 
   /// @brief control with cmd_vel
- private: void SetAction(const geometry_msgs::TwistConstPtr& _cmd_vel);
+ private: void CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
   /// @brief safety stopper when msg is not reached for a while
  private: void SafetyCheckCallback(const ros::TimerEvent& _event);
-
-  /// @brief save cmd_vel
- private: void CmdvelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
   /// @brief odometry publisher
  private: void CalculateOdometry(const ros::TimerEvent& _event);
@@ -153,6 +156,7 @@ class AeroMoveBase
   // @param wheel control publisher
  private: ros::Publisher wheel_pub_;
 
+  // @param current wheel velocities
  private: std::vector<double> cur_vel_;
 
  private: trajectory_msgs::JointTrajectory wheel_cmd_;
@@ -160,7 +164,7 @@ class AeroMoveBase
  private: ros::Subscriber cmd_vel_sub_;
 
   /// @param current (x, y, theta) (vx, vy, vtheta)
- private: double vx_,vy_,vth_,x_,y_,th_;
+ private: double vx_, vy_, vth_, x_, y_, th_;
 
  private: ros::Time current_time_, last_time_;
 
@@ -174,6 +178,10 @@ class AeroMoveBase
 
  private: ros::Publisher odom_pub_;
 
+ private: ros::Timer odom_timer_;
+
+ private: float odom_rate_;
+
   /// @param servo status
  private: std_msgs::Bool servo_;
 
@@ -186,7 +194,7 @@ class AeroMoveBase
 
  private: ros::Timer safe_timer_;
 
- private: ros::Timer odom_timer_;
+ private: float safe_rate_;
 
  private: ros::Time time_stamp_;
 
