@@ -2,8 +2,6 @@
  <arg name="display" default="false"/>
  <arg name="STATIC_TF" default="true"/>
 
- <node pkg="tf" type="static_transform_publisher" name="virtual_odom_base_tf_publisher" args="0 0 0 0 0 0 odom_combined base_link  100" />
-
  <include file="$(find aero_moveit_config)/launch/move_group.launch">
   <arg name="publish_monitored_planning_scene" value="true" />
  </include>
