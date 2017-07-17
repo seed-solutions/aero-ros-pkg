@@ -31,6 +31,7 @@ robot configuration directory under `aero_description`.
   - `AngleJointNmaes.*`
   - `UnusedAngle2Stroke.hh`
 - `aero_move_base/`
+  - `AeroBaseController.cc`
 
 ## BASIC USAGE
 

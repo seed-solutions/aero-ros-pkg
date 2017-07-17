@@ -5,9 +5,14 @@
 # generates : copied files listed in {my_robot}/controllers.cfg
 # modifies  : aero_startup/CMakeLists.txt
 
+## @brief insert string into file
+## @param $1 string to insert
+## @param $2 line number to insert
+## @param $3 file to insert
 function echof() {
   echo "$1" | xargs -0 -I{} sed -i "$2i\{}" $3
 }
+
 tab2=$'  '
 tab6=$'      '
 
@@ -74,6 +79,7 @@ do
 	write_to_line=$(($write_to_line + 1))
 	echof "add_executable(aero_controller_node" ${write_to_line} $cmake_file
 	write_to_line=$(($write_to_line + 1))
+	# enumerate *.cc files in aero_startup into CMakeLists.txt
 	dir="$(rospack find aero_description)/../aero_startup/aero_hardware_interface"
 	cc_files=$(find $dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
 	num_of_cc_files=$(find $dir -name "*.cc" | wc -l)
@@ -130,6 +136,7 @@ do
     includes_main=$(find $copy_to_dir -name Main.cc 2>/dev/null)
     if [[ $includes_main != "" ]]
     then
+	# enumerate *.cc files in aero_startup into CMakeLists.txt
 	cc_files=$(find $copy_to_dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
 	num_of_cc_files=$(find $copy_to_dir -name "*.cc" | wc -l)
 	for (( num=1; num<=${num_of_cc_files}; num++ ))
