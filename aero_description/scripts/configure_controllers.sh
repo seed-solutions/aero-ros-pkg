@@ -38,27 +38,37 @@ then
     echo -e $body > $(rospack find aero_description)/../aero_startup/generated_controllers.launch
 fi
 
+## @brief delete lines from >>> to <<<
+## @param $1 section
+## @param $2 target file
+function delete_section_from() {
+    delete_from=$(grep -n -m 1 ">>> add $1" $2 | cut -d ':' -f1)
+    delete_from=$(($delete_from + 1))
+    delete_to=$(grep -n -m 1 "<<< add $1" $2 | cut -d ':' -f1)
+
+    if [[ $delete_to -ne $delete_from ]]
+    then
+	delete_to=$(($delete_to - 1))
+	sed -i "${delete_from},${delete_to}d" $2
+    fi
+}
+## @brief delete controllers
+## @param $1 target file
+function delete_controllers_from() {
+    delete_section_from "controllers" $1
+}
+## @brief delete dependencies
+## @param $1 target file
+function delete_dependencies_from() {
+    delete_section_from "dependencies" $1
+}
+
 # delete controllers in launch
-delete_from_launch=$(grep -n -m 1 ">>> add controllers" $launch_file | cut -d ':' -f1)
-delete_from_launch=$(($delete_from_launch + 1))
-delete_to_launch=$(grep -n -m 1 "<<< add controllers" $launch_file | cut -d ':' -f1)
+delete_controllers_from $launch_file
 
-if [[ $delete_to_launch -ne $delete_from_launch ]]
-then
-    delete_to_launch=$(($delete_to_launch - 1))
-    sed -i "${delete_from_launch},${delete_to_launch}d" $launch_file
-fi
-
-# delete controllers in CMakeLists.txt
-delete_from_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
-delete_from_line=$(($delete_from_line + 1))
-delete_to_line=$(grep -n -m 1 "<<< add controllers" $cmake_file | cut -d ':' -f1)
-
-if [[ $delete_to_line -ne $delete_from_line ]]
-then
-    delete_to_line=$(($delete_to_line - 1))
-    sed -i "${delete_from_line},${delete_to_line}d" $cmake_file
-fi
+# delete controllers and dependencies in CMakeLists.txt
+delete_controllers_from $cmake_file
+delete_dependencies_from $cmake_file
 
 
 ## GENERATE
@@ -159,6 +169,8 @@ do
     echof "add_dependencies(aero_${executable_name}_controller_node \${PROJECT_NAME}_gencpp)" ${write_to_line} $cmake_file
 
     # add to launch
-    echof "${tab2}<node name=\"aero_${executable_name}_controller_node\" pkg=\"aero_startup\"\n${tab2}${tab6}type=\"aero_${executable_name}_controller_node\" output=\"screen\"/>" $delete_from_launch $launch_file
+    write_to_line=$(grep -n -m 1 ">>> add controllers" $launch_file | cut -d ':' -f1)
+    write_to_line=$(($write_to_line + 1))
+    echof "${tab2}<node name=\"aero_${executable_name}_controller_node\" pkg=\"aero_startup\"\n${tab2}${tab6}type=\"aero_${executable_name}_controller_node\" output=\"screen\"/>" ${write_to_line} $launch_file
 
 done < $input_file
