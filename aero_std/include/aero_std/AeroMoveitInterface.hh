@@ -19,6 +19,8 @@
 #include <move_base_msgs/MoveBaseFeedback.h>
 #include <move_base_msgs/MoveBaseResult.h>
 
+#include <tf/transform_listener.h>
+
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
 #include <aero_std/interpolation_type.h>
@@ -27,7 +29,7 @@
 #include <aero_startup/AeroTorsoController.h>
 #include <std_msgs/String.h>
 #include <std_srvs/SetBool.h>
-
+#include <aero_startup/GetSpot.h>
 namespace aero
 {
   typedef std::vector<std::map<aero::joint, double>> trajectory;
@@ -105,15 +107,15 @@ namespace aero
     void sendResetManipPose(int _time_ms=3000);
     void getResetManipPose(std::map<aero::joint, double> &_map);
 
-    bool sendLifter(double _x, double _z, int _time_ms=0); // m
-    bool sendLifter(int _x, int _z, int _time_ms=0); // mm
-    bool sendLifterLocal(double _x, double _z, int _time_ms=0);
-    bool sendLifterLocal(int _x, int _z, int _time_ms=0);
+    bool sendLifter(double _x, double _z, int _time_ms=5000); // m
+    bool sendLifter(int _x, int _z, int _time_ms=5000); // mm
+    bool sendLifterLocal(double _x, double _z, int _time_ms=5000);
+    bool sendLifterLocal(int _x, int _z, int _time_ms=5000);
 
-    bool sendLifterAsync(double _x, double _z, int _time_ms=0); // m
-    bool sendLifterAsync(int _x, int _z, int _time_ms=0); // mm
-    bool sendLifterLocalAsync(double _x, double _z, int _time_ms=0);
-    bool sendLifterLocalAsync(int _x, int _z, int _time_ms=0);
+    bool sendLifterAsync(double _x, double _z, int _time_ms=5000); // m
+    bool sendLifterAsync(int _x, int _z, int _time_ms=5000); // mm
+    bool sendLifterLocalAsync(double _x, double _z, int _time_ms=5000);
+    bool sendLifterLocalAsync(int _x, int _z, int _time_ms=5000);
 
     // set waist position of kinametic_state
     bool setLifter(double _x, double _z, bool _check_solvable=false);
@@ -202,7 +204,20 @@ namespace aero
 
     void setNeck(double _r,double _p, double _y);
 
-    bool goPos(double _x, double _y, double _rad);
+    bool goPos(double _x, double _y, double _rad);// tmp deprecated
+
+    void moveToAsync(std::string _location);
+    void moveToAsync(Eigen::Vector3d _point);
+    void moveToAsync(geometry_msgs::Pose _pose);
+    void goPosAsync(double _x, double _y, double _rad);
+    bool isMoving();
+    bool at(std::string _location, double _thre=0.2);
+    void stop();
+    void go();
+    float toDestination(std::string _location);
+    void faceTowardAsync(double _x, double _y, double _z);
+    geometry_msgs::Pose getCurrentPose(std::string _map="/map");
+    geometry_msgs::Pose getLocationPose(std::string _location);
 
   private:
     void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
@@ -234,6 +249,7 @@ namespace aero
     ros::ServiceClient waist_service_;
     ros::ServiceClient lifter_ik_service_;
     ros::ServiceClient send_angle_service_;
+    ros::ServiceClient get_spot_;
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;
@@ -246,6 +262,8 @@ namespace aero
     std::string detected_speech_;
     bool tracking_mode_flag_;
     aero_startup::AeroSendJoints send_joints_srv_;
+    tf::TransformListener listener_;
+    geometry_msgs::Pose pose_using_;
   };
   typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
   }

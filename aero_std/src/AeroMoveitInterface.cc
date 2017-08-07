@@ -50,9 +50,15 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   send_angle_service_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/aero_controller/send_joints");
 
+  get_spot_ = _nh.serviceClient<aero_startup::GetSpot>
+    ("/get_spot");
+
+  check_move_to_ = _nh.serviceClient<nav_msgs::GetPlan>
+    ("/make_plan");
+
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
-    ("/move_base/goal", true);
+    ("/move_base", true);
 
   // load robot model
   ROS_INFO("start loading robot model");
@@ -301,7 +307,7 @@ void aero::interface::AeroMoveitInterface::getResetManipPose(std::map<aero::join
   getRobotStateVariables(save);
   setRobotStateToNamedTarget("upper_body", "reset-pose");
   getRobotStateVariables(_map);
-  setRobotStateVariables(save);  
+  setRobotStateVariables(save);
 }
 
 bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int _time_ms)
@@ -505,7 +511,6 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
 
 
   openHand(_grasp.arm);
-  sleep(1);
 
 
   return sendTrajectory(trajectory, times, _grasp.end_ik_range);;
@@ -529,13 +534,6 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
 
 
   ROS_INFO("solving IK");
-  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, end_pose, _grasp.eef)) {
-    ROS_INFO("end ik failed");
-    setRobotStateVariables(av_ini);
-    return false;
-  }
-  setLookAt(end_pose);
-  getRobotStateVariables(av_end);//save end
 
   if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, mid_pose, _grasp.eef)) {
     ROS_INFO("mid ik failed");
@@ -545,8 +543,15 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   setLookAt(mid_pose);
   getRobotStateVariables(av_mid);//save mid
 
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(end_pose);
+  getRobotStateVariables(av_end);//save end
 
-  setRobotStateVariables(av_end);
+
   if (!setFromIK(_grasp.arm, _grasp.end_ik_range, place_pose, _grasp.eef)) {
     ROS_INFO("place ik failed");
     setRobotStateVariables(av_ini);
@@ -741,7 +746,7 @@ std::string aero::interface::AeroMoveitInterface::solveIKOneSequence(aero::arm _
   if (status) {
     getRobotStateVariables(_result);
     return aero::armAndRange2MoveGroup(_arm, _ik_range);
-  }  
+  }
 
   return "";
 }
@@ -774,14 +779,14 @@ bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
   else srv.request.hand = "left";
   srv.request.command = "grasp:" + std::to_string(_power);
   srv.request.thre_warn = -0.9;
-  srv.request.thre_fail = 0.0;
+  srv.request.thre_fail = 0.2;
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");
     return false;
   }
 
-  if (srv.response.status.find("success") != std::string::npos || 
+  if (srv.response.status.find("success") != std::string::npos ||
       srv.response.status.find("bad") != std::string::npos) {
     ROS_INFO("%s", srv.response.status.c_str());
     return true;
@@ -841,7 +846,7 @@ bool aero::interface::AeroMoveitInterface::sendHand(aero::arm _arm, double _rad)
   }
 
   ROS_ERROR("%s", srv.response.status.c_str());
-  return false;  
+  return false;
 }
 
 //////////////////////////////////////////////////
@@ -1035,7 +1040,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
       return false;
     }
     xzs.push_back(std::vector<double>{xz[0], xz[1]});
-  }  
+  }
 
   for (int i=0; i < static_cast<int>(_trajectory.size()); ++i) {
     trajectory_msgs::JointTrajectoryPoint p;
@@ -1089,7 +1094,7 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
     msg.x = _x;
     msg.y = _y;
     msg.z = _z;
-    
+
     look_at_publisher_.publish(msg);
   } else {
     lookAt_(_x, _y, _z);
@@ -1293,7 +1298,7 @@ bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
     ROS_WARN("interpolation service call failed");
     return false;
   }
-  
+
   return true;
 }
 
@@ -1351,29 +1356,240 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad)
 {
-  geometry_msgs::Point p;
-  p.x = _x;
-  p.y = _y;
-  p.z = 0;
+  return false;
+}
 
-  geometry_msgs::Quaternion q;
-  q.x = sin(_rad/ 2.0);
-  q.y = 0;
-  q.z = 0;
-  q.w = cos(_rad/ 2.0);
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::moveToAsync(std::string _location)
+{
+  auto pos = getLocationPose(_location);
+  bool exists = true;
+  if (!exists) {
+    ROS_ERROR("location(%s) is not found", _location.c_str());
+    return;
+  } else {
+    moveToAsync(pos);
+  }
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::moveToAsync(Eigen::Vector3d _point)
+{
+  geometry_msgs::Pose pose;
+  pose.position.x = _point.x();
+  pose.position.y = _point.y();
+  pose.position.z = _point.z();
+
+  moveToAsync(pose);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::moveToAsync(geometry_msgs::Pose _pose)
+{
+  move_base_msgs::MoveBaseGoal goal;
+  goal.target_pose.header.frame_id = "/map";
+  goal.target_pose.header.stamp = ros::Time::now();
+  goal.target_pose.pose = _pose;
+  pose_using_ = _pose;
+
+  ROS_INFO("Sending goal");
+  ac_->sendGoal(goal);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, double _rad)
+{
+  Eigen::Quaterniond qua_cu, qua_to;
+  Eigen::Vector3d pos, pos_to;
+  auto current = getCurrentPose();
+  pos.x() = _x;
+  pos.y() = _y;
+  pos.z() = 0;
+
+  qua_cu.w() = current.orientation.w;
+  qua_cu.x() = current.orientation.x;
+  qua_cu.y() = current.orientation.y;
+  qua_cu.z() = current.orientation.z;
+
+  Eigen::Quaterniond qua_go(Eigen::Matrix3d(Eigen::AngleAxisd(_rad, Eigen::Vector3d::UnitZ())));
+
+  pos_to = qua_cu * pos;
+  qua_to = qua_go * qua_cu;
 
   geometry_msgs::Pose pose;
-  pose.position = p;
-  pose.orientation = q;
+  pose.position.x = pos_to.x() + current.position.x;
+  pose.position.x = pos_to.y() + current.position.y;
+  pose.position.x = pos_to.z() + current.position.z;
+  pose.orientation.w = qua_to.w();
+  pose.orientation.x = qua_to.x();
+  pose.orientation.y = qua_to.y();
+  pose.orientation.z = qua_to.z();
 
-  geometry_msgs::PoseStamped pstamp;
-  pstamp.pose = pose;
+  moveToAsync(pose);
+}
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::isMoving()
+{
+  auto state = ac_->getState();
+  bool finished = state.isDone();
+  return !finished;// moving != finished
+}
 
-  move_base_msgs::MoveBaseGoal goal;
-  goal.target_pose = pstamp;
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thre)
+{
+  auto res = getCurrentPose();
 
-  ac_->sendGoal(goal);
-  return ac_->waitForResult(ros::Duration(5.0));
+  auto pos = res.position;
+
+  auto loc = getLocationPose(_location);
+
+  double diff = pow(pos.x - loc.position.x, 2.0) + pow(pos.y - loc.position.y, 2.0) + pow(pos.z - loc.position.z, 2.0);
+  if (diff > pow(_thre, 2.0)) return false;
+  else return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::at(geometry_msgs::Pose _pose, double _thre)
+{
+  auto res = getCurrentPose();
+
+  auto pos = res.position;
+
+  auto loc = _pose;
+
+  double diff = pow(pos.x - loc.position.x, 2.0) + pow(pos.y - loc.position.y, 2.0) + pow(pos.z - loc.position.z, 2.0);
+  if (diff > pow(_thre, 2.0)) return false;
+  else return true;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::stop()
+{
+  ac_->cancelGoal();
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::go()
+{
+  moveToAsync(pose_using_);
+}
+
+//////////////////////////////////////////////////
+float aero::interface::AeroMoveitInterface::toDestination(std::string _location)
+{
+  auto loc = getLocationPose(_location).position;
+  auto cur = getCurrentPose().position;
+
+  float dis = std::sqrt(pow(loc.x - cur.x, 2.0) + pow(loc.y - cur.y, 2.0) + pow(loc.z - cur.z, 2.0));
+  return dis;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::faceTowardAsync(std::string _location)
+{
+  auto loc = getLocationPose(_location);
+  faceTowardAsync(loc);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::faceTowardAsync(geometry_msgs::Pose _pose)
+{
+  geometry_msgs::Pose cur, pose;
+  cur = getCurrentPose();
+  pose.position = cur.position;
+
+
+  double yaw = std::atan2(cur.position.y - _pose.position.y, cur.position.x -  _pose.position.x) + M_PI;
+
+  while (yaw > M_PI) {
+    yaw -= 2.0 * M_PI;
+  }
+  while (yaw < -M_PI) {
+    yaw += 2.0 * M_PI;
+  }
+  Eigen::Quaterniond qua = Eigen::Quaterniond(Eigen::Matrix3d(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ())));
+  pose.orientation.w = qua.w();
+  pose.orientation.x = qua.x();
+  pose.orientation.y = qua.y();
+  pose.orientation.z = qua.z();
+
+  moveToAsync(pose);
+}
+
+bool aero::interface::AeroMoveitInterface::checkMoveTo(geometry_msgs::Pose _pose) {
+  // whether snoid can move to _pose or cannot
+
+  nav_msgs::GetPlan srv;
+  geometry_msgs::PoseStamped cur,pose;
+  geometry_msgs::Pose result;
+  ros::Time now = ros::Time::now();
+  double tolerance = 0.02;
+  cur.header.stamp = now;
+  cur.pose = getCurrentPose();
+  pose.header.stamp = now;
+  pose.pose = _pose;
+
+  srv.request.start = cur;
+  srv.request.goal = pose;
+  srv.request.tolerance = tolerance;
+
+  check_move_to_.call(srv);
+  ROS_INFO("current pose %f %f %f", cur.pose.position.x, cur.pose.position.y, cur.pose.position.z);
+  ROS_INFO("target pose %f %f %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+  if (srv.response.plan.poses.size() == 0) {
+    ROS_INFO("this path failed");
+    return false;
+  }
+
+  result = srv.response.plan.poses.back().pose;
+  double distance = std::sqrt(std::pow(result.position.x - _pose.position.x, 2.0) + std::pow(result.position.y - _pose.position.y, 2.0));
+  if (distance > tolerance) {
+    ROS_INFO("this path failed");
+    return false;
+  }
+  ROS_INFO("plan found");
+  return true;
+}
+
+//////////////////////////////////////////////////
+geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose(std::string _map)
+{
+  tf::StampedTransform tr;
+  try{
+    listener_.waitForTransform(_map, "/base_link", ros::Time(0), ros::Duration(5.0));
+    listener_.lookupTransform(_map, "/base_link", ros::Time(0), tr);
+  }
+  catch (tf::TransformException ex){
+    ROS_ERROR("%s",ex.what());
+    ros::Duration(1.0).sleep();
+    return geometry_msgs::Pose();
+  }
+
+  geometry_msgs::Pose msg;
+  auto pos = tr.getOrigin();
+  auto rot = tr.getRotation();
+
+  msg.position.x = pos.x();
+  msg.position.y = pos.y();
+  msg.position.z = pos.z();
+
+  msg.orientation.w = rot.w();
+  msg.orientation.x = rot.x();
+  msg.orientation.y = rot.y();
+  msg.orientation.z = rot.z();
+
+  return msg;
+}
+
+//////////////////////////////////////////////////
+geometry_msgs::Pose aero::interface::AeroMoveitInterface::getLocationPose(std::string _location)
+{
+  aero_startup::GetSpot gs;
+  gs.request.name = _location;
+  get_spot_.call(gs);
+  geometry_msgs::Pose pose = gs.response.pose;
+  return pose;
 }
 
 //////////////////////////////////////////////////

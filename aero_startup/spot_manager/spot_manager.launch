@@ -1,0 +1,5 @@
+<launch>
+	<node name="spot_manager" pkg="aero_startup" type="spot_manager" output="screen">
+	  <param name="~file" value="$(find aero_startup)/spot_manager/spot.yaml"/>
+        </node>
+</launch>
