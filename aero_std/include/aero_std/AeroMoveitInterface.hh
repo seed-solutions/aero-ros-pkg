@@ -30,6 +30,7 @@
 #include <std_msgs/String.h>
 #include <std_srvs/SetBool.h>
 #include <aero_startup/GetSpot.h>
+#include <nav_msgs/GetPlan.h>
 namespace aero
 {
   typedef std::vector<std::map<aero::joint, double>> trajectory;
@@ -45,7 +46,7 @@ namespace aero
     /// @param _rd robot_description's name, "_rd", "_rd_ho" and "_rd_op" will be loaded
     explicit AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd="robot_description");
     ~AeroMoveitInterface();
-    
+
     robot_model_loader::RobotModelLoader robot_model_loader;
     robot_model::RobotModelPtr kinematic_model;
     robot_state::RobotStatePtr kinematic_state;
@@ -57,7 +58,7 @@ namespace aero
     robot_model_loader::RobotModelLoader robot_model_loader_op;
     robot_model::RobotModelPtr kinematic_model_op;
     robot_state::RobotStatePtr kinematic_state_op;
-    
+
     // MoveGroup
     moveit::planning_interface::MoveGroup larm;
     moveit::planning_interface::MoveGroup larm_with_torso;
@@ -69,7 +70,7 @@ namespace aero
     moveit::planning_interface::MoveGroup upper_body;
     moveit::planning_interface::MoveGroup torso;
     moveit::planning_interface::MoveGroup head;
-    
+
     // JointModelGroup
     const robot_state::JointModelGroup* jmg_larm;
     const robot_state::JointModelGroup* jmg_larm_with_torso;
@@ -82,9 +83,9 @@ namespace aero
     const robot_state::JointModelGroup* jmg_rarm_with_lifter_ho;
     const robot_state::JointModelGroup* jmg_rarm_with_lifter_op;
     const robot_state::JointModelGroup* jmg_lifter;
-    
+
     // planning scene interface
-    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;  
+    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 
     bool plan(std::string _move_group);
     bool execute();
@@ -212,10 +213,13 @@ namespace aero
     void goPosAsync(double _x, double _y, double _rad);
     bool isMoving();
     bool at(std::string _location, double _thre=0.2);
+    bool at(geometry_msgs::Pose _pose, double _thre=0.2);
     void stop();
     void go();
     float toDestination(std::string _location);
-    void faceTowardAsync(double _x, double _y, double _z);
+    void faceTowardAsync(std::string _location);
+    void faceTowardAsync(geometry_msgs::Pose _pose);
+    bool checkMoveTo(geometry_msgs::Pose _pose);
     geometry_msgs::Pose getCurrentPose(std::string _map="/map");
     geometry_msgs::Pose getLocationPose(std::string _location);
 
@@ -250,6 +254,7 @@ namespace aero
     ros::ServiceClient lifter_ik_service_;
     ros::ServiceClient send_angle_service_;
     ros::ServiceClient get_spot_;
+    ros::ServiceClient check_move_to_;
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     moveit::planning_interface::MoveGroup::Plan plan_;
     std::string planned_group_;

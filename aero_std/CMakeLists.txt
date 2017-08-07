@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   std_srvs
+  nav_msgs
   tf
   cmake_modules
   moveit_core moveit_ros_planning moveit_ros_planning_interface
