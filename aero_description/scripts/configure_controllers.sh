@@ -126,10 +126,6 @@ do
     source=$(echo $reference | cut -d '/' -f2)
     copy_from_file="$(rospack find aero_description)/${robot}/controllers/${source}"
     copy_to_dir="$(rospack find aero_description)/../aero_startup/${executable_dir}"
-    if [[ $proto == "&" ]] # requires test (optional)
-    then
-	${copy_to_dir}/.test $copy_from_file
-    fi
     # copy controller file
     output_file="${copy_to_dir}/${source}"
     cp $copy_from_file $output_file
