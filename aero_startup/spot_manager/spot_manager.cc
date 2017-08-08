@@ -6,18 +6,18 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <seed_mover/SaveSpot.h>
-#include <seed_mover/GetSpot.h>
+#include <aero_startup/SaveSpot.h>
+#include <aero_startup/GetSpot.h>
 
 class SpotManager{
 public:
   SpotManager(ros::NodeHandle _nh, std::string _file);
   ~SpotManager();
 
-  bool SaveSpot(seed_mover::SaveSpot::Request &req,
-		seed_mover::SaveSpot::Response &res);
-  bool GetSpot(seed_mover::GetSpot::Request &req,
-	       seed_mover::GetSpot::Response &res);
+  bool SaveSpot(aero_startup::SaveSpot::Request &req,
+		aero_startup::SaveSpot::Response &res);
+  bool GetSpot(aero_startup::GetSpot::Request &req,
+	       aero_startup::GetSpot::Response &res);
   void DeleteSpot();
   void GetList();
 
@@ -40,8 +40,8 @@ SpotManager::SpotManager(ros::NodeHandle _nh, std::string _file)
 
 SpotManager::~SpotManager(){};
 
-bool SpotManager::SaveSpot(seed_mover::SaveSpot::Request &req,
-			   seed_mover::SaveSpot::Response &res)
+bool SpotManager::SaveSpot(aero_startup::SaveSpot::Request &req,
+			   aero_startup::SaveSpot::Response &res)
 {
   tf::StampedTransform tr;
   try{
@@ -68,8 +68,8 @@ bool SpotManager::SaveSpot(seed_mover::SaveSpot::Request &req,
   return true;
 }
 
-bool SpotManager::GetSpot(seed_mover::GetSpot::Request &req,
-			  seed_mover::GetSpot::Response &res)
+bool SpotManager::GetSpot(aero_startup::GetSpot::Request &req,
+			  aero_startup::GetSpot::Response &res)
 {
   YAML::Node config = YAML::LoadFile(file_);
   bool found = false;
