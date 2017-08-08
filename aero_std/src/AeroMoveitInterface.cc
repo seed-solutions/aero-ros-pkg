@@ -26,7 +26,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
-    ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
+    ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
 
   speech_listener_ = _nh.subscribe
     ("/detected/speech/template",  1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
@@ -390,15 +390,14 @@ bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, 
   return sendLifterAsync(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
 }
 
-bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool _check_solvable)
+bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
 {
 
   std::vector<double> ans_xz;
-  if (_check_solvable) {
-    if (!lifter_ik_(_x, _z, ans_xz)) {
-      return false;
-    }
+  if (!lifter_ik_(_x, _z, ans_xz)) {
+    return false;
   }
+
 
   std::vector<double> joint_values;
   joint_values.push_back(_x);
@@ -498,7 +497,6 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     setLookAt(tmp);
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
-    if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
     trajectory.push_back(av_inner);
     times.push_back((end_time / num) * (i - last_solved_num));
     last_solved_num = i;
@@ -625,7 +623,6 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
     if (!setFromIK(_grasp.arm, range, tmp, _grasp.eef)) continue;
     std::map<aero::joint, double> av_inner;
     getRobotStateVariables(av_inner);
-    if (!isInsideTrajectory_(av_inner, av_mid, av_end)) continue;
     trajectory.push_back(av_inner);
     times.push_back((end_time / num) * (i - last_solved_num));
     last_solved_num = i;
@@ -1286,12 +1283,6 @@ void aero::interface::AeroMoveitInterface::updateLinkTransforms()
 }
 
 /////////////////////////////////////////////////
-Eigen::Affine3d aero::interface::AeroMoveitInterface::getCameraTransform()
-{
-  return kinematic_state->getGlobalLinkTransform("camera_link");
-}
-
-/////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
 {
   aero_startup::AeroInterpolation srv;
@@ -1377,7 +1368,7 @@ bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _ra
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::moveToAsync(std::string _location)
 {
-  auto pos = getLocationPose(_location);
+  geometry_msgs::Pose pos = getLocationPose(_location);
   bool exists = true;
   if (!exists) {
     ROS_ERROR("location(%s) is not found", _location.c_str());
@@ -1416,7 +1407,7 @@ void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, doub
 {
   Eigen::Quaterniond qua_cu, qua_to;
   Eigen::Vector3d pos, pos_to;
-  auto current = getCurrentPose();
+  geometry_msgs::Pose current = getCurrentPose();
   pos.x() = _x;
   pos.y() = _y;
   pos.z() = 0;
@@ -1453,11 +1444,11 @@ bool aero::interface::AeroMoveitInterface::isMoving()
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thre)
 {
-  auto res = getCurrentPose();
+  geometry_msgs::Pose res = getCurrentPose();
 
-  auto pos = res.position;
+  geometry_msgs::Point pos = res.position;
 
-  auto loc = getLocationPose(_location);
+  geometry_msgs::Pose loc = getLocationPose(_location);
 
   double diff = pow(pos.x - loc.position.x, 2.0) + pow(pos.y - loc.position.y, 2.0) + pow(pos.z - loc.position.z, 2.0);
   if (diff > pow(_thre, 2.0)) return false;
@@ -1467,11 +1458,11 @@ bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thr
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::at(geometry_msgs::Pose _pose, double _thre)
 {
-  auto res = getCurrentPose();
+  geometry_msgs::Pose res = getCurrentPose();
 
-  auto pos = res.position;
+  geometry_msgs::Point pos = res.position;
 
-  auto loc = _pose;
+  geometry_msgs::Pose loc = _pose;
 
   double diff = pow(pos.x - loc.position.x, 2.0) + pow(pos.y - loc.position.y, 2.0) + pow(pos.z - loc.position.z, 2.0);
   if (diff > pow(_thre, 2.0)) return false;
@@ -1493,8 +1484,8 @@ void aero::interface::AeroMoveitInterface::go()
 //////////////////////////////////////////////////
 float aero::interface::AeroMoveitInterface::toDestination(std::string _location)
 {
-  auto loc = getLocationPose(_location).position;
-  auto cur = getCurrentPose().position;
+  geometry_msgs::Point loc = getLocationPose(_location).position;
+  geometry_msgs::Point cur = getCurrentPose().position;
 
   float dis = std::sqrt(pow(loc.x - cur.x, 2.0) + pow(loc.y - cur.y, 2.0) + pow(loc.z - cur.z, 2.0));
   return dis;
@@ -1678,7 +1669,7 @@ void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::JointStateCallback(const sensor_msgs::JointState::ConstPtr& _msg)
+void aero::interface::AeroMoveitInterface::JointStateCallback_(const sensor_msgs::JointState::ConstPtr& _msg)
 {
   joint_states_ = *_msg;
 }
@@ -1737,19 +1728,6 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
   }
   return false;
 
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end)
-{
-  return true;//this code seems not to do well
-  for (auto it=_path.begin(); it != _path.end(); ++it) {
-    double angle = it->second;
-    double max = std::max(_begin[it->first],_end[it->first]);
-    double min = std::min(_begin[it->first],_end[it->first]);
-    if (angle < min || angle > max) return false;
-  }
-  return true;
 }
 
 //////////////////////////////////////////////////
