@@ -65,20 +65,20 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   // load robot model
   ROS_INFO("start loading robot model");
-  robot_model_loader = robot_model_loader::RobotModelLoader(_rd);
-  kinematic_model = robot_model_loader.getModel();
+  robot_model_loader_ = robot_model_loader::RobotModelLoader(_rd);
+  kinematic_model = robot_model_loader_.getModel();
   kinematic_state = robot_state::RobotStatePtr(new robot_state::RobotState(kinematic_model));
   kinematic_state->setToDefaultValues();// set all joints to 0.0
 
   ROS_INFO("start loading robot model for height only");
-  robot_model_loader_ho = robot_model_loader::RobotModelLoader(_rd + "_height_only");
-  kinematic_model_ho = robot_model_loader_ho.getModel();
+  robot_model_loader_ho_ = robot_model_loader::RobotModelLoader(_rd + "_height_only");
+  kinematic_model_ho = robot_model_loader_ho_.getModel();
   kinematic_state_ho = robot_state::RobotStatePtr(new robot_state::RobotState(kinematic_model_ho));
   kinematic_state_ho->setToDefaultValues();// set all joints to 0.0
 
   ROS_INFO("start loading robot model for on plane");
-  robot_model_loader_op = robot_model_loader::RobotModelLoader(_rd + "_on_plane");
-  kinematic_model_op = robot_model_loader_op.getModel();
+  robot_model_loader_op_ = robot_model_loader::RobotModelLoader(_rd + "_on_plane");
+  kinematic_model_op = robot_model_loader_op_.getModel();
   kinematic_state_op = robot_state::RobotStatePtr(new robot_state::RobotState(kinematic_model_op));
   kinematic_state_op->setToDefaultValues();// set all joints to 0.0
 
