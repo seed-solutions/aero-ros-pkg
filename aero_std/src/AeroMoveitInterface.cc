@@ -21,6 +21,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
     ("/settings/speach", 1000);
 
+  cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
+    ("/cmd_vel", 1000);
+
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback, this);
@@ -1354,9 +1357,21 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad)
+bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad, int _timeout_ms)
 {
-  return false;
+  // if turn only, move without path planning
+  if (_x == 0.0 && _y == 0.0) return goPosTurnOnly_(_rad, _timeout_ms);
+
+  goPosAsync(_x, _y, _rad);
+
+  bool finished_before_timeout = ac_->waitForResult(ros::Duration(_timeout_ms * 0.001));
+
+  if (!finished_before_timeout) {
+    ROS_WARN("go pos action didn't finish before timeout %d ms", _timeout_ms);
+    return false;
+  }
+
+  return true;
 }
 
 //////////////////////////////////////////////////
@@ -1418,8 +1433,8 @@ void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, doub
 
   geometry_msgs::Pose pose;
   pose.position.x = pos_to.x() + current.position.x;
-  pose.position.x = pos_to.y() + current.position.y;
-  pose.position.x = pos_to.z() + current.position.z;
+  pose.position.y = pos_to.y() + current.position.y;
+  pose.position.z = pos_to.z() + current.position.z;
   pose.orientation.w = qua_to.w();
   pose.orientation.x = qua_to.x();
   pose.orientation.y = qua_to.y();
@@ -1735,4 +1750,48 @@ bool aero::interface::AeroMoveitInterface::isInsideTrajectory_(std::map<aero::jo
     if (angle < min || angle > max) return false;
   }
   return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::goPosTurnOnly_(double _rad, int _timeout_ms)
+{
+  double tolerance = 5.0 * M_PI / 180.0;
+  double vel = 0.5; // absolute rotate velocity
+  int hz = 30;// cmd_vel is sent with this frewquency
+  geometry_msgs::Pose initial_pose = getCurrentPose();
+  double z_ref = 2.0 * acos(initial_pose.orientation.w) + _rad;
+
+  geometry_msgs::Twist cmd;
+  cmd.linear.x = 0.0;
+  cmd.linear.y = 0.0;
+  cmd.linear.z = 0.0;
+  cmd.angular.x = 0.0;
+  cmd.angular.y = 0.0;
+  if (_rad > 0.0) cmd.angular.z = -vel;
+  else cmd.angular.z = vel;
+
+  ros::Time now = ros::Time::now();
+  ros::Duration limit = ros::Duration(_timeout_ms * 0.001);
+  ros::Rate r(hz);
+  while (ros::ok()) {
+    if (ros::Time::now() - now > limit) break;
+    geometry_msgs::Pose cur = getCurrentPose();
+    double z_now = 2.0 * acos(cur.orientation.w); 
+    double z_diff = z_ref - z_now;
+    // -M_PI < z_diff < M_PI
+    while (z_diff > M_PI) z_diff -= M_PI * 2.0;
+    while (z_diff < -M_PI) z_diff += M_PI * 2.0;
+
+    if (std::abs(z_diff) < tolerance) return true;// finish if diff is lower than tolerance
+
+    // send cmd_vel
+    if (z_diff > 0.0) cmd.angular.z = vel;
+    else cmd.angular.z = -vel;
+    cmd_vel_publisher_.publish(cmd);
+
+    r.sleep();
+  }
+
+  ROS_WARN("goPos turn only didn't finish before timeout %d ms", _timeout_ms);
+  return false;
 }

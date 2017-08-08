@@ -205,7 +205,7 @@ namespace aero
 
     void setNeck(double _r,double _p, double _y);
 
-    bool goPos(double _x, double _y, double _rad);// tmp deprecated
+    bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
 
     void moveToAsync(std::string _location);
     void moveToAsync(Eigen::Vector3d _point);
@@ -239,6 +239,8 @@ namespace aero
 
     bool isInsideTrajectory_(std::map<aero::joint, double> _path,std::map<aero::joint, double> _begin,std::map<aero::joint, double> _end);
 
+    bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
+
     ros::ServiceClient hand_grasp_client_;
     ros::ServiceClient joint_states_client_;
     ros::ServiceClient interpolation_client_;
@@ -248,6 +250,7 @@ namespace aero
     ros::Publisher look_at_publisher_;
     ros::Publisher speech_publisher_;
     ros::Publisher speech_detection_settings_publisher_;
+    ros::Publisher cmd_vel_publisher_;
     ros::Subscriber joint_states_subscriber_;
     ros::Subscriber speech_listener_;
     ros::ServiceClient waist_service_;
