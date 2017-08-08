@@ -130,22 +130,19 @@ namespace aero
     public: bool sendLifter(int _x, int _z, int _time_ms=5000); // mm deprecated
     public: bool sendLifterLocal(double _x, double _z, int _time_ms=5000);
     public: bool sendLifterLocal(int _x, int _z, int _time_ms=5000);
-
     public: bool sendLifterAsync(double _x, double _z, int _time_ms=5000); // m
     public: bool sendLifterAsync(int _x, int _z, int _time_ms=5000); // mm  deprecated
     public: bool sendLifterLocalAsync(double _x, double _z, int _time_ms=5000);
     public: bool sendLifterLocalAsync(int _x, int _z, int _time_ms=5000);
 
-    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
-    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
     public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
     public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
-
+    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
 
     public: bool sendGrasp(aero::arm _arm, int _power=100);
     public: bool openHand(aero::arm _arm);
     public: bool sendHand(aero::arm _arm, double _rad);
-
 
     public: bool solveIKSequence(aero::GraspRequest &_grasp);
     public: std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
