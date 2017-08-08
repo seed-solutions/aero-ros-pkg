@@ -89,21 +89,39 @@ namespace aero
     public: void getRobotStateVariables(std::vector<double> &_av);
     public: void getRobotStateVariables(std::map<std::string, double> &_map);
     public: void getRobotStateVariables(std::map<aero::joint, double> &_map);
+
+    public: void getResetManipPose(std::map<aero::joint, double> &_map);
+
     public: Eigen::Vector3d getWaistPosition();
     public: void getLifter(std::map<aero::joint, double>& _xz);
-    public: void getResetManipPose(std::map<aero::joint, double> &_map);
-    public: moveit::planning_interface::MoveGroup &getMoveGroup(std::string _move_group);
-    public: moveit::planning_interface::MoveGroup &getMoveGroup(aero::arm _arm, aero::ikrange _range);
 
     public: double getHand(aero::arm _arm);
 
     public: Eigen::Vector3d getEEFPosition(aero::arm _arm, aero::eef _eef);
     public: Eigen::Quaterniond getEEFOrientation(aero::arm _arm, aero::eef _eef);
 
+    public: moveit::planning_interface::MoveGroup &getMoveGroup(std::string _move_group);
+    public: moveit::planning_interface::MoveGroup &getMoveGroup(aero::arm _arm, aero::ikrange _range);
+
       // ------------------------------------------------------------
       // send to real robot
       // ------------------------------------------------------------
     public: void sendResetManipPose(int _time_ms=3000);
+
+    public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
+    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
+    public: void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+    public: void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
+    public: void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
+    public: void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+
+    public: bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    public: bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
+
+    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
 
     private: void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     private: void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
@@ -118,37 +136,16 @@ namespace aero
     public: bool sendLifterLocalAsync(double _x, double _z, int _time_ms=5000);
     public: bool sendLifterLocalAsync(int _x, int _z, int _time_ms=5000);
 
-
-    public: bool sendGrasp(aero::arm _arm, int _power=100);
-
-    public: bool openHand(aero::arm _arm);
-
-    public: bool sendHand(aero::arm _arm, double _rad);
-
-    public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
-
-    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
-
-    public: void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
-
-    public: void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
-
-    public: void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
-
-    public: void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
-
-    public: bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
-
-    public: bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
-
-    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
-
-    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
-
     public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
     public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
     public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
     public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
+
+
+    public: bool sendGrasp(aero::arm _arm, int _power=100);
+    public: bool openHand(aero::arm _arm);
+    public: bool sendHand(aero::arm _arm, double _rad);
+
 
     public: bool solveIKSequence(aero::GraspRequest &_grasp);
     public: std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
@@ -156,11 +153,11 @@ namespace aero
     public: bool sendPickIK(aero::GraspRequest &_grasp);
     public: bool sendPlaceIK(aero::GraspRequest &_grasp, double _push_height=0.03);
 
-
       // ------------------------------------------------------------
       // move_base functions
       // ------------------------------------------------------------
-
+    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
+    public: geometry_msgs::Pose getLocationPose(std::string _location);
     public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
     public: void goPosAsync(double _x, double _y, double _rad);
     public: void moveToAsync(std::string _location);
@@ -175,8 +172,6 @@ namespace aero
     public: void faceTowardAsync(std::string _location);
     public: void faceTowardAsync(geometry_msgs::Pose _pose);
     public: bool checkMoveTo(geometry_msgs::Pose _pose);
-    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
-    public: geometry_msgs::Pose getLocationPose(std::string _location);
     private: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 
 
@@ -230,16 +225,15 @@ namespace aero
     public: void setNamedTarget(std::string _move_group, std::string _target);
     public: bool move(std::string _move_group);
 
+      // with linux_kinect
     public: void speakAsync(std::string _speech);
-
     public: void speak(std::string _speech, float _wait_sec);
-
     public: void beginListen();
     public: void endListen();
     public: std::string listen();
 
 
-
+      // callback functions
     private: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
     private: void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
 
