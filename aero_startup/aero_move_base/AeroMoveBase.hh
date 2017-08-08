@@ -83,24 +83,6 @@ class AeroMoveBase
   /// MUST be implemented in description directory.
  private: void Init();
 
- private: void MoveBase(const ros::TimerEvent& _event);
-
- private: bool MoveBaseOnce();
-
-  /// @brief ABSTRACT function,
-  /// returns command for each wheels from x, y, theta.
-  ///
-  /// This function depends on hardware construction and
-  /// MUST be implemented in description directory.
- private: wheels Translate(float _x, float _y, float _theta);
-
-  /// @brief ABSTRACT function,
-  /// returns position from wheel velocities and dt
-  ///
-  /// This function depends on hardware construction and
-  /// MUST be implemented in description directory.
- private: pose dX(std::vector<double> _vels, float _dt);
-
   /// @brief ABSTRACT function,
   /// convert velocity to wheel velocity (v0, ... vn)
   ///
@@ -109,17 +91,6 @@ class AeroMoveBase
  private: void VelocityToWheel(
      const geometry_msgs::TwistConstPtr& _cmd_vel,
      std::vector<double>& _wheel_vel);
-
- private: void SetSimpleGoal(
-     const geometry_msgs::PoseStamped::ConstPtr& _msg);
-
- private: void SetActionGoal();
-
- private: void CancelGoal();
-
- private: void FinishMove();
-
- private: void SetGoal(float _x, float _y, float _theta);
 
  private: void CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
@@ -136,38 +107,8 @@ class AeroMoveBase
   /// @param rate for move base action
  private: float ros_rate_;
 
-  /// @param timer for move base action
- private: ros::Timer timer_;
-
-  /// @param time for accel in move base
- private: float warm_up_time_;
-
-  /// @param wait for servo [us]
- private: unsigned int wait_for_servo_usec_;
-
-  /// @param coefficient in move_base
- private: float move_coefficient_x;
-
-  /// @param coefficient in move_base
- private: float move_coefficient_y;
-
-  /// @param coefficient in move_base
- private: float move_coefficient_theta;
-
-  /// @param goal state for move base
- private: goal goal_;
-
-  /// @param status of move base
- private: states states_;
-
   /// @param node handle
  private: ros::NodeHandle nh_;
-
-  /// @param action server for move base
- private: actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> as_;
-
-  /// @param feedback for action server
- private: move_base_msgs::MoveBaseFeedback feedback_;
 
   /// @param wheel control publisher
  private: ros::Publisher wheel_pub_;
@@ -205,8 +146,6 @@ class AeroMoveBase
   /// @param servo control publisher
  private: ros::Publisher servo_pub_;
 
-  /// @param subscriber for simple goal
- private: ros::Subscriber simple_goal_sub_;
 
   /// @param timer for safety check
  private: ros::Timer safe_timer_;
@@ -220,9 +159,6 @@ class AeroMoveBase
   /// @param time stamp of the latest recieved cmd_vel msg
  private: ros::Time time_stamp_;
 
- private: class AeroMoveBaseImpl;
-
- private: std::shared_ptr<AeroMoveBaseImpl> impl_;
 };
 
 typedef std::shared_ptr<AeroMoveBase> AeroMoveBasePtr;
