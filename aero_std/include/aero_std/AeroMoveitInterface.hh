@@ -72,6 +72,8 @@ namespace aero
     public: void setHand(aero::arm _arm, double _radian);
     private: void setHandsFromJointStates_();
 
+    public: void updateLinkTransforms();
+
       // ------------------------------------------------------------
       // set modes
       // ------------------------------------------------------------
@@ -154,6 +156,30 @@ namespace aero
     public: bool sendPickIK(aero::GraspRequest &_grasp);
     public: bool sendPlaceIK(aero::GraspRequest &_grasp, double _push_height=0.03);
 
+
+      // ------------------------------------------------------------
+      // move_base functions
+      // ------------------------------------------------------------
+
+    public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
+    public: void goPosAsync(double _x, double _y, double _rad);
+    public: void moveToAsync(std::string _location);
+    public: void moveToAsync(Eigen::Vector3d _point);
+    public: void moveToAsync(geometry_msgs::Pose _pose);
+    public: bool isMoving();
+    public: bool at(std::string _location, double _thre=0.2);
+    public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
+    public: void stop();
+    public: void go();
+    public: float toDestination(std::string _location);
+    public: void faceTowardAsync(std::string _location);
+    public: void faceTowardAsync(geometry_msgs::Pose _pose);
+    public: bool checkMoveTo(geometry_msgs::Pose _pose);
+    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
+    public: geometry_msgs::Pose getLocationPose(std::string _location);
+    private: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
+
+
       // these varables are to use moveit libralies
       // don't care
     private: robot_model_loader::RobotModelLoader robot_model_loader_;
@@ -204,8 +230,6 @@ namespace aero
     public: void setNamedTarget(std::string _move_group, std::string _target);
     public: bool move(std::string _move_group);
 
-    public: void updateLinkTransforms();
-
     public: void speakAsync(std::string _speech);
 
     public: void speak(std::string _speech, float _wait_sec);
@@ -214,24 +238,6 @@ namespace aero
     public: void endListen();
     public: std::string listen();
 
-
-    public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
-    public: void goPosAsync(double _x, double _y, double _rad);
-    public: void moveToAsync(std::string _location);
-    public: void moveToAsync(Eigen::Vector3d _point);
-    public: void moveToAsync(geometry_msgs::Pose _pose);
-    public: bool isMoving();
-    public: bool at(std::string _location, double _thre=0.2);
-    public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
-    public: void stop();
-    public: void go();
-    public: float toDestination(std::string _location);
-    public: void faceTowardAsync(std::string _location);
-    public: void faceTowardAsync(geometry_msgs::Pose _pose);
-    public: bool checkMoveTo(geometry_msgs::Pose _pose);
-    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
-    public: geometry_msgs::Pose getLocationPose(std::string _location);
-    private: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 
 
     private: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
