@@ -6,7 +6,8 @@ namespace aero
     float TableTemplate (float _stroke)
     {
       int roundedStroke = static_cast<int>(_stroke);
-      auto ref = TableTemplateCandidates.at(roundedStroke);
+      int roundedStrokeIndex = roundedStroke - ArrayTableTemplateOffset;
+      auto ref = TableTemplateCandidates.at(roundedStrokeIndex);
       std::vector<S2AData> candidates = ref.first;
       std::vector<S2AData> appendix = ref.second;
 

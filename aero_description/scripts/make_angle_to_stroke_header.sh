@@ -60,13 +60,26 @@ create_table_func_from_csv() {
 
     # load csv
     code=''
+    previdx=''
+    code_offset=0
     while read line
-    do  
+    do
         idx=$(echo "$line" | cut -d ',' -f1)
+        if [[ $previdx != '' ]]
+        then
+            if [[ $(($idx - $previdx)) -gt 1 ]]
+            then
+                expidx=$(($previdx + 1))
+                echo "   detected idx jump in ${function_name} expecting ${expidx}, got ${idx}"
+            fi
+        else
+            code_offset=$idx
+        fi
+        previdx=$idx
 	e=$(echo "$line" | cut -d ',' -f4)
         val=$(echo "$offset + $e" | bc)
 	interval=$(echo "$line" | cut -d ',' -f3)
-        code="${code}{${idx}, {${val}, ${interval}}},"
+        code="${code}{${val}, ${interval}},"
     done < $file
     code=${code::-1}
 
@@ -86,7 +99,8 @@ create_table_func_from_csv() {
 
     write_declare_map=$(grep -n -m 1 "};" $output_file | cut -d ':' -f1)
     write_declare_map=$(($write_declare_map + 1))
-    sed -i "${write_declare_map}i\    static const std::map<int, std::pair<float, float>> ${function_name}Map = {${code}};" $output_file
+    sed -i "${write_declare_map}i\    static const int Array${function_name}Offset = ${code_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map = {${code}};" $output_file
 
     sed -i "${write_to_top_line}i\    //////////////////////////////////////////////////" $output_file
     sed -i "${write_to_top_line}i\ " $output_file
@@ -114,6 +128,7 @@ create_rp_table_func_from_csv() {
     # load roll csv
     j=0
     code1=''
+    code1_neg=''
     while read line
     do
 	e=$(echo "$line" | cut -d ',' -f4)
@@ -121,12 +136,14 @@ create_rp_table_func_from_csv() {
 	if [[ ${j} -ne 0 ]]
 	then
 	    val=$(echo "-1 * $e" | bc)
-            code1="${code1}{-${j}, {${val}, ${interval}}},"
+            code1_neg="${code1_neg}{${val},${interval}}, "
 	fi
-        code1="${code1}{${j}, {${e}, ${interval}}},"
+        code1="${code1}{${e},${interval}}, "
 	j=$(($j + 1))
     done < $file
-    code1=${code1::-1}
+    code1="${code1}${code1_neg}"
+    code1=${code1::-2}
+    code1_offset=$(($j - 1))
 
     # parse joint_name_b
     file=''
@@ -142,6 +159,7 @@ create_rp_table_func_from_csv() {
     # load pitch csv
     j=0
     code2=''
+    code2_neg=''
     while read line
     do
 	e=$(echo "$line" | cut -d ',' -f4)
@@ -151,13 +169,15 @@ create_rp_table_func_from_csv() {
 	    if [[ ${5} -eq 1 ]]
 	    then
 		val=$(echo "-1 * $e" | bc)
-                code2="${code2}{-${j}, {${val}, ${interval}}},"
+                code2_neg="${code2_neg}{${val},${interval}}, "
 	    fi
 	fi
-        code2="${code2}{${j}, {${e}, ${interval}}},"
+        code2="${code2}{${e},${interval}}, "
 	j=$(($j + 1))
     done < $file
-    code2=${code2::-1}
+    code2="${code2}${code2_neg}"
+    code2=${code2::-2}
+    code2_offset=$(($j - 1))
 
     awk "/dualJoint TableTemplate/,/};/" $template_file > /tmp/mjointsstrokehh
     sed -i "s/TableTemplate/${function_name}/g" /tmp/mjointsstrokehh
@@ -175,8 +195,10 @@ create_rp_table_func_from_csv() {
 
     write_declare_map=$(grep -n -m 1 "};" $output_file | cut -d ':' -f1)
     write_declare_map=$(($write_declare_map + 1))
-    sed -i "${write_declare_map}i\    static const std::map<int, std::pair<float, float>> ${function_name}Map1 = {${code1}};" $output_file
-    sed -i "${write_declare_map}i\    static const std::map<int, std::pair<float, float>> ${function_name}Map2 = {${code2}};" $output_file
+    sed -i "${write_declare_map}i\    static const int Array${function_name}NegativeOffset1 = ${code1_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const int Array${function_name}NegativeOffset2 = ${code2_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map1 = {${code1}};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map2 = {${code2}};" $output_file
 
     sed -i "${write_to_top_line}i\    //////////////////////////////////////////////////" $output_file
     sed -i "${write_to_top_line}i\ " $output_file
@@ -222,7 +244,8 @@ sed -i "/#ifndef/d" $output_source
 sed -i "/#define/d" $output_source
 sed -i "/#endif/d" $output_source
 sed -i "s/};/}/g" $output_source
-sed -i "/static const std::map<int, std::pair<float, float>>/ d" $output_source
+sed -i "/static const int Array/ d" $output_source
+sed -i "/static const std::vector<std::pair<float, float>>/ d" $output_source
 
 edit_start=$(grep -n -m 1 "//////" $output_file | cut -d ':' -f1)
 tail -n +$edit_start $output_file > /tmp/aero_modify_header

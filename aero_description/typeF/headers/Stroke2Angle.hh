@@ -14,7 +14,6 @@
 #ifndef AERO_COMMON_STROKE_TO_ANGLE_H_
 #define AERO_COMMON_STROKE_TO_ANGLE_H_
 
-#include <map>
 #include <vector>
 #include <algorithm>
 #include <stdint.h>

@@ -12,7 +12,6 @@
 #define AERO_COMMON_ANGLE_TO_STROKE_H_
 
 #include <vector>
-#include <map>
 #include <algorithm>
 #include <stdint.h>
 #include "aero_hardware_interface/Angle2Stroke.hh"

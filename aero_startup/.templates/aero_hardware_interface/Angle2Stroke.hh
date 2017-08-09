@@ -7,7 +7,8 @@ namespace aero
     {
       int roundedAngle = static_cast<int>(_angle);
       if (_angle > roundedAngle + 0.001) ++roundedAngle;
-      auto ref = TableTemplateMap.at(roundedAngle);
+      int roundedAngleIndex = roundedAngle - ArrayTableTemplateOffset;
+      auto ref = TableTemplateMap.at(roundedAngleIndex);
       float stroke = ref.first;
       float interval = ref.second;
 
@@ -30,8 +31,10 @@ namespace aero
         if (_angle2 > roundedAngle2 + 0.001) ++roundedAngle2;
       }
 
-      auto ref1 = TableTemplateMap1.at(roundedAngle1);
-      auto ref2 = TableTemplateMap2.at(roundedAngle2);
+      int roundedAngleIndex1 = (roundedAngle1 > 0 ? roundedAngle1 : -roundedAngle1 + ArrayTableTemplateNegativeOffset1);
+      int roundedAngleIndex2 = (roundedAngle2 > 0 ? roundedAngle2 : -roundedAngle2 + ArrayTableTemplateNegativeOffset2);
+      auto ref1 = TableTemplateMap1.at(roundedAngleIndex1);
+      auto ref2 = TableTemplateMap2.at(roundedAngleIndex2);
       float stroke1 = ref1.first, stroke2 = ref2.first;
       float interval1 = ref1.second, interval2 = ref2.second;
 
