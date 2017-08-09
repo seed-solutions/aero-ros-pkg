@@ -31,8 +31,8 @@ namespace aero
         if (_angle2 > roundedAngle2 + 0.001) ++roundedAngle2;
       }
 
-      int roundedAngleIndex1 = (roundedAngle1 > 0 ? roundedAngle1 : -roundedAngle1 + ArrayTableTemplateNegativeOffset1);
-      int roundedAngleIndex2 = (roundedAngle2 > 0 ? roundedAngle2 : -roundedAngle2 + ArrayTableTemplateNegativeOffset2);
+      int roundedAngleIndex1 = (roundedAngle1 >= 0 ? roundedAngle1 : -roundedAngle1 + ArrayTableTemplateNegativeOffset1);
+      int roundedAngleIndex2 = (roundedAngle2 >= 0 ? roundedAngle2 : -roundedAngle2 + ArrayTableTemplateNegativeOffset2);
       auto ref1 = TableTemplateMap1.at(roundedAngleIndex1);
       auto ref2 = TableTemplateMap2.at(roundedAngleIndex2);
       float stroke1 = ref1.first, stroke2 = ref2.first;
