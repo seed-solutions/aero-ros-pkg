@@ -39,53 +39,117 @@ namespace aero
     class AeroMoveitInterface
     {
       /// @brief constructor
-      /// @param _nh ros node handler
-      /// @param _rd robot_description's name, "_rd", "_rd_ho" and "_rd_op" will be loaded
+      /// @param[in] _nh ros node handler
+      /// @param[in] _rd robot_description's name, "${_rd}", "${_rd}_ho" and "${_rd}_op" will be loaded
     public: explicit AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd="robot_description");
     public: ~AeroMoveitInterface();
 
       // ------------------------------------------------------------
       // set robot model's states
       // ------------------------------------------------------------
+
+      /// @brief set robot model's angles
+      /// @param[in] _av angle vector
     public: void setRobotStateVariables(std::vector<double> &_av);
+      /// @brief set robot model's angles
+      /// param[in] _map map<joint name, radian>
     public: void setRobotStateVariables(std::map<std::string, double> &_map);
+      /// @brief set robot model's angles, recommend using this!
+      /// @param[in] _map map<joint name, radian>
     public: void setRobotStateVariables(std::map<aero::joint, double> &_map);
 
+      /// @brief set current real robot's angles to robot model's angles
     public: void setRobotStateToCurrentState();
+      /// @brief set named angles such as "reset-pose" to robot model's angles
+      /// @param[in] _move_group named target is declared with move group
+      /// @param[in] _target target name, target list is in .srdf file in aero_moveit_config
     public: void setRobotStateToNamedTarget(std::string _move_group, std::string _target);
 
+      /// @brief solve IK and set result to robot model's angles
+      /// @param[in] _move_group IK is solved in this move group
+      /// @param[in] _pose IK target pose
+      /// @param[in] _eef_link end effector link name, this link gets closer to _pose
+      /// @param[out] true is solved, false is unsolvable
     public: bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
+      /// @brief solve IK and set result to robot model's angles
+      /// @param[in] _arm aero::arm::rarm or aero::arm::larm
+      /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
+      /// @param[in] _pose IK target pose
+      /// @param[in] _eef_link end effector link name, this link gets closer to _pose
+      /// @param[out] true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
+      /// @brief solve IK and set result to robot model's angles
+      /// @param[in] _arm aero::arm::rarm or aero::arm::larm
+      /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
+      /// @param[in] _pose IK target pose
+      /// @param[in] _eef_link this link gets closer to _pose. you can use aero::eef::(hand|grasp|pick)
+      /// @param[out] true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
 
+
+      /// @brief set robot model's lifter position
+      /// @param[in] _x x meters from top of lifter
+      /// @param[in] _z z meters from top of lifter
     public: bool setLifter(double _x, double _z);
+      /// @brief check lifter is solvable or not
+      /// @param[in] _x target x
+      /// @param[in] _z target z
+      /// @param[out] _ans_xz ankle and hip joint value
+      /// @param[out] bool solvable or not
     private: bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
+
+      /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
+      /// @param[in] _x target x in base_link coordinate
+      /// @param[in] _y target y in base_link coordinate
+      /// @param[in] _z target z in base_link coordinate
     public: void setLookAt(double _x, double _y, double _z);
+      /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
+      /// @param[in] _target target pose in base_link coordinate
     public: void setLookAt(Eigen::Vector3d _target);
+      /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
+      /// @param[in] _target target pose in base_link coordinate
     public: void setLookAt(Eigen::Vector3f _target);
+      /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
+      /// @param[in] _pose target pose in base_link coordinate
     public: void setLookAt(geometry_msgs::Pose _pose);
+      /// @biref set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
+      /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
+      /// @param[in] _r roll, if it's over limit, it beocomes within limit
+      /// @param[in] _p pitch, if it's over limit, it beocomes within limit
+      /// @param[in] _y yaw, if it's over limit, it beocomes within limit
     public: void setNeck(double _r,double _p, double _y);
+      /// @brief private function to calculate look at
+      /// @param[in] _x target x in base_link coordinate
+      /// @param[in] _y target y in base_link coordinate
+      /// @param[in] _z target z in base_link coordinate
     private: void lookAt_(double _x, double _y, double _z);
 
+      /// @brief set the value to robot model's hand angle
+      /// @param[in] _arm aero::arm::(rarm|larm)
+      /// @param[in] _radian target radian
     public: void setHand(aero::arm _arm, double _radian);
     private: void setHandsFromJointStates_();
 
+      /// @brief update the model's link poses based on angle values
     public: void updateLinkTransforms();
 
       // ------------------------------------------------------------
       // set modes
       // ------------------------------------------------------------
+      /// @brief change the interpolation of angle execution
+      /// @brief _i_type the list is in aero_std/include/interpolation_type.h
     public: bool setInterpolation(int _i_type);
 
-    public: void setTrackingMode(bool _yes);// future
+    public: void setTrackingMode(bool _yes);
     public: void switchOnPlane();
     public: void switchHeightOnly();
 
       // ------------------------------------------------------------
       // get robot model's states
       // ------------------------------------------------------------
+      /// @brief 
     public: void getRobotStateVariables(std::vector<double> &_av);
     public: void getRobotStateVariables(std::map<std::string, double> &_map);
     public: void getRobotStateVariables(std::map<aero::joint, double> &_map);
