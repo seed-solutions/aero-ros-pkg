@@ -34,17 +34,17 @@ namespace aero
       float rad2Deg = 180.0 / M_PI;
       float scale = 100.0;
       dualJoint right_wrist =
-	WristRollPitchTable(rad2Deg * r_wrist_p_joint,
-			    rad2Deg * -r_wrist_r_joint);
+        WristRollPitchTable(rad2Deg * r_wrist_p_joint,
+                            rad2Deg * -r_wrist_r_joint);
       dualJoint left_wrist =
-	WristRollPitchTable(rad2Deg * l_wrist_p_joint,
-			    rad2Deg * l_wrist_r_joint);
+        WristRollPitchTable(rad2Deg * l_wrist_p_joint,
+                            rad2Deg * l_wrist_r_joint);
       dualJoint waist =
-	WaistRollPitchTable(-rad2Deg * waist_r_joint,
-			    rad2Deg * waist_p_joint);
+        WaistRollPitchTable(-rad2Deg * waist_r_joint,
+                            rad2Deg * waist_p_joint);
       dualJoint neck =
-	NeckRollPitchTable(rad2Deg * neck_r_joint,
-			   rad2Deg * neck_p_joint);
+        NeckRollPitchTable(rad2Deg * neck_r_joint,
+                           rad2Deg * neck_p_joint);
 
       // ros_order -> can_order
       meta = scale * rad2Deg * neck_y_joint;
@@ -52,9 +52,9 @@ namespace aero
       meta = scale * neck.two;
 
       meta =
-	scale * ShoulderPitchTable(-rad2Deg * r_shoulder_p_joint);
+        scale * ShoulderPitchTable(-rad2Deg * r_shoulder_p_joint);
       meta =
-	scale * ShoulderRollTable(-rad2Deg * r_shoulder_r_joint);
+        scale * ShoulderRollTable(-rad2Deg * r_shoulder_r_joint);
       meta = -scale * rad2Deg * r_shoulder_y_joint;
       meta = scale * ElbowPitchTable(-rad2Deg * r_elbow_joint);
       meta = -scale * rad2Deg * r_wrist_y_joint;
@@ -63,9 +63,9 @@ namespace aero
       meta = -scale * (rad2Deg * r_thumb_joint - 50.0) * 0.18;
 
       meta =
-	scale * ShoulderPitchTable(-rad2Deg * l_shoulder_p_joint);
+        scale * ShoulderPitchTable(-rad2Deg * l_shoulder_p_joint);
       meta =
-	scale * ShoulderRollTable(rad2Deg * l_shoulder_r_joint);
+        scale * ShoulderRollTable(rad2Deg * l_shoulder_r_joint);
       meta = -scale * rad2Deg * l_shoulder_y_joint;
       meta = scale * ElbowPitchTable(-rad2Deg * l_elbow_joint);
       meta = -scale * rad2Deg * l_wrist_y_joint;

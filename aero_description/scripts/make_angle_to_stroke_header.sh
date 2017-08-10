@@ -42,7 +42,7 @@ replace_meta_in_output_file() {
 
 create_table_func_from_csv() {
     joint_name=$1
-    # offset=$2
+    offset=$2
     output_file=$3
     function_name=$4
     template_file=$5
@@ -59,33 +59,29 @@ create_table_func_from_csv() {
     fi
 
     # load csv
-    table=()
-    interval=()
-    j=0
-    while read line
-    do  
-        case_num[j]=$(echo "$line" | cut -d ',' -f1)
-	table[j]=$(echo "$line" | cut -d ',' -f4)
-	interval[j]=$(echo "$line" | cut -d ',' -f3)
-	j=$(($j + 1))
-    done < $file
-
-    tab6=$'      '
-    tab8=$'        '
     code=''
-
-    idx=0
-    for e in "${table[@]}"
+    previdx=''
+    code_offset=0
+    while read line
     do
-	val=$(echo "$2 + $e" | bc)
-	code="${code}${tab6}case ${case_num[${idx}]}:\n"
-	code="${code}${tab8}stroke = ${val};\n"
-	code="${code}${tab8}interval = ${interval[${idx}]};\n"
-	code="${code}${tab8}break;\n"
-	idx=$(($idx + 1))
-    done
-
-    echo -e "${code}" > /tmp/mjointsstrokehhwrite
+        idx=$(echo "$line" | cut -d ',' -f1)
+        if [[ $previdx != '' ]]
+        then
+            if [[ $(($idx - $previdx)) -gt 1 ]]
+            then
+                expidx=$(($previdx + 1))
+                echo "   detected idx jump in ${function_name} expecting ${expidx}, got ${idx}"
+            fi
+        else
+            code_offset=$idx
+        fi
+        previdx=$idx
+	e=$(echo "$line" | cut -d ',' -f4)
+        val=$(echo "$offset + $e" | bc)
+	interval=$(echo "$line" | cut -d ',' -f3)
+        code="${code}{${val}, ${interval}},"
+    done < $file
+    code=${code::-1}
 
     awk "/float TableTemplate/,/};/" $template_file > /tmp/mjointsstrokehh
     sed -i "s/TableTemplate/${function_name}/g" /tmp/mjointsstrokehh
@@ -101,16 +97,10 @@ create_table_func_from_csv() {
 	write_to_line=$(($write_to_line + 1))
     done < /tmp/mjointsstrokehh
 
-    write_to_line=$(grep -n -m 1 "switch (roundedAngle)" /tmp/mjointsstrokehh | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    write_to_line=$(($write_to_top_line + $write_to_line))
-
-    IFS=''
-    while read line
-    do
-	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
-	write_to_line=$(($write_to_line + 1))
-    done < /tmp/mjointsstrokehhwrite
+    write_declare_map=$(grep -n -m 1 "};" $output_file | cut -d ':' -f1)
+    write_declare_map=$(($write_declare_map + 1))
+    sed -i "${write_declare_map}i\    static const int Array${function_name}Offset = ${code_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map = {${code}};" $output_file
 
     sed -i "${write_to_top_line}i\    //////////////////////////////////////////////////" $output_file
     sed -i "${write_to_top_line}i\ " $output_file
@@ -136,15 +126,24 @@ create_rp_table_func_from_csv() {
     fi
 
     # load roll csv
-    table_r=()
-    interval_r=()
     j=0
+    code1=''
+    code1_neg=''
     while read line
     do
-	table_r[j]=$(echo "$line" | cut -d ',' -f4)
-	interval_r[j]=$(echo "$line" | cut -d ',' -f3)
+	e=$(echo "$line" | cut -d ',' -f4)
+	interval=$(echo "$line" | cut -d ',' -f3)
+	if [[ ${j} -ne 0 ]]
+	then
+	    val=$(echo "-1 * $e" | bc)
+            code1_neg="${code1_neg}{${val},${interval}}, "
+	fi
+        code1="${code1}{${e},${interval}}, "
 	j=$(($j + 1))
     done < $file
+    code1="${code1}${code1_neg}"
+    code1=${code1::-2}
+    code1_offset=$(($j - 1))
 
     # parse joint_name_b
     file=''
@@ -158,42 +157,27 @@ create_rp_table_func_from_csv() {
     fi
 
     # load pitch csv
-    table_p=()
-    interval_p=()
     j=0
+    code2=''
+    code2_neg=''
     while read line
     do
-	table_p[j]=$(echo "$line" | cut -d ',' -f4)
-	interval_p[j]=$(echo "$line" | cut -d ',' -f3)
-	j=$(($j + 1))
-    done < $file
-
-    tab6=$'      '
-    tab8=$'        '
-    code=''
-
-    idx=0
-    for e in "${table_p[@]}"
-    do
-	if [[ ${idx} -ne 0 ]]
+	e=$(echo "$line" | cut -d ',' -f4)
+	interval=$(echo "$line" | cut -d ',' -f3)
+	if [[ ${j} -ne 0 ]]
 	then
 	    if [[ ${5} -eq 1 ]]
 	    then
 		val=$(echo "-1 * $e" | bc)
-		code="${code}${tab6}case -${idx}:\n"
-		code="${code}${tab8}stroke2 = ${val};\n"
-		code="${code}${tab8}interval2 = ${interval[${idx}]};\n"
-		code="${code}${tab8}break;\n"
+                code2_neg="${code2_neg}{${val},${interval}}, "
 	    fi
 	fi
-	code="${code}${tab6}case ${idx}:\n"
-	code="${code}${tab8}stroke2 = ${e};\n"
-	code="${code}${tab8}interval2 = ${interval[${idx}]};\n"
-	code="${code}${tab8}break;\n"
-	idx=$(($idx + 1))
-    done
-
-    echo -e "${code}" > /tmp/mjointsstrokehhwrite
+        code2="${code2}{${e},${interval}}, "
+	j=$(($j + 1))
+    done < $file
+    code2="${code2}${code2_neg}"
+    code2=${code2::-2}
+    code2_offset=$(($j - 1))
 
     awk "/dualJoint TableTemplate/,/};/" $template_file > /tmp/mjointsstrokehh
     sed -i "s/TableTemplate/${function_name}/g" /tmp/mjointsstrokehh
@@ -209,48 +193,12 @@ create_rp_table_func_from_csv() {
 	write_to_line=$(($write_to_line + 1))
     done < /tmp/mjointsstrokehh
 
-    write_to_line=$(grep -n -m 1 "switch (roundedAngle2)" /tmp/mjointsstrokehh | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    write_to_line=$(($write_to_top_line + $write_to_line))
-
-    IFS=''
-    while read line
-    do
-	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
-	write_to_line=$(($write_to_line + 1))
-    done < /tmp/mjointsstrokehhwrite
-
-    idx=0
-    code=''
-    for e in "${table_r[@]}"
-    do
-	if [[ ${idx} -ne 0 ]]
-	then
-	    val=$(echo "-1 * $e" | bc)
-	    code="${code}${tab6}case -${idx}:\n"
-	    code="${code}${tab8}stroke1 = ${val};\n"
-	    code="${code}${tab8}interval1 = ${interval[${idx}]};\n"
-	    code="${code}${tab8}break;\n"
-	fi
-	code="${code}${tab6}case ${idx}:\n"
-	code="${code}${tab8}stroke1 = ${e};\n"
-	code="${code}${tab8}interval1 = ${interval[${idx}]};\n"
-	code="${code}${tab8}break;\n"
-	idx=$(($idx + 1))
-    done
-
-    echo -e "${code}" > /tmp/mjointsstrokehhwrite
-
-    write_to_line=$(grep -n -m 1 "switch (roundedAngle1)" /tmp/mjointsstrokehh | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    write_to_line=$(($write_to_top_line + $write_to_line))
-
-    IFS=''
-    while read line
-    do
-	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
-	write_to_line=$(($write_to_line + 1))
-    done < /tmp/mjointsstrokehhwrite
+    write_declare_map=$(grep -n -m 1 "};" $output_file | cut -d ':' -f1)
+    write_declare_map=$(($write_declare_map + 1))
+    sed -i "${write_declare_map}i\    static const int Array${function_name}NegativeOffset1 = ${code1_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const int Array${function_name}NegativeOffset2 = ${code2_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map1 = {${code1}};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map2 = {${code2}};" $output_file
 
     sed -i "${write_to_top_line}i\    //////////////////////////////////////////////////" $output_file
     sed -i "${write_to_top_line}i\ " $output_file
@@ -296,6 +244,8 @@ sed -i "/#ifndef/d" $output_source
 sed -i "/#define/d" $output_source
 sed -i "/#endif/d" $output_source
 sed -i "s/};/}/g" $output_source
+sed -i "/static const int Array/ d" $output_source
+sed -i "/static const std::vector<std::pair<float, float>>/ d" $output_source
 
 edit_start=$(grep -n -m 1 "//////" $output_file | cut -d ':' -f1)
 tail -n +$edit_start $output_file > /tmp/aero_modify_header

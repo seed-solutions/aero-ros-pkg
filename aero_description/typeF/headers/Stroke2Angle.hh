@@ -37,87 +37,86 @@ namespace aero
     {
       float scale = 0.01;
       float left_wrist_roll_stroke =
-	(scale * can_l_wrist_top + scale * can_l_wrist_bottom) * 0.5;
+        (scale * can_l_wrist_top + scale * can_l_wrist_bottom) * 0.5;
       float right_wrist_roll_stroke =
-	(scale * can_r_wrist_top + scale * can_r_wrist_bottom) * 0.5;
+        (scale * can_r_wrist_top + scale * can_r_wrist_bottom) * 0.5;
       float waist_pitch_stroke =
-	(scale * can_waist_right + scale * can_waist_left) * 0.5;
+        (scale * can_waist_right + scale * can_waist_left) * 0.5;
       float neck_pitch_stroke =
-	(scale * can_neck_right + scale * can_neck_left) * 0.5;
+        (scale * can_neck_right + scale * can_neck_left) * 0.5;
       float deg2Rad = M_PI / 180.0;
       float hip_angle = deg2Rad * LegInvTable(scale * can_up);
       float ankle_angle = deg2Rad * LegInvTable(scale * can_down);
 
       // can_order -> ros_order
       meta =
-	deg2Rad * scale * can_waist_y;
+        deg2Rad * scale * can_waist_y;
       meta =
-	deg2Rad * WaistPitchInvTable(waist_pitch_stroke);
+        deg2Rad * WaistPitchInvTable(waist_pitch_stroke);
       meta =
-	deg2Rad * WaistRollInvTable(
+        deg2Rad * WaistRollInvTable(
            fabs(scale * can_waist_right - waist_pitch_stroke))
-	* (can_waist_right > can_waist_left ? 1 : -1);
+        * (can_waist_right > can_waist_left ? 1 : -1);
 
       meta =
-	-deg2Rad * ShoulderPitchInvTable(scale * can_l_shoulder_p);
+        -deg2Rad * ShoulderPitchInvTable(scale * can_l_shoulder_p);
       meta =
-	deg2Rad * ShoulderRollInvTable(scale * can_l_shoulder_r);
+        deg2Rad * ShoulderRollInvTable(scale * can_l_shoulder_r);
       meta =
-	-deg2Rad * scale * can_l_elbow_y;
+        -deg2Rad * scale * can_l_elbow_y;
       meta =
-	-deg2Rad * ElbowPitchInvTable(scale * can_l_elbow_p);
+        -deg2Rad * ElbowPitchInvTable(scale * can_l_elbow_p);
       meta =
-	-deg2Rad * scale * can_l_wrist_y;
+        -deg2Rad * scale * can_l_wrist_y;
       meta =
-	deg2Rad * WristPitchInvTable(
+        deg2Rad * WristPitchInvTable(
             fabs(scale * can_l_wrist_top - left_wrist_roll_stroke))
-	* (can_l_wrist_top > can_l_wrist_bottom ? 1 : -1);
+        * (can_l_wrist_top > can_l_wrist_bottom ? 1 : -1);
       meta =
-	-deg2Rad * WristRollInvTable(-fabs(left_wrist_roll_stroke))
-	* (left_wrist_roll_stroke >= 0 ? -1 : 1);
+        -deg2Rad * WristRollInvTable(-fabs(left_wrist_roll_stroke))
+        * (left_wrist_roll_stroke >= 0 ? -1 : 1);
       meta =
-	-deg2Rad * (scale * can_l_hand * 5.556 - 50.0);
+        -deg2Rad * (scale * can_l_hand * 5.556 - 50.0);
       meta = 0;
       meta = 0;
       meta =
-	deg2Rad * (scale * can_l_hand * 5.556 - 50.0);
+        deg2Rad * (scale * can_l_hand * 5.556 - 50.0);
 
       meta =
-	deg2Rad * scale * can_neck_y;
+        deg2Rad * scale * can_neck_y;
       meta =
-	deg2Rad * NeckPitchInvTable(neck_pitch_stroke);
+        deg2Rad * NeckPitchInvTable(neck_pitch_stroke);
       meta =
-	-deg2Rad * NeckRollInvTable(
+        -deg2Rad * NeckRollInvTable(
            fabs(scale * can_neck_right - neck_pitch_stroke))
-	* (can_neck_right > can_neck_left ? -1 : 1);
+        * (can_neck_right > can_neck_left ? -1 : 1);
 
       meta =
-	-deg2Rad * ShoulderPitchInvTable(scale * can_r_shoulder_p);
+        -deg2Rad * ShoulderPitchInvTable(scale * can_r_shoulder_p);
       meta =
-	-deg2Rad * ShoulderRollInvTable(scale * can_r_shoulder_r);
+        -deg2Rad * ShoulderRollInvTable(scale * can_r_shoulder_r);
       meta =
-	-deg2Rad * scale * can_r_elbow_y;
+        -deg2Rad * scale * can_r_elbow_y;
       meta =
-	-deg2Rad * ElbowPitchInvTable(scale * can_r_elbow_p);
+        -deg2Rad * ElbowPitchInvTable(scale * can_r_elbow_p);
       meta =
-	-deg2Rad * scale * can_r_wrist_y;
+        -deg2Rad * scale * can_r_wrist_y;
       meta =
-	deg2Rad * WristPitchInvTable(
+        deg2Rad * WristPitchInvTable(
            fabs(scale * can_r_wrist_top - right_wrist_roll_stroke))
-	* (can_r_wrist_top > can_r_wrist_bottom ? 1 : -1);
+        * (can_r_wrist_top > can_r_wrist_bottom ? 1 : -1);
       meta =
-	-deg2Rad * WristRollInvTable(-fabs(right_wrist_roll_stroke))
-	* (right_wrist_roll_stroke >= 0 ? 1 : -1);
+        -deg2Rad * WristRollInvTable(-fabs(right_wrist_roll_stroke))
+        * (right_wrist_roll_stroke >= 0 ? 1 : -1);
       meta =
-	deg2Rad * (scale * can_r_hand * 5.556 - 50.0);
+        deg2Rad * (scale * can_r_hand * 5.556 - 50.0);
       meta = 0;
       meta = 0;
       meta =
-	-deg2Rad * (scale * can_r_hand * 5.556 - 50.0);
+        -deg2Rad * (scale * can_r_hand * 5.556 - 50.0);
 
       meta = hip_angle;
-      meta =
-	ankle_angle + hip_angle;
+      meta = ankle_angle + hip_angle;
       meta = ankle_angle;
     };
 

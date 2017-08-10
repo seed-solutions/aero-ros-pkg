@@ -65,11 +65,11 @@ else
 
     ./scripts/make_joint_state_publisher.sh $dir
 
-    printf "\nmaking Angle2Stroke.hh ... (takes about 20 sec)\n"
+    printf "\nmaking Angle2Stroke.hh ... \n"
 
     ./scripts/make_angle_to_stroke_header.sh $dir $upper_name $lower_name
 
-    printf "\nmaking Stroke2Angle.hh ... (takes about 10 sec)\n"
+    printf "\nmaking Stroke2Angle.hh ... \n"
 
     ./scripts/make_stroke_to_angle_header.sh $dir
 

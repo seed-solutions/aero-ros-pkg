@@ -93,7 +93,7 @@ create_table_func_from_csv() {
 		fi
 	    fi
 	    bef_head=$head
-	    ntable[$head]="${ntable[$head]}{${Angle[${idx}]}, ${val}, ${csv_interval[${idx}]}}, "
+	    ntable[$head]="${ntable[$head]}{${Angle[${idx}]},${val},${csv_interval[${idx}]}},"
 	else # when stroke is positive
 	    # if +1 degree results to more than +1 stroke
 	    if [[ ${bef_head} != ""  ]]
@@ -105,37 +105,52 @@ create_table_func_from_csv() {
 	    fi
 	    bef_head=$head
 
-	    table[$head]="${table[$head]}{${Angle[${idx}]}, ${val}, ${csv_interval[${idx}]}}, "
+	    table[$head]="${table[$head]}{${Angle[${idx}]},${val},${csv_interval[${idx}]}},"
 	fi
 	idx=$(($idx + 1))
     done
 
-    tab6=$'      '
-    tab8=$'        '
     code=''
+    array_offset=0
 
     # negative stroke value case
-    idx=0
-    for e in "${ntable[@]}"
+    if [[ ${#ntable[@]} -gt 0 ]]
+    then
+        idx=$((${#ntable[@]} - 1))
+        e=${ntable[$idx]}
+        if [[ $e != "" ]]
+        then
+            code="${code}{{${e::-1}},{}}, "
+            array_offset="-$idx"
+        elif [[ ${#ntable[@]} -gt 1 ]]
+        then
+            idx=$(($idx - 1))
+            array_offset="-$idx"
+        fi
+    fi
+    for (( idx=${#ntable[@]}-2 ; idx>=0 ; idx-- ))
     do
+        e=${ntable[$idx]}
 	if [[ $e != "" ]]
 	then
-	    code="${code}${tab6}case -${idx}:\n"
-	    candidates=$(echo -e "${e}" | sed -e "s/..$//")
-	    code="${code}${tab8}candidates = std::vector<S2AData>({${candidates}});\n"
-	    if [[ $idx -lt $((${#ntable[@]} - 1)) ]]
+            code="${code}{{${e::-1}},"
+	    j=1
+	    if [[ ${ntable[$(($idx + $j))]} == "" ]]
 	    then
-		j=1
-		if [[ ${ntable[$(($idx + $j))]} == "" ]]
-		then
-		    j=2
-		fi
-		appendix=$(echo -e "${ntable[$(($idx + $j))]}" | sed -e "s/..$//")
-		code="${code}${tab8}appendix = std::vector<S2AData>({${appendix}});\n"
+		j=2
 	    fi
-	    code="${code}${tab8}break;\n"
+	    appendix=$(echo -e "${ntable[$(($idx + $j))]}")
+            if [[ "$appendix" = "" ]]
+            then
+                code="${code}{}}, "
+            else
+		code="${code}{${appendix::-1}}}, "
+            fi
+        elif [[ $idx != 0 ]]
+        then
+            echo "   detected empty table in -${idx} of ${function_name}"
+            code="${code}{{{0,0.0f,0.0f}}, {}}, "
 	fi
-	idx=$(($idx + 1))
     done
 
     # positive stroke value case
@@ -144,20 +159,26 @@ create_table_func_from_csv() {
     do
 	if [[ $e != "" ]]
 	then
-	    code="${code}${tab6}case ${idx}:\n"
-	    candidates=$(echo -e "${e}" | sed -e "s/..$//")
-	    code="${code}${tab8}candidates = std::vector<S2AData>({${candidates}});\n"
+            code="${code}{{${e::-1}},"
 	    if [[ $idx -lt $((${#table[@]} - 1)) ]]
 	    then
-		appendix=$(echo -e "${table[$(($idx + 1))]}" | sed -e "s/..$//")
-		code="${code}${tab8}appendix = std::vector<S2AData>({${appendix}});\n"
+		appendix=$(echo -e "${table[$(($idx + 1))]}")
+                if [[ "$appendix" = "" ]]
+                then
+                    code="${code}{}}, "
+                else
+		    code="${code}{${appendix::-1}}}, "
+                fi
+            else
+                code="${code}{}}, "
 	    fi
-	    code="${code}${tab8}break;\n"
+        else
+            echo "   detected empty table in ${idx} of ${function_name}"
+            code="${code}{{{0,0.0f,0.0f}}, {}}, "
 	fi
 	idx=$(($idx + 1))
     done
-
-    echo -e "${code}" > /tmp/mjointsanglehhwrite
+    code="${code::-2}"
 
     awk "/float TableTemplate/,/};/" $template_file > /tmp/mjointsanglehh
     sed -i "s/TableTemplate/${function_name}/g" /tmp/mjointsanglehh
@@ -173,19 +194,15 @@ create_table_func_from_csv() {
 	write_to_line=$(($write_to_line + 1))
     done < /tmp/mjointsanglehh
 
-    write_to_line=$(grep -n -m 1 "switch (roundedStroke)" /tmp/mjointsanglehh | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    write_to_line=$(($write_to_top_line + $write_to_line))
-
-    IFS=''
-    while read line
-    do
-    	echo "${line}" | xargs -0 -I{} sed -i "${write_to_line}i\{}" $output_file
-	write_to_line=$(($write_to_line + 1))
-    done < /tmp/mjointsanglehhwrite
+    write_declare_map=$(grep -n -m 1 "};" $output_file | cut -d ':' -f1)
+    write_declare_map=$(($write_declare_map + 1))
+    sed -i "${write_declare_map}i\    static const int Array${function_name}Offset = ${array_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const std::vector<std::pair<std::vector<S2AData>, std::vector<S2AData>>> ${function_name}Candidates = {${code}};" $output_file
 
     sed -i "${write_to_top_line}i\    //////////////////////////////////////////////////" $output_file
     sed -i "${write_to_top_line}i\ " $output_file
+
+    echo -e "created ${function_name}"
 }
 
 cp $input_file $output_file
@@ -219,6 +236,8 @@ sed -i "/#ifndef/d" $output_source
 sed -i "/#define/d" $output_source
 sed -i "/#endif/d" $output_source
 sed -i "s/};/}/g" $output_source
+sed -i "/static const int Array/ d" $output_source
+sed -i "/static const std::vector<std::pair<std::vector<S2AData>, std::vector<S2AData>>>/ d" $output_source
 
 edit_start=$(grep -n -m 1 "//////" $output_file | cut -d ':' -f1)
 tail -n +$edit_start $output_file > /tmp/aero_modify_header
