@@ -69,21 +69,21 @@ namespace aero
       /// @param[in] _move_group IK is solved in this move group
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link end effector link name, this link gets closer to _pose
-      /// @param[out] true is solved, false is unsolvable
+      /// @return true is solved, false is unsolvable
     public: bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="");
       /// @brief solve IK and set result to robot model's angles
       /// @param[in] _arm aero::arm::rarm or aero::arm::larm
       /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link end effector link name, this link gets closer to _pose
-      /// @param[out] true is solved, false is unsolvable
+      /// @return true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="");
       /// @brief solve IK and set result to robot model's angles
       /// @param[in] _arm aero::arm::rarm or aero::arm::larm
       /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link this link gets closer to _pose. you can use aero::eef::(hand|grasp|pick)
-      /// @param[out] true is solved, false is unsolvable
+      /// @return true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef);
 
 
@@ -95,7 +95,7 @@ namespace aero
       /// @param[in] _x target x
       /// @param[in] _z target z
       /// @param[out] _ans_xz ankle and hip joint value
-      /// @param[out] bool solvable or not
+      /// @return bool solvable or not
     private: bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
 
@@ -149,63 +149,186 @@ namespace aero
       // ------------------------------------------------------------
       // get robot model's states
       // ------------------------------------------------------------
-      /// @brief 
+      /// @brief get joint angles from robot model
+      /// @param[out] _av joint angles vector
     public: void getRobotStateVariables(std::vector<double> &_av);
+      /// @brief get joint angles from robot model
+      /// @param[out] _map joint angles map
     public: void getRobotStateVariables(std::map<std::string, double> &_map);
+      /// @brief get joint angles from robot model, recommend
+      /// @param[out] _map joint angles map
     public: void getRobotStateVariables(std::map<aero::joint, double> &_map);
 
+      /// @brief get named target "reset-pose", its basic pose of robot
+      /// @param[out] _map joint angles map
     public: void getResetManipPose(std::map<aero::joint, double> &_map);
 
+      /// @brief get waist position in base_link coordinate in robot model
+      /// @return waist position
     public: Eigen::Vector3d getWaistPosition();
+      /// @brief get lifter relative position from top of the lifter in robot model
     public: void getLifter(std::map<aero::joint, double>& _xz);
 
+      /// @brief get hand angle in robot model
+      /// param[in] _arm which arm aero::arm::(rarm|larm)
+      /// @return hand angle
     public: double getHand(aero::arm _arm);
 
+      /// @brief get end effector position
+      /// @param[in] _arm arm which eef is fixed to
+      /// @param[in] _eef aero::eef::(hand|grasp|pick|index|thumb)
+      /// @return eef's position in base_link coordinate
     public: Eigen::Vector3d getEEFPosition(aero::arm _arm, aero::eef _eef);
+      /// @brief get end effector orientation
+      /// @param[in] _arm arm which eef is fixed to
+      /// @param[in] _eef aero::eef::(hand|grasp|pick|index|thumb)
+      /// @return eef's quaternion in base_link coordinate
     public: Eigen::Quaterniond getEEFOrientation(aero::arm _arm, aero::eef _eef);
 
+      /// @brief get move group for moveit
+      /// @param[in] _move_group move group name
+      /// @return desired move group
     public: moveit::planning_interface::MoveGroup &getMoveGroup(std::string _move_group);
+      /// @brief get move group for moveit
+      /// @param[in] _arm arm which desired move group is associated
+      /// @param[in] _range arm only, with torso, and with lifter are usable
+      /// @return desired move group
     public: moveit::planning_interface::MoveGroup &getMoveGroup(aero::arm _arm, aero::ikrange _range);
 
       // ------------------------------------------------------------
       // send to real robot
       // ------------------------------------------------------------
+      /// @brief send reset-pose to real robot, simultaneously set reset-pose to model too.
+      /// @param[in] _time_ms execution time, and wait this time
     public: void sendResetManipPose(int _time_ms=3000);
 
+      /// @brief send joint angles in robot model to real robot
+      /// @attention joints using are determined by args. for example when sendAnglevector(aero::arm::rarm, aero:ikrange::lifter, 3000) is called,
+      /// upperbody without left arm will move
+      /// @param[in] _arm witch arm to use
+      /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|torso|lifter)
+      /// @param[in] _time_ms execution time, and wait this time
     public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
+      /// @brief send joint angles in robot model to real robot
+      /// @attention use all joints on upper body
+      /// @param[in] _time_ms execution time, and wait this time
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
+      /// @brief send joint angles in _av_map to real robot
+      /// @param[in] _av_map map witch has joint name and joint angle value
+      /// @param[in] _time_ms execution time, and wait this time
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+      /// @brief send joint angles in robot model to real robot
+      /// @param[in] _arm witch arm to use
+      /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|torso|lifter)
+      /// @param[in] _time_ms execution time, this function returns soon after called
     public: void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
+      /// @brief send joint angles in robot model to real robot
+      /// @attention use all joints on upper body
+      /// @param[in] _time_ms execution time, this function returns soon after called
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
+      /// @brief send joint angles in _av_map to real robot
+      /// @param[in] _av_map map witch has joint name and joint angle value
+      /// @param[in] _time_ms execution time, this function returns soon after called
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
-
+      /// @brief send joints trajectory to real robot
+      /// @attention trajectory type is std::vector<std::map<aero::joint, double>>
+      /// @param[in] _trajectory joints trajectory will be executed
+      /// @param[in] _times execution time. the size of times vector need to be equal to the size of trajectory
+      /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
+      /// @return when times.size is not equal to trajectory.size, return false 
     public: bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
-
+      /// @brief send joints trajectory to real robot
+      /// @param[in] _trajectory joints trajectory will be executed
+      /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
+      /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
     public: bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
-
+      /// @brief send joints trajectory to real robot
+      /// @param[in] _trajectory joints trajectory will be executed
+      /// @param[in] _times execution time. the size of times vector need to be equal to the size of trajectory
+      /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
+      /// @return when times.size is not equal to trajectory.size, return false 
     public: bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
-
+      /// @brief send joints trajectory to real robot
+      /// @param[in] _trajectory joints trajectory will be executed
+      /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
+      /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
     public: bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
-
+      /// @brief private function. the base function of sendAngleVectorAsync
     private: void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     private: void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
 
+      /// @brief send lifter position to real robot
+      /// @attention when lifter is initial position (stretched), x and z are zero.
+      /// @param[in] _x desired x position in meters
+      /// @param[in] _z desired z position in meters
+      /// @param[in] _time_ms execution time, and sleep this time before this function returns
     public: bool sendLifter(double _x, double _z, int _time_ms=5000); // m
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired x position in mili meters
+      /// @param[in] _z desired z position in mili meters
+      /// @param[in] _time_ms execution time, and sleep this time before this function returns
     public: bool sendLifter(int _x, int _z, int _time_ms=5000); // mm deprecated
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired relative x position in meters
+      /// @param[in] _z desired relative z position in meters
+      /// @param[in] _time_ms execution time, and sleep this time before this function returns
     public: bool sendLifterLocal(double _x, double _z, int _time_ms=5000);
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired relative x position in mili meters
+      /// @param[in] _z desired relative z position in mili meters
+      /// @param[in] _time_ms execution time, and sleep this time before this function returns
     public: bool sendLifterLocal(int _x, int _z, int _time_ms=5000);
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired x position in meters
+      /// @param[in] _z desired z position in meters
+      /// @param[in] _time_ms execution time, this function returns soon after called
     public: bool sendLifterAsync(double _x, double _z, int _time_ms=5000); // m
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired x position in mili meters
+      /// @param[in] _z desired z position in mili meters
+      /// @param[in] _time_ms execution time, this function returns soon after called
     public: bool sendLifterAsync(int _x, int _z, int _time_ms=5000); // mm  deprecated
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired relative x position in meters
+      /// @param[in] _z desired relative z position in meters
+      /// @param[in] _time_ms execution time, this function returns soon after called
     public: bool sendLifterLocalAsync(double _x, double _z, int _time_ms=5000);
+      /// @brief send lifter position to real robot
+      /// @param[in] _x desired relative x position in mili meters
+      /// @param[in] _z desired relative z position in mili meters
+      /// @param[in] _time_ms execution time, this function returns soon after called
     public: bool sendLifterLocalAsync(int _x, int _z, int _time_ms=5000);
-
+      /// @brief send lifter trajectory to real robot
+      /// @param[in] _trajectory desired lifter trajectory. x and z pair in meters
+      /// @param[in] _times execution time. the size of times vector needs to be equal to the size of trajectory
     public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+      /// @brief send lifter trajectory to real robot
+      /// @param[in] _trajectory desired lifter trajectory. x and z pair in meters
+      /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
     public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
+      /// @brief send lifter trajectory to real robot
+      /// @param[in] _trajectory desired lifter trajectory. x and z pair in meters
+      /// @param[in] _times execution time. the size of times vector needs to be equal to the size of trajectory
     public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+      /// @brief send lifter trajectory to real robot
+      /// @param[in] _trajectory desired lifter trajectory. x and z pair in meters
+      /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
     public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
 
+      /// @brief send grasp command to real robot
+      /// @param[in] _arm aero::arm::(rarm|larm)
+      /// @param[in] _power grasp power from 0\% to 100\%
     public: bool sendGrasp(aero::arm _arm, int _power=100);
+      /// @brief open real robot's hand
+      /// @param[in] _arm aero::arm::(rarm|larm)
     public: bool openHand(aero::arm _arm);
+      /// @brief send desired hand angle to real robot
+      /// @param[in] _arm aero::arm::(rarm|larm)
+      /// @param[in] _rad desired angle in radian
     public: bool sendHand(aero::arm _arm, double _rad);
 
     public: bool solveIKSequence(aero::GraspRequest &_grasp);
@@ -217,29 +340,77 @@ namespace aero
       // ------------------------------------------------------------
       // move_base functions
       // ------------------------------------------------------------
+      /// @brief get current robot's pose in world
+      /// @param[in] _map map name
+      /// @return current pose from _map to base_link
     public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
+      /// @brief get named location's pose
+      /// @param[in] _location see spot.yaml
+      /// @return pose from map to location
     public: geometry_msgs::Pose getLocationPose(std::string _location);
+      /// @brief move wheel to relative position
+      /// @param[in] _x relative x in meters
+      /// @param[in] _y relative y in meters
+      /// @param[in] _timeout_ms timeout
+      /// @return if lifter can't reach the desired position before timeout, return false
     public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
+      /// @brief move wheel to relative position
+      /// @attention this function returns sonn after called. you can get the information by calling isMoving
+      /// @param[in] _x relative x in meters
+      /// @param[in] _y relative y in meters
     public: void goPosAsync(double _x, double _y, double _rad);
+      /// @brief move wheel to named location
+      /// @attention this function returns sonn after called. you can get the information by calling isMoving
+      /// @param[in] _location see spot.yaml
     public: void moveToAsync(std::string _location);
+      /// @brief move wheel to desired position
+      /// @attention this function returns sonn after called. you can get the information by calling isMoving
+      /// @param[in] _point desired position in map coordinate
     public: void moveToAsync(Eigen::Vector3d _point);
+      /// @brief move wheel to desired pose
+      /// @attention this function returns sonn after called. you can get the information by calling isMoving
+      /// @param[in] _pose desired pose in map coordinate
     public: void moveToAsync(geometry_msgs::Pose _pose);
+      /// @brief check asynchronous wheel function is on process or not
+      /// @return when wheel is moving, return true
     public: bool isMoving();
+      /// @brief check robot is at location or not
+      /// @param[in] _location see spot.yaml
+      /// @param[in] _thre threshold
+      /// @return if base_link is inside thresold in map coordinate, return true
     public: bool at(std::string _location, double _thre=0.2);
+      /// @brief check robot is at _pose or not
+      /// @param[in] _pose desired pose
+      /// @param[in] _thre threshold
+      /// @return if base_link is inside thresold in map coordinate, return true
     public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
+      /// @brief stop asynchronous wheel functions
     public: void stop();
+      /// @brief re-execure stopped functions
     public: void go();
+      /// @brief get the distance to location
+      /// @param[in] _location see spot.yaml
+      /// @return distance from base_link to location in meters
     public: float toDestination(std::string _location);
+      /// @brief turn the robot toward location
+      /// @param[in] _location see spot.yaml
     public: void faceTowardAsync(std::string _location);
+      /// @brief turn the robot toward pose
+      /// @param[in] target pose in map coordinate
     public: void faceTowardAsync(geometry_msgs::Pose _pose);
+      /// @brief check global cost map wether the robot can make plan to go to the position or not
+      /// @param[in] _pose desired pose in map coordinate
+      /// @return if wheel moving plan to the pose can be made, return true
     public: bool checkMoveTo(geometry_msgs::Pose _pose);
+      /// @brief private function. due to move_base_pkg's bug, we use this
     private: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 
 
       // these varables are to use moveit libralies
       // don't care
+      /// basic
     private: robot_model_loader::RobotModelLoader robot_model_loader_;
-    public: robot_model::RobotModelPtr kinematic_model;
+    public: robot_model::RobotModelPtr kinematic_model;// robot model
     public: robot_state::RobotStatePtr kinematic_state;
       // lifter height only
     private: robot_model_loader::RobotModelLoader robot_model_loader_ho_;
