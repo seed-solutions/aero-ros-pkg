@@ -1,6 +1,9 @@
 #include <aero_std/AeroMoveitInterface.hh>
 #include <aero_std/SideGrasp-inl.hh>
 
+/// @file side_grasp.cc
+/// @brief how to use SideGrasp. This function wrapps sequence of grasping object from side of it.
+
 int main(int argc, char **argv)
 {
   // init ros

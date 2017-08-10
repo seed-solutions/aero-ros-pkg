@@ -1,6 +1,9 @@
 #include <aero_std/AeroMoveitInterface.hh>
 #include <aero_std/TopGrasp-inl.hh>
 
+/// @file top_grasp.cc
+/// @brief how to use TopGrasp. This function wrapps sequence of grasping object from top of it.
+
 int main(int argc, char **argv)
 {
   // init ros
