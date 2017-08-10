@@ -135,6 +135,7 @@ create_rp_table_func_from_csv() {
         while read line
         do
 	    e=$(echo "$line" | cut -d ',' -f4)
+	    e=$(echo "$offset_r + $e" | bc)
 	    interval=$(echo "$line" | cut -d ',' -f3)
             code1="{${e},${interval}}, ${code1}"
         done < $file
@@ -143,6 +144,7 @@ create_rp_table_func_from_csv() {
         while read line
         do
 	    e=$(echo "$line" | cut -d ',' -f4)
+	    e=$(echo "$offset_r + $e" | bc)
 	    interval=$(echo "$line" | cut -d ',' -f3)
             code1="${code1}{${e},${interval}}, "
         done < $file
@@ -170,6 +172,7 @@ create_rp_table_func_from_csv() {
         while read line
         do
 	    e=$(echo "$line" | cut -d ',' -f4)
+	    e=$(echo "$offset_p + $e" | bc)
 	    interval=$(echo "$line" | cut -d ',' -f3)
             code2="{${e},${interval}}, ${code2}"
         done < $file
@@ -178,6 +181,7 @@ create_rp_table_func_from_csv() {
         while read line
         do
 	    e=$(echo "$line" | cut -d ',' -f4)
+	    e=$(echo "$offset_p + $e" | bc)
 	    interval=$(echo "$line" | cut -d ',' -f3)
             code2="${code2}{${e},${interval}}, "
         done < $file
