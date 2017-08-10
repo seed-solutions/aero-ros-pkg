@@ -11,6 +11,8 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 add_definitions(-std=c++11)
 
+# samples
+
 add_executable(minimum_sample_node src/minimum.cc)
 target_link_libraries(minimum_sample_node ${catkin_LIBRARIES})
 
@@ -38,10 +40,10 @@ target_link_libraries(side_grasp_sample_node ${catkin_LIBRARIES})
 add_executable(trajectory_lifter_sample_node src/trajectory_lifter.cc)
 target_link_libraries(trajectory_lifter_sample_node ${catkin_LIBRARIES})
 
-add_executable(fullbody_test_sample_node src/fullbody_test.cc)
-target_link_libraries(fullbody_test_sample_node ${catkin_LIBRARIES})
-
 # tests
 
 add_executable(stoa_atos_test_node tests/stoa_atos.cc)
 target_link_libraries(stoa_atos_test_node ${catkin_LIBRARIES})
+
+add_executable(fullbody_test_node tests/fullbody_test.cc)
+target_link_libraries(fullbody_test_node ${catkin_LIBRARIES})
