@@ -35,7 +35,7 @@ namespace aero
       float scale = 100.0;
       dualJoint right_wrist =
         WristRollPitchTable(rad2Deg * r_wrist_p_joint,
-                            rad2Deg * -r_wrist_r_joint);
+                            rad2Deg * r_wrist_r_joint);
       dualJoint left_wrist =
         WristRollPitchTable(rad2Deg * l_wrist_p_joint,
                             rad2Deg * l_wrist_r_joint);
