@@ -1496,33 +1496,25 @@ void aero::interface::AeroMoveitInterface::moveToAsync(geometry_msgs::Pose _pose
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, double _rad)
 {
-  Eigen::Quaterniond qua_cu, qua_to;
-  Eigen::Vector3d pos, pos_to;
-  geometry_msgs::Pose current = getCurrentPose();
-  pos.x() = _x;
-  pos.y() = _y;
-  pos.z() = 0;
-
-  qua_cu.w() = current.orientation.w;
-  qua_cu.x() = current.orientation.x;
-  qua_cu.y() = current.orientation.y;
-  qua_cu.z() = current.orientation.z;
-
-  Eigen::Quaterniond qua_go(Eigen::Matrix3d(Eigen::AngleAxisd(_rad, Eigen::Vector3d::UnitZ())));
-
-  pos_to = qua_cu * pos;
-  qua_to = qua_go * qua_cu;
+  Eigen::Quaterniond qua(Eigen::Matrix3d(Eigen::AngleAxisd(_rad, Eigen::Vector3d::UnitZ())));
 
   geometry_msgs::Pose pose;
-  pose.position.x = pos_to.x() + current.position.x;
-  pose.position.y = pos_to.y() + current.position.y;
-  pose.position.z = pos_to.z() + current.position.z;
-  pose.orientation.w = qua_to.w();
-  pose.orientation.x = qua_to.x();
-  pose.orientation.y = qua_to.y();
-  pose.orientation.z = qua_to.z();
+  pose.position.x = _x;
+  pose.position.y = _y;
+  pose.position.z = 0.0;
+  pose.orientation.w = qua.w();
+  pose.orientation.x = qua.x();
+  pose.orientation.y = qua.y();
+  pose.orientation.z = qua.z();
 
-  moveToAsync(pose);
+  move_base_msgs::MoveBaseGoal goal;
+  goal.target_pose.header.frame_id = "/base_link";
+  goal.target_pose.header.stamp = ros::Time::now();
+  goal.target_pose.pose = pose;
+  pose_using_ = pose;
+
+  ROS_INFO("Sending goal");
+  ac_->sendGoal(goal);
 }
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::isMoving()
