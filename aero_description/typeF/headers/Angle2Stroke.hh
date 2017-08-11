@@ -2,9 +2,9 @@
   @define ShoulderPitchTable from  shoulder-p offset 10.635
   @define ShoulderRollTable from  shoulder-r offset 0
   @define ElbowPitchTable from  elbow-p offset -42.426
-  @define WristRollPitchTable from  wrist-p  wrist-r offset_p -11.709 offset_r -9.631 descend 2
-  @define WaistRollPitchTable from  waist-r  waist-p offset_p -5.335 offset_r -5.794 descend 0
-  @define NeckRollPitchTable from neck-r neck-p offset_p -3.124 offset_r -7.38 descend 0
+  @define WristRollPitchTable from  wrist-p  wrist-r offset_p 5.632 offset_r -9.631
+  @define WaistRollPitchTable from  waist-r  waist-p offset_p -5.335 offset_r -5.794
+  @define NeckRollPitchTable from neck-r neck-p offset_p -3.124 offset_r -7.38
   @define LegTable from lamia offset 0
  */
 

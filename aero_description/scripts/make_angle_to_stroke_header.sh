@@ -113,8 +113,7 @@ create_rp_table_func_from_csv() {
     function_name=$4
     offset_p=$5
     offset_r=$6
-    descend=$7 # 0: both not descend 1: roll descend 2: pitch descend
-    template_file=$8
+    template_file=$7
 
     # parse joint_name_a
     file=''
@@ -130,26 +129,14 @@ create_rp_table_func_from_csv() {
     # load roll csv
     code1=''
     code1_offset=0
-    if [[ $descend == 1 ]]
-    then
-        while read line
-        do
-	    e=$(echo "$line" | cut -d ',' -f4)
-	    e=$(echo "$offset_r + $e" | bc)
-	    interval=$(echo "$line" | cut -d ',' -f3)
-            code1="{${e},${interval}}, ${code1}"
-        done < $file
-        code1_offset=$(tail -n 1 $file | cut -d ',' -f1)
-    else
-        while read line
-        do
-	    e=$(echo "$line" | cut -d ',' -f4)
-	    e=$(echo "$offset_r + $e" | bc)
-	    interval=$(echo "$line" | cut -d ',' -f3)
-            code1="${code1}{${e},${interval}}, "
-        done < $file
-        code1_offset=$(head -n 1 $file | cut -d ',' -f1)
-    fi
+    while read line
+    do
+	e=$(echo "$line" | cut -d ',' -f4)
+	e=$(echo "$offset_r + $e" | bc)
+	interval=$(echo "$line" | cut -d ',' -f3)
+        code1="${code1}{${e},${interval}}, "
+    done < $file
+    code1_offset=$(head -n 1 $file | cut -d ',' -f1)
     code1="${code1}"
     code1=${code1::-2}
 
@@ -167,26 +154,14 @@ create_rp_table_func_from_csv() {
     # load pitch csv
     code2=''
     code2_offset=0
-    if [[ $descend == 2 ]]
-    then
-        while read line
-        do
-	    e=$(echo "$line" | cut -d ',' -f4)
-	    e=$(echo "$offset_p + $e" | bc)
-	    interval=$(echo "$line" | cut -d ',' -f3)
-            code2="{${e},${interval}}, ${code2}"
-        done < $file
-        code2_offset=$(tail -n 1 $file | cut -d ',' -f1)
-    else
-        while read line
-        do
-	    e=$(echo "$line" | cut -d ',' -f4)
-	    e=$(echo "$offset_p + $e" | bc)
-	    interval=$(echo "$line" | cut -d ',' -f3)
-            code2="${code2}{${e},${interval}}, "
-        done < $file
-        code2_offset=$(head -n 1 $file | cut -d ',' -f1)
-    fi
+    while read line
+    do
+	e=$(echo "$line" | cut -d ',' -f4)
+	e=$(echo "$offset_p + $e" | bc)
+	interval=$(echo "$line" | cut -d ',' -f3)
+        code2="${code2}{${e},${interval}}, "
+    done < $file
+    code2_offset=$(head -n 1 $file | cut -d ',' -f1)
     code2="${code2}"
     code2=${code2::-2}
 
@@ -234,8 +209,7 @@ do
 	csv2=$(echo "${line}" | awk '{print $5}')
 	offset_p=$(echo "${line}" | awk '{print $7}')
 	offset_r=$(echo "${line}" | awk '{print $9}')
-        descend=$(echo "${line}" | awk '{print $11}')
-	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $offset_p $offset_r $descend $template_file
+	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $offset_p $offset_r $template_file
     fi
 done
 
