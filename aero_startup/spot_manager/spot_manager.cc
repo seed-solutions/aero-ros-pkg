@@ -18,10 +18,12 @@ public:
 		aero_startup::SaveSpot::Response &res);
   bool GetSpot(aero_startup::GetSpot::Request &req,
 	       aero_startup::GetSpot::Response &res);
-  void DeleteSpot();
+  bool DeleteSpot();
   void GetList();
 
 private:
+  int GetIndex_(std::string _name);
+  std::vector<std::string> GetList_();
   ros::NodeHandle nh_;
   tf::TransformListener listener_;
   ros::ServiceServer save_spot_;
@@ -52,19 +54,39 @@ bool SpotManager::SaveSpot(aero_startup::SaveSpot::Request &req,
     res.status = false;
     return false;
   }
-  std::ofstream ofs(file_, std::ios_base::app);
-  ofs << "- spot:"              << std::endl;
-  ofs << "        name: "         << req.name << std::endl;
-  ofs << "        position:"      << std::endl;
-  ofs << "            x: "        << tr.getOrigin().x() << std::endl;
-  ofs << "            y: "        << tr.getOrigin().y() << std::endl;
-  ofs << "            z: "        << tr.getOrigin().z() << std::endl;
-  ofs << "        orientation:"   << std::endl;
-  ofs << "            x: "        << tr.getRotation().x() << std::endl;
-  ofs << "            y: "        << tr.getRotation().y() << std::endl;
-  ofs << "            z: "        << tr.getRotation().z() << std::endl;
-  ofs << "            w: "        << tr.getRotation().w() << std::endl;
-  res.status = true;
+
+  int index = GetIndex_(req.name);
+
+  if (index < 0) {
+    ROS_INFO("add new location : %s", req.name.c_str());
+    std::ofstream ofs(file_, std::ios_base::app);
+    ofs << "- spot:"              << std::endl;
+    ofs << "        name: "         << req.name << std::endl;
+    ofs << "        position:"      << std::endl;
+    ofs << "            x: "        << tr.getOrigin().x() << std::endl;
+    ofs << "            y: "        << tr.getOrigin().y() << std::endl;
+    ofs << "            z: "        << tr.getOrigin().z() << std::endl;
+    ofs << "        orientation:"   << std::endl;
+    ofs << "            x: "        << tr.getRotation().x() << std::endl;
+    ofs << "            y: "        << tr.getRotation().y() << std::endl;
+    ofs << "            z: "        << tr.getRotation().z() << std::endl;
+    ofs << "            w: "        << tr.getRotation().w() << std::endl;
+  } else {
+    ROS_INFO("renew location : %s", req.name.c_str());
+    YAML::Node config = YAML::LoadFile(file_);
+    config[index]["spot"]["name"] = req.name;
+    config[index]["spot"]["position"]["x"] = tr.getOrigin().x();
+    config[index]["spot"]["position"]["y"] = tr.getOrigin().y();
+    config[index]["spot"]["position"]["z"] = tr.getOrigin().z();
+    config[index]["spot"]["orientation"]["x"] = tr.getRotation().x();
+    config[index]["spot"]["orientation"]["y"] = tr.getRotation().y();
+    config[index]["spot"]["orientation"]["z"] = tr.getRotation().z();
+    config[index]["spot"]["orientation"]["w"] = tr.getRotation().w();
+    std::ofstream ofs_renew(file_, std::ios_base::trunc);
+    ofs_renew << config;
+    ofs_renew << std::endl;
+  }
+ res.status = true;
   return true;
 }
 
@@ -98,6 +120,35 @@ bool SpotManager::GetSpot(aero_startup::GetSpot::Request &req,
   res.pose.orientation.z = config[index]["spot"]["orientation"]["z"].as<float>();
 
   return true;
+}
+
+
+int SpotManager::GetIndex_(std::string _name) {
+  std::vector<std::string> list = GetList_();
+  int result = -1;
+  int index = 0;
+  for (auto it: list) {
+    if (_name == it) {
+      result = index;
+      break;
+    }
+    ++index;
+  }
+  return result;
+}
+
+std::vector<std::string> SpotManager::GetList_() {
+  std::vector<std::string> res;
+
+  std::ifstream ifs(file_);
+  bool exist_file = ifs.is_open();
+  if (!exist_file) return res;
+
+  YAML::Node config = YAML::LoadFile(file_);
+  for (int i=0; i < config.size(); ++i) {
+    res.push_back(config[i]["spot"]["name"].as<std::string>());
+  }
+  return res;
 }
 
 int main(int argc, char **argv)
