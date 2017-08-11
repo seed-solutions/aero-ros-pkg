@@ -8,6 +8,7 @@
 
 #include <aero_startup/SaveSpot.h>
 #include <aero_startup/GetSpot.h>
+#include <aero_startup/DeleteSpot.h>
 
 class SpotManager{
 public:
@@ -18,7 +19,8 @@ public:
 		aero_startup::SaveSpot::Response &res);
   bool GetSpot(aero_startup::GetSpot::Request &req,
 	       aero_startup::GetSpot::Response &res);
-  bool DeleteSpot();
+  bool DeleteSpot(aero_startup::DeleteSpot::Request &req,
+	       aero_startup::DeleteSpot::Response &res);
   void GetList();
 
 private:
@@ -28,6 +30,7 @@ private:
   tf::TransformListener listener_;
   ros::ServiceServer save_spot_;
   ros::ServiceServer get_spot_;
+  ros::ServiceServer delete_spot_;
 
   std::string file_;
 };
@@ -38,6 +41,7 @@ SpotManager::SpotManager(ros::NodeHandle _nh, std::string _file)
 {
   save_spot_ = nh_.advertiseService("save_spot", &SpotManager::SaveSpot, this);
   get_spot_ = nh_.advertiseService("get_spot", &SpotManager::GetSpot, this);
+  delete_spot_ = nh_.advertiseService("delete_spot", &SpotManager::DeleteSpot, this);
 }
 
 SpotManager::~SpotManager(){};
@@ -87,23 +91,16 @@ bool SpotManager::SaveSpot(aero_startup::SaveSpot::Request &req,
     ofs_renew << std::endl;
   }
  res.status = true;
-  return true;
+ return true;
 }
 
 bool SpotManager::GetSpot(aero_startup::GetSpot::Request &req,
 			  aero_startup::GetSpot::Response &res)
 {
   YAML::Node config = YAML::LoadFile(file_);
-  bool found = false;
-  int index = 0;
-  for (int i=0; i < config.size(); ++i) {
-    if (config[i]["spot"]["name"].as<std::string>() == req.name){
-      index = i;
-      found = true;
-      break;
-    }
-  }
-  if (!found) {
+  int index = GetIndex_(req.name);
+
+  if (index < 0) {
     res.status = false;
     res.error = "such spot is not found";
     return false;
@@ -122,6 +119,34 @@ bool SpotManager::GetSpot(aero_startup::GetSpot::Request &req,
   return true;
 }
 
+bool SpotManager::DeleteSpot(aero_startup::DeleteSpot::Request &req,
+			  aero_startup::DeleteSpot::Response &res)
+{
+  YAML::Node config = YAML::LoadFile(file_);
+  int index = GetIndex_(req.name);
+
+  if (index < 0) {
+    ROS_WARN("spot: %s doesn't exist", req.name.c_str());
+    res.status = false;
+    return false;
+  }
+
+  YAML::Node result;
+  for(int i=0; i < config.size(); ++i) {
+    if (i!=index) {
+      result.push_back(config[i]);
+    }
+  }
+
+  //config.remove(index);
+  std::ofstream ofs(file_, std::ios_base::trunc);
+  ofs << result;
+  ofs << std::endl;
+
+  ROS_INFO("spot: %s is successfully deleted", req.name.c_str());
+  res.status = true;
+  return true;
+}
 
 int SpotManager::GetIndex_(std::string _name) {
   std::vector<std::string> list = GetList_();
