@@ -9,6 +9,7 @@
 #include <aero_startup/SaveSpot.h>
 #include <aero_startup/GetSpot.h>
 #include <aero_startup/DeleteSpot.h>
+#include <aero_startup/GetSpots.h>
 
 class SpotManager{
 public:
@@ -21,7 +22,8 @@ public:
 	       aero_startup::GetSpot::Response &res);
   bool DeleteSpot(aero_startup::DeleteSpot::Request &req,
 	       aero_startup::DeleteSpot::Response &res);
-  void GetList();
+  bool GetSpots(aero_startup::GetSpots::Request &req,
+                aero_startup::GetSpots::Response &res);
 
 private:
   int GetIndex_(std::string _name);
@@ -31,6 +33,7 @@ private:
   ros::ServiceServer save_spot_;
   ros::ServiceServer get_spot_;
   ros::ServiceServer delete_spot_;
+  ros::ServiceServer get_spots_;
 
   std::string file_;
 };
@@ -42,6 +45,7 @@ SpotManager::SpotManager(ros::NodeHandle _nh, std::string _file)
   save_spot_ = nh_.advertiseService("save_spot", &SpotManager::SaveSpot, this);
   get_spot_ = nh_.advertiseService("get_spot", &SpotManager::GetSpot, this);
   delete_spot_ = nh_.advertiseService("delete_spot", &SpotManager::DeleteSpot, this);
+  get_spots_ = nh_.advertiseService("get_spots", &SpotManager::GetSpots, this);
 }
 
 SpotManager::~SpotManager(){};
@@ -145,6 +149,15 @@ bool SpotManager::DeleteSpot(aero_startup::DeleteSpot::Request &req,
 
   ROS_INFO("spot: %s is successfully deleted", req.name.c_str());
   res.status = true;
+  return true;
+}
+
+bool SpotManager::GetSpots(aero_startup::GetSpots::Request &req,
+                           aero_startup::GetSpots::Response &res)
+{
+  std::vector<std::string> list = GetList_();
+
+  for(auto it: list) res.spots.push_back(it);
   return true;
 }
 
