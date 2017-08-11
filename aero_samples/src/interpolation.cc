@@ -1,5 +1,8 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
+/// @file interpolation.cc
+/// @brief how to change joint angle's interpolation type.
+
 int main(int argc, char **argv)
 {
   // init ros

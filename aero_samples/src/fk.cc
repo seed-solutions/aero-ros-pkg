@@ -1,5 +1,9 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
+/// @file fk.cc
+/// @brief how to set direcly model's joint angle and send it to real robot
+
+
 int main(int argc, char **argv)
 {
   // init ros

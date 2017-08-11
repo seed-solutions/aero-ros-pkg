@@ -120,36 +120,24 @@ int main(int argc, char **argv)
 
   // test lifter
   ROS_INFO("lifter x:0.0 z:-0.4");
-  interface->sendLifter(0.0, -0.4);
+  interface->sendLifter(0.0, -0.4, 3000);
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:0.0 z:-0.2");
-  interface->sendLifter(0.0, -0.2);
+  interface->sendLifter(0.0, -0.2, 3000);
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:-0.1 z:-0.2");
-  interface->sendLifter(-0.1, -0.2);
+  interface->sendLifter(-0.1, -0.2, 3000);
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:0.1 z:-0.2");
-  interface->sendLifter(0.1, -0.2);
+  interface->sendLifter(0.1, -0.2, 3000);
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:0.0 z:0.0");
-  interface->sendLifter(0.0, 0.0);
+  interface->sendLifter(0.0, 0.0, 3000);
   usleep(500 * 1000);
-
-
-  // test wheel
-  ROS_INFO("go and back 0.3m");
-  interface->goPos(0.3, 0.0, 0.0);
-  usleep(1000 * 1000);
-  interface->goPos(-0.3, 0.0, 0.0);
-
-  ROS_INFO("turn 90 degrees");
-  interface->goPos(0.0, 0.0, M_PI/2.0);
-  usleep(1000 * 1000);
-  interface->goPos(0.0, 0.0, -M_PI/2.0);
 
   ROS_INFO("demo node finished");
   ros::shutdown();

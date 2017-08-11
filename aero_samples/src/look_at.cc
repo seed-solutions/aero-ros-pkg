@@ -1,5 +1,8 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
+/// @file look_at.cc
+/// @brief how to controll neck and look at object
+
 int main(int argc, char **argv)
 {
   // init ros

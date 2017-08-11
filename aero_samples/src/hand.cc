@@ -1,5 +1,8 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
+/// @file hand.cc
+/// @brief how to controll hand. move to desired angle, grasp, and open
+
 int main(int argc, char **argv)
 {
   // init ros

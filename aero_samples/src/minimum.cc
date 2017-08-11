@@ -1,5 +1,8 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
+/// @file minimum.cc
+/// @brief minimum code to use interface. This file initialize interface and move robot once.
+
 int main(int argc, char **argv)
 {
   // init ros
