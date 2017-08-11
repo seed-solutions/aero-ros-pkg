@@ -1,0 +1,3 @@
+<launch>
+  <node name="map_saver" pkg="map_server" type="map_saver" args="-f $(find aero_startup)/aero_move_base/maps/map" output="screen"/>
+</launch>
