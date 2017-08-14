@@ -43,6 +43,9 @@ target_link_libraries(trajectory_lifter_sample_node ${catkin_LIBRARIES})
 add_executable(go_pos_sample_node src/go_pos.cc)
 target_link_libraries(go_pos_sample_node ${catkin_LIBRARIES})
 
+add_executable(async_sample_node src/async.cc)
+target_link_libraries(async_sample_node ${catkin_LIBRARIES})
+
 # tests
 
 add_executable(stoa_atos_test_node tests/stoa_atos.cc)
@@ -50,3 +53,6 @@ target_link_libraries(stoa_atos_test_node ${catkin_LIBRARIES})
 
 add_executable(fullbody_test_node tests/fullbody_test.cc)
 target_link_libraries(fullbody_test_node ${catkin_LIBRARIES})
+
+add_executable(lifter_ik_test_node tests/lifter_ik.cc)
+target_link_libraries(lifter_ik_test_node ${catkin_LIBRARIES})
