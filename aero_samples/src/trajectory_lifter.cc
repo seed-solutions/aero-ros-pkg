@@ -1,6 +1,9 @@
 #include <aero_std/AeroMoveitInterface.hh>
 #include <aero_std/time.h>
 
+/// @file trajectory_lifter.cc
+/// @brief how to send lifter trajectory to real robot
+
 int main(int argc, char **argv)
 {
   // init ros
