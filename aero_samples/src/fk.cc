@@ -23,9 +23,8 @@ int main(int argc, char **argv)
   double l_elbow_to = -1.745;
   std::map<aero::joint, double> joint_angles;
   interface->getRobotStateVariables(joint_angles);// save angles from robot model
+  ROS_INFO("left elbow moves from %f to %f", joint_angles[aero::joint::l_elbow], l_elbow_to);
   joint_angles[aero::joint::l_elbow] = l_elbow_to;// replace elbow's angle value
-  ROS_INFO("left elbow moves from %d to %d", joint_angles[aero::joint::l_elbow], l_elbow_to);
-
 
   ROS_INFO("moveing left elbow");
   interface->sendAngleVector(joint_angles, 2000);// send to robot
