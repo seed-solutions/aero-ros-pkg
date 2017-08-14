@@ -1,5 +1,8 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
+/// @file ik.cc
+/// @brief how to solve inverse kinematics, and reach the hand to there.
+
 int main(int argc, char **argv)
 {
   // init ros
