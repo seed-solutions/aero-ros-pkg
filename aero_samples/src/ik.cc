@@ -21,6 +21,11 @@ int main(int argc, char **argv)
   pose1.orientation.x = 0.0;
   pose1.orientation.y = 0.0;
   pose1.orientation.z = 0.0;
+  ROS_INFO("ik target");
+  ROS_INFO("pos");
+  ROS_INFO("x:%f y%f z:%f", pose1.position.x, pose1.position.y, pose1.position.z);
+  ROS_INFO("rot");
+  ROS_INFO("w:%f x:%f y%f z:%f", pose1.orientation.w, pose1.orientation.x, pose1.orientation.y, pose1.orientation.z);
 
   // setFromIK(arm, ikrange, pose, eef)
   // solve IK and set that answer to the robot model which interface has
