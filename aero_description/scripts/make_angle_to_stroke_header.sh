@@ -109,10 +109,11 @@ create_table_func_from_csv() {
 create_rp_table_func_from_csv() {
     joint_name_a=$1
     joint_name_b=$2
-    # offset=$2
     output_file=$3
     function_name=$4
-    template_file=$6
+    offset_p=$5
+    offset_r=$6
+    template_file=$7
 
     # parse joint_name_a
     file=''
@@ -126,24 +127,18 @@ create_rp_table_func_from_csv() {
     fi
 
     # load roll csv
-    j=0
     code1=''
-    code1_neg=''
+    code1_offset=0
     while read line
     do
 	e=$(echo "$line" | cut -d ',' -f4)
+	e=$(echo "$offset_r + $e" | bc)
 	interval=$(echo "$line" | cut -d ',' -f3)
-	if [[ ${j} -ne 0 ]]
-	then
-	    val=$(echo "-1 * $e" | bc)
-            code1_neg="${code1_neg}{${val},${interval}}, "
-	fi
         code1="${code1}{${e},${interval}}, "
-	j=$(($j + 1))
     done < $file
-    code1="${code1}${code1_neg}"
+    code1_offset=$(head -n 1 $file | cut -d ',' -f1)
+    code1="${code1}"
     code1=${code1::-2}
-    code1_offset=$(($j - 1))
 
     # parse joint_name_b
     file=''
@@ -157,27 +152,18 @@ create_rp_table_func_from_csv() {
     fi
 
     # load pitch csv
-    j=0
     code2=''
-    code2_neg=''
+    code2_offset=0
     while read line
     do
 	e=$(echo "$line" | cut -d ',' -f4)
+	e=$(echo "$offset_p + $e" | bc)
 	interval=$(echo "$line" | cut -d ',' -f3)
-	if [[ ${j} -ne 0 ]]
-	then
-	    if [[ ${5} -eq 1 ]]
-	    then
-		val=$(echo "-1 * $e" | bc)
-                code2_neg="${code2_neg}{${val},${interval}}, "
-	    fi
-	fi
         code2="${code2}{${e},${interval}}, "
-	j=$(($j + 1))
     done < $file
-    code2="${code2}${code2_neg}"
+    code2_offset=$(head -n 1 $file | cut -d ',' -f1)
+    code2="${code2}"
     code2=${code2::-2}
-    code2_offset=$(($j - 1))
 
     awk "/dualJoint TableTemplate/,/};/" $template_file > /tmp/mjointsstrokehh
     sed -i "s/TableTemplate/${function_name}/g" /tmp/mjointsstrokehh
@@ -195,8 +181,8 @@ create_rp_table_func_from_csv() {
 
     write_declare_map=$(grep -n -m 1 "};" $output_file | cut -d ':' -f1)
     write_declare_map=$(($write_declare_map + 1))
-    sed -i "${write_declare_map}i\    static const int Array${function_name}NegativeOffset1 = ${code1_offset};" $output_file
-    sed -i "${write_declare_map}i\    static const int Array${function_name}NegativeOffset2 = ${code2_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const int Array${function_name}Offset1 = ${code1_offset};" $output_file
+    sed -i "${write_declare_map}i\    static const int Array${function_name}Offset2 = ${code2_offset};" $output_file
     sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map1 = {${code1}};" $output_file
     sed -i "${write_declare_map}i\    static const std::vector<std::pair<float, float>> ${function_name}Map2 = {${code2}};" $output_file
 
@@ -221,8 +207,9 @@ do
     else
 	csv1=$(echo "${line}" | awk '{print $4}')
 	csv2=$(echo "${line}" | awk '{print $5}')
-	symmetry=$(echo "${line}" | awk '{print $7}')
-	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $symmetry $template_file
+	offset_p=$(echo "${line}" | awk '{print $7}')
+	offset_r=$(echo "${line}" | awk '{print $9}')
+	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $offset_p $offset_r $template_file
     fi
 done
 

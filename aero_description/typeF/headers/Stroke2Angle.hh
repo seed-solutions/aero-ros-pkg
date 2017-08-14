@@ -3,7 +3,7 @@
   @define ShoulderRollInvTable from  shoulder-r offset 0
   @define ElbowPitchInvTable from  elbow-p offset -42.426
   @define WristPitchInvTable from  wrist-p offset -9.631
-  @define WristRollInvTable from  wrist-r offset -11.709
+  @define WristRollInvTable from  wrist-r offset 5.632
   @define WaistPitchInvTable from  waist-p offset -5.335
   @define WaistRollInvTable from  waist-r offset -5.794
   @define NeckPitchInvTable from  neck-p offset -3.124
@@ -54,9 +54,7 @@ namespace aero
       meta =
         deg2Rad * WaistPitchInvTable(waist_pitch_stroke);
       meta =
-        deg2Rad * WaistRollInvTable(
-           fabs(scale * can_waist_right - waist_pitch_stroke))
-        * (can_waist_right > can_waist_left ? 1 : -1);
+        deg2Rad * WaistRollInvTable(scale * can_waist_right - waist_pitch_stroke);
 
       meta =
         -deg2Rad * ShoulderPitchInvTable(scale * can_l_shoulder_p);
@@ -69,12 +67,9 @@ namespace aero
       meta =
         -deg2Rad * scale * can_l_wrist_y;
       meta =
-        deg2Rad * WristPitchInvTable(
-            fabs(scale * can_l_wrist_top - left_wrist_roll_stroke))
-        * (can_l_wrist_top > can_l_wrist_bottom ? 1 : -1);
+        deg2Rad * WristPitchInvTable(scale * can_l_wrist_top - left_wrist_roll_stroke);
       meta =
-        -deg2Rad * WristRollInvTable(-fabs(left_wrist_roll_stroke))
-        * (left_wrist_roll_stroke >= 0 ? -1 : 1);
+        deg2Rad * WristRollInvTable(left_wrist_roll_stroke);
       meta =
         -deg2Rad * (scale * can_l_hand * 5.556 - 50.0);
       meta = 0;
@@ -87,9 +82,7 @@ namespace aero
       meta =
         deg2Rad * NeckPitchInvTable(neck_pitch_stroke);
       meta =
-        -deg2Rad * NeckRollInvTable(
-           fabs(scale * can_neck_right - neck_pitch_stroke))
-        * (can_neck_right > can_neck_left ? -1 : 1);
+        -deg2Rad * NeckRollInvTable(scale * can_neck_right - neck_pitch_stroke);
 
       meta =
         -deg2Rad * ShoulderPitchInvTable(scale * can_r_shoulder_p);
@@ -102,12 +95,9 @@ namespace aero
       meta =
         -deg2Rad * scale * can_r_wrist_y;
       meta =
-        deg2Rad * WristPitchInvTable(
-           fabs(scale * can_r_wrist_top - right_wrist_roll_stroke))
-        * (can_r_wrist_top > can_r_wrist_bottom ? 1 : -1);
+        deg2Rad * WristPitchInvTable(scale * can_r_wrist_top - right_wrist_roll_stroke);
       meta =
-        -deg2Rad * WristRollInvTable(-fabs(right_wrist_roll_stroke))
-        * (right_wrist_roll_stroke >= 0 ? 1 : -1);
+        deg2Rad * WristRollInvTable(right_wrist_roll_stroke);
       meta =
         deg2Rad * (scale * can_r_hand * 5.556 - 50.0);
       meta = 0;

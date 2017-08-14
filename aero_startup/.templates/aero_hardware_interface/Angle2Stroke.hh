@@ -18,21 +18,13 @@ namespace aero
     dualJoint TableTemplate (float _angle1, float _angle2)
     {
       int roundedAngle1 = static_cast<int>(_angle1);
-      if (_angle1 < 0) {
-        if (_angle1 < roundedAngle1 - 0.001) --roundedAngle1;
-      } else {
-        if (_angle1 > roundedAngle1 + 0.001) ++roundedAngle1;
-      }
+      if (_angle1 > roundedAngle1 + 0.001) ++roundedAngle1;
 
       int roundedAngle2 = static_cast<int>(_angle2);
-      if (_angle2 < 0) {
-        if (_angle2 < roundedAngle2 - 0.001) --roundedAngle2;
-      } else {
-        if (_angle2 > roundedAngle2 + 0.001) ++roundedAngle2;
-      }
+      if (_angle2 > roundedAngle2 + 0.001) ++roundedAngle2;
 
-      int roundedAngleIndex1 = (roundedAngle1 >= 0 ? roundedAngle1 : -roundedAngle1 + ArrayTableTemplateNegativeOffset1);
-      int roundedAngleIndex2 = (roundedAngle2 >= 0 ? roundedAngle2 : -roundedAngle2 + ArrayTableTemplateNegativeOffset2);
+      int roundedAngleIndex1 = roundedAngle1 - ArrayTableTemplateOffset1;
+      int roundedAngleIndex2 = roundedAngle2 - ArrayTableTemplateOffset2;
       auto ref1 = TableTemplateMap1.at(roundedAngleIndex1);
       auto ref2 = TableTemplateMap2.at(roundedAngleIndex2);
       float stroke1 = ref1.first, stroke2 = ref2.first;

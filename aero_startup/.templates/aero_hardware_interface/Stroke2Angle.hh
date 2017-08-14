@@ -18,18 +18,25 @@ namespace aero
 
         for (unsigned int i = 0; i < candidates.size(); ++i)
           if (_stroke >= candidates[i].stroke)
-            return candidates[i].angle
-              - (candidates[i].stroke - _stroke) / candidates[i].range;
+            if (candidates[i].range == 0)
+              return candidates[i].angle;
+            else
+              return candidates[i].angle
+                - (candidates[i].stroke - _stroke) / candidates[i].range;
 
         if (appendix.size() >= 2)
           if (appendix[0].stroke < appendix[1].stroke)
             std::reverse(appendix.begin(), appendix.end());
 
-        if (appendix.size() == 0)
+        if (appendix.size() == 0) {
           return candidates[candidates.size() - 1].angle;
-        else
-          return appendix[0].angle
-            - (appendix[0].stroke - _stroke) / appendix[0].range;
+        } else {
+          if (appendix[0].range == 0)
+            return appendix[0].angle;
+          else
+            return appendix[0].angle
+              - (appendix[0].stroke - _stroke) / appendix[0].range;
+        }
       }
 
       else {
