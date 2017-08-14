@@ -1226,6 +1226,14 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     last_solved_num = i;
   }
 
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, _grasp.end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(_grasp.end_pose);
+  getRobotStateVariables(av_end);//save end
+
   trajectory.push_back(av_end);
   times.push_back((end_time / num) * (4 - last_solved_num));
   ROS_INFO("end pose %f %f %f, %f %f %f %f",
