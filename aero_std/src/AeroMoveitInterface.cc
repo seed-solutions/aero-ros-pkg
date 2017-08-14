@@ -256,7 +256,7 @@ bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikran
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z)
+bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool _check_lifter_ik)
 {
 
   std::vector<double> ans_xz;

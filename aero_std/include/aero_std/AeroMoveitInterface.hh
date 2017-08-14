@@ -90,7 +90,9 @@ namespace aero
       /// @brief set robot model's lifter position
       /// @param[in] _x x meters from top of lifter
       /// @param[in] _z z meters from top of lifter
-    public: bool setLifter(double _x, double _z);
+      /// @param[in] _check_lifter_ik deprecated argument.
+      /// @return if lifter position is outside of limit. return false and setting fails
+    public: bool setLifter(double _x, double _z, bool _check_lifter_ik=true);
       /// @brief check lifter is solvable or not
       /// @param[in] _x target x
       /// @param[in] _z target z
