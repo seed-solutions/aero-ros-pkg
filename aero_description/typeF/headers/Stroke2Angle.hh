@@ -69,7 +69,7 @@ namespace aero
       meta =
         deg2Rad * WristPitchInvTable(scale * can_l_wrist_top - left_wrist_roll_stroke);
       meta =
-        deg2Rad * WristRollInvTable(left_wrist_roll_stroke);
+        -deg2Rad * WristRollInvTable(left_wrist_roll_stroke);
       meta =
         -deg2Rad * (scale * can_l_hand * 5.556 - 50.0);
       meta = 0;
