@@ -38,7 +38,7 @@ namespace aero
                             rad2Deg * r_wrist_r_joint);
       dualJoint left_wrist =
         WristRollPitchTable(rad2Deg * l_wrist_p_joint,
-                            rad2Deg * l_wrist_r_joint);
+                            -rad2Deg * l_wrist_r_joint);
       dualJoint waist =
         WaistRollPitchTable(-rad2Deg * waist_r_joint,
                             rad2Deg * waist_p_joint);
