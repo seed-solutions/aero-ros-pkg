@@ -46,6 +46,9 @@ target_link_libraries(go_pos_sample_node ${catkin_LIBRARIES})
 add_executable(async_sample_node src/async.cc)
 target_link_libraries(async_sample_node ${catkin_LIBRARIES})
 
+add_executable(async_lifter_cancel_node src/async_lifter_cancel.cc)
+target_link_libraries(async_lifter_cancel_node ${catkin_LIBRARIES})
+
 # tests
 
 add_executable(stoa_atos_test_node tests/stoa_atos.cc)

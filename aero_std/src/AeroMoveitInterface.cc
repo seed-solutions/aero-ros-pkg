@@ -872,7 +872,6 @@ bool aero::interface::AeroMoveitInterface::sendLifterAsync(double _x, double _z,
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(int _x, int _z, int _time_ms)
 {
-
   aero_startup::AeroTorsoController srv;
   srv.request.x = _x;
   srv.request.z = _z;
@@ -889,6 +888,55 @@ bool aero::interface::AeroMoveitInterface::sendLifterAsync(int _x, int _z, int _
     return true;
   }
   return false;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::cancelLifter()
+{
+  // send cancel joints
+  // why not use AeroSendJoints? -> to safe exit trajectory
+  // but actually, cancel joints is not supported with AeroSendJoints
+
+  // aero_startup::AeroSendJoints srv;
+  // srv.request.joint_names = {"hip_joint", "knee_joint"};
+  // srv.request.points.positions = {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
+  // srv.request.points.time_from_start = ros::Duration(0.1);
+  // srv.request.reset_status = false;
+  // if (!send_angle_service_.call(srv)) {
+  //   ROS_ERROR("sendJoints failed service call");
+  //   return false;
+  // }
+
+  trajectory_msgs::JointTrajectory msg;
+  msg.points.resize(1);
+  msg.joint_names.resize(2);
+  msg.joint_names = {"hip_joint", "knee_joint"};
+  msg.points[0].positions.resize(2);
+  msg.points[0].positions = {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
+  msg.points[0].time_from_start = ros::Duration(0.5);
+  angle_vector_publisher_.publish(msg);
+  usleep(1000 * 1000);
+
+  // get current joint angles
+  aero_startup::AeroSendJoints srv;
+  if (!joint_states_client_.call(srv)) {
+    ROS_ERROR("getJoints failed service call");
+    return false;
+  }
+
+  // update lifter
+  auto hip_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "hip_joint");
+  auto knee_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "knee_joint");
+  double hip = srv.response.points.positions[static_cast<int>(hip_itr - srv.response.joint_names.begin())];
+  double knee = srv.response.points.positions[static_cast<int>(knee_itr - srv.response.joint_names.begin())];
+  double x = -lifter_foreleg_link_ * sin(knee - hip)
+    + lifter_thigh_link_ * sin(hip);
+  double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
+    + lifter_thigh_link_ * (cos(hip) - 1.0);
+  setLifter(x, z);
+
+  updateLinkTransforms();
+  return true;
 }
 
 //////////////////////////////////////////////////

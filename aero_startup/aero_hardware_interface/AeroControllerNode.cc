@@ -435,6 +435,13 @@ void AeroControllerNode::JointTrajectoryCallback(
     if (lower_count > 0 && _msg->points.size() > 1) {
       lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
     } else if (lower_count > 0 && i == 0) { // to be removed in future
+      // check for cancel joints
+      std::vector<int16_t> cur_stroke = lower_.get_actual_stroke_vector();
+      for (unsigned int l = 0; l < lower_stroke_vector.size(); ++l) {
+        auto s = lower_stroke_vector.begin() + l;
+        if (*s == 0x7fff)
+          *s = cur_stroke.at(i);
+      }
       lower_.set_position(lower_stroke_vector, time_csec);
     }
   }
