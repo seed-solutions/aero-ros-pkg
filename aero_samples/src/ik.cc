@@ -10,9 +10,9 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  interface->sendResetManipPose();
+  robot->sendResetManipPose();
   sleep(1);
 
 
@@ -39,14 +39,14 @@ int main(int argc, char **argv)
   // eef is moving target in hand
   // aero::eef::grasp is the center of cylinder which hand is grasping
   // aero::eef::pick is the tip of finger when hand angle is zero
-  bool ik_result = interface->setFromIK(aero::arm::rarm, aero::ikrange::torso, pose1, aero::eef::grasp);
+  bool ik_result = robot->setFromIK(aero::arm::rarm, aero::ikrange::torso, pose1, aero::eef::grasp);
 
   if (ik_result) {// if ik successed, send the joint values to real robot
     ROS_INFO("ik success !");
-    interface->sendAngleVector(aero::arm::rarm, aero::ikrange::torso, 3000);
+    robot->sendAngleVector(aero::arm::rarm, aero::ikrange::torso, 3000);
     sleep(3);
     ROS_INFO("reseting robot pose");
-    interface->sendResetManipPose();
+    robot->sendResetManipPose();
   } else {
     ROS_WARN("ik failed");
   }

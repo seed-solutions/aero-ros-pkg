@@ -11,9 +11,9 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  interface->sendResetManipPose();
+  robot->sendResetManipPose();
   sleep(1);
 
 
@@ -31,13 +31,13 @@ int main(int argc, char **argv)
   req.mid_ik_range = aero::ikrange::torso;
   req.end_ik_range = aero::ikrange::torso;
 
-  if (interface->sendPickIK(req)) {
+  if (robot->sendPickIK(req)) {
     ROS_INFO("success");
     sleep(1);
-    interface->sendGrasp(req.arm);
+    robot->sendGrasp(req.arm);
     sleep(3);
     ROS_INFO("reseting robot pose");
-    interface->sendResetManipPose();
+    robot->sendResetManipPose();
   }
   else ROS_INFO("failed");
 
