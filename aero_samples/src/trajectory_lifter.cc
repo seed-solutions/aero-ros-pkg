@@ -11,14 +11,14 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  interface->sendResetManipPose();
+  robot->sendResetManipPose();
 
   const double z = -0.2;
 
   // prepare
-  interface->sendLifter(-0.2, z);
+  robot->sendLifter(-0.2, z);
   usleep(1000 * 1000);
 
   //
@@ -35,12 +35,12 @@ int main(int argc, char **argv)
   }
 
   ROS_INFO("starting trajectory");
-  if (!interface->sendLifterTrajectory(tra, times)) {
+  if (!robot->sendLifterTrajectory(tra, times)) {
     ROS_INFO("lifter ik failed");
   } else {
     ROS_INFO("lifter ik succeeded");
     usleep(1000 * 1000);
-    interface->sendLifter(0.0,0.0);
+    robot->sendLifter(0.0,0.0);
   }
 
   ROS_INFO("demo node finished");

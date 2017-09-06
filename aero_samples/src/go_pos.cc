@@ -11,17 +11,17 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  interface->sendResetManipPose();
+  robot->sendResetManipPose();
   sleep(1);
 
   // go 0.5 meters forward
-  interface->goPos(0.5, 0.0, 0.0);
+  robot->goPos(0.5, 0.0, 0.0);
 
   usleep(2000 * 1000);
 
-  interface->goPos(-0.5, 0.0, 0.0);
+  robot->goPos(-0.5, 0.0, 0.0);
 
   ROS_INFO("demo node finished");
   ros::shutdown();

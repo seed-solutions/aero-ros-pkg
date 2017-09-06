@@ -11,28 +11,28 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr interface(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  interface->sendResetManipPose();
+  robot->sendResetManipPose();
   sleep(1);
 
   // set real robot's joint angles to the robot model in interface 
-  interface->setRobotStateToCurrentState();
+  robot->setRobotStateToCurrentState();
 
   // how to move selected joint
   double l_elbow_to = -1.745;
   std::map<aero::joint, double> joint_angles;
-  interface->getRobotStateVariables(joint_angles);// save angles from robot model
+  robot->getRobotStateVariables(joint_angles);// save angles from robot model
   ROS_INFO("left elbow moves from %f to %f", joint_angles[aero::joint::l_elbow], l_elbow_to);
   joint_angles[aero::joint::l_elbow] = l_elbow_to;// replace elbow's angle value
 
   ROS_INFO("moveing left elbow");
-  interface->sendAngleVector(joint_angles, 2000);// send to robot
+  robot->sendAngleVector(joint_angles, 2000);// send to robot
   sleep(1);
 
 
   ROS_INFO("reseting robot pose");
-  interface->sendResetManipPose();
+  robot->sendResetManipPose();
   ROS_INFO("demo node finished");
   ros::shutdown();
   return 0;
