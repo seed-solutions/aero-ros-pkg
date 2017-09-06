@@ -897,25 +897,15 @@ bool aero::interface::AeroMoveitInterface::cancelLifter()
   // why not use AeroSendJoints? -> to safe exit trajectory
   // but actually, cancel joints is not supported with AeroSendJoints
 
-  // aero_startup::AeroSendJoints srv;
-  // srv.request.joint_names = {"hip_joint", "knee_joint"};
-  // srv.request.points.positions = {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
-  // srv.request.points.time_from_start = ros::Duration(0.1);
-  // srv.request.reset_status = false;
-  // if (!send_angle_service_.call(srv)) {
-  //   ROS_ERROR("sendJoints failed service call");
-  //   return false;
-  // }
-
   trajectory_msgs::JointTrajectory msg;
   msg.points.resize(1);
   msg.joint_names.resize(2);
   msg.joint_names = {"hip_joint", "knee_joint"};
   msg.points[0].positions.resize(2);
   msg.points[0].positions = {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
-  msg.points[0].time_from_start = ros::Duration(0.5);
+  msg.points[0].time_from_start = ros::Duration(0.01); // duration is not used
   angle_vector_publisher_.publish(msg);
-  usleep(1000 * 1000);
+  usleep(100 * 1000);
 
   // get current joint angles
   aero_startup::AeroSendJoints srv;
