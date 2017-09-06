@@ -295,7 +295,7 @@ namespace aero
       /// @param[in] _time_ms execution time, this function returns soon after called
     public: bool sendLifterAsync(int _x, int _z, int _time_ms=5000); // mm  deprecated
       /// @brief cancel async lifter move (position stays where cancel was called)
-    public: bool cancelLifter(); // do not use with TrajectoryAsync!
+    public: bool cancelLifter();
       /// @brief send lifter position to real robot
       /// @param[in] _x desired relative x position in meters
       /// @param[in] _z desired relative z position in meters

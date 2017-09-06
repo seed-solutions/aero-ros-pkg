@@ -244,6 +244,10 @@ namespace aero
     private: std::vector<killed_thread_info> thread_graveyard_;
 
     private: std::mutex mtx_thread_graveyard_;
+
+    private: std::mutex mtx_lower_thread_;
+
+    private: thread_info lower_thread_;
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;
