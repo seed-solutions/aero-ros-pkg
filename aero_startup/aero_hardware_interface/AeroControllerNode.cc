@@ -290,6 +290,15 @@ void AeroControllerNode::LowerTrajectoryThread(
 
   for (auto it = _stroke_trajectory.begin() + 1;
        it != _stroke_trajectory.end(); ++it) {
+    // check for kill signal
+    mtx_lower_thread_.lock();
+    if (lower_thread_.kill) {
+      ROS_WARN("lower joint trajectory thread: detected kill signal during trajectory!");
+      mtx_lower_thread_.unlock();
+      break;
+    }
+    mtx_lower_thread_.unlock();
+    // send
     uint16_t csec_in_frame = it->second - (it-1)->second;
     mtx_lower_.lock();
     lower_.set_position(it->first, csec_in_frame  + 10);
@@ -297,6 +306,10 @@ void AeroControllerNode::LowerTrajectoryThread(
     // 20ms sleep in set_position, subtract
     usleep(static_cast<int32_t>(csec_in_frame * 10.0 * 1000.0 - 20000.0));
   }
+
+  mtx_lower_thread_.lock();
+  lower_thread_.id = 0; // thread finish
+  mtx_lower_thread_.unlock();
 
   ROS_INFO("finished lower joint trajectory thread %f",
 	   aero::time::ms(aero::time::now() - start_time));
@@ -440,12 +453,20 @@ void AeroControllerNode::JointTrajectoryCallback(
       for (auto l = lower_stroke_vector.begin();
            l != lower_stroke_vector.end(); ++l)
         if (*l == 0x7fff) {
-          lower_.servo_on();
           servo_off = true;
           break;
         }
-      if (!servo_off)
+      if (servo_off) {
+        // kill if trajectory is running
+        mtx_lower_thread_.lock();
+        if (lower_thread_.id == 1) // trajectory is running
+          lower_thread_.kill = true;
+        mtx_lower_thread_.unlock();
+        // cancel lower movement
+        lower_.servo_on();
+      } else {
         lower_.set_position(lower_stroke_vector, time_csec);
+      }
     }
   }
 
@@ -453,11 +474,22 @@ void AeroControllerNode::JointTrajectoryCallback(
   mtx_lower_.unlock();
 
   if (lower_count > 0 && _msg->points.size() > 1) {
-    std::thread send_lower([&](
-      std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory) {
-        LowerTrajectoryThread(_stroke_trajectory);
-      }, lower_stroke_trajectory);
-    send_lower.detach();
+    // setup thread settings
+    mtx_lower_thread_.lock();
+    if (lower_thread_.id == 1) { // trajectory is already running
+      ROS_ERROR("you cannot overwrite lower trajectory!");
+      mtx_lower_thread_.unlock();
+    } else {
+      lower_thread_.id = 1;
+      lower_thread_.kill = false;
+      mtx_lower_thread_.unlock();
+      // start thread
+      std::thread send_lower([&](
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory) {
+          LowerTrajectoryThread(_stroke_trajectory);
+        }, lower_stroke_trajectory);
+      send_lower.detach();
+    }
   }
 
   if (upper_count <= 0) {
