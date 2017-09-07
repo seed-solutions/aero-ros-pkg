@@ -46,4 +46,4 @@ target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
 add_library(object_features
   src/ObjectFeatures.cc
 )
-target_link_libraries(object_features ${catkin_LIBRARIES})
+target_link_libraries(object_features ${catkin_LIBRARIES} aero_moveit_interface)

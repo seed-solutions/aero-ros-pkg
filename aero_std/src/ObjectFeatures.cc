@@ -4,6 +4,15 @@ using namespace aero;
 using namespace vision;
 
 //////////////////////////////////////////////////
+ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh)
+  : nh_(_nh)
+{
+  marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  camera_relative_position_ = Eigen::Vector3d(0.0, 0.0, 0.0);
+  camera_relative_orientation_ = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0);
+}
+
+//////////////////////////////////////////////////
 ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _interface)
   : nh_(_nh)
 {
@@ -78,7 +87,7 @@ int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _ori
 }
 
 //////////////////////////////////////////////////
-int ObjectFeatures::setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id){
+int ObjectFeatures::setMarker(Eigen::Vector3d _pos1, Eigen::Vector3d _pos2, int _id){
   visualization_msgs::Marker marker;
   marker.header.frame_id = "/base_link";
   marker.header.stamp = ros::Time::now();
@@ -100,6 +109,11 @@ int ObjectFeatures::setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int 
 }
 
 //////////////////////////////////////////////////
+int ObjectFeatures::setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id){
+  return setMarker(Eigen::Vector3d(_pos1.x(), _pos1.y(), _pos1.z()), Eigen::Vector3d(_pos2.x(), _pos2.y(), _pos2.z()), _id);
+}
+
+//////////////////////////////////////////////////
 int ObjectFeatures::setMarker(Eigen::Vector3d _position, int _id){
   return setMarker(_position, Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0), _id);
 }
@@ -113,4 +127,30 @@ int ObjectFeatures::setMarker(Eigen::Vector3f _position, int _id){
 //////////////////////////////////////////////////
 int ObjectFeatures::setMarker(geometry_msgs::Pose _pose, int _id){
   return setMarker(Eigen::Vector3d(_pose.position.x, _pose.position.y, _pose.position.z), Eigen::Quaterniond(_pose.orientation.w, _pose.orientation.x, _pose.orientation.y, _pose.orientation.z), _id);
+}
+
+//////////////////////////////////////////////////
+int ObjectFeatures::setMesh(geometry_msgs::Pose _pose, std::string _mesh_path,int _id, std_msgs::ColorRGBA _color){
+  // If color is (0.0, 0.0, 0.0), mesh file's original color is used.
+  // File path should be in ros package to display on any PC.
+  // ex. _mesh_path = "package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae"
+
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = "/base_link";
+  marker.header.stamp = ros::Time::now();
+  marker.ns = "aero_markers";
+  marker.id = _id;
+  marker.type = visualization_msgs::Marker::MESH_RESOURCE;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose = _pose;
+  marker.mesh_resource = _mesh_path;
+  marker.scale.x = 1.0;
+  marker.scale.y = 1.0;
+  marker.scale.z = 1.0;
+  marker.color = _color;
+  marker.lifetime = ros::Duration();
+  marker.mesh_use_embedded_materials = true;
+  marker_publisher_.publish(marker);
+
+  return _id;
 }

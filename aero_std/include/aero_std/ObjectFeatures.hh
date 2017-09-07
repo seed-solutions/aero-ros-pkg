@@ -12,6 +12,8 @@ namespace aero
 
     class ObjectFeatures
     {
+    public: explicit ObjectFeatures(ros::NodeHandle _nh);
+
     public: explicit ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _interface);
 
     public: ~ObjectFeatures();
@@ -26,7 +28,10 @@ namespace aero
     public: int setMarker(Eigen::Vector3d _position, int _id=1);
     public: int setMarker(Eigen::Vector3f _position, int _id=1);
     public: int setMarker(geometry_msgs::Pose _pose, int _id=1);
+    public: int setMarker(Eigen::Vector3d _pos1, Eigen::Vector3d _pos2, int _id=1);
     public: int setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id=1);
+
+    public: int setMesh(geometry_msgs::Pose _pose, std::string _mesh_path, int _id=1, std_msgs::ColorRGBA _color=std_msgs::ColorRGBA());
 
     private: ros::NodeHandle nh_;
 
