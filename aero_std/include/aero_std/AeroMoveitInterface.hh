@@ -327,6 +327,11 @@ namespace aero
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _power grasp power from 0\% to 100\%
     public: bool sendGrasp(aero::arm _arm, int _power=100);
+      /// @brief send grasp command to real robot (automatically opens when fail detected)
+      /// @param[in] _arm aero::arm::(rarm|larm)
+      /// @param[in] _power grasp power from 0\% to 100\%
+      /// @param[in] _power fail angle in radian from 0.0 to 0.9
+    public: bool sendGraspFast(aero::arm _arm, int _power=100, float _thre_fail=0.0);
       /// @brief open real robot's hand
       /// @param[in] _arm aero::arm::(rarm|larm)
     public: bool openHand(aero::arm _arm);
