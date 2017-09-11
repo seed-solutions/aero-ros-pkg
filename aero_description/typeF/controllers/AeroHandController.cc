@@ -15,7 +15,8 @@ ros::ServiceClient g_client;
 int executing_flg_left = 1;
 int executing_flg_right = 1;
 
-void GraspAngle(std::string hand, float larm_angle, float rarm_angle)
+aero_startup::AeroSendJoints::Response GraspAngle
+(std::string hand, float larm_angle, float rarm_angle, float time=0.5)
 {
   aero_startup::AeroSendJoints srv;
   if (hand == "both") {
@@ -46,9 +47,26 @@ void GraspAngle(std::string hand, float larm_angle, float rarm_angle)
     srv.request.points.positions.resize(1);
     srv.request.points.positions[0] = rarm_angle * M_PI / 180;
   }
-  srv.request.points.time_from_start = ros::Duration(0.5);
+  srv.request.points.time_from_start = ros::Duration(time);
   client.call(srv);
+
+  return srv.response;
 };
+
+void OpenHand(std::string hand)
+{
+  aero_startup::AeroGraspController g_srv;
+
+  if (hand == "left") {
+    g_srv.request.script = {Left, ungrasp};
+    executing_flg_left = 0;
+  } else if (hand == "right") {
+    g_srv.request.script = {Right, ungrasp};
+    executing_flg_right = 0;
+  }
+  g_srv.request.power = (100 << 8) + 30;
+  g_client.call(g_srv);
+}
 
 bool HandControl(aero_startup::AeroHandController::Request &req,
 		 aero_startup::AeroHandController::Response &res)
@@ -95,21 +113,57 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
   }
 
   else if (cmd == "ungrasp") {
-    if (req.hand == "left") {
-      g_srv.request.script = {Left, ungrasp};
-      executing_flg_left = 0;
-    } else if (req.hand == "right") {
-      g_srv.request.script = {Right, ungrasp};
-      executing_flg_right = 0;
-    }
-    g_srv.request.power = (100 << 8) + 30;
-    g_client.call(g_srv);
+    OpenHand(req.hand);
     res.status = "ungrasp success";
   }
 
   else if (cmd == "grasp-angle") {
     GraspAngle(req.hand, req.larm_angle, req.rarm_angle);
     res.status = "grasp-angle success";
+  }
+
+  else if (cmd == "grasp-fast") {
+    // grasp till angle, check if grasp is okay, then hold
+    auto joints = GraspAngle(req.hand, 0.0, 0.0, 1.2); // grasp takes about 1 sec
+
+    if (req.hand == "left") {
+      int at = static_cast<int> // should always be found
+        (std::find(joints.joint_names.begin(), joints.joint_names.end(),
+                   "l_thumb_joint") - joints.joint_names.begin());
+      ROS_INFO("%f", joints.points.positions.at(at));
+      if (fabs(joints.points.positions.at(at)) < 0.05) {
+        OpenHand(req.hand);
+        res.status = "grasp failed";
+        return true;
+      }
+      g_srv.request.script = {Left, grasp};
+      executing_flg_left = 1; //executing_grasp_script
+    } else if (req.hand == "right") {
+      int at = static_cast<int> // should always be found
+        (std::find(joints.joint_names.begin(), joints.joint_names.end(),
+                   "r_thumb_joint") - joints.joint_names.begin());
+      if (fabs(joints.points.positions.at(at)) < 0.05) {
+        OpenHand(req.hand);
+        res.status = "grasp failed";
+        return true;
+      }
+      g_srv.request.script = {Right, grasp};
+      executing_flg_right = 1; //executing_grasp_script
+    }
+
+    if (power != "")
+      g_srv.request.power = (std::stoi(power) << 8) + 30;
+    else
+      g_srv.request.power = (100 << 8) + 30;
+
+    g_client.call(g_srv);
+    std::string status_msg = "grasp success";
+    if (req.hand == "left")
+      if (g_srv.response.angles[0] > req.thre_fail) status_msg = "grasp failed";
+    else if (req.hand == "right")
+      if (g_srv.response.angles[1] < -req.thre_fail) status_msg = "grasp failed";
+
+    res.status = status_msg;
   }
 
   return true;
