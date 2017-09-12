@@ -1092,6 +1092,8 @@ bool aero::interface::AeroMoveitInterface::sendGraspFast(aero::arm _arm, int _po
   else srv.request.hand = "left";
   srv.request.command = "grasp-fast:" + std::to_string(_power);
   srv.request.thre_fail = _thre_fail;
+  srv.request.larm_angle = getHand(aero::arm::larm) * 180.0 / M_PI;
+  srv.request.rarm_angle = getHand(aero::arm::rarm) * 180.0 / M_PI;
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");

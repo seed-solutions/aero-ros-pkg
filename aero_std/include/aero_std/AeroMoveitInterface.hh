@@ -132,11 +132,6 @@ namespace aero
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _radian target radian
     public: void setHand(aero::arm _arm, double _radian);
-      /// @brief set robot arm in use for manipulation
-      /// @param[in] _arm aero::arm::(rarm|larm)
-    public: inline void setArmInUse(aero::arm _arm) { arm_in_use_ = _arm; };
-      /// @brief get robot arm in use for manipulation
-    public: inline aero::arm getArmInUse() { return arm_in_use_; };
     private: void setHandsFromJointStates_();
 
       /// @brief update the model's link poses based on angle values
@@ -528,7 +523,6 @@ namespace aero
     private: aero_startup::AeroSendJoints send_joints_srv_;
     private: tf::TransformListener listener_;
     private: geometry_msgs::Pose pose_using_;
-    private: aero::arm arm_in_use_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
