@@ -25,7 +25,9 @@ namespace xtion
 
     class XtionInterface
     {
-    public: explicit XtionInterface(ros::NodeHandle _nh);
+     public: XtionInterface(ros::NodeHandle _nh,
+                            const std::string& _depth_topic = "/xtion/depth_registered/points",
+                            const std::string& _image_topic = "/xtion/rgb/image_raw");
 
     public: ~XtionInterface();
 

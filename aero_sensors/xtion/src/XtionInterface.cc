@@ -4,13 +4,15 @@ using namespace xtion;
 using namespace interface;
 
 //////////////////////////////////////////////////
-XtionInterface::XtionInterface(ros::NodeHandle _nh)
+XtionInterface::XtionInterface(ros::NodeHandle _nh,
+                               const std::string& _depth_topic,
+                               const std::string& _image_topic)
   : nh_(_nh), depth_spinner_(1, &depth_queue_), image_spinner_(1, &image_queue_),
     depth_width_(640), depth_height_(480)
 {
   depth_ops_ =
     ros::SubscribeOptions::create<sensor_msgs::PointCloud2>(
-        "/xtion/depth_registered/points",
+        _depth_topic,
         1000,
         boost::bind(&XtionInterface::DepthCallback, this, _1),
         ros::VoidPtr(),
@@ -20,7 +22,7 @@ XtionInterface::XtionInterface(ros::NodeHandle _nh)
 
   image_ops_ =
     ros::SubscribeOptions::create<sensor_msgs::Image>(
-        "/xtion/rgb/image_raw",
+        _image_topic,
         1000,
         boost::bind(&XtionInterface::ImageCallback, this, _1),
         ros::VoidPtr(),
