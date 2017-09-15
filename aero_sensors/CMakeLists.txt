@@ -36,6 +36,9 @@ target_link_libraries(dynamic_kinect_frame_publisher
 
 # examples
 
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 find_package(PCL 1.8)
 if(NOT PCL_INCLUDE_DIRS)
   message(WARNING "PCL not found, disabled")

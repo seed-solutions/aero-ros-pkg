@@ -28,6 +28,7 @@ XtionInterface::XtionInterface(ros::NodeHandle _nh)
   image_sub_ = nh_.subscribe(image_ops_);
   image_spinner_.start();
 
+  time_now_ = ros::Time::now();
   // wait for connection to openni
   usleep(2000 * 1000);
 }
@@ -187,6 +188,34 @@ sensor_msgs::Image XtionInterface::ReadImage()
 }
 
 //////////////////////////////////////////////////
+sensor_msgs::PointCloud2 XtionInterface::ReadPointsAfter(float _scale_x, float _scale_y)
+{
+  ros::Time time;
+  for (int i=0; i < 100; ++i) {
+    depth_mutex_.lock();
+    time = depth_.header.stamp;
+    depth_mutex_.unlock();
+    if (time > time_now_) continue;
+    usleep(100*1000);
+  }
+  return ReadPoints(_scale_x, _scale_y);
+}
+
+//////////////////////////////////////////////////
+sensor_msgs::Image XtionInterface::ReadImageAfter()
+{
+  ros::Time time;
+  for (int i=0; i < 100; ++i) {
+    image_mutex_.lock();
+    time = image_.header.stamp;
+    image_mutex_.unlock();
+    if (time > time_now_) continue;
+    usleep(100*1000);
+  }
+  return ReadImage();
+}
+
+//////////////////////////////////////////////////
 std::vector<sensor_msgs::RegionOfInterest> XtionInterface::ImageBounds
 (std::vector<std::array<int, 4> > _depth_indicies)
 {
@@ -285,6 +314,12 @@ std::vector<geometry_msgs::Point> XtionInterface::ImageCenters
   depth_mutex_.unlock();
 
   return res;
+}
+
+//////////////////////////////////////////////////
+void XtionInterface::SetNow()
+{
+  time_now_ = ros::Time::now();
 }
 
 //////////////////////////////////////////////////

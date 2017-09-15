@@ -35,6 +35,10 @@ namespace xtion
 
     public: sensor_msgs::Image ReadImage();
 
+    public: sensor_msgs::PointCloud2 ReadPointsAfter(float _scale_x, float _scale_y);
+
+    public: sensor_msgs::Image ReadImageAfter();
+
     public: std::vector<sensor_msgs::RegionOfInterest> ImageBounds
     (std::vector<std::array<int, 4> > _depth_indicies);
 
@@ -43,6 +47,8 @@ namespace xtion
 
     public: std::vector<geometry_msgs::Point> ImageCenters
     (std::vector<sensor_msgs::RegionOfInterest> _image_bounds);
+
+    public: void SetNow();
 
     private: void DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& _msg);
 
@@ -77,6 +83,8 @@ namespace xtion
     private: int depth_width_;
 
     private: int depth_height_;
+
+    private: ros::Time time_now_;
     };
 
     typedef std::shared_ptr<XtionInterface> XtionInterfacePtr;
