@@ -6,14 +6,13 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   INCLUDE_DIRS xtion/include kinect/include
-  LIBRARIES aerosensors_xtion aerosensors_rotatekinectaddon aerosensors_ps4eye
+  LIBRARIES aerosensors_xtion aerosensors_rotatekinectaddon
   CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs tf
 )
 
 include_directories(
   xtion/include
   kinect/include
-  ps4eye/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -23,7 +22,6 @@ add_definitions(-std=c++11)
 
 add_library(aerosensors_xtion xtion/src/XtionInterface.cc)
 add_library(aerosensors_rotatekinectaddon kinect/src/RotateKinectAddon.cc)
-add_library(aerosensors_ps4eye ps4eye/src/PS4eyeInterface.cc)
 
 # dynamic kinect controller (optional)
 
