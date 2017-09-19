@@ -1,5 +1,5 @@
-#ifndef _AERO_SENSORS_XTION_INTERFACE_
-#define _AERO_SENSORS_XTION_INTERFACE_
+#ifndef _AERO_SENSORS_DEPTH_CAMERA_INTERFACE_
+#define _AERO_SENSORS_DEPTH_CAMERA_INTERFACE_
 
 #include <ros/ros.h>
 
@@ -18,18 +18,18 @@
 #include <limits>
 #include <cmath>
 
-namespace xtion
+namespace depth_camera
 {
   namespace interface
   {
 
-    class XtionInterface
+    class DepthCameraInterface
     {
-     public: XtionInterface(ros::NodeHandle _nh,
+     public: DepthCameraInterface(ros::NodeHandle _nh,
                             const std::string& _depth_topic = "/xtion/depth_registered/points",
                             const std::string& _image_topic = "/xtion/rgb/image_raw");
 
-    public: ~XtionInterface();
+    public: ~DepthCameraInterface();
 
     public: sensor_msgs::PointCloud2 ReadPoints();
 
@@ -89,7 +89,7 @@ namespace xtion
     private: ros::Time time_now_;
     };
 
-    typedef std::shared_ptr<XtionInterface> XtionInterfacePtr;
+    typedef std::shared_ptr<DepthCameraInterface> DepthCameraInterfacePtr;
 
   }
 }

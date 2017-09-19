@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "aero_sensors/XtionInterface.hh"
+#include "aero_sensors/DepthCameraInterface.hh"
 
 #include <opencv2/core/utility.hpp>
 #include <opencv2/highgui.hpp>
@@ -23,8 +23,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "image_bounds_sample");
   ros::NodeHandle nh;
 
-  xtion::interface::XtionInterfacePtr xtion
-    (new xtion::interface::XtionInterface(nh));
+  depth_camera::interface::DepthCameraInterfacePtr xtion
+    (new depth_camera::interface::DepthCameraInterface(nh));
 
   float resize_x = 0.25;
   float resize_y = 0.25;

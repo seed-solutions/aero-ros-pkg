@@ -1,10 +1,10 @@
-#include "aero_sensors/XtionInterface.hh"
+#include "aero_sensors/DepthCameraInterface.hh"
 
-using namespace xtion;
+using namespace depth_camera;
 using namespace interface;
 
 //////////////////////////////////////////////////
-XtionInterface::XtionInterface(ros::NodeHandle _nh,
+DepthCameraInterface::DepthCameraInterface(ros::NodeHandle _nh,
                                const std::string& _depth_topic,
                                const std::string& _image_topic)
   : nh_(_nh), depth_spinner_(1, &depth_queue_), image_spinner_(1, &image_queue_),
@@ -14,7 +14,7 @@ XtionInterface::XtionInterface(ros::NodeHandle _nh,
     ros::SubscribeOptions::create<sensor_msgs::PointCloud2>(
         _depth_topic,
         1000,
-        boost::bind(&XtionInterface::DepthCallback, this, _1),
+        boost::bind(&DepthCameraInterface::DepthCallback, this, _1),
         ros::VoidPtr(),
         &depth_queue_);
   depth_sub_ = nh_.subscribe(depth_ops_);
@@ -24,7 +24,7 @@ XtionInterface::XtionInterface(ros::NodeHandle _nh,
     ros::SubscribeOptions::create<sensor_msgs::Image>(
         _image_topic,
         1000,
-        boost::bind(&XtionInterface::ImageCallback, this, _1),
+        boost::bind(&DepthCameraInterface::ImageCallback, this, _1),
         ros::VoidPtr(),
         &image_queue_);
   image_sub_ = nh_.subscribe(image_ops_);
@@ -36,12 +36,12 @@ XtionInterface::XtionInterface(ros::NodeHandle _nh,
 }
 
 //////////////////////////////////////////////////
-XtionInterface::~XtionInterface()
+DepthCameraInterface::~DepthCameraInterface()
 {
 }
 
 //////////////////////////////////////////////////
-sensor_msgs::PointCloud2 XtionInterface::ReadPoints()
+sensor_msgs::PointCloud2 DepthCameraInterface::ReadPoints()
 {
   depth_mutex_.lock();
   auto res = depth_;
@@ -51,7 +51,7 @@ sensor_msgs::PointCloud2 XtionInterface::ReadPoints()
 }
 
 //////////////////////////////////////////////////
-sensor_msgs::PointCloud2 XtionInterface::ReadPoints(float _scale_x, float _scale_y)
+sensor_msgs::PointCloud2 DepthCameraInterface::ReadPoints(float _scale_x, float _scale_y)
 {
   depth_mutex_.lock();
   auto res = sensor_msgs::PointCloud2();
@@ -180,7 +180,7 @@ sensor_msgs::PointCloud2 XtionInterface::ReadPoints(float _scale_x, float _scale
 }
 
 //////////////////////////////////////////////////
-sensor_msgs::Image XtionInterface::ReadImage()
+sensor_msgs::Image DepthCameraInterface::ReadImage()
 {
   image_mutex_.lock();
   auto res = image_;
@@ -190,7 +190,7 @@ sensor_msgs::Image XtionInterface::ReadImage()
 }
 
 //////////////////////////////////////////////////
-sensor_msgs::PointCloud2 XtionInterface::ReadPointsAfter(float _scale_x, float _scale_y)
+sensor_msgs::PointCloud2 DepthCameraInterface::ReadPointsAfter(float _scale_x, float _scale_y)
 {
   ros::Time time;
   for (int i=0; i < 100; ++i) {
@@ -204,7 +204,7 @@ sensor_msgs::PointCloud2 XtionInterface::ReadPointsAfter(float _scale_x, float _
 }
 
 //////////////////////////////////////////////////
-sensor_msgs::Image XtionInterface::ReadImageAfter()
+sensor_msgs::Image DepthCameraInterface::ReadImageAfter()
 {
   ros::Time time;
   for (int i=0; i < 100; ++i) {
@@ -218,7 +218,7 @@ sensor_msgs::Image XtionInterface::ReadImageAfter()
 }
 
 //////////////////////////////////////////////////
-std::vector<sensor_msgs::RegionOfInterest> XtionInterface::ImageBounds
+std::vector<sensor_msgs::RegionOfInterest> DepthCameraInterface::ImageBounds
 (std::vector<std::array<int, 4> > _depth_indicies)
 {
   std::vector<sensor_msgs::RegionOfInterest> result;
@@ -256,7 +256,7 @@ std::vector<sensor_msgs::RegionOfInterest> XtionInterface::ImageBounds
 }
 
 //////////////////////////////////////////////////
-std::vector<sensor_msgs::RegionOfInterest> XtionInterface::ImageBounds
+std::vector<sensor_msgs::RegionOfInterest> DepthCameraInterface::ImageBounds
 (std::vector<std::array<int, 4> > _depth_indicies, float _w_scale, float _h_scale)
 {
   std::vector<std::array<int, 4> > rescaled_indices;
@@ -280,7 +280,7 @@ std::vector<sensor_msgs::RegionOfInterest> XtionInterface::ImageBounds
 }
 
 //////////////////////////////////////////////////
-std::vector<geometry_msgs::Point> XtionInterface::ImageCenters
+std::vector<geometry_msgs::Point> DepthCameraInterface::ImageCenters
 (std::vector<sensor_msgs::RegionOfInterest> _image_bounds)
 {
   std::vector<geometry_msgs::Point> res;
@@ -319,13 +319,13 @@ std::vector<geometry_msgs::Point> XtionInterface::ImageCenters
 }
 
 //////////////////////////////////////////////////
-void XtionInterface::SetNow()
+void DepthCameraInterface::SetNow()
 {
   time_now_ = ros::Time::now();
 }
 
 //////////////////////////////////////////////////
-void XtionInterface::DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& _msg)
+void DepthCameraInterface::DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
   depth_mutex_.lock();
   depth_ = *_msg;
@@ -333,7 +333,7 @@ void XtionInterface::DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& _ms
 }
 
 //////////////////////////////////////////////////
-void XtionInterface::ImageCallback(const sensor_msgs::Image::ConstPtr& _msg)
+void DepthCameraInterface::ImageCallback(const sensor_msgs::Image::ConstPtr& _msg)
 {
   image_mutex_.lock();
   image_ = *_msg;

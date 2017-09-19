@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "aero_sensors/XtionInterface.hh"
+#include "aero_sensors/DepthCameraInterface.hh"
 
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/RegionOfInterest.h"
@@ -16,8 +16,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "image_centers_sample");
   ros::NodeHandle nh;
 
-  xtion::interface::XtionInterfacePtr xtion
-    (new xtion::interface::XtionInterface(nh));
+  depth_camera::interface::DepthCameraInterfacePtr xtion
+    (new depth_camera::interface::DepthCameraInterface(nh));
 
   auto image = xtion->ReadImage();
 
