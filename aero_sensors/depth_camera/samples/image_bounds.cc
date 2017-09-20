@@ -1,3 +1,6 @@
+/// @brief sample for boundary estimation
+/// @author Kazuhiro Sasabuchi
+
 #include <ros/ros.h>
 #include "aero_sensors/DepthCameraInterface.hh"
 

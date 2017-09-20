@@ -1,9 +1,16 @@
+/// @brief depth camera capturing interface
+/// @author Kazuhiro Sasabuchi
+
 #include "aero_sensors/DepthCameraInterface.hh"
 
 using namespace depth_camera;
 using namespace interface;
 
 //////////////////////////////////////////////////
+/// @brief Constructor
+/// @param _nh Node handle
+/// @param _depth_topic depth topic name
+/// @param _image_topic image topic name
 DepthCameraInterface::DepthCameraInterface(ros::NodeHandle _nh,
                                const std::string& _depth_topic,
                                const std::string& _image_topic)
@@ -36,11 +43,13 @@ DepthCameraInterface::DepthCameraInterface(ros::NodeHandle _nh,
 }
 
 //////////////////////////////////////////////////
+/// @brief Destructor, NOP
 DepthCameraInterface::~DepthCameraInterface()
 {
 }
 
 //////////////////////////////////////////////////
+/// @brief Read point cloud as original resolution
 sensor_msgs::PointCloud2 DepthCameraInterface::ReadPoints()
 {
   depth_mutex_.lock();
@@ -51,6 +60,10 @@ sensor_msgs::PointCloud2 DepthCameraInterface::ReadPoints()
 }
 
 //////////////////////////////////////////////////
+/// @brief Read point cloud as scaled resolution,
+/// returning cloud will be resized to (WIDTH * _scale_x, HEIGHT * _scale_y)
+/// @param _scale_x scale parameter for width
+/// @param _scale_y scale parameter for height
 sensor_msgs::PointCloud2 DepthCameraInterface::ReadPoints(float _scale_x, float _scale_y)
 {
   depth_mutex_.lock();
@@ -180,6 +193,7 @@ sensor_msgs::PointCloud2 DepthCameraInterface::ReadPoints(float _scale_x, float 
 }
 
 //////////////////////////////////////////////////
+/// @brief Read image as original resolution
 sensor_msgs::Image DepthCameraInterface::ReadImage()
 {
   image_mutex_.lock();
@@ -190,6 +204,10 @@ sensor_msgs::Image DepthCameraInterface::ReadImage()
 }
 
 //////////////////////////////////////////////////
+/// @brief Read point cloud after updated,
+/// returning cloud will be resized to (WIDTH * _scale_x, HEIGHT * _scale_y)
+/// @param _scale_x scale parameter for width
+/// @param _scale_y scale parameter for height
 sensor_msgs::PointCloud2 DepthCameraInterface::ReadPointsAfter(float _scale_x, float _scale_y)
 {
   ros::Time time;
@@ -204,6 +222,7 @@ sensor_msgs::PointCloud2 DepthCameraInterface::ReadPointsAfter(float _scale_x, f
 }
 
 //////////////////////////////////////////////////
+/// @brief Read image after updated
 sensor_msgs::Image DepthCameraInterface::ReadImageAfter()
 {
   ros::Time time;
@@ -319,12 +338,14 @@ std::vector<geometry_msgs::Point> DepthCameraInterface::ImageCenters
 }
 
 //////////////////////////////////////////////////
+/// @brief force update timestamp
 void DepthCameraInterface::SetNow()
 {
   time_now_ = ros::Time::now();
 }
 
 //////////////////////////////////////////////////
+/// @brief callback for point cloud
 void DepthCameraInterface::DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& _msg)
 {
   depth_mutex_.lock();
@@ -333,6 +354,7 @@ void DepthCameraInterface::DepthCallback(const sensor_msgs::PointCloud2::ConstPt
 }
 
 //////////////////////////////////////////////////
+/// @brief callback for image
 void DepthCameraInterface::ImageCallback(const sensor_msgs::Image::ConstPtr& _msg)
 {
   image_mutex_.lock();

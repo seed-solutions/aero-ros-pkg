@@ -1,3 +1,6 @@
+/// @brief sample for depth_camera point cloud capturing
+/// @author Kazuhiro Sasabuchi
+
 #include <ros/ros.h>
 #include <chrono>
 #include "aero_sensors/DepthCameraInterface.hh"

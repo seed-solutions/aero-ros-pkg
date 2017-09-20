@@ -1,3 +1,6 @@
+/// @brief depth camera capturing interface
+/// @author Kazuhiro Sasabuchi
+
 #ifndef _AERO_SENSORS_DEPTH_CAMERA_INTERFACE_
 #define _AERO_SENSORS_DEPTH_CAMERA_INTERFACE_
 

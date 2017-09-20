@@ -1,3 +1,6 @@
+/// @brief sample for 3d center estimation from 2d bounds
+/// @author Kazuhiro Sasabuchi
+
 #include <ros/ros.h>
 #include "aero_sensors/DepthCameraInterface.hh"
 
