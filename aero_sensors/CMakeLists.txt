@@ -5,15 +5,14 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp sensor_msgs geometry_msgs tf)
 
 catkin_package(
-  INCLUDE_DIRS xtion/include kinect/include
-  LIBRARIES aerosensors_xtion aerosensors_rotatekinectaddon aerosensors_ps4eye
+  INCLUDE_DIRS depth_camera/include kinect/include
+  LIBRARIES aerosensors_depth_camera aerosensors_rotatekinectaddon
   CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs tf
 )
 
 include_directories(
-  xtion/include
+  depth_camera/include
   kinect/include
-  ps4eye/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -21,9 +20,8 @@ add_definitions(-std=c++11)
 
 # xtion library
 
-add_library(aerosensors_xtion xtion/src/XtionInterface.cc)
+add_library(aerosensors_xtion depth_camera/src/DepthCameraInterface.cc)
 add_library(aerosensors_rotatekinectaddon kinect/src/RotateKinectAddon.cc)
-add_library(aerosensors_ps4eye ps4eye/src/PS4eyeInterface.cc)
 
 # dynamic kinect controller (optional)
 
@@ -35,6 +33,9 @@ target_link_libraries(dynamic_kinect_frame_publisher
 
 
 # examples
+
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(PCL 1.8)
 if(NOT PCL_INCLUDE_DIRS)
@@ -66,33 +67,33 @@ else()
   message(STATUS "found opencv contrib")
 endif()
 
-# xtion examples
+# depth_camera examples
 
 add_executable(points_sample
-  xtion/samples/points.cc
-  xtion/src/XtionInterface.cc
+  depth_camera/samples/points.cc
+  depth_camera/src/DepthCameraInterface.cc
   )
 target_link_libraries(points_sample
   ${catkin_LIBRARIES})
 
 add_executable(points_compressed_sample
-  xtion/samples/points_compressed.cc
-  xtion/src/XtionInterface.cc
+  depth_camera/samples/points_compressed.cc
+  depth_camera/src/DepthCameraInterface.cc
   )
 target_link_libraries(points_compressed_sample
   ${catkin_LIBRARIES})
 
 add_executable(image_sample
-  xtion/samples/image.cc
-  xtion/src/XtionInterface.cc
+  depth_camera/samples/image.cc
+  depth_camera/src/DepthCameraInterface.cc
   )
 target_link_libraries(image_sample
   ${catkin_LIBRARIES})
 
 if (FOUND_OpenCV AND FOUND_OpenCV_CONTRIB)
   add_executable(image_centers_sample
-    xtion/samples/image_centers.cc
-    xtion/src/XtionInterface.cc
+    depth_camera/samples/image_centers.cc
+    depth_camera/src/DepthCameraInterface.cc
     )
   target_link_libraries(image_centers_sample
     ${catkin_LIBRARIES} ${OpenCV_LIBS})
@@ -100,8 +101,8 @@ endif()
 
 if (FOUND_OpenCV AND FOUND_PCL)
   add_executable(image_bounds_sample
-    xtion/samples/image_bounds.cc
-    xtion/src/XtionInterface.cc
+    depth_camera/samples/image_bounds.cc
+    depth_camera/src/DepthCameraInterface.cc
     )
   target_link_libraries(image_bounds_sample
     ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES})

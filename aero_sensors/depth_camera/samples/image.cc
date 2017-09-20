@@ -1,14 +1,17 @@
+/// @brief sample for depth_camera image capturing
+/// @author Kazuhiro Sasabuchi
+
 #include <ros/ros.h>
 #include <chrono>
-#include "aero_sensors/XtionInterface.hh"
+#include "aero_sensors/DepthCameraInterface.hh"
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "xtion_image_sample");
   ros::NodeHandle nh;
 
-  xtion::interface::XtionInterfacePtr xtion
-    (new xtion::interface::XtionInterface(nh));
+  depth_camera::interface::DepthCameraInterfacePtr xtion
+    (new depth_camera::interface::DepthCameraInterface(nh));
 
   ros::Publisher image_publisher =
     nh.advertise<sensor_msgs::Image>("/xtion/pixelstream", 1);

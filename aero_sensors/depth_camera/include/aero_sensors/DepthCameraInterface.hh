@@ -1,5 +1,8 @@
-#ifndef _AERO_SENSORS_PS4EYE_INTERFACE_
-#define _AERO_SENSORS_PS4EYE_INTERFACE_
+/// @brief depth camera capturing interface
+/// @author Kazuhiro Sasabuchi
+
+#ifndef _AERO_SENSORS_DEPTH_CAMERA_INTERFACE_
+#define _AERO_SENSORS_DEPTH_CAMERA_INTERFACE_
 
 #include <ros/ros.h>
 
@@ -18,16 +21,18 @@
 #include <limits>
 #include <cmath>
 
-namespace ps4eye
+namespace depth_camera
 {
   namespace interface
   {
 
-    class PS4eyeInterface
+    class DepthCameraInterface
     {
-    public: explicit PS4eyeInterface(ros::NodeHandle _nh);
+     public: DepthCameraInterface(ros::NodeHandle _nh,
+                            const std::string& _depth_topic = "/xtion/depth_registered/points",
+                            const std::string& _image_topic = "/xtion/rgb/image_raw");
 
-    public: ~PS4eyeInterface();
+    public: ~DepthCameraInterface();
 
     public: sensor_msgs::PointCloud2 ReadPoints();
 
@@ -87,7 +92,7 @@ namespace ps4eye
     private: ros::Time time_now_;
     };
 
-    typedef std::shared_ptr<PS4eyeInterface> PS4eyeInterfacePtr;
+    typedef std::shared_ptr<DepthCameraInterface> DepthCameraInterfacePtr;
 
   }
 }
