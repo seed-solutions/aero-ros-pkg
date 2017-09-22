@@ -16,10 +16,14 @@
        xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+
+  <xacro:property name="wheel_radius" value="0.075"/>
   
   <xacro:macro name="wheels" params="base_link disable_mesh:=false">
     
-    <link name="${base_link}">
+    <link name="${base_link}"/>
+
+    <link name="wheel_base_link">
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
@@ -38,7 +42,7 @@
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
-    <gazebo reference="${base_link}">
+    <gazebo reference="wheel_base_link">
       <mu1>0.9</mu1>
       <mu2>0.9</mu2>
     </gazebo>
@@ -189,34 +193,40 @@
     </gazebo>
 
 
+    <joint name="base_link_to_wheel_base_link_connector" type="fixed">
+      <parent link="${base_link}"/>
+      <child link="wheel_base_link"/>
+      <origin xyz="0.0 0.0 ${wheel_radius}" rpy="0 0 0"/>
+    </joint>
+
     <joint name="wheels_body_to_top_connector" type="fixed">
-      <parent  link="${base_link}"/>
+      <parent  link="wheel_base_link"/>
       <child link="wheels_top_link"/>
       <origin xyz="0.0 0.0 0.115" rpy="0 0 0 "/>
     </joint>
 
     <joint name="wheels_body_to_front_left_mecanum_connector" type="fixed">
-      <parent  link="${base_link}"/>
+      <parent  link="wheel_base_link"/>
       <child link="wheels_front_left_mecanum"/>
       <origin xyz="0.225 0.19456 0" rpy="0 0 0"/>
     </joint>
     <joint name="wheels_body_to_front_right_mecanum_connector" type="fixed">
-      <parent  link="${base_link}"/>
+      <parent  link="wheel_base_link"/>
       <child link="wheels_front_right_mecanum"/>
       <origin xyz="0.225 -0.19456 0" rpy="0 0 0"/>
     </joint>
     <joint name="wheels_body_to_rear_left_mecanum_connector" type="fixed">
-      <parent  link="${base_link}"/>
+      <parent  link="wheel_base_link"/>
       <child link="wheels_rear_left_mecanum"/>
       <origin xyz="-0.225 0.19456 0" rpy="0 0 0"/>
     </joint>
     <joint name="wheels_body_to_rear_right_mecanum_connector" type="fixed">
-      <parent  link="${base_link}"/>
+      <parent  link="wheel_base_link"/>
       <child link="wheels_rear_right_mecanum"/>
       <origin xyz="-0.225 -0.19456 0" rpy="0 0 0"/>
     </joint>
     <joint name="wheels_body_to_base_laser_connector" type="fixed">
-      <parent  link="${base_link}"/>
+      <parent  link="wheel_base_link"/>
       <child link="wheels_base_laser_link"/>
       <origin xyz="0.220697 0 0.1594" rpy="0 0 0"/>
     </joint>
