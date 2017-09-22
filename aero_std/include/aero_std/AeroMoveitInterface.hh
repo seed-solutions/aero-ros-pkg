@@ -160,6 +160,9 @@ namespace aero
       /// @brief get joint angles from robot model, recommend
       /// @param[out] _map joint angles map
     public: void getRobotStateVariables(std::map<aero::joint, double> &_map);
+      /// @brief get joint angles from robot model including hand angles
+      /// @param[out] _map joint angles map
+    public: void getRobotStateVariables(aero::fullarm &_map);
 
       /// @brief get named target "reset-pose", its basic pose of robot
       /// @param[out] _map joint angles map
@@ -217,12 +220,17 @@ namespace aero
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
       /// @brief send joint angles in _av_map to real robot
-      /// @param[in] _av_map map witch has joint name and joint angle value
+      /// @param[in] _av_map map which has joint name and joint angle value
       /// @param[in] _time_ms execution time, and wait this time
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+      /// @brief send joint angles including hand angles in _av_map to real robot
+      /// @param[in] _av_map map which has joint name and joint angle value
+      /// @param[in] _time_ms execution time, and wait this time
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
+    public: void sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
       /// @brief send joint angles in robot model to real robot
-      /// @param[in] _arm witch arm to use
+      /// @param[in] _arm which arm to use
       /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|torso|lifter)
       /// @param[in] _time_ms execution time, this function returns soon after called
     public: void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms); // _av in kinematic_state is used
@@ -232,10 +240,15 @@ namespace aero
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso); // all angles from kinematic_state is published
       /// @brief send joint angles in _av_map to real robot
-      /// @param[in] _av_map map witch has joint name and joint angle value
+      /// @param[in] _av_map map which has joint name and joint angle value
       /// @param[in] _time_ms execution time, this function returns soon after called
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
     public: void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+      /// @brief send joint angles including hand angles in _av_map to real robot
+      /// @param[in] _av_map map which has joint name and joint angle value
+      /// @param[in] _time_ms execution time, this function returns soon after called
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
+    public: void sendAngleVectorAsync(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
       /// @brief send joints trajectory to real robot
       /// @attention trajectory type is std::vector<std::map<aero::joint, double>>
       /// @param[in] _trajectory joints trajectory will be executed

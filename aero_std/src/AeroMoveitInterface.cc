@@ -111,7 +111,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   tracking_mode_flag_ = false;
 
-
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
   ROS_INFO("----------------------------------------");
@@ -466,6 +465,16 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<aero:
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::getRobotStateVariables(aero::fullarm &_map)
+{
+  std::map<std::string, double> map_tmp;
+  getRobotStateVariables(map_tmp);
+  aero::stringMap2JointMap(map_tmp, _map.joints);
+  _map.l_hand = getHand(aero::arm::larm);
+  _map.r_hand = getHand(aero::arm::rarm);
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::getResetManipPose(std::map<aero::joint, double> &_map)
 {
   std::map<aero::joint, double> save;
@@ -621,6 +630,15 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint,
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
+{
+  sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
+  usleep(_time_ms * 1000);
+
+  sleep(1); // guarantee action has finished
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms)
 {
     sendAngleVectorAsync_( aero::armAndRange2MoveGroup(_arm, _range), _time_ms);
@@ -656,6 +674,35 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::j
 {
   setRobotStateVariables(_av_map);
   sendAngleVectorAsync(_time_ms, _move_waist);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
+{
+  setRobotStateVariables(_av_map.joints);
+  setHand(aero::arm::larm, _av_map.l_hand);
+  setHand(aero::arm::rarm, _av_map.r_hand);
+  // add upper body
+  std::vector<double> av_mg;
+  kinematic_state->copyJointGroupPositions("upper_body", av_mg);
+  std::vector<std::string> j_names;
+  j_names = getMoveGroup("upper_body").getJointNames();
+  // add hands
+  av_mg.push_back(_av_map.l_hand);
+  av_mg.push_back(_av_map.r_hand);
+  j_names.push_back("l_thumb_joint");
+  j_names.push_back("r_thumb_joint");
+  // add lifter
+  if (_move_waist == aero::ikrange::lifter) {
+    std::map<aero::joint, double> av_lif;
+    getLifter(av_lif);
+    av_mg.push_back(av_lif[aero::joint::lifter_x]);
+    av_mg.push_back(av_lif[aero::joint::lifter_z]);
+    std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
+    j_names.push_back(j_lif[0]);
+    j_names.push_back(j_lif[1]);
+  }
+  sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
 //////////////////////////////////////////////////
@@ -1043,6 +1090,8 @@ bool aero::interface::AeroMoveitInterface::sendGraspFast(aero::arm _arm, int _po
   else srv.request.hand = "left";
   srv.request.command = "grasp-fast:" + std::to_string(_power);
   srv.request.thre_fail = _thre_fail;
+  srv.request.larm_angle = getHand(aero::arm::larm) * 180.0 / M_PI;
+  srv.request.rarm_angle = getHand(aero::arm::rarm) * 180.0 / M_PI;
 
   if (!hand_grasp_client_.call(srv)) {
     ROS_ERROR("open/close hand failed service call");

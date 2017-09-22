@@ -130,9 +130,11 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
       int at = static_cast<int> // should always be found
         (std::find(joints.joint_names.begin(), joints.joint_names.end(),
                    "l_thumb_joint") - joints.joint_names.begin());
-      ROS_INFO("%f", joints.points.positions.at(at));
       if (fabs(joints.points.positions.at(at)) < 0.05) {
-        OpenHand(req.hand);
+        if (fabs(req.larm_angle) < 0.05)
+          OpenHand(req.hand);
+        else
+          GraspAngle(req.hand, req.larm_angle, 0.0, 1.2);
         res.status = "grasp failed";
         return true;
       }
@@ -143,7 +145,10 @@ bool HandControl(aero_startup::AeroHandController::Request &req,
         (std::find(joints.joint_names.begin(), joints.joint_names.end(),
                    "r_thumb_joint") - joints.joint_names.begin());
       if (fabs(joints.points.positions.at(at)) < 0.05) {
-        OpenHand(req.hand);
+        if (fabs(req.rarm_angle) < 0.05)
+          OpenHand(req.hand);
+        else
+          GraspAngle(req.hand, 0.0, req.rarm_angle, 1.2);
         res.status = "grasp failed";
         return true;
       }

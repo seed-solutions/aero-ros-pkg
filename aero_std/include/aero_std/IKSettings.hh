@@ -144,6 +144,12 @@ namespace aero
       _j_map[jointName2Joint(it->first)] = it->second;
     }
   }
+
+  struct fullarm {
+    std::map<aero::joint, double> joints;
+    double l_hand;
+    double r_hand;
+  };
 }
 
 #endif
