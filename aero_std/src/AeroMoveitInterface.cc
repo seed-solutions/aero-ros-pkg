@@ -159,13 +159,15 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
     if (itr == srv.response.joint_names.end()) continue;
     map[it->first] = srv.response.points.positions[static_cast<int>(itr - srv.response.joint_names.begin())];
   }
-  kinematic_state->setVariablePositions(map);
 
   // update hands
-  auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "r_thumb_joint");
-  setHand(aero::arm::rarm,srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())]);
-  hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "l_thumb_joint");
-  setHand(aero::arm::larm,srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())]);
+  std::vector<std::string> hand_joints = {"r_thumb_joint","r_indexbase_joint","r_indexmid_joint","r_indexend_joint", "l_thumb_joint","l_indexbase_joint","l_indexmid_joint","l_indexend_joint"};
+  for(std::string jn: hand_joints) {
+    auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), jn);
+    if(hitr != srv.response.joint_names.end()) map[jn] = srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())];
+  }
+
+  kinematic_state->setVariablePositions(map);
 
   // update lifter
   auto hip_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "hip_joint");
