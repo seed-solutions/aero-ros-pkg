@@ -131,8 +131,8 @@ namespace aero
       /// @brief set the value to robot model's hand angle
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _radian target radian
-    public: void setHand(aero::arm _arm, double _radian);
-    private: void setHandsFromJointStates_();
+    public: virtual void setHand(aero::arm _arm, double _radian);
+    private: virtual void setHandsFromJointStates_();
 
       /// @brief update the model's link poses based on angle values
     public: void updateLinkTransforms();
@@ -177,7 +177,7 @@ namespace aero
       /// @brief get hand angle in robot model
       /// param[in] _arm which arm aero::arm::(rarm|larm)
       /// @return hand angle
-    public: double getHand(aero::arm _arm);
+    public: virtual double getHand(aero::arm _arm);
 
       /// @brief get end effector position
       /// @param[in] _arm arm which eef is fixed to
