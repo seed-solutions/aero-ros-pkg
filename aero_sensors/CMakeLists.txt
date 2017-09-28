@@ -20,7 +20,7 @@ add_definitions(-std=c++11)
 
 # xtion library
 
-add_library(aerosensors_xtion depth_camera/src/DepthCameraInterface.cc)
+add_library(aerosensors_depth_camera depth_camera/src/DepthCameraInterface.cc)
 add_library(aerosensors_rotatekinectaddon kinect/src/RotateKinectAddon.cc)
 
 # dynamic kinect controller (optional)
