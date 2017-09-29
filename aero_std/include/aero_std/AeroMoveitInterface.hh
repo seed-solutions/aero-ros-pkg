@@ -98,7 +98,7 @@ namespace aero
       /// @param[in] _z target z
       /// @param[out] _ans_xz ankle and hip joint value
       /// @return bool solvable or not
-    private: bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
+    protected: bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
 
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
@@ -122,17 +122,17 @@ namespace aero
       /// @param[in] _p pitch, if it's over limit, it beocomes within limit
       /// @param[in] _y yaw, if it's over limit, it beocomes within limit
     public: void setNeck(double _r,double _p, double _y);
-      /// @brief private function to calculate look at
+      /// @brief protected function to calculate look at
       /// @param[in] _x target x in base_link coordinate
       /// @param[in] _y target y in base_link coordinate
       /// @param[in] _z target z in base_link coordinate
-    private: void lookAt_(double _x, double _y, double _z);
+    protected: void lookAt_(double _x, double _y, double _z);
 
       /// @brief set the value to robot model's hand angle
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _radian target radian
     public: virtual void setHand(aero::arm _arm, double _radian);
-    private: virtual void setHandsFromJointStates_();
+    protected: virtual void setHandsFromJointStates_();
 
       /// @brief update the model's link poses based on angle values
     public: void updateLinkTransforms();
@@ -272,9 +272,9 @@ namespace aero
       /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
     public: bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso);
-      /// @brief private function. the base function of sendAngleVectorAsync
-    private: void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
-    private: void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
+      /// @brief protected function. the base function of sendAngleVectorAsync
+    protected: void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
+    protected: void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
 
       /// @brief send lifter position to real robot
       /// @attention when lifter is initial position (stretched), x and z are zero.
@@ -424,22 +424,22 @@ namespace aero
       /// @param[in] _pose desired pose in map coordinate
       /// @return if wheel moving plan to the pose can be made, return true
     public: bool checkMoveTo(geometry_msgs::Pose _pose);
-      /// @brief private function. due to move_base_pkg's bug, we use this
-    private: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
+      /// @brief protected function. due to move_base_pkg's bug, we use this
+    protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 
 
       // these varables are to use moveit libralies
       // don't care
       /// basic
-    private: robot_model_loader::RobotModelLoader robot_model_loader_;
+    protected: robot_model_loader::RobotModelLoader robot_model_loader_;
     public: robot_model::RobotModelPtr kinematic_model;// robot model
     public: robot_state::RobotStatePtr kinematic_state;
       // lifter height only
-    private: robot_model_loader::RobotModelLoader robot_model_loader_ho_;
+    protected: robot_model_loader::RobotModelLoader robot_model_loader_ho_;
     public: robot_model::RobotModelPtr kinematic_model_ho;
     public: robot_state::RobotStatePtr kinematic_state_ho;
       // lifter on plane
-    private: robot_model_loader::RobotModelLoader robot_model_loader_op_;
+    protected: robot_model_loader::RobotModelLoader robot_model_loader_op_;
     public: robot_model::RobotModelPtr kinematic_model_op;
     public: robot_state::RobotStatePtr kinematic_state_op;
 
@@ -488,41 +488,41 @@ namespace aero
 
 
       // callback functions
-    private: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
-    private: void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
+    protected: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
+    protected: void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
 
 
-    private: ros::ServiceClient hand_grasp_client_;
-    private: ros::ServiceClient joint_states_client_;
-    private: ros::ServiceClient interpolation_client_;
-    private: ros::ServiceClient activate_tracking_client_;
-    private: ros::Publisher display_publisher_;
-    private: ros::Publisher angle_vector_publisher_;
-    private: ros::Publisher look_at_publisher_;
-    private: ros::Publisher speech_publisher_;
-    private: ros::Publisher speech_detection_settings_publisher_;
-    private: ros::Publisher cmd_vel_publisher_;
-    private: ros::Subscriber joint_states_subscriber_;
-    private: ros::Subscriber speech_listener_;
-    private: ros::ServiceClient waist_service_;
-    private: ros::ServiceClient lifter_ik_service_;
-    private: ros::ServiceClient send_angle_service_;
-    private: ros::ServiceClient get_spot_;
-    private: ros::ServiceClient check_move_to_;
-    private: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
-    private: moveit::planning_interface::MoveGroup::Plan plan_;
-    private: std::string planned_group_;
-    private: bool height_only_;
-    private: std::vector<std::vector<double>> trajectory_;
-    private: std::vector<std::string> trajectory_groups_;
-    private: sensor_msgs::JointState joint_states_;
-    private: double lifter_thigh_link_;// lifter's upper link
-    private: double lifter_foreleg_link_;// lifter's lower link
-    private: std::string detected_speech_;
-    private: bool tracking_mode_flag_;
-    private: aero_startup::AeroSendJoints send_joints_srv_;
-    private: tf::TransformListener listener_;
-    private: geometry_msgs::Pose pose_using_;
+    protected: ros::ServiceClient hand_grasp_client_;
+    protected: ros::ServiceClient joint_states_client_;
+    protected: ros::ServiceClient interpolation_client_;
+    protected: ros::ServiceClient activate_tracking_client_;
+    protected: ros::Publisher display_publisher_;
+    protected: ros::Publisher angle_vector_publisher_;
+    protected: ros::Publisher look_at_publisher_;
+    protected: ros::Publisher speech_publisher_;
+    protected: ros::Publisher speech_detection_settings_publisher_;
+    protected: ros::Publisher cmd_vel_publisher_;
+    protected: ros::Subscriber joint_states_subscriber_;
+    protected: ros::Subscriber speech_listener_;
+    protected: ros::ServiceClient waist_service_;
+    protected: ros::ServiceClient lifter_ik_service_;
+    protected: ros::ServiceClient send_angle_service_;
+    protected: ros::ServiceClient get_spot_;
+    protected: ros::ServiceClient check_move_to_;
+    protected: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
+    protected: moveit::planning_interface::MoveGroup::Plan plan_;
+    protected: std::string planned_group_;
+    protected: bool height_only_;
+    protected: std::vector<std::vector<double>> trajectory_;
+    protected: std::vector<std::string> trajectory_groups_;
+    protected: sensor_msgs::JointState joint_states_;
+    protected: double lifter_thigh_link_;// lifter's upper link
+    protected: double lifter_foreleg_link_;// lifter's lower link
+    protected: std::string detected_speech_;
+    protected: bool tracking_mode_flag_;
+    protected: aero_startup::AeroSendJoints send_joints_srv_;
+    protected: tf::TransformListener listener_;
+    protected: geometry_msgs::Pose pose_using_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
