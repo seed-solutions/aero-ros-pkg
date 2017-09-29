@@ -4,6 +4,8 @@ using namespace aero;
 using namespace vision;
 
 //////////////////////////////////////////////////
+/// @brief constructor
+/// @param _nh Node handle
 ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh)
   : nh_(_nh)
 {
@@ -13,6 +15,9 @@ ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh)
 }
 
 //////////////////////////////////////////////////
+/// @brief constructor with AeroMoveitInterface
+/// @param _nh Node handle
+/// @param _interface AeroMoveitInterface
 ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _interface)
   : nh_(_nh)
 {
@@ -29,6 +34,11 @@ ObjectFeatures::~ObjectFeatures()
 }
 
 //////////////////////////////////////////////////
+/// @brief convert 3d position from in camera coords
+///        to in world coords (/base_link)
+///        This function requires AeroMoveitInterface
+/// @param _pos position in camera coords
+/// @return position in world coords
 Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
 {
 
@@ -44,12 +54,19 @@ Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
 }
 
 //////////////////////////////////////////////////
+/// @brief convert 3d position from in camera coords
+///        to in world coords (/base_link)
 Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3f _pos)
 {
   return convertWorld(Eigen::Vector3d(_pos.x(), _pos.y(), _pos.z()));
 }
 
 //////////////////////////////////////////////////
+/// @brief set camera transformation,
+///        this transform is used in convertWorld()
+/// @param _camera_parent_link parent frameID of camera
+/// @param _position position of camera
+/// @param _orientation orientation of camera
 void ObjectFeatures::setCameraTransform(std::string _camera_parent_link, Eigen::Vector3d _position, Eigen::Quaterniond _orientation)
 {
   camera_parent_link_ = _camera_parent_link;
@@ -58,6 +75,14 @@ void ObjectFeatures::setCameraTransform(std::string _camera_parent_link, Eigen::
 }
 
 //////////////////////////////////////////////////
+/// @brief set ARROW to marker,
+/// frameID is "/base_link",
+/// color is red (1, 0, 0)
+///
+/// @param _position base position
+/// @param _orientation orientation of arrow
+/// @param _id marker ID
+/// @return marker ID
 int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _orientation, int _id){
   visualization_msgs::Marker marker;
   marker.header.frame_id = "/base_link";
@@ -87,6 +112,14 @@ int ObjectFeatures::setMarker(Eigen::Vector3d _position, Eigen::Quaterniond _ori
 }
 
 //////////////////////////////////////////////////
+/// @brief set LINE_LIST to marker,
+/// frameID is "/base_link",
+/// color is blue (0, 0, 1)
+///
+/// @param _pos1 vertex position (1)
+/// @param _pos2 vertex position (2)
+/// @param _id marker ID
+/// @return marker ID
 int ObjectFeatures::setMarker(Eigen::Vector3d _pos1, Eigen::Vector3d _pos2, int _id){
   visualization_msgs::Marker marker;
   marker.header.frame_id = "/base_link";
@@ -109,31 +142,47 @@ int ObjectFeatures::setMarker(Eigen::Vector3d _pos1, Eigen::Vector3d _pos2, int 
 }
 
 //////////////////////////////////////////////////
+/// @brief set LINE_LIST to marker
 int ObjectFeatures::setMarker(Eigen::Vector3f _pos1, Eigen::Vector3f _pos2, int _id){
   return setMarker(Eigen::Vector3d(_pos1.x(), _pos1.y(), _pos1.z()), Eigen::Vector3d(_pos2.x(), _pos2.y(), _pos2.z()), _id);
 }
 
 //////////////////////////////////////////////////
+/// @brief set ARROW to marker, with default rotation (1, 0, 0, 0)
 int ObjectFeatures::setMarker(Eigen::Vector3d _position, int _id){
   return setMarker(_position, Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0), _id);
 }
 
 
 //////////////////////////////////////////////////
+/// @brief set ARROW to marker, with default rotation (1, 0, 0, 0)
 int ObjectFeatures::setMarker(Eigen::Vector3f _position, int _id){
   return setMarker(Eigen::Vector3d(_position.x(), _position.y(), _position.z()), Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0), _id);
 }
 
 //////////////////////////////////////////////////
+/// @brief set ARROW to marker
+/// @param _pose position and orientation of arrow
 int ObjectFeatures::setMarker(geometry_msgs::Pose _pose, int _id){
   return setMarker(Eigen::Vector3d(_pose.position.x, _pose.position.y, _pose.position.z), Eigen::Quaterniond(_pose.orientation.w, _pose.orientation.x, _pose.orientation.y, _pose.orientation.z), _id);
 }
 
 //////////////////////////////////////////////////
+/// @brief set MESH_RESOURCES to marker
+///
+/// @param _pose pose in /base_link frame
+///
+/// @param _mesh_path path to mesh file,
+/// File path should be in ros package to display on any PC.
+/// ex. _mesh_path = "package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae"
+///
+/// @param _id marker ID
+///
+/// @param _color mesh color,
+/// If color is (0.0, 0.0, 0.0), mesh file's original color is used.
+///
+/// @return marker ID
 int ObjectFeatures::setMesh(geometry_msgs::Pose _pose, std::string _mesh_path,int _id, std_msgs::ColorRGBA _color){
-  // If color is (0.0, 0.0, 0.0), mesh file's original color is used.
-  // File path should be in ros package to display on any PC.
-  // ex. _mesh_path = "package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae"
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = "/base_link";
