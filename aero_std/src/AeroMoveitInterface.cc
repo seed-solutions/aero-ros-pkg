@@ -192,7 +192,7 @@ void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::strin
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link){
+bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts){
   const robot_state::JointModelGroup* jmg_tmp;
   bool lifter_ik = false;
 
@@ -220,8 +220,8 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, ge
   if (lifter_ik) kinematic_state->enforceBounds(jmg_tmp);
 
   bool found_ik;
-  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, 10, 0.1);
-  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, 10, 0.1);
+  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
+  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
   if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
   if (found_ik || !lifter_ik) return found_ik;
 
@@ -238,22 +238,22 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, ge
   }
 
   kinematic_state->enforceBounds(jmg_tmp);
-  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, 10, 0.1);
-  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, 10, 0.1);
+  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
+  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
   if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
   return found_ik;
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link)
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
 {
-  return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link);
+  return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link, _attempts);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef)
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts)
 {
-  return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef));
+  return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef), _attempts);
 }
 
 //////////////////////////////////////////////////
