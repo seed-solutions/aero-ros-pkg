@@ -69,6 +69,7 @@ namespace aero
       /// @param[in] _move_group IK is solved in this move group
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link end effector link name, this link gets closer to _pose
+      /// @param[in] _attempts the number of times IK is attempted
       /// @return true is solved, false is unsolvable
     public: bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
       /// @brief solve IK and set result to robot model's angles
@@ -76,6 +77,7 @@ namespace aero
       /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link end effector link name, this link gets closer to _pose
+      /// @param[in] _attempts the number of times IK is attempted 
       /// @return true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
       /// @brief solve IK and set result to robot model's angles
@@ -83,6 +85,7 @@ namespace aero
       /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link this link gets closer to _pose. you can use aero::eef::(hand|grasp|pick)
+      /// @param[in] _attempts the number of times IK is attempted
       /// @return true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts=10);
 
