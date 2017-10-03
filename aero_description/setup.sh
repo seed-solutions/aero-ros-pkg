@@ -21,7 +21,15 @@ else
     fi
 fi
 
-upper_file=$(find ./$dir -name "*upper*.txt" | awk -F "/" '{print $NF}')
+pkg=$(echo $dir | cut -d/ -f1)
+dir=$(echo $dir | cut -d/ -f2)
+
+if [ $dir != $pkg ]
+then
+    ln -s $(rospack find $pkg)/$dir .
+fi
+
+upper_file=$(ls ./$dir | grep "upper" | grep ".txt")
 if [[ $upper_file = "" ]]
 then
     echo "error: make sure robot directory exists"
@@ -30,7 +38,7 @@ then
 fi
 
 upper_name=$(echo "$upper_file" | awk -F "." '{print $1}')
-lower_name=$(find ./$dir -name "*.txt" ! -name $upper_file | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
+lower_name=$(ls ./$dir | grep ".txt" | grep -v $upper_file | awk -F "." '{print $1}')
 
 check_install=$(rospack find aero_description)
 if [[ $check_install = "" ]]
