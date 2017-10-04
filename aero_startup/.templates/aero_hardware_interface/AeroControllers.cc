@@ -9,6 +9,7 @@ AeroUpperController::AeroUpperController(const std::string& _port) :
 {
   stroke_vector_.resize(AERO_DOF_UPPER);
   stroke_ref_vector_.resize(AERO_DOF_UPPER);
+  stroke_cur_vector_.resize(AERO_DOF_UPPER);
   status_vector_.resize(AERO_DOF_UPPER);
 
   stroke_joint_indices_.clear();
@@ -74,6 +75,7 @@ AeroLowerController::AeroLowerController(const std::string& _port) :
 {
   stroke_vector_.resize(AERO_DOF_LOWER);
   stroke_ref_vector_.resize(AERO_DOF_LOWER);
+  stroke_cur_vector_.resize(AERO_DOF_LOWER);
   status_vector_.resize(AERO_DOF_LOWER);
 
   wheel_vector_.resize(AERO_DOF_WHEEL);
