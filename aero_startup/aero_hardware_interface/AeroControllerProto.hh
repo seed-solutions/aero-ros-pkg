@@ -65,6 +65,17 @@ namespace aero
       /// @param _send_data raw data buffer
      public: void send_data(std::vector<uint8_t>& _send_data);
 
+      /// @brief set / unset verbose mode
+      /// @param val verbose mode
+     public: void verbose(bool val) {verbose_ = val;}
+      /// @brief get verbose mode flag
+      /// @return verbose mode flag
+     public: bool verbose() {return verbose_;}
+
+      /// @brief getdebug mode flag
+      /// @return true if in debug mode
+     public: bool is_debug_mode() {return !ser_.is_open();}
+
      private: io_service io_;
 
      private: serial_port ser_;

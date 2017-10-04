@@ -11,6 +11,7 @@ SEED485Controller::SEED485Controller(
 {
   if (_port == "") {
     std::cerr << "empty serial port name: entering debug mode...\n";
+    // verbose_ = true;
     return;
   }
 
@@ -21,6 +22,7 @@ SEED485Controller::SEED485Controller(
 
   if (err) {
     std::cerr << "could not open " << _port << "\n";
+    // verbose_ = true;
     return;
   }
 
@@ -286,22 +288,28 @@ bool AeroControllerProto::get_status(std::vector<bool>& _status_vector)
 //////////////////////////////////////////////////
 void AeroControllerProto::update_position()
 {
-  seed_.flush();
-  get_command(CMD_GET_POS, stroke_cur_vector_);
+  if (seed_.is_debug_mode()) {
+    // just return ref_vector in debug mode
+    stroke_cur_vector_.assign(stroke_ref_vector_.begin(),
+                              stroke_ref_vector_.end());
+  } else {
+    seed_.flush();
+    get_command(CMD_GET_POS, stroke_cur_vector_);
+  }
 }
 
 //////////////////////////////////////////////////
 void AeroControllerProto::update_status()
 {
   seed_.flush();
-  get_command(0x52, status_vector_);
+  get_command(CMD_WATCH_MISSTEP, status_vector_);
 }
 
 //////////////////////////////////////////////////
 void AeroControllerProto::reset_status()
 {
   seed_.flush();
-  get_command(0x52, 0xff, status_vector_);
+  get_command(CMD_WATCH_MISSTEP, 0xff, status_vector_);
 }
 
 //////////////////////////////////////////////////
@@ -336,8 +344,13 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     return;
   }
 
-  if (cmd == 0x14 || cmd == 0x41 || cmd == 0x42 || cmd == 0x43
-      || cmd == 0x44 || cmd == 0x45 || cmd == 0x52) {
+  if (cmd == CMD_MOVE_ABS ||
+      cmd == CMD_GET_POS ||
+      cmd == CMD_GET_CUR ||
+      cmd == CMD_GET_TMP ||
+      cmd == CMD_GET_AD ||
+      cmd == CMD_GET_DIO ||
+      cmd == CMD_WATCH_MISSTEP) {
     _stroke_vector.resize(stroke_joint_indices_.size());
     // raw to stroke
     for (size_t i = 0; i < stroke_joint_indices_.size(); ++i) {
@@ -355,8 +368,8 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
     }
   }
 
-  // if (cmd == 0x14 || cmd == 0x52 || cmd == 0x41) {
-  if (cmd == 0x52) {
+  // if (cmd == CMD_MOVE_ABS || cmd == CMD_WATCH_MISSTEP || cmd == CMD_GET_POS) {
+  if (cmd == CMD_WATCH_MISSTEP) {
     uint8_t status0 = dat[RAW_HEADER_OFFSET + 60];
     uint8_t status1 = dat[RAW_HEADER_OFFSET + 61];
     if ((status0 >> 5) == 1 || (status1 >> 5) == 1) {
@@ -408,7 +421,14 @@ void AeroControllerProto::set_position(
 
   // for ROS
   usleep(1000 * 20);
-  get_data(stroke_cur_vector_);
+  if (seed_.is_debug_mode()) {
+    // in debug mode, get_data returns before writing stroke vector,
+    // and controller must copy ref_vector into cur_vector
+    stroke_cur_vector_.assign(stroke_ref_vector_.begin(),
+                              stroke_ref_vector_.end());
+  } else {
+    get_data(stroke_cur_vector_);
+  }
 }
 
 //////////////////////////////////////////////////
