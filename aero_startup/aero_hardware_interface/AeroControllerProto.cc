@@ -107,8 +107,10 @@ void SEED485Controller::send_command(
   // check sum
   int32_t b_check_sum = 0;
 
-  for (size_t i = 2; i < data.size() - 1; ++i)
+  for (size_t i = 2; i < data.size() - 1; ++i) {
     b_check_sum += data[i];
+  }
+
   data[data.size() - 1] =
     ~(reinterpret_cast<uint8_t*>(&b_check_sum)[0]);
 
@@ -132,8 +134,10 @@ void SEED485Controller::send_command(
   // check sum
   int32_t b_check_sum = 0;
 
-  for (size_t i = 2; i < RAW_DATA_LENGTH - 1; ++i)
+  for (size_t i = 2; i < RAW_DATA_LENGTH - 1; ++i) {
     b_check_sum += _send_data[i];
+  }
+
   _send_data[RAW_DATA_LENGTH - 1] =
     ~(reinterpret_cast<uint8_t*>(&b_check_sum)[0]);
 
@@ -254,8 +258,9 @@ int AeroControllerProto::get_number_of_angle_joints()
 int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
 {
   auto it = angle_joint_indices_.find(_name);
-  if (it != angle_joint_indices_.end())
-      return angle_joint_indices_[_name];
+  if (it != angle_joint_indices_.end()) {
+    return angle_joint_indices_[_name];
+  }
   return -1;
 }
 
@@ -342,10 +347,11 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
         decode_short_(&dat[RAW_HEADER_OFFSET + aji.raw_index * 2]);
 
       // check value
-      if (_stroke_vector[aji.stroke_index] > 0x7fff)
+      if (_stroke_vector[aji.stroke_index] > 0x7fff) {
         _stroke_vector[aji.stroke_index] -= std::pow(2, 16);
-      else if (_stroke_vector[aji.stroke_index] == 0x7fff)
+      } else if (_stroke_vector[aji.stroke_index] == 0x7fff) {
         _stroke_vector[aji.stroke_index] = 0;
+      }
     }
   }
 
@@ -353,10 +359,11 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
   if (cmd == 0x52) {
     uint8_t status0 = dat[RAW_HEADER_OFFSET + 60];
     uint8_t status1 = dat[RAW_HEADER_OFFSET + 61];
-    if ((status0 >> 5) == 1 || (status1 >> 5) == 1)
+    if ((status0 >> 5) == 1 || (status1 >> 5) == 1) {
       bad_status_ = true;
-    else
+    } else {
       bad_status_ = false;
+    }
   }
 
 }
@@ -387,9 +394,11 @@ void AeroControllerProto::set_position(
   boost::mutex::scoped_lock lock(ctrl_mtx_);
 
   // for ROS
-  for (size_t i = 0; i < _stroke_vector.size(); ++i)
-    if (_stroke_vector[i] != 0x7fff)
+  for (size_t i = 0; i < _stroke_vector.size(); ++i) {
+    if (_stroke_vector[i] != 0x7fff) {
       stroke_ref_vector_[i] = _stroke_vector[i];
+    }
+  }
 
   // for seed
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
