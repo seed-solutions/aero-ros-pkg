@@ -93,6 +93,15 @@ T.B.D.
 roslaunch aero_startup aero_bringup.launch
 ```
 
+### View Robot Model
+
+```
+rosrun rviz rviz
+```
+
+then add RobotModel, change Robot Description to `aero_description`.
+
+
 ### Run euslisp
 
 ```
