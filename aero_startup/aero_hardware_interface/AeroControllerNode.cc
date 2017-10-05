@@ -25,6 +25,10 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   ROS_INFO(" create error publisher");
   status_pub_ = nh_.advertise<std_msgs::Bool>("error", 10);
 
+  ROS_INFO(" create in_action publisher");
+  in_action_pub_ =
+    nh_.advertise<std_msgs::Bool>("in_action", 10);
+
   // ROS_INFO(" create cmdvel sub");
   // cmdvel_sub_ =
   //     nh_.subscribe(
@@ -131,6 +135,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   }
 
   global_thread_cnt_ = 0;
+  send_joints_status_ = false;
 
   ROS_INFO(" done");
 }
@@ -210,7 +215,6 @@ void AeroControllerNode::JointTrajectoryThread(
     }
 
     int k = static_cast<int>(it - _stroke_trajectory.begin());
-
     // from here, main process for trajectory it
     // any movement faster than 100ms(10cs) will not interpolate = linear
     if (it->second < 10
@@ -647,6 +651,7 @@ void AeroControllerNode::JointTrajectoryCallback(
 void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event)
 {
   this->JointStateOnce();
+  this->PublishInAction();
 }
 
 //////////////////////////////////////////////////
@@ -760,6 +765,41 @@ void AeroControllerNode::JointStateOnce()
   mtx_lower_.unlock();
 }
 
+//////////////////////////////////////////////////
+void AeroControllerNode::PublishInAction()
+{
+  std_msgs::Bool msg;
+  msg.data = false;
+
+  // count upper trajectory threads number
+  int upper;
+  mtx_threads_.lock();
+  upper = static_cast<int>(registered_threads_.size());
+  mtx_threads_.unlock();
+  if( upper > 0) {
+    msg.data = true;
+  }
+
+  // lower trajectory thread is active or not
+  int lower;
+  mtx_lower_thread_.lock();
+  lower = lower_thread_.id;
+  mtx_lower_thread_.unlock();
+  if( lower > 0) {
+    msg.data = true;
+  }
+
+  // send joints is active or not.
+  bool send_joints;
+  mtx_send_joints_status_.lock();
+  send_joints = send_joints_status_;
+  mtx_send_joints_status_.unlock();
+  if(send_joints) {
+    msg.data = true;
+  }
+
+  in_action_pub_.publish(msg);
+}
 //////////////////////////////////////////////////
 void AeroControllerNode::WheelServoCallback(
     const std_msgs::Bool::ConstPtr& _msg)
@@ -941,6 +981,9 @@ bool AeroControllerNode::SendJointsCallback(
     aero_startup::AeroSendJoints::Request &_req,
     aero_startup::AeroSendJoints::Response &_res)
 {
+  mtx_send_joints_status_.lock();
+  send_joints_status_ = true;
+  mtx_send_joints_status_.unlock();
   mtx_upper_.lock();
   mtx_lower_.lock();
 
@@ -952,6 +995,9 @@ bool AeroControllerNode::SendJointsCallback(
     // invalid number of joints from _req
     mtx_upper_.unlock();
     mtx_lower_.unlock();
+    mtx_send_joints_status_.lock();
+    send_joints_status_ = false;
+    mtx_send_joints_status_.unlock();
     return false;
   }
 
@@ -987,6 +1033,9 @@ bool AeroControllerNode::SendJointsCallback(
     if (id_in_req_to_ordered_id[i] < 0) {
       mtx_upper_.unlock();
       mtx_lower_.unlock();
+      mtx_send_joints_status_.lock();
+      send_joints_status_ = false;
+      mtx_send_joints_status_.unlock();
       return false; // invalid name
     }
 
@@ -1120,6 +1169,9 @@ bool AeroControllerNode::SendJointsCallback(
 
   mtx_upper_.unlock();
   mtx_lower_.unlock();
+  mtx_send_joints_status_.lock();
+  send_joints_status_ = false;
+  mtx_send_joints_status_.unlock();
 
   return true;
 }

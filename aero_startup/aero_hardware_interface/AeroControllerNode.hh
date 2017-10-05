@@ -131,6 +131,10 @@ namespace aero
       /// @brief read joint state
     private: void JointStateOnce();
 
+      /// @brief publish the information to /node_ns/in_action
+      /// whether trajectories are in action or not.
+    private: void PublishInAction();
+
       /// @brief subscribe wheel servo message
       /// @param _msg true: on, false :off
     private: void WheelServoCallback(
@@ -207,6 +211,8 @@ namespace aero
 
     private: ros::Publisher status_pub_;
 
+    private: ros::Publisher in_action_pub_;
+
     private: ros::Subscriber status_reset_sub_;
 
     private: ros::ServiceServer interpolation_server_;
@@ -248,6 +254,11 @@ namespace aero
     private: std::mutex mtx_lower_thread_;
 
     private: thread_info lower_thread_;
+
+      // @brief wether sendJoints is active or not
+    private: bool send_joints_status_;
+
+    private: std::mutex mtx_send_joints_status_;
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;
