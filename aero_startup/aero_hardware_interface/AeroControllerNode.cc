@@ -269,11 +269,10 @@ void AeroControllerNode::JointTrajectoryThread(
       }
       // slightly longer time added for trajectory smoothness
       mtx_upper_.lock();
-      upper_.set_position(stroke, csec_per_frame + 10 + 5);// 5 csec(50[ms]) is to synchronize upper and lower
+      upper_.set_position(stroke, csec_per_frame + 10);
       mtx_upper_.unlock();
       // 20ms sleep in set_position, subtract
       usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
-      usleep(50 * 1000);// to synchronize upper and lower
     } // splits
     _split_start_from = 1;
   } // _stroke_trajectory
