@@ -228,6 +228,7 @@ void AeroControllerNode::JointTrajectoryThread(
       upper_.set_position(it->first, it->second - (it-1)->second);
       mtx_upper_.unlock();
       usleep(static_cast<int32_t>((it->second - (it-1)->second) * 10.0 * 1000.0 - 20000.0));
+      usleep(50 * 1000);// to synchronize upper and lower
       continue;
     }
     // find number of splits in this trajectory
@@ -272,6 +273,7 @@ void AeroControllerNode::JointTrajectoryThread(
       mtx_upper_.unlock();
       // 20ms sleep in set_position, subtract
       usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
+      usleep(50 * 1000);// to synchronize upper and lower
     } // splits
     _split_start_from = 1;
   } // _stroke_trajectory
