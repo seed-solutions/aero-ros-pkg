@@ -343,8 +343,11 @@ namespace aero
       /// use with send{AngleVector|Trajectory|Lifter}Async
       /// @param[in] _timeout_ms if waiting talkes longer than this time, the method returns
       /// if _timeout_ms == 0, timeout will not occur.
-      /// return if timeout occurs, returns false
+      /// sleeps a little before call waitInterpolation_ to guarantee the controller state
+      /// @return if timeout occurs, returns false
     public: bool waitInterpolation(int _timeout_ms=0);
+      /// @brief prototype for waitInterpolation
+    protected: bool waitInterpolation_(int _timeout_ms=0);
 
       /// @brief send grasp command to real robot
       /// @param[in] _arm aero::arm::(rarm|larm)

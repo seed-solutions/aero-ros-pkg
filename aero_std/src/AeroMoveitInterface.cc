@@ -1065,6 +1065,12 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
+  usleep(100 * 1000);// to avoid getting wrong controller state;
+  return waitInterpolation(_timeout_ms);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
   bool check_timeout = false;
   if(_timeout_ms > 0) check_timeout = true;
   ros::Duration timeout = ros::Duration(_timeout_ms * 0.001);
