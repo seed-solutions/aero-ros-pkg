@@ -225,7 +225,7 @@ void AeroControllerNode::JointTrajectoryThread(
 	|| _interpolation.at(k)->is(aero::interpolation::i_constant)
 	) {
       mtx_upper_.lock();
-      upper_.set_position(it->first, it->second - (it-1)->second);
+      upper_.set_position(it->first, it->second - (it-1)->second + 5);// 5 csec(50[ms]) is to synchronize upper and lower
       mtx_upper_.unlock();
       usleep(static_cast<int32_t>((it->second - (it-1)->second) * 10.0 * 1000.0 - 20000.0));
       usleep(50 * 1000);// to synchronize upper and lower
@@ -269,7 +269,7 @@ void AeroControllerNode::JointTrajectoryThread(
       }
       // slightly longer time added for trajectory smoothness
       mtx_upper_.lock();
-      upper_.set_position(stroke, csec_per_frame + 10);
+      upper_.set_position(stroke, csec_per_frame + 10 + 5);// 5 csec(50[ms]) is to synchronize upper and lower
       mtx_upper_.unlock();
       // 20ms sleep in set_position, subtract
       usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
