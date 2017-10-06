@@ -613,36 +613,32 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms)
 {
   sendAngleVectorAsync(_arm, _range, _time_ms);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_time_ms, _move_waist);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
@@ -777,7 +773,8 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
 {
   if (!sendTrajectoryAsync(_trajectory, _times, _move_lifter)) return false;
   int time = std::accumulate(_times.begin(), _times.end(), 0);
-  usleep(time * 1000);
+  usleep(static_cast<int>(time * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
   return true;
 }
 
@@ -785,7 +782,8 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
 bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
 {
   if (!sendTrajectoryAsync(_trajectory, _time_ms, _move_lifter)) return false;
-  usleep(_time_ms * 1000);
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
   return true;
 }
 
@@ -896,8 +894,9 @@ bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_
 
   if (srv.response.status == "success") {
     setLifter(_x/1000.0, _z/1000.0);
-    if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000);
-    else usleep(_time_ms * 1000);
+    if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000 * 0.8) * 1000);
+    else usleep(static_cast<int>(_time_ms * 0.8) * 1000);
+    waitInterpolation_();
     return true;
   }
   return false;
@@ -1003,7 +1002,8 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
   if(!sendLifterTrajectoryAsync(_trajectory, _times)) return false;
   else {
     int time = std::accumulate(_times.begin(), _times.end(), 0);
-    usleep(time * 1000);
+    usleep(static_cast<int>(time * 0.8) * 1000);
+    waitInterpolation_();
     return true;
   }
 }
@@ -1013,7 +1013,8 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 {
   if(!sendLifterTrajectoryAsync(_trajectory, _time_ms)) return false;
   else {
-    usleep(_time_ms * 1000);
+    usleep(static_cast<int>(_time_ms * 0.8) * 1000);
+    waitInterpolation_();
     return true;
   }
 }
