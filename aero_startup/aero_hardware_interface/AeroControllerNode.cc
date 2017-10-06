@@ -134,6 +134,10 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
     this->JointStateOnce();
   }
 
+  in_action_timer_ =
+    nh_.createTimer(ros::Duration(0.02),
+                    &AeroControllerNode::PublishInAction, this);
+
   global_thread_cnt_ = 0;
   send_joints_status_ = false;
 
@@ -455,11 +459,12 @@ void AeroControllerNode::JointTrajectoryCallback(
       bool servo_off = false;
       // if cancel in any of the joints, cancel movement with servo on
       for (auto l = lower_stroke_vector.begin();
-           l != lower_stroke_vector.end(); ++l)
+           l != lower_stroke_vector.end(); ++l) {
         if (*l == 0x7fff) {
           servo_off = true;
           break;
         }
+      }
       if (servo_off) {
         // kill if trajectory is running
         mtx_lower_thread_.lock();
@@ -469,7 +474,7 @@ void AeroControllerNode::JointTrajectoryCallback(
         // cancel lower movement
         lower_.servo_on();
       } else {
-        lower_.set_position(lower_stroke_vector, time_csec);
+        lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
       }
     }
   }
@@ -477,7 +482,7 @@ void AeroControllerNode::JointTrajectoryCallback(
   mtx_upper_.unlock();
   mtx_lower_.unlock();
 
-  if (lower_count > 0 && _msg->points.size() > 1) {
+  if (lower_count > 0 && lower_stroke_trajectory.size() > 0) {
     // setup thread settings
     mtx_lower_thread_.lock();
     if (lower_thread_.id == 1) { // trajectory is already running
@@ -651,7 +656,6 @@ void AeroControllerNode::JointTrajectoryCallback(
 void AeroControllerNode::JointStateCallback(const ros::TimerEvent& event)
 {
   this->JointStateOnce();
-  this->PublishInAction();
 }
 
 //////////////////////////////////////////////////
@@ -766,36 +770,52 @@ void AeroControllerNode::JointStateOnce()
 }
 
 //////////////////////////////////////////////////
-void AeroControllerNode::PublishInAction()
+void AeroControllerNode::PublishInAction(const ros::TimerEvent& event)
 {
   std_msgs::Bool msg;
   msg.data = false;
 
+  // send joints is active or not.
+  bool send_joints;
+  if(!mtx_send_joints_status_.try_lock()) {// when mutex cant be locked, thread should be active.
+    send_joints = true;
+  } else {// lock
+    send_joints = send_joints_status_;
+    mtx_send_joints_status_.unlock();
+  }
+
+  if(send_joints) {
+    msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
+  }
+
   // count upper trajectory threads number
   int upper;
-  mtx_threads_.lock();
-  upper = static_cast<int>(registered_threads_.size());
-  mtx_threads_.unlock();
+  if(!mtx_threads_.try_lock()) {// when mutex cant be locked, thread should be active.
+    upper = 1;
+  } else {//lock
+    upper = static_cast<int>(registered_threads_.size());
+    mtx_threads_.unlock();
+  }
   if( upper > 0) {
     msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
   }
 
   // lower trajectory thread is active or not
   int lower;
-  mtx_lower_thread_.lock();
-  lower = lower_thread_.id;
-  mtx_lower_thread_.unlock();
+  if(!mtx_lower_thread_.try_lock()) {// when mutex cant be locked, thread should be active.
+    lower = 1;
+  } else {
+    lower = lower_thread_.id;
+    mtx_lower_thread_.unlock();
+  }
   if( lower > 0) {
     msg.data = true;
-  }
-
-  // send joints is active or not.
-  bool send_joints;
-  mtx_send_joints_status_.lock();
-  send_joints = send_joints_status_;
-  mtx_send_joints_status_.unlock();
-  if(send_joints) {
-    msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
   }
 
   in_action_pub_.publish(msg);

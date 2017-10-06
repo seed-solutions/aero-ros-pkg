@@ -133,7 +133,7 @@ namespace aero
 
       /// @brief publish the information to /node_ns/in_action
       /// whether trajectories are in action or not.
-    private: void PublishInAction();
+    private: void PublishInAction(const ros::TimerEvent& event);
 
       /// @brief subscribe wheel servo message
       /// @param _msg true: on, false :off
@@ -259,6 +259,8 @@ namespace aero
     private: bool send_joints_status_;
 
     private: std::mutex mtx_send_joints_status_;
+
+    private: ros::Timer in_action_timer_;
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;
