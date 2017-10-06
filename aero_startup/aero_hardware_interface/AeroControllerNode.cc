@@ -259,6 +259,7 @@ void AeroControllerNode::JointTrajectoryThread(
       // from here, main process for split j
       float t_param = _interpolation.at(k)->interpolate(
           static_cast<float>(j) / splits);
+      if(j == splits) t_param = 1.0;
       // calculate stroke in this split
       std::vector<int16_t> stroke(it->first.size(), 0x7fff);
       for (size_t i = 0; i < it->first.size(); ++i) {
@@ -271,9 +272,12 @@ void AeroControllerNode::JointTrajectoryThread(
       upper_.set_position(stroke, csec_per_frame + 10);
       mtx_upper_.unlock();
       // 20ms sleep in set_position, subtract
-      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
+      if(j != splits) {
+	usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000 - 20000);
+      } else {// total time - used time
+	usleep(static_cast<int32_t>(it->second - (it-1)->second - (splits - 1) * csec_per_frame) * 10 * 1000 - 20000);
+      }
     } // splits
-    usleep(50 * 1000);// to synchronize upper and lower 
     _split_start_from = 1;
   } // _stroke_trajectory
 
