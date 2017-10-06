@@ -274,6 +274,7 @@ void AeroControllerNode::JointTrajectoryThread(
       // 20ms sleep in set_position, subtract
       usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
     } // splits
+    usleep(50 * 1000);// to synchronize upper and lower 
     _split_start_from = 1;
   } // _stroke_trajectory
 
