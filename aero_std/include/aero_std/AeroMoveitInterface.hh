@@ -28,6 +28,7 @@
 #include <aero_startup/AeroHandController.h>
 #include <aero_startup/AeroTorsoController.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
 #include <std_srvs/SetBool.h>
 #include <aero_startup/GetSpot.h>
 #include <nav_msgs/GetPlan.h>
@@ -338,6 +339,15 @@ namespace aero
       /// @param[in] _trajectory desired lifter trajectory. x and z pair in meters
       /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
     public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
+      /// @brief wait until trajecory execution finishes.
+      /// use with send{AngleVector|Trajectory|Lifter}Async
+      /// @param[in] _timeout_ms if waiting talkes longer than this time, the method returns
+      /// if _timeout_ms == 0, timeout will not occur.
+      /// sleeps a little before call waitInterpolation_ to guarantee the controller state
+      /// @return if timeout occurs, returns false
+    public: bool waitInterpolation(int _timeout_ms=0);
+      /// @brief prototype for waitInterpolation
+    protected: bool waitInterpolation_(int _timeout_ms=0);
 
       /// @brief send grasp command to real robot
       /// @param[in] _arm aero::arm::(rarm|larm)
@@ -494,6 +504,7 @@ namespace aero
     protected: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
     protected: void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
 
+    protected: void inActionCallback_(const std_msgs::Bool::ConstPtr& _msg);
 
     protected: ros::ServiceClient hand_grasp_client_;
     protected: ros::ServiceClient joint_states_client_;
@@ -507,6 +518,7 @@ namespace aero
     protected: ros::Publisher cmd_vel_publisher_;
     protected: ros::Subscriber joint_states_subscriber_;
     protected: ros::Subscriber speech_listener_;
+    protected: ros::Subscriber in_action_listener_;
     protected: ros::ServiceClient waist_service_;
     protected: ros::ServiceClient lifter_ik_service_;
     protected: ros::ServiceClient send_angle_service_;
@@ -526,6 +538,7 @@ namespace aero
     protected: aero_startup::AeroSendJoints send_joints_srv_;
     protected: tf::TransformListener listener_;
     protected: geometry_msgs::Pose pose_using_;
+    protected: bool in_action_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;

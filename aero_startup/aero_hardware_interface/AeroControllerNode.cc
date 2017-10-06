@@ -25,6 +25,10 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   ROS_INFO(" create error publisher");
   status_pub_ = nh_.advertise<std_msgs::Bool>("error", 10);
 
+  ROS_INFO(" create in_action publisher");
+  in_action_pub_ =
+    nh_.advertise<std_msgs::Bool>("in_action", 10);
+
   // ROS_INFO(" create cmdvel sub");
   // cmdvel_sub_ =
   //     nh_.subscribe(
@@ -130,7 +134,12 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
     this->JointStateOnce();
   }
 
+  in_action_timer_ =
+    nh_.createTimer(ros::Duration(0.02),
+                    &AeroControllerNode::PublishInAction, this);
+
   global_thread_cnt_ = 0;
+  send_joints_status_ = false;
 
   ROS_INFO(" done");
 }
@@ -210,16 +219,15 @@ void AeroControllerNode::JointTrajectoryThread(
     }
 
     int k = static_cast<int>(it - _stroke_trajectory.begin());
-
     // from here, main process for trajectory it
     // any movement faster than 100ms(10cs) will not interpolate = linear
-    if (it->second < 10
+    if (it->second - (it-1)->second < 10
 	|| _interpolation.at(k)->is(aero::interpolation::i_constant)
 	) {
       mtx_upper_.lock();
-      upper_.set_position(it->first, it->second - (it-1)->second);
+      upper_.set_position(it->first, it->second - (it-1)->second + 5 + 1);// 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
       mtx_upper_.unlock();
-      usleep(static_cast<int32_t>((it->second - (it-1)->second) * 10.0 * 1000.0 - 20000.0));
+      usleep(static_cast<int32_t>((it->second - (it-1)->second)) * 10 * 1000 - 20000);
       continue;
     }
     // find number of splits in this trajectory
@@ -251,6 +259,7 @@ void AeroControllerNode::JointTrajectoryThread(
       // from here, main process for split j
       float t_param = _interpolation.at(k)->interpolate(
           static_cast<float>(j) / splits);
+      if(j == splits) t_param = 1.0;
       // calculate stroke in this split
       std::vector<int16_t> stroke(it->first.size(), 0x7fff);
       for (size_t i = 0; i < it->first.size(); ++i) {
@@ -263,7 +272,11 @@ void AeroControllerNode::JointTrajectoryThread(
       upper_.set_position(stroke, csec_per_frame + 10);
       mtx_upper_.unlock();
       // 20ms sleep in set_position, subtract
-      usleep(static_cast<int32_t>(csec_per_frame * 10.0 * 1000.0 - 20000.0));
+      if(j != splits) {
+	usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000 - 20000);
+      } else {// total time - used time
+	usleep(static_cast<int32_t>(it->second - (it-1)->second - (splits - 1) * csec_per_frame) * 10 * 1000 - 20000);
+      }
     } // splits
     _split_start_from = 1;
   } // _stroke_trajectory
@@ -304,7 +317,7 @@ void AeroControllerNode::LowerTrajectoryThread(
     lower_.set_position(it->first, csec_in_frame  + 10);
     mtx_lower_.unlock();
     // 20ms sleep in set_position, subtract
-    usleep(static_cast<int32_t>(csec_in_frame * 10.0 * 1000.0 - 20000.0));
+    usleep(static_cast<int32_t>(csec_in_frame) * 10 * 1000 - 20000);
   }
 
   mtx_lower_thread_.lock();
@@ -451,11 +464,12 @@ void AeroControllerNode::JointTrajectoryCallback(
       bool servo_off = false;
       // if cancel in any of the joints, cancel movement with servo on
       for (auto l = lower_stroke_vector.begin();
-           l != lower_stroke_vector.end(); ++l)
+           l != lower_stroke_vector.end(); ++l) {
         if (*l == 0x7fff) {
           servo_off = true;
           break;
         }
+      }
       if (servo_off) {
         // kill if trajectory is running
         mtx_lower_thread_.lock();
@@ -465,7 +479,7 @@ void AeroControllerNode::JointTrajectoryCallback(
         // cancel lower movement
         lower_.servo_on();
       } else {
-        lower_.set_position(lower_stroke_vector, time_csec);
+        lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
       }
     }
   }
@@ -473,7 +487,7 @@ void AeroControllerNode::JointTrajectoryCallback(
   mtx_upper_.unlock();
   mtx_lower_.unlock();
 
-  if (lower_count > 0 && _msg->points.size() > 1) {
+  if (lower_count > 0 && lower_stroke_trajectory.size() > 0) {
     // setup thread settings
     mtx_lower_thread_.lock();
     if (lower_thread_.id == 1) { // trajectory is already running
@@ -761,6 +775,57 @@ void AeroControllerNode::JointStateOnce()
 }
 
 //////////////////////////////////////////////////
+void AeroControllerNode::PublishInAction(const ros::TimerEvent& event)
+{
+  std_msgs::Bool msg;
+  msg.data = false;
+
+  // send joints is active or not.
+  bool send_joints;
+  if(!mtx_send_joints_status_.try_lock()) {// when mutex cant be locked, thread should be active.
+    send_joints = true;
+  } else {// lock
+    send_joints = send_joints_status_;
+    mtx_send_joints_status_.unlock();
+  }
+
+  if(send_joints) {
+    msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
+  }
+
+  // count upper trajectory threads number
+  int upper;
+  if(!mtx_threads_.try_lock()) {// when mutex cant be locked, thread should be active.
+    upper = 1;
+  } else {//lock
+    upper = static_cast<int>(registered_threads_.size());
+    mtx_threads_.unlock();
+  }
+  if( upper > 0) {
+    msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
+  }
+
+  // lower trajectory thread is active or not
+  int lower;
+  if(!mtx_lower_thread_.try_lock()) {// when mutex cant be locked, thread should be active.
+    lower = 1;
+  } else {
+    lower = lower_thread_.id;
+    mtx_lower_thread_.unlock();
+  }
+  if( lower > 0) {
+    msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
+  }
+
+  in_action_pub_.publish(msg);
+}
+//////////////////////////////////////////////////
 void AeroControllerNode::WheelServoCallback(
     const std_msgs::Bool::ConstPtr& _msg)
 {
@@ -941,6 +1006,9 @@ bool AeroControllerNode::SendJointsCallback(
     aero_startup::AeroSendJoints::Request &_req,
     aero_startup::AeroSendJoints::Response &_res)
 {
+  mtx_send_joints_status_.lock();
+  send_joints_status_ = true;
+  mtx_send_joints_status_.unlock();
   mtx_upper_.lock();
   mtx_lower_.lock();
 
@@ -952,6 +1020,9 @@ bool AeroControllerNode::SendJointsCallback(
     // invalid number of joints from _req
     mtx_upper_.unlock();
     mtx_lower_.unlock();
+    mtx_send_joints_status_.lock();
+    send_joints_status_ = false;
+    mtx_send_joints_status_.unlock();
     return false;
   }
 
@@ -987,6 +1058,9 @@ bool AeroControllerNode::SendJointsCallback(
     if (id_in_req_to_ordered_id[i] < 0) {
       mtx_upper_.unlock();
       mtx_lower_.unlock();
+      mtx_send_joints_status_.lock();
+      send_joints_status_ = false;
+      mtx_send_joints_status_.unlock();
       return false; // invalid name
     }
 
@@ -1120,6 +1194,9 @@ bool AeroControllerNode::SendJointsCallback(
 
   mtx_upper_.unlock();
   mtx_lower_.unlock();
+  mtx_send_joints_status_.lock();
+  send_joints_status_ = false;
+  mtx_send_joints_status_.unlock();
 
   return true;
 }

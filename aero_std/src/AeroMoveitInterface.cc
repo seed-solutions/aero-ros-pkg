@@ -35,6 +35,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
 
+  in_action_listener_ = _nh.subscribe
+    ("/aero_controller/in_action", 1, &aero::interface::AeroMoveitInterface::inActionCallback_, this);
+
   // service clients
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
@@ -110,6 +113,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   detected_speech_ = "";
 
   tracking_mode_flag_ = false;
+
+  in_action_ = true;
 
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
@@ -608,36 +613,32 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms)
 {
   sendAngleVectorAsync(_arm, _range, _time_ms);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_time_ms, _move_waist);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
 {
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
-  usleep(_time_ms * 1000);
-
-  sleep(1); // guarantee action has finished
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
 }
 
 //////////////////////////////////////////////////
@@ -772,7 +773,8 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
 {
   if (!sendTrajectoryAsync(_trajectory, _times, _move_lifter)) return false;
   int time = std::accumulate(_times.begin(), _times.end(), 0);
-  usleep(time * 1000);
+  usleep(static_cast<int>(time * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
   return true;
 }
 
@@ -780,7 +782,8 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
 bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
 {
   if (!sendTrajectoryAsync(_trajectory, _time_ms, _move_lifter)) return false;
-  usleep(_time_ms * 1000);
+  usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
+  waitInterpolation_();
   return true;
 }
 
@@ -891,8 +894,9 @@ bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_
 
   if (srv.response.status == "success") {
     setLifter(_x/1000.0, _z/1000.0);
-    if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000);
-    else usleep(_time_ms * 1000);
+    if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000 * 0.8) * 1000);
+    else usleep(static_cast<int>(_time_ms * 0.8) * 1000);
+    waitInterpolation_();
     return true;
   }
   return false;
@@ -998,7 +1002,8 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
   if(!sendLifterTrajectoryAsync(_trajectory, _times)) return false;
   else {
     int time = std::accumulate(_times.begin(), _times.end(), 0);
-    usleep(time * 1000);
+    usleep(static_cast<int>(time * 0.8) * 1000);
+    waitInterpolation_();
     return true;
   }
 }
@@ -1008,7 +1013,8 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 {
   if(!sendLifterTrajectoryAsync(_trajectory, _time_ms)) return false;
   else {
-    usleep(_time_ms * 1000);
+    usleep(static_cast<int>(_time_ms * 0.8) * 1000);
+    waitInterpolation_();
     return true;
   }
 }
@@ -1056,6 +1062,35 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
   return sendLifterTrajectoryAsync(_trajectory, times);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
+  usleep(100 * 1000);// to avoid getting wrong controller state;
+  return waitInterpolation(_timeout_ms);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
+  bool check_timeout = false;
+  if(_timeout_ms > 0) check_timeout = true;
+  ros::Duration timeout = ros::Duration(_timeout_ms * 0.001);
+  ros::Time start = ros::Time::now();
+
+
+  while(ros::ok()) {
+    usleep(50 * 1000);// 20Hz
+    ros::spinOnce();
+    if(!in_action_) {
+      ROS_INFO("%s: finished", __FUNCTION__);
+      return true;
+    }
+    if(check_timeout && start + timeout < ros::Time::now()) {
+      ROS_WARN("%s: timeout! %d[ms]", __FUNCTION__, _timeout_ms);
+      break;
+    }
+  }
+  return false;
 }
 
 //////////////////////////////////////////////////
@@ -1906,4 +1941,10 @@ void aero::interface::AeroMoveitInterface::JointStateCallback_(const sensor_msgs
 void aero::interface::AeroMoveitInterface::listenerCallBack_(const std_msgs::String::ConstPtr& _msg)
 {
   detected_speech_ = _msg->data;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::inActionCallback_(const std_msgs::Bool::ConstPtr& _msg)
+{
+  in_action_ = _msg->data;
 }
