@@ -35,6 +35,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
 
+  in_action_listener_ = _nh.subscribe
+    ("/aero_controller/in_action", 1, &aero::interface::AeroMoveitInterface::inActionCallback_, this);
+
   // service clients
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
@@ -110,6 +113,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   detected_speech_ = "";
 
   tracking_mode_flag_ = false;
+
+  in_action_ = true;
 
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
@@ -1059,6 +1064,29 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
 }
 
 //////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
+  bool check_timeout = false;
+  if(_timeout_ms > 0) check_timeout = true;
+  ros::Duration timeout = ros::Duration(_timeout_ms * 0.001);
+  ros::Time start = ros::Time::now();
+
+
+  while(ros::ok()) {
+    usleep(50 * 1000);// 20Hz
+    ros::spinOnce();
+    if(!in_action_) {
+      ROS_INFO("%s: finished", __FUNCTION__);
+      return true;
+    }
+    if(check_timeout && start + timeout < ros::Time::now()) {
+      ROS_WARN("%s: timeout! %d[ms]", __FUNCTION__, _timeout_ms);
+      break;
+    }
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
   //return true;
@@ -1906,4 +1934,10 @@ void aero::interface::AeroMoveitInterface::JointStateCallback_(const sensor_msgs
 void aero::interface::AeroMoveitInterface::listenerCallBack_(const std_msgs::String::ConstPtr& _msg)
 {
   detected_speech_ = _msg->data;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::inActionCallback_(const std_msgs::Bool::ConstPtr& _msg)
+{
+  in_action_ = _msg->data;
 }
