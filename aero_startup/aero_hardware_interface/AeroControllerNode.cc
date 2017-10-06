@@ -221,14 +221,13 @@ void AeroControllerNode::JointTrajectoryThread(
     int k = static_cast<int>(it - _stroke_trajectory.begin());
     // from here, main process for trajectory it
     // any movement faster than 100ms(10cs) will not interpolate = linear
-    if (it->second < 10
+    if (it->second - (it-1)->second < 10
 	|| _interpolation.at(k)->is(aero::interpolation::i_constant)
 	) {
       mtx_upper_.lock();
-      upper_.set_position(it->first, it->second - (it-1)->second + 5);// 5 csec(50[ms]) is to synchronize upper and lower
+      upper_.set_position(it->first, it->second - (it-1)->second + 5 + 1);// 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
       mtx_upper_.unlock();
-      usleep(static_cast<int32_t>((it->second - (it-1)->second) * 10.0 * 1000.0 - 20000.0));
-      usleep(50 * 1000);// to synchronize upper and lower
+      usleep(static_cast<int32_t>((it->second - (it-1)->second)) * 10 * 1000 - 20000);
       continue;
     }
     // find number of splits in this trajectory
@@ -314,7 +313,7 @@ void AeroControllerNode::LowerTrajectoryThread(
     lower_.set_position(it->first, csec_in_frame  + 10);
     mtx_lower_.unlock();
     // 20ms sleep in set_position, subtract
-    usleep(static_cast<int32_t>(csec_in_frame * 10.0 * 1000.0 - 20000.0));
+    usleep(static_cast<int32_t>(csec_in_frame) * 10 * 1000 - 20000);
   }
 
   mtx_lower_thread_.lock();
