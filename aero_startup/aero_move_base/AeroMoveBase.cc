@@ -1,3 +1,5 @@
+/// @author Sasabuchi Kazuhiro, Shintaro Hori, Hiroaki Yaguchi
+
 #include "aero_move_base/AeroMoveBase.hh"
 
 using namespace aero;

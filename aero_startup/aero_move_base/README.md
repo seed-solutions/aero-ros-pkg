@@ -1,0 +1,34 @@
+# aero_move_base
+
+## AeroBaseControllerNode
+
+This node is for Vehicle-type lower body,
+and be automatically added generated_controllers.launch.
+`aero_bringup.launch` will run this.
+
+To use this, put `AeroBaseController.cc` on robot's description directoly
+and define `AeroMoveBase::Init` and `AeroMoveBase::VelocityToWheel`.
+
+Following files are sources of this Node;
+
+- Main.cc
+- AeroBaseController.cc (Auto Generated)
+- AeroMoveBase.{cc,hh}
+
+
+
+## 2D Navigation
+
+### Mapping
+
+`roslaunch aero_startup gmapping.launch`
+
+### Navigation
+
+`roslaunch aero_startup move_base.launch`
+
+### For more information,
+
+please refer the Documentation of the ROS navigation stack.
+
+http://wiki.ros.org/navigation
