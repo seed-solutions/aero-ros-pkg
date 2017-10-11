@@ -57,7 +57,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   send_angle_service_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/aero_controller/send_joints");
 
-  get_spot_ = _nh.serviceClient<aero_startup::GetSpot>
+  get_spot_ = _nh.serviceClient<aero_std::GetSpot>
     ("/get_spot");
 
   check_move_to_ = _nh.serviceClient<nav_msgs::GetPlan>
@@ -1586,7 +1586,7 @@ geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose(std::st
 //////////////////////////////////////////////////
 geometry_msgs::Pose aero::interface::AeroMoveitInterface::getLocationPose(std::string _location)
 {
-  aero_startup::GetSpot gs;
+  aero_std::GetSpot gs;
   gs.request.name = _location;
   get_spot_.call(gs);
   geometry_msgs::Pose pose = gs.response.pose;
@@ -1821,7 +1821,7 @@ bool aero::interface::AeroMoveitInterface::goPosTurnOnly_(double _rad, int _time
   while (ros::ok()) {
     if (ros::Time::now() - now > limit) break;
     geometry_msgs::Pose cur = getCurrentPose();
-    double z_now = 2.0 * acos(cur.orientation.w); 
+    double z_now = 2.0 * acos(cur.orientation.w);
     double z_diff = z_ref - z_now;
     // -M_PI < z_diff < M_PI
     while (z_diff > M_PI) z_diff -= M_PI * 2.0;

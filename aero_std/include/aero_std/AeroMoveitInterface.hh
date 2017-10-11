@@ -30,7 +30,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/SetBool.h>
-#include <aero_startup/GetSpot.h>
+#include <aero_std/GetSpot.h>
 #include <nav_msgs/GetPlan.h>
 namespace aero
 {
@@ -78,7 +78,7 @@ namespace aero
       /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
       /// @param[in] _pose IK target pose
       /// @param[in] _eef_link end effector link name, this link gets closer to _pose
-      /// @param[in] _attempts the number of times IK is attempted 
+      /// @param[in] _attempts the number of times IK is attempted
       /// @return true is solved, false is unsolvable
     public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
       /// @brief solve IK and set result to robot model's angles
@@ -258,7 +258,7 @@ namespace aero
       /// @param[in] _trajectory joints trajectory will be executed
       /// @param[in] _times execution time. the size of times vector need to be equal to the size of trajectory
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
-      /// @return when times.size is not equal to trajectory.size, return false 
+      /// @return when times.size is not equal to trajectory.size, return false
     public: bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
       /// @brief send joints trajectory to real robot
       /// @param[in] _trajectory joints trajectory will be executed
@@ -269,7 +269,7 @@ namespace aero
       /// @param[in] _trajectory joints trajectory will be executed
       /// @param[in] _times execution time. the size of times vector need to be equal to the size of trajectory
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
-      /// @return when times.size is not equal to trajectory.size, return false 
+      /// @return when times.size is not equal to trajectory.size, return false
     public: bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso);
       /// @brief send joints trajectory to real robot
       /// @param[in] _trajectory joints trajectory will be executed
