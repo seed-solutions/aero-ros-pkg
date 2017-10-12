@@ -1,0 +1,13 @@
+EBandPlannerROS:
+  xy_goal_tolerance: 0.03
+  yaw_goal_tolerance: 0.05
+  max_vel_lin: 0.5
+  min_vel_lin: 0.1
+  max_vel_th: 0.5
+  min_vel_th: 0.0
+
+  max_acceleration: 0.5
+  max_translational_acceleration: 0.5
+  max_rotational_acceleration: 1.0
+
+  differential_drive: false

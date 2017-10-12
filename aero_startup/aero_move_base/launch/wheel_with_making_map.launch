@@ -4,10 +4,7 @@
   <!--- Run bringup -->
   <include file="$(find aero_startup)/aero_move_base/launch/wheel_bringup.launch" />
 
-  <!--- Run gmapping -->
-  <include file="$(find aero_startup)/aero_move_base/launch/gmapping.launch" />
-
-  <!--- Run Move Base -->
-  <include file="$(find aero_startup)/aero_move_base/launch/move_base.launch" />
+  <!--- Run making map -->
+  <include file="$(find aero_startup)/aero_move_base/launch/making_map_navigation.launch" />
 
 </launch>

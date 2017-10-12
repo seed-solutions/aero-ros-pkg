@@ -1,3 +1,5 @@
+/// @author Sasabuchi Kazuhiro, Shintaro Hori, Hiroaki Yaguchi
+
 #ifndef AERO_NAVIGATION_AERO_MOVE_BASE_H_
 #define AERO_NAVIGATION_AERO_MOVE_BASE_H_
 

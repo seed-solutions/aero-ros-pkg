@@ -8,12 +8,12 @@ Software License Agreement (BSD)
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 the following conditions are met:
- * Redistributions of source code must retain the above copyright notice, this list of conditions and the
-   following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
-   following disclaimer in the documentation and/or other materials provided with the distribution.
- * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
-   products derived from this software without specific prior written permission.
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the
+following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
+products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WAR-
 RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -24,60 +24,71 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 )ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <launch>
-
+  <arg name="map_file"
+       default="$(find aero_startup)/aero_move_base/maps/map.yaml"/>
   <arg name="no_static_map" default="false"/>
 
   <arg name="base_global_planner" default="navfn/NavfnROS"/>
-  <arg name="base_local_planner" default="dwa_local_planner/DWAPlannerROS"/>
-  <!-- <arg name="base_local_planner" default="base_local_planner/TrajectoryPlannerROS"/> -->
+  <arg name="base_local_planner"
+       default="eband_local_planner/EBandPlannerROS"/>
 
-  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  <!-- <arg name="base_local_planner"
+       default="dwa_local_planner/DWAPlannerROS"/> -->
+  <!-- <arg name="base_local_planner"
+       default="base_local_planner/TrajectoryPlannerROS"/> -->
 
+  <node pkg="move_base" type="move_base" name="move_base"
+        respawn="false" output="screen">
     <param name="base_global_planner" value="$(arg base_global_planner)"/>
-    <param name="base_local_planner" value="$(arg base_local_planner)"/>  
-    <rosparam file="$(find aero_startup)/aero_move_base/maps/map.yaml" command="load"/>
+    <param name="base_local_planner" value="$(arg base_local_planner)"/>
+    <rosparam file="$(arg map_file)" command="load"/>
 
     <!-- observation sources located in costmap_common.yaml -->
-    <rosparam file="$(find aero_startup)/aero_move_base/config/costmap_common.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find aero_startup)/aero_move_base/config/costmap_common.yaml" command="load" ns="local_costmap" />
+    <rosparam
+        file="$(find aero_startup)/aero_move_base/config/costmap_common.yaml"
+        command="load" ns="global_costmap" />
+    <rosparam
+        file="$(find aero_startup)/aero_move_base/config/costmap_common.yaml"
+        command="load" ns="local_costmap" />
 
     <!-- local costmap, needs size -->
-    <rosparam file="$(find aero_startup)/aero_move_base/config/costmap_local.yaml" command="load" ns="local_costmap" />
-    <param name="local_costmap/width" value="5.0"/>
-    <param name="local_costmap/height" value="5.0"/>
+    <rosparam
+        file="$(find aero_startup)/aero_move_base/config/costmap_local.yaml"
+        command="load" ns="local_costmap" />
+    <param name="local_costmap/width" value="2.5"/>
+    <param name="local_costmap/height" value="2.5"/>
 
     <!-- static global costmap, static map provides size -->
-    <rosparam file="$(find aero_startup)/aero_move_base/config/costmap_global_static.yaml" command="load" ns="global_costmap" unless="$(arg no_static_map)"/>
-    
+    <rosparam
+        file="$(find aero_startup)/aero_move_base/config/costmap_global_static.yaml"
+        command="load" ns="global_costmap" unless="$(arg no_static_map)"/>
+
     <!-- global costmap with laser, for odom_navigation_demo -->
-    <rosparam file="$(find aero_startup)/aero_move_base/config/costmap_global_laser.yaml" command="load" ns="global_costmap" if="$(arg no_static_map)"/>
+    <rosparam
+        file="$(find aero_startup)/aero_move_base/config/costmap_global_laser.yaml"
+        command="load" ns="global_costmap" if="$(arg no_static_map)"/>
 
-    <param name="global_costmap/width" value="50.0" if="$(arg no_static_map)"/> 
-    <param name="global_costmap/height" value="50.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/width" value="10.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/height" value="10.0" if="$(arg no_static_map)"/>
 
-	<!--
-	<param name="/TrajectoryPlannerROS/max_vel_theta" value="0.4"/>
-	<param name="/TrajectoryPlannerROS/max_vel_x" value="0.1"/>
-	-->
+	  <!--
+	      <param name="/TrajectoryPlannerROS/max_vel_theta" value="0.4"/>
+	      <param name="/TrajectoryPlannerROS/max_vel_x" value="0.1"/>
+	  -->
 
     <!-- For recovery Mode -->
-	<param name="/TrajectoryPlannerROS/max_rotational_vel" value="0.2"/>
+	  <param name="/TrajectoryPlannerROS/max_rotational_vel" value="0.5"/>
 
     <!-- Moving Parameters -->
-	<param name="/DWAPlannerROS/max_vel_x" value="0.2"/>
-	<param name="/DWAPlannerROS/min_vel_x" value="-0.2"/>
-	<param name="/DWAPlannerROS/max_vel_y" value="0.2"/>
-	<param name="/DWAPlannerROS/min_vel_y" value="-0.2"/>
-	<param name="/DWAPlannerROS/max_trnas_vel" value="0.2"/>
-	<param name="/DWAPlannerROS/min_trans_vel" value="-0.2"/>
-	<param name="/DWAPlannerROS/max_rot_vel" value="0.2"/>
+    <!-- EBandPlanner -->
+    <rosparam
+        file="$(find aero_startup)/aero_move_base/config/EBandPlanner.yaml"
+        command="load" />
 
-	<param name="/DWAPlannerROS/acc_lim_theta" value="1.0"/>
-	<param name="/DWAPlannerROS/acc_lim_x" value="0.5"/>
-	<param name="/DWAPlannerROS/acc_lim_y" value="0.5"/>
-
-	<param name="/DWAPlannerROS/yaw_goal_tolerance" value="0.05"/>
-	<param name="/DWAPlannerROS/xy_goal_tolerance" value="0.03"/>
+    <!-- DWAPlanner -->
+    <!-- <rosparam -->
+    <!--     file="$(find aero_startup)/aero_move_base/config/DWAPlanner.yaml" -->
+    <!--     command="load" /> -->
 
   </node>
 
