@@ -15,17 +15,48 @@ Following files are sources of this Node;
 - AeroBaseController.cc (Auto Generated)
 - AeroMoveBase.{cc,hh}
 
+## Joystick Teleoperation
+
+```
+roslaunch wheel_bringup.launch
+```
 
 
-## 2D Navigation
+## Navigation
 
 ### Mapping
 
-`roslaunch aero_startup gmapping.launch`
+```
+roslaunch wheel_with_making_map.launch
+```
+
+will launch `wheel_bringup` and mapping nodes.
+
+For running mapping nodes on external PCs,
+launch `wheel_bringup.launch` on the Robot control PC first,
+then
+
+```
+roslaunch making_map_navigation.launch
+```
+
 
 ### Navigation
 
-`roslaunch aero_startup move_base.launch`
+```
+roslaunch wheel_with_static_map.launch
+```
+
+will launch `wheel_bringup` and navigation nodes.
+
+For running mapping nodes on external PCs,
+launch `wheel_bringup.launch` on the Robot control PC first,
+then
+
+```
+roslaunch static_map_navigation.launch
+```
+
 
 ### For more information,
 
