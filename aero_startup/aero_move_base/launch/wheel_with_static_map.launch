@@ -6,7 +6,7 @@
 
   <!-- Run map navigation -->
   <arg name="map_file" default="$(find aero_startup)/aero_move_base/maps/map.yaml"/>
-  <include file="$(find aero_startup)/aero_move_base/launch/wheel_bringup.launch">
+  <include file="$(find aero_startup)/aero_move_base/launch/static_map_navigation.launch">
     <arg name="map_file" value="$(arg map_file)" />
   </include>
 
