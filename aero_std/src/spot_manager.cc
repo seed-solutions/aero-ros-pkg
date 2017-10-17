@@ -6,24 +6,24 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <aero_startup/SaveSpot.h>
-#include <aero_startup/GetSpot.h>
-#include <aero_startup/DeleteSpot.h>
-#include <aero_startup/GetSpots.h>
+#include <aero_std/SaveSpot.h>
+#include <aero_std/GetSpot.h>
+#include <aero_std/DeleteSpot.h>
+#include <aero_std/GetSpots.h>
 
 class SpotManager{
 public:
   SpotManager(ros::NodeHandle _nh, std::string _file);
   ~SpotManager();
 
-  bool SaveSpot(aero_startup::SaveSpot::Request &req,
-		aero_startup::SaveSpot::Response &res);
-  bool GetSpot(aero_startup::GetSpot::Request &req,
-	       aero_startup::GetSpot::Response &res);
-  bool DeleteSpot(aero_startup::DeleteSpot::Request &req,
-	       aero_startup::DeleteSpot::Response &res);
-  bool GetSpots(aero_startup::GetSpots::Request &req,
-                aero_startup::GetSpots::Response &res);
+  bool SaveSpot(aero_std::SaveSpot::Request &req,
+		aero_std::SaveSpot::Response &res);
+  bool GetSpot(aero_std::GetSpot::Request &req,
+	       aero_std::GetSpot::Response &res);
+  bool DeleteSpot(aero_std::DeleteSpot::Request &req,
+	       aero_std::DeleteSpot::Response &res);
+  bool GetSpots(aero_std::GetSpots::Request &req,
+                aero_std::GetSpots::Response &res);
 
 private:
   int GetIndex_(std::string _name);
@@ -50,8 +50,8 @@ SpotManager::SpotManager(ros::NodeHandle _nh, std::string _file)
 
 SpotManager::~SpotManager(){};
 
-bool SpotManager::SaveSpot(aero_startup::SaveSpot::Request &req,
-			   aero_startup::SaveSpot::Response &res)
+bool SpotManager::SaveSpot(aero_std::SaveSpot::Request &req,
+			   aero_std::SaveSpot::Response &res)
 {
   tf::StampedTransform tr;
   try{
@@ -98,8 +98,8 @@ bool SpotManager::SaveSpot(aero_startup::SaveSpot::Request &req,
  return true;
 }
 
-bool SpotManager::GetSpot(aero_startup::GetSpot::Request &req,
-			  aero_startup::GetSpot::Response &res)
+bool SpotManager::GetSpot(aero_std::GetSpot::Request &req,
+			  aero_std::GetSpot::Response &res)
 {
   YAML::Node config = YAML::LoadFile(file_);
   int index = GetIndex_(req.name);
@@ -123,8 +123,8 @@ bool SpotManager::GetSpot(aero_startup::GetSpot::Request &req,
   return true;
 }
 
-bool SpotManager::DeleteSpot(aero_startup::DeleteSpot::Request &req,
-			  aero_startup::DeleteSpot::Response &res)
+bool SpotManager::DeleteSpot(aero_std::DeleteSpot::Request &req,
+			  aero_std::DeleteSpot::Response &res)
 {
   YAML::Node config = YAML::LoadFile(file_);
   int index = GetIndex_(req.name);
@@ -152,8 +152,8 @@ bool SpotManager::DeleteSpot(aero_startup::DeleteSpot::Request &req,
   return true;
 }
 
-bool SpotManager::GetSpots(aero_startup::GetSpots::Request &req,
-                           aero_startup::GetSpots::Response &res)
+bool SpotManager::GetSpots(aero_std::GetSpots::Request &req,
+                           aero_std::GetSpots::Response &res)
 {
   std::vector<std::string> list = GetList_();
 
