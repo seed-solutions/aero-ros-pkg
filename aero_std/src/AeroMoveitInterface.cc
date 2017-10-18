@@ -185,7 +185,6 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
   double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
     + lifter_thigh_link_ * (cos(hip) - 1.0);
   setLifter(x, z);
-  ROS_INFO("%s: x:%f z:%f",__FUNCTION__, x, z);
 
   // update necks
   std::vector<std::string> neck_joints = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
