@@ -1,16 +1,3 @@
-/*
-  @define ShoulderPitchInvTable from  shoulder-p offset 10.635
-  @define ShoulderRollInvTable from  shoulder-r offset 0
-  @define ElbowPitchInvTable from  elbow-p offset -42.426
-  @define WristPitchInvTable from  wrist-p offset -9.631
-  @define WristRollInvTable from  wrist-r offset 5.632
-  @define WaistPitchInvTable from  waist-p offset -5.335
-  @define WaistRollInvTable from  waist-r offset -5.794
-  @define NeckPitchInvTable from  neck-p offset -3.124
-  @define NeckRollInvTable from  neck-r offset -7.38
-  @define LegInvTable from lamia offset 0
- */
-
 #ifndef AERO_COMMON_STROKE_TO_ANGLE_H_
 #define AERO_COMMON_STROKE_TO_ANGLE_H_
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# prerequisites : {my_robot}/robot.cfg
 # prerequisites : {my_robot}/headers/Angle2Stroke.hh
 # prerequisites : /tmp/aero_ros_order_upper < create_urdf
 # prerequisites : /tmp/aero_ros_order_lower < create_urdf
@@ -11,6 +12,7 @@ dir=$1
 upper_file=$2
 lower_file=$3
 
+robot_file="$(rospack find aero_description)/${dir}/robot.cfg"
 input_file="$(rospack find aero_description)/${dir}/headers/Angle2Stroke.hh"
 output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Angle2Stroke.hh"
 output_source="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Angle2Stroke.cc"
@@ -25,7 +27,7 @@ replace_meta_in_output_file() {
 	sed -i "0,/meta =/s//_strokes[${joint_number}] =/" $output_file
     done
 
-    i=0    
+    i=0
 
     while read line
     do
@@ -46,17 +48,10 @@ create_table_func_from_csv() {
     output_file=$3
     function_name=$4
     template_file=$5
+    parts_dir=$6
 
     # parse joint_name
-    file=''
-    csv=$(echo "$joint_name" | awk -F/ '{print $2}')
-    if [[ $csv == '' ]]
-    then
-	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name}.csv"
-    else
-	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
-	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
-    fi
+    file="${parts_dir}/csv/${joint_name}.csv"
 
     # load csv
     code=''
@@ -114,17 +109,10 @@ create_rp_table_func_from_csv() {
     offset_p=$5
     offset_r=$6
     template_file=$7
+    parts_dir=$8
 
     # parse joint_name_a
-    file=''
-    csv=$(echo "$joint_name_a" | awk -F/ '{print $2}')
-    if [[ $csv == '' ]]
-    then
-	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name_a}.csv"
-    else
-	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
-	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
-    fi
+    file="${parts_dir}/csv/${joint_name_a}.csv"
 
     # load roll csv
     code1=''
@@ -141,15 +129,7 @@ create_rp_table_func_from_csv() {
     code1=${code1::-2}
 
     # parse joint_name_b
-    file=''
-    csv=$(echo "$joint_name_b" | awk -F/ '{print $2}')
-    if [[ $csv == '' ]]
-    then
-	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name_b}.csv"
-    else
-	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
-	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
-    fi
+    file="${parts_dir}/csv/${joint_name_b}.csv"
 
     # load pitch csv
     code2=''
@@ -193,27 +173,60 @@ create_rp_table_func_from_csv() {
 cp $input_file $output_file
 replace_meta_in_output_file $output_file
 
-total_tables=$(grep -o '@define' $output_file | wc -l)
-for (( table_number=1; table_number<=${total_tables}; table_number++ ))
-do
-    line=$(awk "/@define/{i++}i==${table_number}{print; exit}" $output_file)
-    table_type=$(echo "${line}" | awk '{print $7}')
-    func=$(echo "${line}" | awk '{print $2}')
-    if [[ $table_type == '' ]]
-    then
-	csv=$(echo "${line}" | awk '{print $4}')
-	offset=$(echo "${line}" | awk '{print $6}')
-	create_table_func_from_csv $csv $offset $output_file $func $template_file
-    else
-	csv1=$(echo "${line}" | awk '{print $4}')
-	csv2=$(echo "${line}" | awk '{print $5}')
-	offset_p=$(echo "${line}" | awk '{print $7}')
-	offset_r=$(echo "${line}" | awk '{print $9}')
-	create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $offset_p $offset_r $template_file
-    fi
-done
+read_csv_config() { 
+    csv_file=$1
+    parts_dir=$2
+    total_tables=$(wc -l $csv_file | awk '{print $1}')
+    for (( table_number=1; table_number<=${total_tables}; table_number++ ))
+    do
+        line=$(sed -n "${table_number} p" $csv_file)
+        table_type=$(echo "${line}" | awk '{print $6}')
+        func=$(echo "${line}" | awk '{print $1}')
+        if [[ $table_type == '' ]]
+        then
+	    csv=$(echo "${line}" | awk '{print $3}')
+	    offset=$(echo "${line}" | awk '{print $5}')
+	    create_table_func_from_csv $csv $offset $output_file $func $template_file $parts_dir
+        else
+	    csv1=$(echo "${line}" | awk '{print $3}')
+	    csv2=$(echo "${line}" | awk '{print $4}')
+	    offset_p=$(echo "${line}" | awk '{print $6}')
+	    offset_r=$(echo "${line}" | awk '{print $8}')
+	    create_rp_table_func_from_csv $csv1 $csv2 $output_file $func $offset_p $offset_r $template_file $parts_dir
+        fi
+    done
+}
 
-sed -i "1,$((${total_tables} + 2))d" $output_file
+# get required csv files
+
+while read line
+do
+    proto=$(echo $line | awk '{print $1}')
+    if [[ $proto == "#" ]] # comment out
+    then
+        continue
+    elif [[ $proto == ":" ]] # body name
+    then
+        continue
+    fi
+
+    shop_dir=$(echo $line | awk '{print $1}' | cut -d/ -f1)
+    parts_dir=$(echo $line | awk '{print $1}' | awk -F/ '{print $NF}')
+    if [[ $shop_dir == $parts_dir ]]
+    then # use relative path
+        parts_dir="$(rospack find aero_description)/../aero_shop/${parts_dir}"
+    else # does not work with some OS
+        parts_dir="$(locate ${shop_dir} | grep /${shop_dir}$)/${parts_dir}"
+    fi
+    # check if parts has any csv files
+    if [[ $(ls $parts_dir | grep csv$) == "" ]]
+    then
+        continue
+    fi
+
+    csv_file="${parts_dir}/csv/Angle2Stroke.cfg"
+    read_csv_config $csv_file $parts_dir
+done < $robot_file
 
 # write warnings
 

@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# prerequisites : {my_robot}/controllers.cfg
+# version v2.01
 
-# generates : copied files listed in {my_robot}/controllers.cfg
+# prerequisites : {my_robot}/robot.cfg
+
+# generates : controllers in {my_shop}/{my_parts}/controller
 # modifies  : aero_startup/CMakeLists.txt
 
 ## @brief insert string into file
@@ -18,9 +20,8 @@ tab6=$'      '
 
 ## FILES
 robot=$1
-input_file="$(rospack find aero_description)/${robot}/controllers.cfg"
+input_file="$(rospack find aero_description)/${robot}/robot.cfg"
 cmake_file="$(rospack find aero_description)/../aero_startup/CMakeLists.txt"
-# launch_file="$(rospack find aero_description)/../aero_startup/aero_bringup.launch"
 launch_file="$(rospack find aero_description)/../aero_startup/generated_controllers.launch"
 
 # create CMakeLists.txt if it does not exist
@@ -73,100 +74,122 @@ delete_dependencies_from $cmake_file
 
 ## GENERATE
 
+# default controllers (always created as of v2.01)
+
+# add aero_controller_node
+write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
+write_to_line=$(($write_to_line + 1))
+echof "add_executable(aero_controller_node" ${write_to_line} $cmake_file
+write_to_line=$(($write_to_line + 1))
+# enumerate *.cc files in aero_startup into CMakeLists.txt
+dir="$(rospack find aero_description)/../aero_startup/aero_hardware_interface"
+cc_files=$(find $dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
+num_of_cc_files=$(find $dir -name "*.cc" | wc -l)
+for (( num=1; num<=${num_of_cc_files}; num++ ))
+do
+    file=$(echo $cc_files | awk '{print $'$num'}')
+    echof "${tab2}aero_hardware_interface/${file}" ${write_to_line} $cmake_file
+    write_to_line=$(($write_to_line + 1))
+done
+echof "${tab2})" ${write_to_line} $cmake_file
+write_to_line=$(($write_to_line + 1))
+echof "target_link_libraries(aero_controller_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" ${write_to_line} $cmake_file
+write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
+write_to_line=$(($write_to_line + 1))
+echof "add_dependencies(aero_controller_node \${PROJECT_NAME}_gencpp)" ${write_to_line} $cmake_file
+
+# add aero_joint_state_publisher
+write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
+write_to_line=$(($write_to_line + 1))
+echof "add_executable(aero_joint_state_publisher" ${write_to_line} $cmake_file
+write_to_line=$(($write_to_line + 1))
+echof "target_link_libraries(aero_joint_state_publisher \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" ${write_to_line} $cmake_file
+echof "${tab2}aero_controller_manager/AeroJointStatePublisher.cc)" ${write_to_line} $cmake_file
+write_to_line=$(($write_to_line + 1))
+
 # read from $input file
 while read line
 do
-    header=$(echo $line | cut -d ':' -f1)
-    proto=$(echo $header | awk '{print $1}')
+    proto=$(echo $line | awk '{print $1}')
     if [[ $proto == "#" ]] # comment out
     then
         continue
-    fi
-    if [[ $proto == "default" ]] # default controllers
+    elif [[ $proto == ":" ]] # body name
     then
-	# add aero_controller_node
-	write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
-	write_to_line=$(($write_to_line + 1))
-	echof "add_executable(aero_controller_node" ${write_to_line} $cmake_file
-	write_to_line=$(($write_to_line + 1))
-	# enumerate *.cc files in aero_startup into CMakeLists.txt
-	dir="$(rospack find aero_description)/../aero_startup/aero_hardware_interface"
-	cc_files=$(find $dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
-	num_of_cc_files=$(find $dir -name "*.cc" | wc -l)
-	for (( num=1; num<=${num_of_cc_files}; num++ ))
-	do
-	    file=$(echo $cc_files | awk '{print $'$num'}')
-	    echof "${tab2}aero_hardware_interface/${file}" ${write_to_line} $cmake_file
+        continue
+    fi
+
+    # else (not '#' or body name)
+    executable_dir=$(echo $line | awk '{print $3}')
+    if [[ $executable_dir == "" ]]
+    then
+        executable_dir="aero_controller_manager"
+    fi
+    shop_dir=$(echo $line | awk '{print $1}' | cut -d/ -f1)
+    parts_dir=$(echo $line | awk '{print $1}' | awk -F/ '{print $NF}')
+    if [[ $shop_dir == $parts_dir ]]
+    then # use relative path
+        parts_dir="$(rospack find aero_description)/../aero_shop/${parts_dir}"
+    else # does not work with some OS
+        parts_dir="$(locate ${shop_dir} | grep /${shop_dir}$)/${parts_dir}"
+    fi
+    # check if parts has any controller
+    if [[ $(ls $parts_dir | grep controller$) == "" ]]
+    then
+        continue
+    fi
+
+    controller_dir="${parts_dir}/controller"
+    executables=$(ls $controller_dir)
+    num_of_executables=$(ls $controller_dir | wc -l)
+    for (( i=1 ; i<=${num_of_executables}; i++ ))
+    do
+        source=$(echo $executables | awk '{print $i}')
+        executable_name=$(echo $source | cut -d. -f1 | awk '{print tolower($0)}')
+        copy_from_file="${controller_dir}/${source}"
+        copy_to_dir="$(rospack find aero_description)/../aero_startup/${executable_dir}"
+        # copy controller file
+        output_file="${copy_to_dir}/${source}"
+        cp $copy_from_file $output_file
+        sed -i "1i\/*" $output_file
+        sed -i "2i\ * This file auto-generated from script. Do not Edit!" $output_file
+        sed -i "3i\ * Original : aero_description/${robot}/controllers/${source}" $output_file
+        sed -i "4i\*/" $output_file
+
+        # add executable to CMakeLists.txt
+        write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
+        write_to_line=$(($write_to_line + 1))
+        echof "add_executable(${executable_name}_node" ${write_to_line} $cmake_file
+        write_to_line=$(($write_to_line + 1))
+        includes_main=$(find $copy_to_dir -name Main.cc 2>/dev/null)
+        if [[ $includes_main != "" ]]
+        then
+	    # enumerate *.cc files in aero_startup into CMakeLists.txt
+	    cc_files=$(find $copy_to_dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
+	    num_of_cc_files=$(find $copy_to_dir -name "*.cc" | wc -l)
+	    for (( num=1; num<=${num_of_cc_files}; num++ ))
+	    do
+	        file=$(echo $cc_files | awk '{print $'$num'}')
+	        echof "${tab2}${executable_dir}/${file}" ${write_to_line} $cmake_file
+	        write_to_line=$(($write_to_line + 1))
+	    done
+	    echof "${tab2})" ${write_to_line} $cmake_file
 	    write_to_line=$(($write_to_line + 1))
-	done
-	echof "${tab2})" ${write_to_line} $cmake_file
-	write_to_line=$(($write_to_line + 1))
-	echof "target_link_libraries(aero_controller_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" ${write_to_line} $cmake_file
+        else
+	    echof "${tab2}${executable_dir}/${source})" ${write_to_line} $cmake_file
+	    write_to_line=$(($write_to_line + 1))
+        fi
+        echof "target_link_libraries(${executable_name}_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" ${write_to_line} $cmake_file
+
+        # add dependencies to CMakeLists.txt
         write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
         write_to_line=$(($write_to_line + 1))
-        echof "add_dependencies(aero_controller_node \${PROJECT_NAME}_gencpp)" ${write_to_line} $cmake_file
+        echof "add_dependencies(${executable_name}_node \${PROJECT_NAME}_gencpp)" ${write_to_line} $cmake_file
 
-	# add aero_joint_state_publisher
-	write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
-	write_to_line=$(($write_to_line + 1))
-	echof "add_executable(aero_joint_state_publisher" ${write_to_line} $cmake_file
-	write_to_line=$(($write_to_line + 1))
-	echof "target_link_libraries(aero_joint_state_publisher \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" ${write_to_line} $cmake_file
-	echof "${tab2}aero_controller_manager/AeroJointStatePublisher.cc)" ${write_to_line} $cmake_file
-	write_to_line=$(($write_to_line + 1))
-	continue
-    fi
-
-    # else (not '#' or "default")
-    executable_name=$(echo $header | awk '{print $2}')
-    body=$(echo $line | cut -d ':' -f2)
-    reference=$(echo $body | awk '{print $1}')
-    executable_dir=$(echo $body | awk '{print $3}')
-    robot=$(echo $reference | cut -d '/' -f1)
-    source=$(echo $reference | cut -d '/' -f2)
-    copy_from_file="$(rospack find aero_description)/${robot}/controllers/${source}"
-    copy_to_dir="$(rospack find aero_description)/../aero_startup/${executable_dir}"
-    # copy controller file
-    output_file="${copy_to_dir}/${source}"
-    cp $copy_from_file $output_file
-    sed -i "1i\/*" $output_file
-    sed -i "2i\ * This file auto-generated from script. Do not Edit!" $output_file
-    sed -i "3i\ * Original : aero_description/${robot}/controllers/${source}" $output_file
-    sed -i "4i\*/" $output_file
-
-    # add executable to CMakeLists.txt
-    write_to_line=$(grep -n -m 1 ">>> add controllers" $cmake_file | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    echof "add_executable(aero_${executable_name}_controller_node" ${write_to_line} $cmake_file
-    write_to_line=$(($write_to_line + 1))
-    includes_main=$(find $copy_to_dir -name Main.cc 2>/dev/null)
-    if [[ $includes_main != "" ]]
-    then
-	# enumerate *.cc files in aero_startup into CMakeLists.txt
-	cc_files=$(find $copy_to_dir -name "*.cc" | xargs -0 -I{} echo "{}" | awk -F/ '{print $NF}' | tr '\n' ' ')
-	num_of_cc_files=$(find $copy_to_dir -name "*.cc" | wc -l)
-	for (( num=1; num<=${num_of_cc_files}; num++ ))
-	do
-	    file=$(echo $cc_files | awk '{print $'$num'}')
-	    echof "${tab2}${executable_dir}/${file}" ${write_to_line} $cmake_file
-	    write_to_line=$(($write_to_line + 1))
-	done
-	echof "${tab2})" ${write_to_line} $cmake_file
-	write_to_line=$(($write_to_line + 1))
-    else
-	echof "${tab2}${executable_dir}/${source})" ${write_to_line} $cmake_file
-	write_to_line=$(($write_to_line + 1))
-    fi
-    echof "target_link_libraries(aero_${executable_name}_controller_node \${catkin_LIBRARIES} \${Boost_LIBRARIES})\n" ${write_to_line} $cmake_file
-
-    # add dependencies to CMakeLists.txt
-    write_to_line=$(grep -n -m 1 ">>> add dependencies" $cmake_file | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    echof "add_dependencies(aero_${executable_name}_controller_node \${PROJECT_NAME}_gencpp)" ${write_to_line} $cmake_file
-
-    # add to launch
-    write_to_line=$(grep -n -m 1 ">>> add controllers" $launch_file | cut -d ':' -f1)
-    write_to_line=$(($write_to_line + 1))
-    echof "${tab2}<node name=\"aero_${executable_name}_controller_node\" pkg=\"aero_startup\"\n${tab2}${tab6}type=\"aero_${executable_name}_controller_node\" output=\"screen\"/>" ${write_to_line} $launch_file
+        # add to launch
+        write_to_line=$(grep -n -m 1 ">>> add controllers" $launch_file | cut -d ':' -f1)
+        write_to_line=$(($write_to_line + 1))
+        echof "${tab2}<node name=\"${executable_name}_node\" pkg=\"aero_startup\"\n${tab2}${tab6}type=\"${executable_name}_node\" output=\"screen\"/>" ${write_to_line} $launch_file
+    done
 
 done < $input_file
