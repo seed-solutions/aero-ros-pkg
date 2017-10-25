@@ -9,7 +9,7 @@ using namespace vision;
 ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh)
   : nh_(_nh)
 {
-  marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
   camera_relative_position_ = Eigen::Vector3d(0.0, 0.0, 0.0);
   camera_relative_orientation_ = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0);
 }
@@ -23,7 +23,7 @@ ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitI
 {
   interface_ = _interface;
 
-  marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
   camera_relative_position_ = Eigen::Vector3d(0.0, 0.0, 0.0);
   camera_relative_orientation_ = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0);
 }
@@ -38,12 +38,15 @@ ObjectFeatures::~ObjectFeatures()
 ///        to in world coords (/base_link)
 ///        This function requires AeroMoveitInterface
 /// @param _pos position in camera coords
+/// @param _update_model if true, update the robot model
 /// @return position in world coords
-Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
+Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos, bool _update_model)
 {
 
-  interface_->setRobotStateToCurrentState();
-  interface_->updateLinkTransforms();
+  if(_update_model) {
+    interface_->setRobotStateToCurrentState();
+    interface_->updateLinkTransforms();
+  }
   Eigen::Vector3d p_pos = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).translation();
   Eigen::Matrix3d mat = interface_->kinematic_state->getGlobalLinkTransform(camera_parent_link_).rotation();
   Eigen::Quaterniond p_qua(mat);
@@ -56,9 +59,9 @@ Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3d _pos)
 //////////////////////////////////////////////////
 /// @brief convert 3d position from in camera coords
 ///        to in world coords (/base_link)
-Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3f _pos)
+Eigen::Vector3d ObjectFeatures::convertWorld(Eigen::Vector3f _pos, bool _update_model)
 {
-  return convertWorld(Eigen::Vector3d(_pos.x(), _pos.y(), _pos.z()));
+  return convertWorld(Eigen::Vector3d(_pos.x(), _pos.y(), _pos.z()), _update_model);
 }
 
 //////////////////////////////////////////////////
