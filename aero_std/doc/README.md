@@ -1,7 +1,7 @@
 # aero_std's doc
 - Author: Shintaro Hori
 
-## Dexcription
+## Description
 you can make aero_std's document from doxygen.
 
 ## How to make
