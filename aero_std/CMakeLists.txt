@@ -73,6 +73,7 @@ add_library(aero_moveit_interface
   src/AeroMoveitInterface.cc
 )
 target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
+add_dependencies(aero_moveit_interface ${PROJECT_NAME}_gencpp)
 
 add_executable(spot_manager src/spot_manager.cc)
 target_link_libraries(spot_manager ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
