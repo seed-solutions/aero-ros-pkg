@@ -210,13 +210,15 @@ do
         continue
     fi
 
+    # shop_dir: aero_shop or your pkg path
+    # parts_dir: this must be directry under the ${shop_dir}
     shop_dir=$(echo $line | awk '{print $1}' | cut -d/ -f1)
     parts_dir=$(echo $line | awk '{print $1}' | awk -F/ '{print $NF}')
-    if [[ $shop_dir == $parts_dir ]]
+    if [[ $shop_dir == "aero_shop" ]]
     then # use relative path
         parts_dir="$(rospack find aero_description)/../aero_shop/${parts_dir}"
-    else # does not work with some OS
-        parts_dir="$(locate ${shop_dir} | grep /${shop_dir}$)/${parts_dir}"
+    else
+        parts_dir=$(rospack find ${shop_dir})/${parts_dir}
     fi
     # check if parts has any csv files
     if [[ $(ls $parts_dir | grep csv$) == "" ]]

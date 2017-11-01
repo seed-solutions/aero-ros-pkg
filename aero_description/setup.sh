@@ -24,6 +24,13 @@ fi
 pkg=$(echo $dir | cut -d/ -f1)
 dir=$(echo $dir | cut -d/ -f2)
 
+if [[ -z "${dir}" ]]; then
+    # compensate args
+    # from: ./setup.sh robot_dir/
+    # to  : ./setup.sh robot_dir
+    dir=${pkg}
+fi
+
 if [ $dir != $pkg ]
 then
     ln -s $(rospack find $pkg)/$dir .
