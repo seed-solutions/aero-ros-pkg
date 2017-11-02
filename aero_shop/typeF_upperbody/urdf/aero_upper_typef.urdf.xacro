@@ -422,7 +422,8 @@
     <child  link="hip_sphere_link"/>
     <origin xyz="0 0 0.010" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -120 to 120 degrees-->
+    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.9" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_y_joint_trans" >
@@ -438,7 +439,8 @@
     <child  link="hip_center"/>
     <origin xyz="0 0 0.1355" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="0" upper="0.4014" effort="100" velocity="0.5" />
+    <!-- from -5 to 30 degrees-->
+    <limit lower="-0.0872" upper="0.5235" effort="100" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_p_joint_trans" >
@@ -454,7 +456,8 @@
     <child  link="body_link"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.5" />
+    <!-- from -1 to 1 degrees-->
+    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_r_joint_trans" >
@@ -470,7 +473,8 @@
     <child  link="l_shoulder_link"/>
     <origin xyz="-0.01815 0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 -0.173648"/>
-    <limit lower="-1.50" upper="0" effort="100" velocity="0.5" />
+    <!-- from -88 to 15 degrees-->
+    <limit lower="-1.535" upper="0.261" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_p_joint_trans" >
@@ -486,7 +490,8 @@
     <child  link="l_shoulder_center"/>
     <origin xyz="0 0.05978 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from 0 to 90 degrees-->
+    <limit lower="0" upper="1.5707" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_r_joint_trans" >
@@ -502,7 +507,8 @@
     <child  link="l_upperarm_link"/>
     <origin xyz="0 -0.010 -0.127" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="0.785398" effort="100" velocity="0.5" />
+    <!-- from -180 to 45 degrees-->
+    <limit lower="-1.5707" upper="0.785398" effort="100" velocity="3.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_y_joint_trans" >
@@ -518,7 +524,8 @@
     <child  link="l_elbow_link"/>
     <origin xyz="0.035 0 -0.1625" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
+    <!-- from -140 to 0 degrees-->
+    <limit lower="-2.44246" upper="0" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_elbow_joint_trans" >
@@ -534,7 +541,8 @@
     <child  link="l_forearm_link"/>
     <origin xyz="-0.035 0 -0.070" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -180 to 180 degrees-->
+    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="5.6" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_y_joint_trans" >
@@ -550,7 +558,8 @@
     <child  link="l_wrist_center"/>
     <origin xyz="0 0 -0.1955" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-0.15" upper="0.15" effort="100" velocity="0.5" />
+    <!-- from -9 to 9 degrees-->
+    <limit lower="-0.15" upper="0.15" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_p_joint_trans" >
@@ -566,7 +575,8 @@
     <child  link="${l_hand_link}"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.698132" upper="0.698132" effort="100" velocity="0.5" />
+    <!-- from -75 to 40 degrees-->
+    <limit lower="-1.309" upper="-0.698132" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_r_joint_trans" >
@@ -631,7 +641,8 @@
     <child  link="r_shoulder_link"/>
     <origin xyz="-0.01815 -0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 0.173648"/>
-    <limit lower="-1.50" upper="0" effort="100" velocity="0.5" />
+    <!-- from -15 to 88 degrees-->
+    <limit lower="-0.261" upper="-1.535" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_p_joint_trans" >
@@ -647,7 +658,8 @@
     <child  link="r_shoulder_center"/>
     <origin xyz="0 -0.059778 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-1.5707" upper="0" effort="100" velocity="0.5" />
+    <!-- from -90 to 0 degrees-->
+    <limit lower="-1.5707" upper="0" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_r_joint_trans" >
@@ -663,7 +675,8 @@
     <child  link="r_upperarm_link"/>
     <origin xyz="0 0.010 -0.127" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-0.785398" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -45 to 180 degrees-->
+    <limit lower="-0.785398" upper="1.5707" effort="100" velocity="3.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_y_joint_trans" >
@@ -679,7 +692,8 @@
     <child  link="r_elbow_link"/>
     <origin xyz="0.035 0 -0.1625" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
+    <!-- from 0 to 140 degrees-->
+    <limit lower="0" upper="2.44246" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_elbow_joint_trans" >
@@ -695,7 +709,8 @@
     <child  link="r_forearm_link"/>
     <origin xyz="-0.035 0 -0.070" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -180 to 180 degrees-->
+    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="5.6" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_y_joint_trans" >
@@ -711,7 +726,8 @@
     <child  link="r_wrist_center"/>
     <origin xyz="0 0 -0.1955" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-0.15" upper="0.15" effort="100" velocity="0.5" />
+    <!-- from -9 to 9 degrees-->
+    <limit lower="-0.15" upper="0.15" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_p_joint_trans" >
@@ -727,7 +743,8 @@
     <child  link="${r_hand_link}"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.698132" upper="0.698132" effort="100" velocity="0.5" />
+    <!-- from -40 to 75 degrees-->
+    <limit lower="-0.698132" upper="1.309" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_r_joint_trans" >
