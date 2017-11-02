@@ -16,8 +16,8 @@
        xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
-  <xacro:include filename="$(find aero_description)/urdf/typeB_lifter/lifter.urdf.xacro" />
-  <xacro:include filename="$(find aero_description)/urdf/typeB_lifter/virtual_lifter.urdf.xacro" />
+  <xacro:include filename="$(find aero_description)/urdf/typeC_lifter/lifter.urdf.xacro" />
+  <xacro:include filename="$(find aero_description)/urdf/typeC_lifter/virtual_lifter.urdf.xacro" />
   <xacro:include filename="$(find aero_description)/urdf/typeD_wheel/wheels.urdf.xacro" />
   
 
