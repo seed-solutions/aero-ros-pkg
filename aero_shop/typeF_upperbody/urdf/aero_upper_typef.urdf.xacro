@@ -423,7 +423,7 @@
     <origin xyz="0 0 0.010" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <!-- from -120 to 120 degrees-->
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.9" />
+    <limit lower="-2.0" upper="2.0" effort="100" velocity="0.9" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_y_joint_trans" >
