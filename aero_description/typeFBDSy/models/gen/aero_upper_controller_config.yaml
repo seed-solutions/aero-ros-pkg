@@ -1,0 +1,49 @@
+##
+## auto generated file
+##
+##controller_configuration:
+##  - group_name: <joint group name>
+##    controller_name: <name of joint trajectory topic name>
+##    joint_list: ## list of using joints
+##      - <joint_name>
+controller_configuration:
+  - group_name: larm
+    controller_name: /larm_controller
+    joint_list:
+      - LARM_SHOULDER_P
+      - LARM_SHOULDER_R
+      - LARM_SHOULDER_Y
+      - LARM_ELBOW
+      - LARM_WRIST_Y
+      - LARM_WRIST_P
+      - LARM_WRIST_R
+      - LARM_THUMB_P
+      - LARM_INDEX_P1
+      - LARM_INDEX_P2
+      - LARM_INDEX_P3
+  - group_name: rarm
+    controller_name: /rarm_controller
+    joint_list:
+      - RARM_SHOULDER_P
+      - RARM_SHOULDER_R
+      - RARM_SHOULDER_Y
+      - RARM_ELBOW
+      - RARM_WRIST_Y
+      - RARM_WRIST_P
+      - RARM_WRIST_R
+      - RARM_THUMB_P
+      - RARM_INDEX_P1
+      - RARM_INDEX_P2
+      - RARM_INDEX_P3
+  - group_name: torso
+    controller_name: /torso_controller
+    joint_list:
+      - WAIST_Y
+      - WAIST_P
+      - WAIST_R
+  - group_name: head
+    controller_name: /head_controller
+    joint_list:
+      - NECK_Y
+      - NECK_P
+      - NECK_R
