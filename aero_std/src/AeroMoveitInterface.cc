@@ -186,6 +186,14 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
     + lifter_thigh_link_ * (cos(hip) - 1.0);
   setLifter(x, z);
 
+  // update necks
+  std::vector<std::string> neck_joints = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
+  for(std::string jn: neck_joints) {
+    auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), jn);
+    if(hitr != srv.response.joint_names.end()) map[jn] = srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())];
+  }
+
+  kinematic_state->setVariablePositions(map);
 
   updateLinkTransforms();
 }
@@ -270,12 +278,12 @@ bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool 
     return false;
   }
 
+  std::map<std::string, double> map = {
+    {"virtual_lifter_x_joint", _x},
+    {"virtual_lifter_z_joint", _z},
+  };
 
-  std::vector<double> joint_values;
-  joint_values.push_back(_x);
-  joint_values.push_back(_z);
-  kinematic_state->setJointGroupPositions(jmg_lifter, joint_values);
-
+  kinematic_state->setVariablePositions(map);
   return true;
 }
 

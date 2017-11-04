@@ -19,8 +19,8 @@ namespace aero
     public: ~ObjectFeatures();
 
       // Convert vectors in camera coords to world coords.
-    public: Eigen::Vector3d convertWorld(Eigen::Vector3d _pos);
-    public: Eigen::Vector3d convertWorld(Eigen::Vector3f _pos);
+    public: Eigen::Vector3d convertWorld(Eigen::Vector3d _pos, bool _update_model=true);
+    public: Eigen::Vector3d convertWorld(Eigen::Vector3f _pos, bool _update_model=true);
 
     public: void setCameraTransform(std::string _camera_parent_link, Eigen::Vector3d _position, Eigen::Quaterniond _orientation);
 
