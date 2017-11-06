@@ -465,9 +465,17 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<do
 void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<std::string, double> &_map)
 {
   _map.clear();
+  std::vector<std::string> upper_names, lifter_names;
+  upper_names = getMoveGroup("upper_body").getJointNames();
+  lifter_names = getMoveGroup("lifter").getJointNames();
 
-  for (auto it=aero::string_map.begin(); it != aero::string_map.end(); ++it) {
-    _map[it->first] = kinematic_state->getVariablePosition(it->first);
+  std::vector<std::string> names;
+  names.reserve(upper_names.size() + lifter_names.size());
+  std::copy(upper_names.begin(), upper_names.end(), std::back_inserter(names));
+  std::copy(lifter_names.begin(), lifter_names.end(), std::back_inserter(names));
+
+  for (auto it=names.begin(); it != names.end(); ++it) {
+    _map[*it] = kinematic_state->getVariablePosition(*it);
   }
 }
 

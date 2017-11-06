@@ -21,3 +21,5 @@ aero_std/doc/html
 aero_std/doc/latex
 aero_moveit_config/models/aero_virtual_lifter.urdf
 aero_moveit_config/models/camera_link.conf
+aero_moveit_config/config/*
+!.gitkeep

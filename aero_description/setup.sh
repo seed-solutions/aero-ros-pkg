@@ -62,6 +62,10 @@ printf "\nCreating urdf ...\n"
 
 ./scripts/create_urdf.sh $dir $upper_name $lower_name
 
+printf "\nSetting up aero_moveit_config ...\n"
+
+./scripts/setup_moveit_config.sh $dir
+
 if [[ $1 = "--local" ]]
 then
     printf "\nsetting up srvs ...\n"
