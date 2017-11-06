@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# prerequisites : {my_robot}/robot.cfg
 # prerequisites : {my_robot}/headers/Stroke2Angle.hh
 # prerequisites : /tmp/aero_CAN_order < make_controller
 
@@ -8,6 +9,7 @@
 
 dir=$1
 
+robot_file="$(rospack find aero_description)/${dir}/robot.cfg"
 input_file="$(rospack find aero_description)/${dir}/headers/Stroke2Angle.hh"
 output_file="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Stroke2Angle.hh"
 output_source="$(rospack find aero_description)/../aero_startup/aero_hardware_interface/Stroke2Angle.cc"
@@ -37,17 +39,10 @@ create_table_func_from_csv() {
     output_file=$3
     function_name=$4
     template_file=$5
+    parts_dir=$6
 
     # parse joint_name
-    file=''
-    csv=$(echo "$joint_name" | awk -F/ '{print $2}')
-    if [[ $csv == '' ]]
-    then
-	file="$(rospack find aero_description)/${dir}/models/csv/${joint_name}.csv"
-    else
-	csvdir=$(echo "$joint_name" | awk -F/ '{print $1}')
-	file="$(rospack find aero_description)/${csvdir}/models/csv/${csv}.csv"
-    fi
+    file="${parts_dir}/csv/${joint_name}.csv"
 
     # load csv
     csv=()
@@ -208,17 +203,52 @@ create_table_func_from_csv() {
 cp $input_file $output_file
 replace_meta_in_output_file $output_file
 
-total_tables=$(grep -o '@define' $output_file | wc -l)
-for (( table_number=1; table_number<=${total_tables}; table_number++ ))
-do
-    line=$(awk "/@define/{i++}i==${table_number}{print; exit}" $output_file)
-    csv=$(echo "${line}" | awk '{print $4}')
-    func=$(echo "${line}" | awk '{print $2}')
-    offset=$(echo "${line}" | awk '{print $6}')
-    create_table_func_from_csv $csv $offset $output_file $func $template_file
-done
+read_csv_config() {
+    csv_file=$1
+    parts_dir=$2
+    total_tables=$(wc -l $csv_file | awk '{print $1}')
+    for (( table_number=1; table_number<=${total_tables}; table_number++ ))
+    do
+        line=$(sed -n "${table_number} p" $csv_file)
+        csv=$(echo "${line}" | awk '{print $3}')
+        func=$(echo "${line}" | awk '{print $1}')
+        offset=$(echo "${line}" | awk '{print $5}')
+        create_table_func_from_csv $csv $offset $output_file $func $template_file $parts_dir
+    done
+}
 
-sed -i "1,$((${total_tables} + 2))d" $output_file
+# get required csv files
+
+while read line
+do
+    proto=$(echo $line | awk '{print $1}')
+    if [[ $proto == "#" ]] # comment out
+    then
+        continue
+    elif [[ $proto == ":" ]] # body name
+    then
+        continue
+    fi
+
+    # shop_dir: aero_shop or your pkg path
+    # parts_dir: this must be directry under the ${shop_dir}
+    shop_dir=$(echo $line | awk '{print $1}' | cut -d/ -f1)
+    parts_dir=$(echo $line | awk '{print $1}' | cut -d/ -f2)
+    if [[ $shop_dir == "aero_shop" ]]
+    then # use relative path
+        parts_dir="$(rospack find aero_description)/../aero_shop/${parts_dir}"
+    else
+        parts_dir=$(rospack find ${shop_dir})/${parts_dir}
+    fi
+    # check if parts has any csv files
+    if [[ $(ls $parts_dir | grep csv$) == "" ]]
+    then
+        continue
+    fi
+
+    csv_file="${parts_dir}/csv/Stroke2Angle.cfg"
+    read_csv_config $csv_file $parts_dir
+done < $robot_file
 
 # write warnings
 

@@ -6,26 +6,25 @@
        xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
        xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <!--xacro:include filename="$(find aero_description)/urdf/aero_upper/aero_upper.gazebo.xacro" /-->
-  <!--xacro:include filename="$(find aero_description)/urdf/aero_upper/aero_upper.transmission.xacro" /-->
+
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
 
   <xacro:property name="wrist_sensor_offset" value="0.0"/>
   <!-- ============================   aero_upper   ============================ -->
 
-  <xacro:macro name="aero_upper" params="base_link disable_mesh:=false">
+  <xacro:macro name="aero_upper" params="base_link disable_mesh:=false r_hand_link:=r_hand_link l_hand_link:=l_hand_link">
     
   <link name="${base_link}">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/WAIST_LINK0_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK0_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/WAIST_LINK0_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -42,13 +41,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/WAIST_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/WAIST_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -76,13 +75,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/WAIST_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/WAIST_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/WAIST_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -99,13 +98,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="-0.174532925 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="-0.174532925 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -122,13 +121,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -145,13 +144,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -168,13 +167,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -191,13 +190,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -221,132 +220,17 @@
     <mu1>0.9</mu1>
     <mu2>0.9</mu2>
   </gazebo>
-  <link name="l_hand_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0 ${-1.0 * wrist_sensor_offset}" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 ${-1.0 * wrist_sensor_offset}" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_LINK7_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0.183" />
-      <origin xyz="0 0 ${-0.0875 - wrist_sensor_offset}" rpy="0 -0 0"/>
-      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
-    </inertial>
-  </link>
-  <gazebo reference="l_hand_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="l_indexbase_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 -0.013 0.115" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 -0.013 0.115" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="l_indexbase_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="l_indexmid_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0.015754 0.149615" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0.015754 0.149615" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="l_indexmid_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="l_indexend_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0.03747 0.162972" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0.03747 0.162972" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="l_indexend_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="l_thumb_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0.022355 0.079645" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0.022355 0.079645" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/LARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="l_thumb_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
   <link name="neck_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/NECK_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/NECK_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -363,13 +247,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/NECK_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/NECK_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -386,13 +270,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/NECK_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/NECK_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/NECK_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -409,13 +293,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0.174532925 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK1_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -432,13 +316,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK2_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK2_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -455,13 +339,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK3_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -478,13 +362,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="-0.035 0 -0.070" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK4_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -501,13 +385,13 @@
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK5_mesh.dae" scale="1 1 1" />
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -531,139 +415,15 @@
     <mu1>0.9</mu1>
     <mu2>0.9</mu2>
   </gazebo>
-  <link name="r_hand_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0 ${-1.0 * wrist_sensor_offset}" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 ${-1.0 * wrist_sensor_offset}" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_LINK7_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0.183" />
-      <origin xyz="0 0 ${-0.0875 - wrist_sensor_offset}" rpy="0 -0 0"/>
-      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
-    </inertial>
-  </link>
-  <gazebo reference="r_hand_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="r_indexbase_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0.013 0.115" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0.013 0.115" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="r_indexthumb_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="r_indexmid_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 -0.015754 0.149615" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 -0.015754 0.149615" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="r_indexmid_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="r_indexend_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 -0.03747 0.162972" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 -0.03747 0.162972" rpy="0 -0 0"/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="r_indexend_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-  <link name="r_thumb_link">
-    <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 -0.022355 0.079645" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 -0.022355 0.079645" rpy="0 -0 0 "/>
-      <geometry>
-        <mesh filename="package://aero_description/meshes/aero_upper_meshes/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
-      </geometry>
-    </collision> </xacro:unless>
-    <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-  </link>
-  <gazebo reference="r_thumb_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
 
-  <!-- for ik eef link-->
-<link name="r_eef_grasp_link"/>
-<link name="r_eef_pick_link"/>
-<link name="r_thumb_tip_link"/>
-<link name="r_index_tip_link"/>
-<link name="l_eef_grasp_link"/>
-<link name="l_eef_pick_link"/>
-<link name="l_thumb_tip_link"/>
-<link name="l_index_tip_link"/>
-  <!-- for ik eef link-->
 
   <joint name="waist_y_joint" type="revolute">
     <parent link="${base_link}"/>
     <child  link="hip_sphere_link"/>
     <origin xyz="0 0 0.010" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -120 to 120 degrees-->
+    <limit lower="-2.0" upper="2.0" effort="100" velocity="0.9" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_y_joint_trans" >
@@ -679,7 +439,8 @@
     <child  link="hip_center"/>
     <origin xyz="0 0 0.1355" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="0" upper="0.4014" effort="100" velocity="0.5" />
+    <!-- from -5 to 30 degrees-->
+    <limit lower="-0.0872" upper="0.5235" effort="100" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_p_joint_trans" >
@@ -695,7 +456,8 @@
     <child  link="body_link"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.5" />
+    <!-- from -1 to 1 degrees-->
+    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_r_joint_trans" >
@@ -711,7 +473,8 @@
     <child  link="l_shoulder_link"/>
     <origin xyz="-0.01815 0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 -0.173648"/>
-    <limit lower="-1.50" upper="0" effort="100" velocity="0.5" />
+    <!-- from -88 to 15 degrees-->
+    <limit lower="-1.535" upper="0.261" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_p_joint_trans" >
@@ -727,7 +490,8 @@
     <child  link="l_shoulder_center"/>
     <origin xyz="0 0.05978 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from 0 to 90 degrees-->
+    <limit lower="0" upper="1.5707" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_r_joint_trans" >
@@ -743,7 +507,8 @@
     <child  link="l_upperarm_link"/>
     <origin xyz="0 -0.010 -0.127" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="0.785398" effort="100" velocity="0.5" />
+    <!-- from -180 to 45 degrees-->
+    <limit lower="-1.5707" upper="0.785398" effort="100" velocity="3.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_y_joint_trans" >
@@ -759,7 +524,8 @@
     <child  link="l_elbow_link"/>
     <origin xyz="0.035 0 -0.1625" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
+    <!-- from -140 to 0 degrees-->
+    <limit lower="-2.44246" upper="0" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_elbow_joint_trans" >
@@ -775,7 +541,8 @@
     <child  link="l_forearm_link"/>
     <origin xyz="-0.035 0 -0.070" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -180 to 180 degrees-->
+    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="5.6" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_y_joint_trans" >
@@ -791,7 +558,8 @@
     <child  link="l_wrist_center"/>
     <origin xyz="0 0 -0.1955" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-0.15" upper="0.15" effort="100" velocity="0.5" />
+    <!-- from -9 to 9 degrees-->
+    <limit lower="-0.15" upper="0.15" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_p_joint_trans" >
@@ -804,10 +572,11 @@
   </gazebo>
   <joint name="l_wrist_r_joint" type="revolute">
     <parent link="l_wrist_center"/>
-    <child  link="l_hand_link"/>
+    <child  link="${l_hand_link}"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.698132" upper="0.698132" effort="100" velocity="0.5" />
+    <!-- from -75 to 40 degrees-->
+    <limit lower="-1.309" upper="0.698132" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_r_joint_trans" >
@@ -818,55 +587,7 @@
   <gazebo reference="l_wrist_r_joint">
     <implicitSpringDamper>0.4</implicitSpringDamper>
   </gazebo>
-  <joint name="l_indexbase_joint" type="revolute">
-    <parent link="l_hand_link"/>
-    <child  link="l_indexbase_link"/>
-    <origin xyz="0 0.013 ${-0.115 - wrist_sensor_offset}" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <gazebo reference="l_indexbase_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-  <joint name="l_indexmid_joint" type="revolute">
-    <parent link="l_indexbase_link"/>
-    <child  link="l_indexmid_link"/>
-    <origin xyz="0 -0.028754 -0.034615" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <gazebo reference="l_indexmid_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-  <joint name="l_indexend_joint" type="revolute">
-    <parent link="l_indexmid_link"/>
-    <child  link="l_indexend_link"/>
-    <origin xyz="0 -0.021716 -0.013357" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <gazebo reference="l_indexend_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-  <joint name="l_thumb_joint" type="revolute">
-    <parent link="l_hand_link"/>
-    <child  link="l_thumb_link"/>
-    <origin xyz="0 -0.022355 ${-0.079645 - wrist_sensor_offset}" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_thumb_joint_trans" >
-    <actuator name="l_thumb_joint_motor" />
-    <joint name="l_thumb_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_thumb_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+
   <joint name="neck_y_joint" type="revolute">
     <parent link="body_link"/>
     <child  link="neck_link"/>
@@ -920,7 +641,8 @@
     <child  link="r_shoulder_link"/>
     <origin xyz="-0.01815 -0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 0.173648"/>
-    <limit lower="-1.50" upper="0" effort="100" velocity="0.5" />
+    <!-- from -88 to 15 degrees-->
+    <limit lower="-1.535" upper="0.261" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_p_joint_trans" >
@@ -936,7 +658,8 @@
     <child  link="r_shoulder_center"/>
     <origin xyz="0 -0.059778 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-1.5707" upper="0" effort="100" velocity="0.5" />
+    <!-- from -90 to 0 degrees-->
+    <limit lower="-1.5707" upper="0" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_r_joint_trans" >
@@ -952,7 +675,8 @@
     <child  link="r_upperarm_link"/>
     <origin xyz="0 0.010 -0.127" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-0.785398" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -45 to 180 degrees-->
+    <limit lower="-0.785398" upper="1.5707" effort="100" velocity="3.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_y_joint_trans" >
@@ -968,7 +692,8 @@
     <child  link="r_elbow_link"/>
     <origin xyz="0.035 0 -0.1625" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-2.44246" upper="0" effort="100" velocity="0.5" />
+    <!-- from -140 to 0 degrees-->
+    <limit lower="-2.44246" upper="0" effort="100" velocity="2.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_elbow_joint_trans" >
@@ -984,7 +709,8 @@
     <child  link="r_forearm_link"/>
     <origin xyz="-0.035 0 -0.070" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <!-- from -180 to 180 degrees-->
+    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="5.6" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_y_joint_trans" >
@@ -1000,7 +726,8 @@
     <child  link="r_wrist_center"/>
     <origin xyz="0 0 -0.1955" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <limit lower="-0.15" upper="0.15" effort="100" velocity="0.5" />
+    <!-- from -9 to 9 degrees-->
+    <limit lower="-0.15" upper="0.15" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_p_joint_trans" >
@@ -1013,10 +740,11 @@
   </gazebo>
   <joint name="r_wrist_r_joint" type="revolute">
     <parent link="r_wrist_center"/>
-    <child  link="r_hand_link"/>
+    <child  link="${r_hand_link}"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
-    <limit lower="-0.698132" upper="0.698132" effort="100" velocity="0.5" />
+    <!-- from -40 to 75 degrees-->
+    <limit lower="-0.698132" upper="1.309" effort="100" velocity="2.2" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_r_joint_trans" >
@@ -1027,104 +755,5 @@
   <gazebo reference="r_wrist_r_joint">
     <implicitSpringDamper>0.4</implicitSpringDamper>
   </gazebo>
-  <joint name="r_indexbase_joint" type="revolute">
-    <parent link="r_hand_link"/>
-    <child  link="r_indexbase_link"/>
-    <origin xyz="0 -0.013 ${-0.115 - wrist_sensor_offset}" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <gazebo reference="r_indexbase_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-  <joint name="r_indexmid_joint" type="revolute">
-    <parent link="r_indexbase_link"/>
-    <child  link="r_indexmid_link"/>
-    <origin xyz="0 0.028754 -0.034615" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <gazebo reference="r_indexmid_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-  <joint name="r_indexend_joint" type="revolute">
-    <parent link="r_indexmid_link"/>
-    <child  link="r_indexend_link"/>
-    <origin xyz="0 0.021716 -0.013357" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_indexend_joint_trans" >
-    <actuator name="r_indexend_joint_motor" />
-    <joint name="r_indexend_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_indexend_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-  <joint name="r_thumb_joint" type="revolute">
-    <parent link="r_hand_link"/>
-    <child  link="r_thumb_link"/>
-    <origin xyz="0 0.022355 ${-0.079645 - wrist_sensor_offset}" rpy="0 -0 0 "/>
-    <axis   xyz="1 0 0"/>
-    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
-    <dynamics damping="0.2" friction="0" />
-  </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_thumb_joint_trans" >
-    <actuator name="r_thumb_joint_motor" />
-    <joint name="r_thumb_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_thumb_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
-
-
-  <!-- for ik eef connector-->
-<joint name="r_eef_grasp_joint" type="fixed">
-  <parent  link="r_hand_link"/>
-  <child link="r_eef_grasp_link"/>
-  <origin xyz="0.0 0.04 ${-0.14 - wrist_sensor_offset}" rpy="0 1.5708 0 "/>
-</joint>
-<joint name="r_eef_pick_joint" type="fixed">
-  <parent  link="r_hand_link"/>
-  <child link="r_eef_pick_link"/>
-  <origin xyz="0.0 0.07 ${-0.16 - wrist_sensor_offset}" rpy="0 1.5708 0 "/>
-</joint>
-<joint name="r_thumb_tip_joint" type="fixed">
-  <parent  link="r_thumb_link"/>
-  <child link="r_thumb_tip_link"/>
-  <origin xyz="0.0 0.035 -0.085" rpy="0 0 0 "/>
-</joint>
-<joint name="r_index_tip_joint" type="fixed">
-  <parent  link="r_indexend_link"/>
-  <child link="r_index_tip_link"/>
-  <origin xyz="0.0 0.02 0.0" rpy="0 0 0 "/>
-</joint>
-<joint name="l_eef_grasp_joint" type="fixed">
-  <parent  link="l_hand_link"/>
-  <child link="l_eef_grasp_link"/>
-  <origin xyz="0.0 -0.04 ${-0.14 - wrist_sensor_offset}" rpy="0 1.5708 0 "/>
-</joint>
-<joint name="l_eef_pick_joint" type="fixed">
-  <parent  link="l_hand_link"/>
-  <child link="l_eef_pick_link"/>
-  <origin xyz="0.0 -0.07 ${-0.16 - wrist_sensor_offset}" rpy="0 1.5708 0 "/>
-</joint>
-<joint name="l_thumb_tip_joint" type="fixed">
-  <parent  link="l_thumb_link"/>
-  <child link="l_thumb_tip_link"/>
-  <origin xyz="0.0 -0.035 -0.085" rpy="0 0 0 "/>
-</joint>
-<joint name="l_index_tip_joint" type="fixed">
-  <parent  link="l_indexend_link"/>
-  <child link="l_index_tip_link"/>
-  <origin xyz="0.0 -0.02 -0.0" rpy="0 0 0 "/>
-</joint>
-  <!-- for ik eef connector-->
   </xacro:macro>
-
 </robot>

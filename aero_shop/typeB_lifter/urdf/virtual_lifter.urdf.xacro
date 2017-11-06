@@ -22,23 +22,6 @@
     <link name="${base_link}" />
 
     <link name="leg_base_link">
-<!--      <visual>
-        <origin xyz="0 0 0" rpy="0 -0 0"/>
-        <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 -0 0"/>
-        <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/WAIST_LINK1_mesh.dae" scale="1 1 1" />
-        </geometry>
-      </collision>
-      <inertial>
-        <mass value="7.64604" />
-        <origin xyz="-0.012819 -0.002679 0.007207" rpy="0 -0 0"/>
-        <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
-      </inertial> -->
     </link>
     <gazebo reference="leg_base_link">
       <mu1>0.9</mu1>
@@ -61,7 +44,7 @@
       <child link="leg_base_link"/>
       <origin xyz="0.0 0.0 -0.0" rpy="0 -0 0 "/>
       <axis   xyz="0 0 1"/>
-      <limit lower="${z_min}" upper="${z_max}" effort="100" velocity="0.1" />
+      <limit lower="${z_min}" upper="${z_max}" effort="100" velocity="0.15" />
       <dynamics damping="0.2" friction="0" />
     </joint>
 
@@ -71,7 +54,7 @@
       <!--origin xyz="0.0 0.0 0.58018" rpy="0 -0 0 "/-->
       <origin xyz="0.0 0.0 0.5" rpy="0 -0 0 "/>
       <axis   xyz="1 0 0"/>
-      <limit lower="${x_min}" upper="${x_max}" effort="100" velocity="0.1" />
+      <limit lower="${x_min}" upper="${x_max}" effort="100" velocity="0.15" />
       <dynamics damping="0.2" friction="0" />
     </joint>
 

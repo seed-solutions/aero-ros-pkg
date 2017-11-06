@@ -23,13 +23,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -47,13 +47,13 @@
       <visual>
         <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -71,13 +71,13 @@
       <visual>
         <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_knee.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_knee.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_knee.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_knee.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -95,13 +95,13 @@
       <visual>
         <origin xyz="0 0 0.25" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -119,13 +119,13 @@
       <visual>
         <origin xyz="0 0 0.05" rpy="3.1415920 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -143,13 +143,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_top.dae" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_top.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_top.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -241,7 +241,7 @@
     <link name="leg_foreleg_link_dummy">
       <visual>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone_dummy.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone_dummy.dae" scale="1 1 1" />
         </geometry>
         <origin xyz="0 0 0.25" rpy="0 0 0"/>
       </visual>
@@ -249,7 +249,7 @@
     <link name="leg_thigh_link_dummy">
       <visual>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/lifter_bone_dummy.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone_dummy.dae" scale="1 1 1" />
         </geometry>
         <origin xyz="0 0 0.25" rpy="0 0 0"/>
       </visual>

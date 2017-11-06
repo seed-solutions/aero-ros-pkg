@@ -27,13 +27,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_base.dae" scale="1 1 1" />
           </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_base.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>
@@ -52,13 +52,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_top.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_top.dae" scale="1 1 1" />
         </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_top.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_top.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>
@@ -76,13 +76,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>
@@ -100,13 +100,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>
@@ -124,13 +124,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>
@@ -148,13 +148,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_mecanum.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_mecanum.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>
@@ -172,13 +172,13 @@
       <xacro:unless value="${disable_mesh}"> <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_urg.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_urg.dae" scale="1 1 1" />
         </geometry>
       </visual> </xacro:unless>
       <xacro:unless value="${disable_mesh}"> <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/aero-lower_meshes/wheels_urg.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeD_wheel/wheels_urg.dae" scale="1 1 1" />
         </geometry>
       </collision> </xacro:unless>
       <inertial>

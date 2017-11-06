@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+
+<!-- XML namespaces -->
+<robot xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:gazebo="http://playerstage.sourceforge.net/gazebo/xmlschema/#gz"
+       xmlns:model="http://playerstage.sourceforge.net/gazebo/xmlschema/#model"
+       xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:body="http://playerstage.sourceforge.net/gazebo/xmlschema/#body"
+       xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
+       xmlns:joint="http://playerstage.sourceforge.net/gazebo/xmlschema/#joint"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:rendering="http://playerstage.sourceforge.net/gazebo/xmlschema/#rendering"
+       xmlns:renderable="http://playerstage.sourceforge.net/gazebo/xmlschema/#renderable"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+  
+  <xacro:macro name="virtual_lifter" params="base_link x_max x_min z_max z_min">
+    
+    <link name="${base_link}" />
+
+    <link name="leg_base_link">
+    </link>
+    <gazebo reference="leg_base_link">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+    </gazebo>
+
+    <link name="virtual_lifter_z_link"/>
+    <link name="virtual_lifter_x_link"/>
+    <link name="lifter_top_link"/>
+
+    <joint name="lifter_top_connector" type="fixed">
+      <parent link="leg_base_link"/>
+      <child  link="lifter_top_link"/>
+      <!--origin xyz="-0.01591 0.0 0.05" rpy="0 -0 0 "/-->
+      <origin xyz="0.0 0.0 0.055" rpy="0 -0 0 "/>
+    </joint>
+
+    <joint name="virtual_lifter_z_joint" type="prismatic">
+      <parent  link="virtual_lifter_z_link"/>
+      <child link="leg_base_link"/>
+      <origin xyz="0.0 0.0 -0.0" rpy="0 -0 0 "/>
+      <axis   xyz="0 0 1"/>
+      <limit lower="${z_min}" upper="${z_max}" effort="100" velocity="0.15" />
+      <dynamics damping="0.2" friction="0" />
+    </joint>
+
+    <joint name="virtual_lifter_x_joint" type="prismatic">
+      <parent link="virtual_lifter_x_link"/>
+      <child  link="virtual_lifter_z_link"/>
+      <!--origin xyz="0.0 0.0 0.58018" rpy="0 -0 0 "/-->
+      <origin xyz="0.0 0.0 0.5" rpy="0 -0 0 "/>
+      <axis   xyz="1 0 0"/>
+      <limit lower="${x_min}" upper="${x_max}" effort="100" velocity="0.15" />
+      <dynamics damping="0.2" friction="0" />
+    </joint>
+
+    <joint name="virtual_ankle_connector" type="fixed">
+      <parent link="${base_link}"/>
+      <child  link="virtual_lifter_x_link"/>
+      <!--origin xyz="0.0 0.0 0.07" rpy="0 -0 0 "/-->
+      <origin xyz="0.0 0.0 0.17" rpy="0 -0 0 "/>
+      <axis   xyz="0 -1 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

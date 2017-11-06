@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+
+<!-- XML namespaces -->
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+  <property name="M_PI" value="3.1415926535897931" />
+  <!-- ============================   trx_s   ============================ -->
+
+  <xacro:macro name="trx_s" params="prefix:=r reflect:=1 disable_mesh:=false">
+    <!-- prefix is "r" or "l" -->
+    <!-- reflect=1 is rightside, reflect=-1 is leftside -->
+
+  <link name="${prefix}_hand_link">
+    <xacro:unless value="${disable_mesh}"> <visual>
+      <origin xyz="0 0 0" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual> </xacro:unless>
+    <xacro:unless value="${disable_mesh}"> <collision>
+      <origin xyz="0 0 0" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_LINK7_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision> </xacro:unless>
+    <inertial>
+      <mass value="0.183" />
+      <origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
+      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
+    </inertial>
+  </link>
+  <gazebo reference="${prefix}_hand_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+
+  <link name="${prefix}_indexbase_link">
+    <xacro:unless value="${disable_mesh}"> <visual>
+      <origin xyz="0 ${0.013 * reflect} 0.115" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual> </xacro:unless>
+    <xacro:unless value="${disable_mesh}"> <collision>
+      <origin xyz="0 ${0.013 * reflect} 0.115" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision> </xacro:unless>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="${prefix}_indexthumb_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+
+  <link name="${prefix}_indexmid_link">
+    <xacro:unless value="${disable_mesh}"> <visual>
+      <origin xyz="0 ${-0.015754 * reflect} 0.149615" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual> </xacro:unless>
+    <xacro:unless value="${disable_mesh}"> <collision>
+      <origin xyz="0 ${-0.015754 * reflect} 0.149615" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision> </xacro:unless>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="${prefix}_indexmid_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+
+  <link name="${prefix}_indexend_link">
+    <xacro:unless value="${disable_mesh}"> <visual>
+      <origin xyz="0 ${-0.03747 * reflect} 0.162972" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual> </xacro:unless>
+    <xacro:unless value="${disable_mesh}"> <collision>
+      <origin xyz="0 ${-0.03747 * reflect} 0.162972" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision> </xacro:unless>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="${prefix}_indexend_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+
+  <link name="${prefix}_thumb_link">
+    <xacro:unless value="${disable_mesh}"> <visual>
+      <origin xyz="0 ${-0.022355 * reflect} 0.079645" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </visual> </xacro:unless>
+    <xacro:unless value="${disable_mesh}"> <collision>
+      <origin xyz="0 ${-0.022355 * reflect} 0.079645" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/trx_s/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision> </xacro:unless>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="${prefix}_thumb_link">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+
+  <joint name="${prefix}_indexbase_joint" type="revolute">
+    <parent link="${prefix}_hand_link"/>
+    <child  link="${prefix}_indexbase_link"/>
+    <origin xyz="0 ${-0.013 * reflect} -0.115" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <gazebo reference="${prefix}_indexbase_joint">
+    <implicitSpringDamper>0.4</implicitSpringDamper>
+  </gazebo>
+
+  <joint name="${prefix}_indexmid_joint" type="revolute">
+    <parent link="${prefix}_indexbase_link"/>
+    <child  link="${prefix}_indexmid_link"/>
+    <origin xyz="0 ${0.028754 * reflect} -0.034615" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <gazebo reference="${prefix}_indexmid_joint">
+    <implicitSpringDamper>0.4</implicitSpringDamper>
+  </gazebo>
+  <joint name="${prefix}_indexend_joint" type="revolute">
+    <parent link="${prefix}_indexmid_link"/>
+    <child  link="${prefix}_indexend_link"/>
+    <origin xyz="0 ${0.021716 * reflect} -0.013357" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="${prefix}_indexend_joint_trans" >
+    <actuator name="${prefix}_indexend_joint_motor" />
+    <joint name="${prefix}_indexend_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="${prefix}_indexend_joint">
+    <implicitSpringDamper>0.4</implicitSpringDamper>
+  </gazebo>
+  <joint name="${prefix}_thumb_joint" type="revolute">
+    <parent link="${prefix}_hand_link"/>
+    <child  link="${prefix}_thumb_link"/>
+    <origin xyz="0 ${0.022355 * reflect} -0.079645" rpy="0 -0 0 "/>
+    <axis   xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
+    <dynamics damping="0.2" friction="0" />
+  </joint>
+  <transmission type="pr2_mechanism_model/SimpleTransmission" name="${prefix}_thumb_joint_trans" >
+    <actuator name="${prefix}_thumb_joint_motor" />
+    <joint name="${prefix}_thumb_joint" />
+    <mechanicalReduction>1</mechanicalReduction>
+  </transmission>
+  <gazebo reference="${prefix}_thumb_joint">
+    <implicitSpringDamper>0.4</implicitSpringDamper>
+  </gazebo>
+
+  <!-- for ik eef link-->
+  <link name="${prefix}_eef_grasp_link"/>
+  <link name="${prefix}_eef_pick_link"/>
+  <link name="${prefix}_thumb_tip_link"/>
+  <link name="${prefix}_index_tip_link"/>
+  <!-- for ik eef link-->
+
+  <!-- for ik eef connector-->
+  <joint name="${prefix}_eef_grasp_joint" type="fixed">
+    <parent  link="${prefix}_hand_link"/>
+    <child link="${prefix}_eef_grasp_link"/>
+    <origin xyz="0.0 ${0.04 * reflect} -0.14" rpy="0 1.5708 0 "/>
+  </joint>
+  <joint name="${prefix}_eef_pick_joint" type="fixed">
+    <parent  link="${prefix}_hand_link"/>
+    <child link="${prefix}_eef_pick_link"/>
+    <origin xyz="0.0 ${0.07 * reflect} -0.16" rpy="0 1.5708 0 "/>
+  </joint>
+  <joint name="${prefix}_thumb_tip_joint" type="fixed">
+    <parent  link="${prefix}_thumb_link"/>
+    <child link="${prefix}_thumb_tip_link"/>
+    <origin xyz="0.0 ${0.035 * reflect} -0.085" rpy="0 0 0 "/>
+  </joint>
+  <joint name="${prefix}_index_tip_joint" type="fixed">
+    <parent  link="${prefix}_indexend_link"/>
+    <child link="${prefix}_index_tip_link"/>
+    <origin xyz="0.0 ${0.02 * reflect} 0.0" rpy="0 0 0 "/>
+  </joint>
+  <!-- for ik eef connector-->
+
+  </xacro:macro>
+</robot>

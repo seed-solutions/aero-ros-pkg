@@ -6,24 +6,15 @@
        name="AeroUpperRobot" >
 
   <!-- The following included files set up definitions of parts of the robot body -->
+  <!-- common variables -->
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
-  <!-- aero_upper body -->
-  <xacro:include filename="$(find aero_description)/urdf/aero_upper/aero_upper.urdf.xacro" />
-  <!-- aero-lower_body -->
-  <xacro:include filename="$(find aero_description)/urdf/aero-wheels/aero-wheels.urdf.xacro" />
-  <!-- Now we can start using the macros included above to define the actual aero -->
-
-  <xacro:aero_upper base_link="waist_link"/>
-
-  <joint name="upper_lower_connector" type="fixed">
-    <parent link="lifter_top_link"/>
-    <child link="waist_link"/>
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/> 
-  </joint>
-
-  <xacro:aero-wheels base_link="base_link"/>
-    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so"/>
-  <gazebo>
-  </gazebo>
+  <!-- wraps upperbody and hand-->
+  <xacro:include filename="$(find aero_description)/urdf/aero-upper.urdf.xacro" />
+  <!-- wraps lifter and wheels-->
+  <xacro:include filename="$(find aero_description)/urdf/aero-wheels.urdf.xacro" />
+ 
+ <!-- Now we can start using the macros included above to define the actual robot -->
+ <xacro:aero-upper/>
+ <xacro:aero-wheels base_link="base_link"/>
 
 </robot>

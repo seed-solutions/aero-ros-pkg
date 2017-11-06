@@ -15,30 +15,23 @@
        xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics"
        xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:include filename="$(find aero_description)/urdf/aero-wheels/lifter.urdf.xacro" />
-  <xacro:include filename="$(find aero_description)/urdf/aero-wheels/wheels.urdf.xacro" />
-  <xacro:include filename="$(find aero_description)/urdf/aero-wheels/virtual_lifter.urdf.xacro" />
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
-  
+  <xacro:include filename="$(find aero_description)/urdf/typeF_upperbody/aero_upper_typef.urdf.xacro" />
+  <xacro:include filename="$(find aero_description)/urdf/trx_s/trx_s.urdf.xacro" />
 
 
-  <xacro:macro name="aero-wheels" params="base_link virtual_lifter:=false x_max:=0.0 x_min:=0.0 z_max:=0.0 z_min:=0.0 disable_mesh:=false">
+  <xacro:macro name="aero-upper" params="disable_mesh:=false">
 
-    <xacro:wheels base_link="${base_link}" disable_mesh="${disable_mesh}"/>
+  <xacro:aero_upper base_link="waist_link" r_hand_link="r_hand_link" l_hand_link="l_hand_link" disable_mesh="${disable_mesh}"/>
 
-    <joint name="wheel_lifter_connector" type="fixed">
-      <parent  link="wheels_top_link"/>
-      <child link="lifter_base_link"/>
-      <origin xyz="0.0 0.0 0.005" rpy="0 0 0 "/> 
-   </joint>
+  <xacro:trx_s prefix="r" reflect="1" disable_mesh="${disable_mesh}"/>
+  <xacro:trx_s prefix="l" reflect="-1" disable_mesh="${disable_mesh}"/>
 
-   <xacro:unless value="${virtual_lifter}">
-    <xacro:lifter base_link="lifter_base_link"/>
-   </xacro:unless>
-
-   <xacro:if value="${virtual_lifter}">
-    <xacro:virtual_lifter base_link="lifter_base_link" x_max="${x_max}" x_min="${x_min}" z_max="${z_max}" z_min="${z_min}"/>
-   </xacro:if>
+  <joint name="upper_lower_connector" type="fixed">
+    <parent link="lifter_top_link"/>
+    <child link="waist_link"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/> 
+  </joint>
 
   </xacro:macro>
 
