@@ -11,9 +11,9 @@
 
   <!-- arguments for camera param uri -->
   <arg name="camera_info_file_right"
-       default="$(find aero_startup)/aero_sensors/config/ps4eye_right.yaml" />
+       default="$(find aero_sensors)/ps4eye/config/ps4eye_right.yaml" />
   <arg name="camera_info_file_left"
-       default="$(find aero_startup)/aero_sensors/config/ps4eye_left.yaml" />
+       default="$(find aero_sensors)/ps4eye/config/ps4eye_left.yaml" />
   <arg name="camera_info_url_default"
        default="file://$(find ps4eye)/camera_info/default.yaml" />
   <arg name="camera_info_url_right"

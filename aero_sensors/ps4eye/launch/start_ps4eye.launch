@@ -1,15 +1,15 @@
 <launch>
   <arg name="DEVICE" default="/dev/video0"/>
-  <arg name="camera_info_file_left" default="$(find aero_startup)/aero_sensors/config/ps4eye_left.yaml"/>
-  <arg name="camera_info_file_right" default="$(find aero_startup)/aero_sensors/config/ps4eye_right.yaml"/>
+  <arg name="camera_info_file_left" default="$(find aero_sensors)/ps4eye/config/ps4eye_left.yaml"/>
+  <arg name="camera_info_file_right" default="$(find aero_sensors)/ps4eye/config/ps4eye_right.yaml"/>
 
-  <include file="$(find aero_startup)/aero_sensors/launch/incl_start_ps4eye_capture.launch">
+  <include file="$(find aero_sensors)/ps4eye/launch/incl_start_ps4eye_capture.launch">
     <arg name="DEVICE" value="$(arg DEVICE)"/>
     <arg name="camera_info_file_left" value="$(arg camera_info_file_left)"/>
     <arg name="camera_info_file_right" value="$(arg camera_info_file_right)"/>
   </include>
 
-  <include file="$(find aero_startup)/aero_sensors/launch/incl_start_ps4eye_proc.launch">
+  <include file="$(find aero_sensors)/ps4eye/launch/incl_start_ps4eye_proc.launch">
     <arg name="DEVICE" value="$(arg DEVICE)"/>
     <arg name="camera_info_file_left" value="$(arg camera_info_file_left)"/>
     <arg name="camera_info_file_right" value="$(arg camera_info_file_right)"/>
