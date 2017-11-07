@@ -1,6 +1,5 @@
 #include <aero_std/AeroMoveitInterface.hh>
 #include <thread>
-#include <mutex>
 
 /// @file look_at_external.cc
 /// @brief how to control neck with lookAt manager
@@ -15,59 +14,87 @@ int main(int argc, char **argv)
   // init robot interface
   aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
 
-  // start lookAt manager
-  robot->setLookAtTopic("/look_at/target"); // set topic 
-
-  std::mutex robot_mutex;
-  std::thread head_control([&](){
-      int count = 0;
-      while (count <= 30) { // keep updating lookAt position every 100ms
-        robot_mutex.lock();
-        // look at right hand position
-        Eigen::Vector3d obj = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
-        robot->setLookAt(obj); // stream values to "/look_at/target"
-        if (robot->getLookAtTopic() != "/look_at/target") // in disable mode
-          ++count; // prepare thread end only when in disable mode
-        robot_mutex.unlock();
-        usleep(100 * 1000);
-      }
-    });
-
+  // create a poses to look at
   ROS_INFO("reseting robot pose");
-  robot_mutex.lock();
   robot->sendResetManipPose();
-  robot_mutex.unlock();
   sleep(1);
+  Eigen::Vector3d obj0 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
 
   ROS_INFO("moving arm"); // send to different pose
-  robot_mutex.lock();
   std::map<aero::joint, double> joints;
-  robot->getRobotStateVariables(joints);
   joints[aero::joint::r_elbow] = -1.745;
   robot->setRobotStateVariables(joints);
-  robot->sendAngleVectorAsync(3000);
-  robot_mutex.unlock();
-  sleep(6);
+  robot->sendAngleVector(3000);
+  sleep(1);
+  Eigen::Vector3d obj1 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
 
-  robot->setLookAtTopic("/look_at/dummy"); // disable threaded lookAt
-  // robot should stay looking at current position
+  // main example starts here
 
+  // static target example
+
+  // reset robot pose
   ROS_INFO("reseting robot pose");
-  robot_mutex.lock();
   robot->sendResetManipPose();
-  robot_mutex.unlock();
   sleep(1);
 
-  robot->setLookAtTopic(""); // re-enable head control from main
-  // robot should reset head position
+  // set positioned look at on background
+  robot->setTrackingMode(true);
+  robot->setLookAt(obj0); // set position to track
 
-  ROS_INFO("reseting robot pose");
-  robot_mutex.lock();
-  robot->sendResetManipPose();
-  robot_mutex.unlock();
+  // change robot pose (lookAt should be updated in background)
+  ROS_INFO("moving torso"); // send to different pose
+  std::map<aero::joint, double> joints2;
+  joints2[aero::joint::waist_p] = 0.524;
+  robot->setRobotStateVariables(joints2);
+  robot->sendAngleVector(5000);
   sleep(1);
 
-  head_control.join();
+  // set background tracking to false
+  robot->setTrackingMode(false);
+
+  // streaming target example
+
+  // reset robot pose
+  ROS_INFO("reseting robot pose");
+  robot->sendResetManipPose();
+  sleep(1);
+
+  // set position streaming topic name
+  robot->setLookAtTopic("/look_at/some_topic"); // set topic
+
+  // dummy position publishing node
+  std::thread streamer([&](Eigen::Vector3d _p1, Eigen::Vector3d _p2){
+      ros::Publisher streaming_target =
+        nh.advertise<geometry_msgs::Point>("/look_at/some_topic", 10);
+      int count = 0;
+      while (count <= 6) { // keep updating lookAt position every 100ms
+        geometry_msgs::Point msg;
+        if (count % 2 == 0) {
+          msg.x = _p1.x(); msg.y = _p1.y(); msg.z = _p1.z();
+        } else {
+          msg.x = _p2.x(); msg.y = _p2.y(); msg.z = _p2.z();
+        }
+        streaming_target.publish(msg);
+        usleep(1000 * 1000);
+        ++count;
+      }
+    }, obj0, obj1);
+
+  // change robot pose (lookAt should be updated in background)
+  ROS_INFO("moving torso"); // send to different pose
+  robot->setRobotStateVariables(joints2);
+  robot->sendAngleVector(5000);
+  sleep(1);
+
+  // set background tracking to false
+  robot->setTrackingMode(false);
+
+  // finish
+  ROS_INFO("reseting robot pose");
+  robot->sendResetManipPose();
+  sleep(1);
+
+  streamer.join();
 
   ROS_INFO("demo node finished");
   ros::shutdown();

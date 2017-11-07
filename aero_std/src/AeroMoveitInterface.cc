@@ -51,8 +51,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
     ("/aero_controller/interpolation");
 
-  activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
-    ("/look_at/set_tracking");
+  // activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
+  //   ("/look_at/set_tracking");
 
   lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_kinematics");
@@ -471,9 +471,12 @@ bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
 {
-  std_srvs::SetBool req;
-  req.request.data = _yes;
-  if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
+  // std_srvs::SetBool req;
+  // req.request.data = _yes;
+  // if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
+  tracking_mode_flag_ = _yes;
+  if (!_yes)
+    setLookAtTopic(""); // disable tracking
 }
 
 //////////////////////////////////////////////////

@@ -119,7 +119,7 @@ namespace aero
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _pose target pose in base_link coordinate
     public: void setLookAt(geometry_msgs::Pose _pose);
-      /// @biref set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
+      /// @brief set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
       /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _r roll, if it's over limit, it beocomes within limit
@@ -130,8 +130,9 @@ namespace aero
     public: void sendNeckAsync();
       /// @brief Set lookAt with external lookAt manager.
       /// @param[in] _topic Name of topic lookAt manager should subscribe.
-    public: void setLookAtTopic(std::string _topic="/look_at/set_target_topic");
+    public: void setLookAtTopic(std::string _topic);
       /// @brief Return last set topic for lookAt manager.
+      /// @return Last set topic name.
     public: std::string getLookAtTopic();
       /// @brief protected function to calculate look at
       /// @param[in] _x target x in base_link coordinate
@@ -516,7 +517,7 @@ namespace aero
     protected: ros::ServiceClient hand_grasp_client_;
     protected: ros::ServiceClient joint_states_client_;
     protected: ros::ServiceClient interpolation_client_;
-    protected: ros::ServiceClient activate_tracking_client_;
+    // protected: ros::ServiceClient activate_tracking_client_;
     protected: ros::Publisher display_publisher_;
     protected: ros::Publisher angle_vector_publisher_;
     protected: ros::Publisher look_at_publisher_;
