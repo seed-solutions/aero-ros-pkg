@@ -79,6 +79,9 @@ add_executable(spot_manager src/spot_manager.cc)
 target_link_libraries(spot_manager ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
 add_dependencies(spot_manager ${PROJECT_NAME}_gencpp)
 
+add_executable(look_at src/look_at.cc)
+target_link_libraries(look_at ${catkin_LIBRARIES} aero_moveit_interface)
+
 add_library(object_features
   src/ObjectFeatures.cc
 )

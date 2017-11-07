@@ -25,6 +25,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
 
+  lookat_target_publisher_ = _nh.advertise<std_msgs::String>
+    ("/look_at/set_target_topic", 10);
+
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
@@ -359,6 +362,42 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
   kinematic_state->setVariablePosition("neck_y_joint", _y);
 
   kinematic_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendNeckAsync()
+{
+  trajectory_msgs::JointTrajectory msg;
+  msg.points.resize(1);
+  msg.joint_names = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
+  msg.points[0].positions = {kinematic_state->getVariablePosition("neck_r_joint"), kinematic_state->getVariablePosition("neck_p_joint"), kinematic_state->getVariablePosition("neck_y_joint")};
+  msg.points[0].time_from_start = ros::Duration(1000 * 0.001);
+  angle_vector_publisher_.publish(msg);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
+{
+  std_msgs::String msg;
+  msg.data = _topic;
+
+  if (_topic == "") {
+    tracking_mode_flag_ = false;
+    msg.data = "/look_at/manager_disabled";
+    lookat_target_publisher_.publish(msg);
+    lookat_topic_ = msg.data;
+    return;
+  }
+
+  tracking_mode_flag_ = true;
+  lookat_target_publisher_.publish(msg);
+  lookat_topic_ = _topic;
+}
+
+//////////////////////////////////////////////////
+std::string aero::interface::AeroMoveitInterface::getLookAtTopic()
+{
+  return lookat_topic_;
 }
 
 //////////////////////////////////////////////////

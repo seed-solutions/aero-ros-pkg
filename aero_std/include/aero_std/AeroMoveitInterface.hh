@@ -126,6 +126,13 @@ namespace aero
       /// @param[in] _p pitch, if it's over limit, it beocomes within limit
       /// @param[in] _y yaw, if it's over limit, it beocomes within limit
     public: void setNeck(double _r,double _p, double _y);
+      /// @brief send neck values
+    public: void sendNeckAsync();
+      /// @brief Set lookAt with external lookAt manager.
+      /// @param[in] _topic Name of topic lookAt manager should subscribe.
+    public: void setLookAtTopic(std::string _topic="/look_at/set_target_topic");
+      /// @brief Return last set topic for lookAt manager.
+    public: std::string getLookAtTopic();
       /// @brief protected function to calculate look at
       /// @param[in] _x target x in base_link coordinate
       /// @param[in] _y target y in base_link coordinate
@@ -516,6 +523,7 @@ namespace aero
     protected: ros::Publisher speech_publisher_;
     protected: ros::Publisher speech_detection_settings_publisher_;
     protected: ros::Publisher cmd_vel_publisher_;
+    protected: ros::Publisher lookat_target_publisher_;
     protected: ros::Subscriber joint_states_subscriber_;
     protected: ros::Subscriber speech_listener_;
     protected: ros::Subscriber in_action_listener_;
@@ -539,6 +547,7 @@ namespace aero
     protected: tf::TransformListener listener_;
     protected: geometry_msgs::Pose pose_using_;
     protected: bool in_action_;
+    protected: std::string lookat_topic_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
