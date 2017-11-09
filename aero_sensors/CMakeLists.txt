@@ -5,14 +5,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp sensor_msgs geometry_msgs tf)
 
 catkin_package(
-  INCLUDE_DIRS depth_camera/include kinect/include
+  INCLUDE_DIRS depth_camera/include
   LIBRARIES aerosensors_depth_camera aerosensors_rotatekinectaddon
   CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs tf
 )
 
 include_directories(
   depth_camera/include
-  kinect/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -21,16 +20,6 @@ add_definitions(-std=c++11)
 # xtion library
 
 add_library(aerosensors_depth_camera depth_camera/src/DepthCameraInterface.cc)
-add_library(aerosensors_rotatekinectaddon kinect/src/RotateKinectAddon.cc)
-
-# dynamic kinect controller (optional)
-
-add_executable(dynamic_kinect_frame_publisher
-  kinect/dynamic_kinect_controller/DynamicKinectFramePublisher.cc
-  )
-target_link_libraries(dynamic_kinect_frame_publisher
-  ${catkin_LIBRARIES})
-
 
 # examples
 
