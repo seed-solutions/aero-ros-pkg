@@ -1715,10 +1715,7 @@ void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, doub
   pose.position.x = _x;
   pose.position.y = _y;
   pose.position.z = 0.0;
-  pose.orientation.w = qua.w();
-  pose.orientation.x = qua.x();
-  pose.orientation.y = qua.y();
-  pose.orientation.z = qua.z();
+  tf::quaternionEigenToMsg(qua, pose.orientation);
 
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = "/base_link";
@@ -1811,10 +1808,7 @@ void aero::interface::AeroMoveitInterface::faceTowardAsync(geometry_msgs::Pose _
     yaw += 2.0 * M_PI;
   }
   Eigen::Quaterniond qua = Eigen::Quaterniond(Eigen::Matrix3d(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ())));
-  pose.orientation.w = qua.w();
-  pose.orientation.x = qua.x();
-  pose.orientation.y = qua.y();
-  pose.orientation.z = qua.z();
+  tf::quaternionEigenToMsg(qua, pose.orientation);
 
   moveToAsync(pose);
 }
