@@ -25,6 +25,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
 
+  lookat_target_publisher_ = _nh.advertise<std_msgs::String>
+    ("/look_at/set_target_topic", 10);
+
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
@@ -48,8 +51,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
     ("/aero_controller/interpolation");
 
-  activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
-    ("/look_at/set_tracking");
+  // activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
+  //   ("/look_at/set_tracking");
 
   lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_kinematics");
@@ -362,6 +365,42 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendNeckAsync()
+{
+  trajectory_msgs::JointTrajectory msg;
+  msg.points.resize(1);
+  msg.joint_names = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
+  msg.points[0].positions = {kinematic_state->getVariablePosition("neck_r_joint"), kinematic_state->getVariablePosition("neck_p_joint"), kinematic_state->getVariablePosition("neck_y_joint")};
+  msg.points[0].time_from_start = ros::Duration(1000 * 0.001);
+  angle_vector_publisher_.publish(msg);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
+{
+  std_msgs::String msg;
+  msg.data = _topic;
+
+  if (_topic == "") {
+    tracking_mode_flag_ = false;
+    msg.data = "/look_at/manager_disabled";
+    lookat_target_publisher_.publish(msg);
+    lookat_topic_ = msg.data;
+    return;
+  }
+
+  tracking_mode_flag_ = true;
+  lookat_target_publisher_.publish(msg);
+  lookat_topic_ = _topic;
+}
+
+//////////////////////////////////////////////////
+std::string aero::interface::AeroMoveitInterface::getLookAtTopic()
+{
+  return lookat_topic_;
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double _z)
 {
   Eigen::Vector3d obj;
@@ -432,9 +471,12 @@ bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
 {
-  std_srvs::SetBool req;
-  req.request.data = _yes;
-  if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
+  // std_srvs::SetBool req;
+  // req.request.data = _yes;
+  // if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
+  tracking_mode_flag_ = _yes;
+  if (!_yes)
+    setLookAtTopic(""); // disable tracking
 }
 
 //////////////////////////////////////////////////

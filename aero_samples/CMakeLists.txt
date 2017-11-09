@@ -31,6 +31,9 @@ target_link_libraries(hand_sample_node ${catkin_LIBRARIES})
 add_executable(look_at_sample_node src/look_at.cc)
 target_link_libraries(look_at_sample_node ${catkin_LIBRARIES})
 
+add_executable(look_at_external_sample_node src/look_at_external.cc)
+target_link_libraries(look_at_external_sample_node ${catkin_LIBRARIES})
+
 add_executable(top_grasp_sample_node src/top_grasp.cc)
 target_link_libraries(top_grasp_sample_node ${catkin_LIBRARIES})
 
