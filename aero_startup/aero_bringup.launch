@@ -1,5 +1,4 @@
 <launch>
-  <arg name="DYNAMIC_KINECT" default="false"/>
   <arg name="port_upper" default="/dev/aero_upper"/>
   <arg name="port_lower" default="/dev/aero_lower"/>
 
@@ -16,9 +15,6 @@
   <include file="$(find aero_startup)/generated_controllers.launch"/>
 
   <include file="$(find aero_moveit_config)/launch/moveit_planning_execution.launch"/>
-
-  <include file="$(find aero_sensors)/kinect/launch/dynamic_kinect.launch"
-          if="$(arg DYNAMIC_KINECT)"/>
 
   <!--ps4eye sensor-->
   <!--include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
