@@ -20,6 +20,7 @@
 #include <move_base_msgs/MoveBaseResult.h>
 
 #include <tf/transform_listener.h>
+#include <eigen_conversions/eigen_msg.h>
 
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
