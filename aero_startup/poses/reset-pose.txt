@@ -4,7 +4,7 @@ header:
     secs: 1486541103
     nsecs: 661864118
   frame_id: ''
-name: ['waist_y_joint', 'waist_p_joint', 'waist_r_joint', 'l_shoulder_p_joint', 'l_shoulder_r_joint', 'l_shoulder_y_joint', 'l_elbow_joint', 'l_wrist_y_joint', 'l_wrist_p_joint', 'l_wrist_r_joint', 'l_indexbase_joint', 'l_indexmid_joint', 'l_indexend_joint', 'l_thumb_joint', 'neck_y_joint', 'neck_p_joint', 'neck_r_joint', 'r_shoulder_p_joint', 'r_shoulder_r_joint', 'r_shoulder_y_joint', 'r_elbow_joint', 'r_wrist_y_joint', 'r_wrist_p_joint', 'r_wrist_r_joint', 'r_indexbase_joint', 'r_indexmid_joint', 'r_indexend_joint', 'r_thumb_joint', 'upper_lower_connector', 'hip_joint', 'knee_joint']
+name: ['waist_y_joint', 'waist_p_joint', 'waist_r_joint', 'l_shoulder_p_joint', 'l_shoulder_r_joint', 'l_shoulder_y_joint', 'l_elbow_joint', 'l_wrist_y_joint', 'l_wrist_p_joint', 'l_wrist_r_joint', 'l_indexbase_joint', 'l_indexmid_joint', 'l_indexend_joint', 'l_thumb_joint', 'neck_y_joint', 'neck_p_joint', 'neck_r_joint', 'r_shoulder_p_joint', 'r_shoulder_r_joint', 'r_shoulder_y_joint', 'r_elbow_joint', 'r_wrist_y_joint', 'r_wrist_p_joint', 'r_wrist_r_joint', 'r_indexbase_joint', 'r_indexmid_joint', 'r_indexend_joint', 'r_thumb_joint', 'upper_lower_connector', 'hip_joint', 'ankle_joint']
 position: [-0.00017453292093705386, 0.0, -0.0, -0.24393895268440247, 0.0, 0.00017453292093705386, -2.355128049850464, 0.00017453292093705386, -0.0, -0.0, -0.8726646192371845, 0.0, 0.0, 0.8726646192371845, 0.0, 0.0, 0.0, -0.24393895268440247, -0.0, -0.0, -2.355128049850464, -0.0, -0.0, 0.0, 0.8726646192371845, 0.0, 0.0, -0.8726646192371845, 0.0, 0.0, 0.0]
 velocity: []
 effort: []
