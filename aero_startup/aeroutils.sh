@@ -147,3 +147,43 @@ points:
 
     )
 }
+
+function graspAero() {
+    if [[ $1 == "" ]]
+    then
+        echo "usage: graspAero [right | rarm | left | larm]"
+        return
+    fi
+
+    hand=$1
+    if [[ $1 == "rarm" ]]
+    then
+        hand="right"
+    fi
+    if [[ $1 == "larm" ]]
+    then
+        hand="left"
+    fi
+
+    rosservice call /aero_hand_controller "{hand: '$hand', command: 'grasp', thre_fail: 0.0, thre_warn: 0.0, larm_angle: 0.0, rarm_angle: 0.0}"
+}
+
+function ungraspAero() {
+    if [[ $1 == "" ]]
+    then
+        echo "usage: ungraspAero [right | rarm | left | larm]"
+        return
+    fi
+
+    hand=$1
+    if [[ $1 == "rarm" ]]
+    then
+        hand="right"
+    fi
+    if [[ $1 == "larm" ]]
+    then
+        hand="left"
+    fi
+
+    rosservice call /aero_hand_controller "{hand: '$hand', command: 'ungrasp', thre_fail: 0.0, thre_warn: 0.0, larm_angle: 0.0, rarm_angle: 0.0}"
+}
