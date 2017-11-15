@@ -22,22 +22,24 @@ aero_startup::AeroSendJoints::Response GraspAngle
 {
   aero_startup::AeroSendJoints srv;
   if (hand == "both") {
-    srv.request.joint_names = {"l_thumb_joint", "r_indexbase_joint", "r_thumb_joint"};
-    srv.request.points.positions.resize(3);
-    srv.request.points.positions[0] = larm_angle * M_PI / 180;
-    srv.request.points.positions[1] = -rarm_angle * M_PI / 180;
-    srv.request.points.positions[2] = rarm_angle * M_PI / 180 / 4.0;
+    srv.request.joint_names = {"l_indexbase_joint", "l_thumb_joint", "r_indexbase_joint", "r_thumb_joint"};
+    srv.request.points.positions.resize(4);
+    srv.request.points.positions[0] = -larm_angle * M_PI / 180;
+    srv.request.points.positions[1] = larm_angle * M_PI / 180/ 4.0;
+    srv.request.points.positions[2] = -rarm_angle * M_PI / 180;
+    srv.request.points.positions[3] = rarm_angle * M_PI / 180 / 4.0;
   } else if (hand == "left") {
     if (executing_flg_left == 1) {
       aero_startup::AeroGraspController g_srv;
       g_srv.request.script = {Left, cancel};
       g_srv.request.power = (100 << 8) + 30;
       g_client.call(g_srv);
-      executing_flg_left= 0;
+      executing_flg_left = 0;
     }
-    srv.request.joint_names = {"l_thumb_joint"};
-    srv.request.points.positions.resize(1);
-    srv.request.points.positions[0] = larm_angle * M_PI / 180;
+    srv.request.joint_names = {"l_thumb_joint","l_indexbase_joint"};
+    srv.request.points.positions.resize(2);
+    srv.request.points.positions[0] = larm_angle * M_PI / 180 / 4.0;
+    srv.request.points.positions[1] = -larm_angle * M_PI / 180;
   } else if (hand == "right") {
     if (executing_flg_right == 1) {
       aero_startup::AeroGraspController g_srv;
@@ -64,6 +66,14 @@ void OpenHand(std::string hand)
   if (hand == "left") {
     g_srv.request.script = {Left, ungrasp};
     executing_flg_left = 0;
+
+    trajectory_msgs::JointTrajectory msg;
+    msg.joint_names = {"l_thumb_joint"};
+    msg.points.resize(1);
+    msg.points[0].positions.resize(0);
+    msg.points[0].positions.push_back(-15.0 * M_PI / 180.0);
+    msg.points[0].time_from_start = ros::Duration(1.0);
+    pub.publish(msg);
   } else if (hand == "right") {
     g_srv.request.script = {Right, ungrasp};
     executing_flg_right = 0;
