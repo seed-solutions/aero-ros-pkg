@@ -100,13 +100,13 @@
 
   <link name="${prefix}_thumb_link">
     <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0 0" rpy="${M_PI} 0 ${reflect * M_PI / 2.0}"/>
+      <origin xyz="0 0 0" rpy="${-M_PI} 0 ${reflect * M_PI / 2.0}"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/fcsc_hand/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 0" rpy="${M_PI} 0 ${reflect * M_PI / 2.0}"/>
+      <origin xyz="0 0 0" rpy="${-M_PI} 0 ${reflect * M_PI / 2.0}"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/fcsc_hand/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
