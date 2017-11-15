@@ -53,7 +53,7 @@ generate_messages(
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES aero_moveit_interface object_features
+ LIBRARIES aero_moveit_interface object_features spot_list
  CATKIN_DEPENDS
  geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs
  moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs
@@ -75,8 +75,11 @@ add_library(aero_moveit_interface
 target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
 add_dependencies(aero_moveit_interface ${PROJECT_NAME}_gencpp)
 
+add_library(spot_list src/spot_list.cc)
+target_link_libraries(spot_list ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
+
 add_executable(spot_manager src/spot_manager.cc)
-target_link_libraries(spot_manager ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
+target_link_libraries(spot_manager ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES} spot_list)
 add_dependencies(spot_manager ${PROJECT_NAME}_gencpp)
 
 add_executable(look_at src/look_at.cc)
