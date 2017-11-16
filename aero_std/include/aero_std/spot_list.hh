@@ -16,6 +16,10 @@ struct Spot {
   geometry_msgs::Pose pose;
 };
 
+Spot MakeSpot(std::string name,
+              float tx, float ty, float tz,
+              float qx, float qy, float qz, float qw);
+
 class SpotList {
 public:
   SpotList();

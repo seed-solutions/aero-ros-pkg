@@ -1,12 +1,9 @@
 /// @author Shintaro Hori
 
 #include <ros/ros.h>
-#include <fstream>
 
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-
-#include <yaml-cpp/yaml.h>
 
 #include <aero_std/spot_list.hh>
 

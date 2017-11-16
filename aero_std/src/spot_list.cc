@@ -4,6 +4,31 @@
 
 namespace aero {
 
+/// @brief make Spot from args
+/// @param name spot name
+/// @param tx position x
+/// @param ty position y
+/// @param tz position z
+/// @param qx quaternion x
+/// @param qy quaternion y
+/// @param qz quaternion z
+/// @param qw quaternion w
+Spot MakeSpot(std::string name,
+              float tx, float ty, float tz,
+              float qx, float qy, float qz, float qw) {
+  Spot spot;
+  spot.name = name;
+  spot.pose.position.x = tx;
+  spot.pose.position.y = ty;
+  spot.pose.position.z = tz;
+  spot.pose.orientation.x = qx;
+  spot.pose.orientation.y = qy;
+  spot.pose.orientation.z = qz;
+  spot.pose.orientation.w = qw;
+
+  return spot;
+}
+
 SpotList::SpotList() {
 }
 
