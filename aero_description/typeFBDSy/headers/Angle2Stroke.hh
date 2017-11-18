@@ -65,7 +65,7 @@ namespace aero
       meta = scale * left_wrist.two;
       meta = scale * (rad2Deg * l_indexbase_joint - 65.0) * 0.12;
       meta = -scale * rad2Deg * l_hand_y_joint;
-      meta = -scale * (rad2Deg * l_thumb_joint + 15) * 0.18;
+      meta = -scale * (rad2Deg * l_thumb_joint + 15) * 0.09;
 
       meta = scale * waist.two;
       meta = scale * waist.one;

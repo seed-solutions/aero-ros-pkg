@@ -64,7 +64,7 @@ namespace aero
       meta = 0;
       meta = 0;
       meta =
-        -deg2Rad * (scale * can_l_thumb * 5.556 - 15.0);
+        -deg2Rad * (scale * can_l_thumb * 11.111 + 15.0);
 
       meta =
         deg2Rad * scale * can_neck_y;
