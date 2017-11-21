@@ -19,6 +19,7 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
 
   target_thread_alive_ = false;
   target_thread_kill_ = true;
+  prev_msgs_ = {"/look_at/manager_disabled", "/look_at/manager_disabled"};
 
   sneak_ = false;
   p0_ = Eigen::Vector3d(0.0, 0.0, 0.0);
@@ -27,23 +28,30 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
 public: ~LookAt() {};
 
 private: void SetTarget(const std_msgs::String &_msg) {
+  auto prev = (prev_msgs_.end() - 2);
+  ROS_WARN("got %s where prev %s p0: %f %f %f",
+           _msg.data.c_str(), prev->c_str(), p0_.x(), p0_.y(), p0_.z());
+
   if (_msg.data == "/look_at/previous") {
-    if (prev_msg_.data == "/look_at/manager_disabled") { // send set value
+    if (*prev == "/look_at/manager_disabled") { // send set value
       robot_->setLookAt(p0_.x(), p0_.y(), p0_.z());
       robot_->sendNeckAsync();
-    } else if (prev_msg_.data == "/look_at/positioned_target") {
+    } else if (*prev == "/look_at/positioned_target") {
       CreateThread(p_);
       return;
     }
-    SetTarget(prev_msg_);
+    std_msgs::String msg; msg.data = *prev;
+    SetTarget(msg);
   } else {
     thread_alive_mutex_.lock();
     target_thread_kill_ = true;
     thread_alive_mutex_.unlock();
     // listens to different topic, no need to care about thread state
     sub_.shutdown();
+    ROS_WARN("I am now listening to %s!!!!", _msg.data.c_str());
     sub_ = nh_.subscribe(_msg.data, 1, &LookAt::Callback, this);
-    prev_msg_.data = _msg.data;
+    prev_msgs_.erase(prev_msgs_.begin()); // erase oldest
+    prev_msgs_.push_back(_msg.data);
     sneak_ = (_msg.data == "/look_at/manager_disabled" ? true : false);
   }
 };
@@ -71,13 +79,14 @@ private: void CreateThread(const geometry_msgs::Point _msg) {
     thread_alive_mutex_.unlock();
   }
   sub_.shutdown();
+    ROS_WARN("I am now listening to %s!!!!", "/look_at/positioned_target");
   sub_ = nh_.subscribe("/look_at/positioned_target", 1, &LookAt::Callback, this);
 
   // set values
   p_.x = _msg.x;
   p_.y = _msg.y;
   p_.z = _msg.z;
-  prev_msg_.data = "/look_at/positioned_target";
+  prev_msgs_.push_back("/look_at/positioned_target");
 
   // build new thread
   target_thread_alive_ = true;
@@ -143,7 +152,7 @@ private: Eigen::Vector3d p0_;
 // target value for previous == "/look_at/positioned_target"
 private: geometry_msgs::Point p_;
 
-private: std_msgs::String prev_msg_;
+private: std::vector<std::string> prev_msgs_;
 };
 
 int main(int argc, char **argv) {
