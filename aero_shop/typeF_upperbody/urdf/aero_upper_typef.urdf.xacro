@@ -593,7 +593,7 @@
     <child  link="neck_link"/>
     <origin xyz="0 0 0.3535" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
-    <limit lower="-1.5707" upper="1.5707" effort="100" velocity="0.5" />
+    <limit lower="-2.1" upper="2.1" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_y_joint_trans" >
