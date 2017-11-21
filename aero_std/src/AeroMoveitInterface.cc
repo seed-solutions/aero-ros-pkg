@@ -347,11 +347,7 @@ void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::resetLookAt()
 {
-  if (tracking_mode_flag_) {
-    setLookAt(0.0, 0.0, 0.0);
-  } else {
-    setNeck(0.0, 0.0, 0.0);
-  }
+  setNeck(0.0, 0.0, 0.0);
 }
 
 //////////////////////////////////////////////////
