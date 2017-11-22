@@ -403,21 +403,34 @@ void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double 
   obj.x() = _x;
   obj.y() = _y;
   obj.z() = _z;
-  double eye_height = 0.2; // from body
-  double b_to_n = 0.35;
+  double neck2eye = 0.2;
+  double body2neck = 0.35;
 
+  // get robot position in map
+  geometry_msgs::Pose map2base = getCurrentPose();
+  Eigen::Vector3d map2base_p(map2base.position.x,
+                             map2base.position.y,
+                             map2base.position.z);
+  Eigen::Quaterniond map2base_q(map2base.orientation.w,
+                                map2base.orientation.x,
+                                map2base.orientation.y,
+                                map2base.orientation.z);
+
+  // get base position in robot coords
   updateLinkTransforms();
   std::string body_link = "body_link";
-  Eigen::Vector3d pos_body = kinematic_state->getGlobalLinkTransform(body_link).translation();
-  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
-  Eigen::Quaterniond qua_body(mat);
+  Eigen::Vector3d base2body_p = kinematic_state->getGlobalLinkTransform(body_link).translation();
+  Eigen::Matrix3d base2body_mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
+  Eigen::Quaterniond base2body_q(base2body_mat);
 
-  Eigen::Vector3d pos_obj_rel = qua_body.inverse() * (obj - pos_body) - Eigen::Vector3d{0.0, 0.0, b_to_n};
+  Eigen::Vector3d pos_obj_rel =
+    base2body_q.inverse() * (map2base_q.inverse() * (obj - map2base_p) - base2body_p)
+    - Eigen::Vector3d(0.0, 0.0, body2neck);
   double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
   double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
                         + pos_obj_rel.y() * pos_obj_rel.y()
                         + pos_obj_rel.z() * pos_obj_rel.z());
-  double theta = acos(eye_height / dis_obj);
+  double theta = acos(neck2eye / dis_obj);
   double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
   double pitch = 1.5708 + pitch_obj - theta;
 
