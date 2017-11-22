@@ -11,8 +11,11 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
   set_target_ =
     nh_.subscribe("/look_at/set_target_topic", 1, &LookAt::SetTarget, this);
 
-  create_thread_ =
-    nh_.subscribe("/look_at/target", 1, &LookAt::CreateThread, this);
+  create_thread_base_ =
+    nh_.subscribe("/look_at/target", 1, &LookAt::CreateThreadBase, this);
+
+  create_thread_map_ =
+    nh_.subscribe("/look_at/target/map", 1, &LookAt::CreateThreadMap, this);
 
   sneak_values_ =
     nh_.subscribe("/aero_controller/command", 1, &LookAt::SneakValues, this);
@@ -21,6 +24,7 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
   target_thread_kill_ = true;
   prev_msgs_ = {"/look_at/manager_disabled", "/look_at/manager_disabled"};
 
+  map_coordinate_ = false;
   sneak_ = false;
   p0_ = Eigen::Vector3d(0.0, 0.0, 0.0);
 };
@@ -32,12 +36,18 @@ private: void SetTarget(const std_msgs::String &_msg) {
   ROS_WARN("got %s where prev %s p0: %f %f %f",
            _msg.data.c_str(), prev->c_str(), p0_.x(), p0_.y(), p0_.z());
 
+  if (_msg.data == prev_msgs_.back()) // don't do anything if same topic
+    return;
+
   if (_msg.data == "/look_at/previous") {
     if (*prev == "/look_at/manager_disabled") { // send set value
-      robot_->setLookAt(p0_.x(), p0_.y(), p0_.z());
+      robot_->setNeck(p0_.x(), p0_.y(), p0_.z());
       robot_->sendNeckAsync();
     } else if (*prev == "/look_at/positioned_target") {
-      CreateThread(p_);
+      CreateThreadBase(p_);
+      return;
+    } else if (*prev == "/look_at/positioned_target/map/") {
+      CreateThreadMap(p_);
       return;
     }
     std_msgs::String msg; msg.data = *prev;
@@ -48,7 +58,13 @@ private: void SetTarget(const std_msgs::String &_msg) {
     thread_alive_mutex_.unlock();
     // listens to different topic, no need to care about thread state
     sub_.shutdown();
-    ROS_WARN("I am now listening to %s!!!!", _msg.data.c_str());
+    if (_msg.data.find("/map/") != std::string::npos) {
+      ROS_WARN("Listening to %s!!!! in map coordinate", _msg.data.c_str());
+      map_coordinate_ = true;
+    } else {
+      ROS_WARN("Listening to %s!!!! in base coordinate", _msg.data.c_str());
+      map_coordinate_ = false;
+    }
     sub_ = nh_.subscribe(_msg.data, 1, &LookAt::Callback, this);
     prev_msgs_.erase(prev_msgs_.begin()); // erase oldest
     prev_msgs_.push_back(_msg.data);
@@ -57,12 +73,31 @@ private: void SetTarget(const std_msgs::String &_msg) {
 };
 
 private: void Callback(const geometry_msgs::Point::ConstPtr &_msg) {
-  robot_->setRobotStateToCurrentState();
-  robot_->setLookAt(_msg->x, _msg->y, _msg->z);
+  if (map_coordinate_) {
+    // get robot position in map
+    Eigen::Vector3d vec_in_base =
+      robot_->volatileTransformToBase(_msg->x, _msg->y, _msg->z);
+    robot_->setRobotStateToCurrentState();
+    robot_->setLookAt(vec_in_base);
+  } else {
+    robot_->setRobotStateToCurrentState();
+    robot_->setLookAt(_msg->x, _msg->y, _msg->z);
+  }
   robot_->sendNeckAsync();
 };
 
-private: void CreateThread(const geometry_msgs::Point _msg) {
+private: void CreateThreadBase(const geometry_msgs::Point _msg) {
+  map_coordinate_ = false;
+  CreateThread(_msg, "/look_at/positioned_target");
+};
+
+private: void CreateThreadMap(const geometry_msgs::Point _msg) {
+  map_coordinate_ = true;
+  CreateThread(_msg, "/look_at/positioned_target/map/");
+};
+
+private: void CreateThread
+(const geometry_msgs::Point _msg, const std::string _topic) {
   // check if any thread is already running
   thread_alive_mutex_.lock();
   if (target_thread_alive_) {
@@ -79,21 +114,21 @@ private: void CreateThread(const geometry_msgs::Point _msg) {
     thread_alive_mutex_.unlock();
   }
   sub_.shutdown();
-    ROS_WARN("I am now listening to %s!!!!", "/look_at/positioned_target");
-  sub_ = nh_.subscribe("/look_at/positioned_target", 1, &LookAt::Callback, this);
+  ROS_WARN("Listening to %s!!!!", _topic.c_str());
+  sub_ = nh_.subscribe(_topic, 1, &LookAt::Callback, this);
 
   // set values
   p_.x = _msg.x;
   p_.y = _msg.y;
   p_.z = _msg.z;
-  prev_msgs_.push_back("/look_at/positioned_target");
+  prev_msgs_.push_back(_topic);
 
   // build new thread
   target_thread_alive_ = true;
   target_thread_kill_ = false;
-  std::thread run([&](double _x, double _y, double _z){
+  std::thread run([&](double _x, double _y, double _z, std::string _t) {
       ros::Publisher pub =
-        nh_.advertise<geometry_msgs::Point>("/look_at/positioned_target", 1);
+        nh_.advertise<geometry_msgs::Point>(_t, 1);
       bool thread_kill = false;
       while (!thread_kill) {
         geometry_msgs::Point msg;
@@ -107,7 +142,7 @@ private: void CreateThread(const geometry_msgs::Point _msg) {
       thread_alive_mutex_.lock();
       target_thread_alive_ = false;
       thread_alive_mutex_.unlock();
-    }, _msg.x, _msg.y, _msg.z);
+    }, _msg.x, _msg.y, _msg.z, _topic);
   run.detach();
 }
 
@@ -130,7 +165,9 @@ private: ros::NodeHandle nh_;
 
 private: ros::Subscriber set_target_;
 
-private: ros::Subscriber create_thread_;
+private: ros::Subscriber create_thread_base_;
+
+private: ros::Subscriber create_thread_map_;
 
 private: ros::Subscriber sneak_values_;
 
@@ -153,6 +190,8 @@ private: Eigen::Vector3d p0_;
 private: geometry_msgs::Point p_;
 
 private: std::vector<std::string> prev_msgs_;
+
+private: bool map_coordinate_;
 };
 
 int main(int argc, char **argv) {

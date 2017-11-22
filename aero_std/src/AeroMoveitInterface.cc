@@ -16,8 +16,11 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>
     ("/aero_controller/command", 1000);
 
-  look_at_publisher_ = _nh.advertise<geometry_msgs::Point>
+  look_at_publisher_base_ = _nh.advertise<geometry_msgs::Point>
     ("/look_at/target", 1000);
+
+  look_at_publisher_map_ = _nh.advertise<geometry_msgs::Point>
+    ("/look_at/target/map", 1000);
 
   speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
     ("/settings/speach", 1000);
@@ -312,7 +315,7 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z)
+void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate)
 {
   if (tracking_mode_flag_) {
     geometry_msgs::Point msg;
@@ -320,28 +323,31 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
     msg.y = _y;
     msg.z = _z;
 
-    look_at_publisher_.publish(msg);
+    if (_map_coordinate)
+      look_at_publisher_map_.publish(msg);
+    else
+      look_at_publisher_base_.publish(msg);
   } else {
     lookAt_(_x, _y, _z);
   }
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target)
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target, bool _map_coordinate)
 {
-  setLookAt(_target.x(), _target.y(), _target.z());
+  setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target)
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target, bool _map_coordinate)
 {
-  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()));
+  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()), _map_coordinate);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose)
+void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate)
 {
-  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z);
+  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z, _map_coordinate);
 }
 
 //////////////////////////////////////////////////
@@ -397,27 +403,43 @@ std::string aero::interface::AeroMoveitInterface::getLookAtTopic()
 }
 
 //////////////////////////////////////////////////
+Eigen::Vector3d aero::interface::AeroMoveitInterface::volatileTransformToBase(double _x, double _y, double _z) {
+  geometry_msgs::Pose map2base = getCurrentPose();
+  Eigen::Vector3d map2base_p(map2base.position.x,
+                             map2base.position.y,
+                             map2base.position.z);
+  Eigen::Quaterniond map2base_q(map2base.orientation.w,
+                                map2base.orientation.x,
+                                map2base.orientation.y,
+                                map2base.orientation.z);
+  // convert to map coordinates
+  return map2base_q.inverse() * (Eigen::Vector3d(_x, _y, _z) - map2base_p);
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double _z)
 {
   Eigen::Vector3d obj;
   obj.x() = _x;
   obj.y() = _y;
   obj.z() = _z;
-  double eye_height = 0.2; // from body
-  double b_to_n = 0.35;
+  double neck2eye = 0.2;
+  double body2neck = 0.35;
 
+  // get base position in robot coords
   updateLinkTransforms();
   std::string body_link = "body_link";
-  Eigen::Vector3d pos_body = kinematic_state->getGlobalLinkTransform(body_link).translation();
-  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
-  Eigen::Quaterniond qua_body(mat);
+  Eigen::Vector3d base2body_p = kinematic_state->getGlobalLinkTransform(body_link).translation();
+  Eigen::Matrix3d base2body_mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
+  Eigen::Quaterniond base2body_q(base2body_mat);
 
-  Eigen::Vector3d pos_obj_rel = qua_body.inverse() * (obj - pos_body) - Eigen::Vector3d{0.0, 0.0, b_to_n};
+  Eigen::Vector3d pos_obj_rel = base2body_q.inverse() * (obj - base2body_p) - Eigen::Vector3d(0.0, 0.0, body2neck);
+
   double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
   double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
                         + pos_obj_rel.y() * pos_obj_rel.y()
                         + pos_obj_rel.z() * pos_obj_rel.z());
-  double theta = acos(eye_height / dis_obj);
+  double theta = acos(neck2eye / dis_obj);
   double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
   double pitch = 1.5708 + pitch_obj - theta;
 
