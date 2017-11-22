@@ -110,16 +110,20 @@ namespace aero
       /// @param[in] _x target x in base_link coordinate
       /// @param[in] _y target y in base_link coordinate
       /// @param[in] _z target z in base_link coordinate
-    public: void setLookAt(double _x, double _y, double _z);
+      /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
+    public: void setLookAt(double _x, double _y, double _z, bool _map_coordinate=false);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _target target pose in base_link coordinate
-    public: void setLookAt(Eigen::Vector3d _target);
+      /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
+    public: void setLookAt(Eigen::Vector3d _target, bool _map_coordinate=false);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _target target pose in base_link coordinate
-    public: void setLookAt(Eigen::Vector3f _target);
+      /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
+    public: void setLookAt(Eigen::Vector3f _target, bool _map_coordinate=false);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _pose target pose in base_link coordinate
-    public: void setLookAt(geometry_msgs::Pose _pose);
+      /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
+    public: void setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate=false);
       /// @brief set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
       /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
@@ -135,6 +139,12 @@ namespace aero
       /// @brief Return last set topic for lookAt manager.
       /// @return Last set topic name.
     public: std::string getLookAtTopic();
+      /// @brief Converts map coordinate values to base coordinate values using current robot position in map coordinate. Be careful as inteded values may change if robot moves in map coordinates.
+      /// @param[in] _x x value in map coordinate.
+      /// @param[in] _y y value in map coordinate.
+      /// @param[in] _z z value in map coordinate.
+      /// @return Converted base value, valid as long as robot is in same position.
+    public: Eigen::Vector3d volatileTransformToBase(double _x, double _y, double _z);
       /// @brief protected function to calculate look at
       /// @param[in] _x target x in base_link coordinate
       /// @param[in] _y target y in base_link coordinate
@@ -521,7 +531,8 @@ namespace aero
     // protected: ros::ServiceClient activate_tracking_client_;
     protected: ros::Publisher display_publisher_;
     protected: ros::Publisher angle_vector_publisher_;
-    protected: ros::Publisher look_at_publisher_;
+    protected: ros::Publisher look_at_publisher_base_;
+    protected: ros::Publisher look_at_publisher_map_;
     protected: ros::Publisher speech_publisher_;
     protected: ros::Publisher speech_detection_settings_publisher_;
     protected: ros::Publisher cmd_vel_publisher_;
