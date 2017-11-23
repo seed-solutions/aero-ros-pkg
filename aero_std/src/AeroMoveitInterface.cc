@@ -69,6 +69,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   check_move_to_ = _nh.serviceClient<nav_msgs::GetPlan>
     ("/make_plan");
 
+  get_prev_lookat_topic_ = _nh.serviceClient<std_srvs::Trigger>
+    ("/look_at/get_prev_topic");
+
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
     ("/move_base", true);
@@ -383,11 +386,20 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
   std_msgs::String msg;
   msg.data = _topic;
 
-  if (_topic == "") {
+  if (_topic == "" || _topic == "/look_at/manager_disabled") {
     tracking_mode_flag_ = false;
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
+    return;
+  } else if (_topic == "/look_at/previous") {
+    std_srvs::Trigger srv;
+    if (!get_prev_lookat_topic_.call(srv))
+      ROS_WARN("failed to get lookat topic, using log, may cause errors.");
+    else
+      lookat_topic_ = srv.response.message;
+    ROS_INFO("set look at to %s from /look_at/previous", lookat_topic_.c_str());
+    setLookAtTopic(lookat_topic_);
     return;
   }
 

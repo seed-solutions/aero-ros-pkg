@@ -31,6 +31,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/SetBool.h>
+#include <std_srvs/Trigger.h>
 #include <aero_std/GetSpot.h>
 #include <nav_msgs/GetPlan.h>
 namespace aero
@@ -545,6 +546,7 @@ namespace aero
     protected: ros::ServiceClient send_angle_service_;
     protected: ros::ServiceClient get_spot_;
     protected: ros::ServiceClient check_move_to_;
+    protected: ros::ServiceClient get_prev_lookat_topic_;
     protected: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     protected: moveit::planning_interface::MoveGroup::Plan plan_;
     protected: std::string planned_group_;

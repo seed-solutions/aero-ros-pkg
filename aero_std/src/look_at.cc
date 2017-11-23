@@ -2,6 +2,7 @@
 #include <thread>
 #include <mutex>
 #include "aero_std/AeroMoveitInterface.hh"
+#include <std_srvs/Trigger.h>
 
 class LookAt {
 public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _robot)
@@ -19,6 +20,9 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
 
   sneak_values_ =
     nh_.subscribe("/aero_controller/command", 1, &LookAt::SneakValues, this);
+
+  reply_prev_topic_ =
+    nh_.advertiseService("/look_at/get_prev_topic", &LookAt::ReplePrevTopic, this);
 
   target_thread_alive_ = false;
   target_thread_kill_ = true;
@@ -161,6 +165,12 @@ private: void SneakValues
     }
 };
 
+private: bool ReplePrevTopic(std_srvs::Trigger::Request &_req,
+                             std_srvs::Trigger::Response &_res) {
+  _res.message = *(prev_msgs_.end() - 2);
+  return true;
+};
+
 private: ros::NodeHandle nh_;
 
 private: ros::Subscriber set_target_;
@@ -172,6 +182,8 @@ private: ros::Subscriber create_thread_map_;
 private: ros::Subscriber sneak_values_;
 
 private: ros::Subscriber sub_;
+
+private: ros::ServiceServer reply_prev_topic_;
 
 private: aero::interface::AeroMoveitInterfacePtr robot_;
 
