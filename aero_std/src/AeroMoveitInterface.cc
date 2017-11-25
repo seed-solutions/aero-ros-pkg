@@ -23,7 +23,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
     ("/look_at/target/map", 1000);
 
   speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
-    ("/settings/speach", 1000);
+    ("/settings/speech", 1000);
 
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
@@ -1985,6 +1985,10 @@ void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
 void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wait_sec)
 {
   ROS_INFO("speak: %s", _speech.c_str());
+  if (_wait_sec > 500) { // obviously too long for a speech
+    ROS_WARN("detected a large speaking time! mistaken seconds as milliseconds?");
+    _wait_sec / 1000.0f; // forcefully change to seconds
+  }
   std_msgs::String msg;
   msg.data = _speech;
   speech_publisher_.publish(msg);
