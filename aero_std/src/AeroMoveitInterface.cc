@@ -23,7 +23,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
     ("/look_at/target/map", 1000);
 
   speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
-    ("/settings/speach", 1000);
+    ("/settings/speech", 1000);
 
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
@@ -71,6 +71,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   get_prev_lookat_topic_ = _nh.serviceClient<std_srvs::Trigger>
     ("/look_at/get_prev_topic");
+
+  get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
+    ("/look_at/get_model_update");
 
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
@@ -386,8 +389,22 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
   std_msgs::String msg;
   msg.data = _topic;
 
-  if (_topic == "" || _topic == "/look_at/manager_disabled") {
+  if (_topic == "") {
     tracking_mode_flag_ = false;
+    msg.data = "/look_at/manager_disabled";
+    lookat_target_publisher_.publish(msg);
+    lookat_topic_ = msg.data;
+    return;
+  } else if (_topic == "/look_at/manager_disabled") {
+    ROS_WARN("note, /look_at/manager_disabled only valid from prev");
+    tracking_mode_flag_ = false;
+    aero_startup::AeroSendJoints srv;
+    if (!get_saved_neck_positions_.call(srv))
+      ROS_WARN("failed to get saved neck positions.");
+    setNeck(srv.response.points.positions.at(0),
+            srv.response.points.positions.at(1),
+            srv.response.points.positions.at(2));
+    sendNeckAsync();
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
@@ -1985,6 +2002,10 @@ void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
 void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wait_sec)
 {
   ROS_INFO("speak: %s", _speech.c_str());
+  if (_wait_sec > 500) { // obviously too long for a speech
+    ROS_WARN("detected a large speaking time! mistaken seconds as milliseconds?");
+    _wait_sec / 1000.0f; // forcefully change to seconds
+  }
   std_msgs::String msg;
   msg.data = _speech;
   speech_publisher_.publish(msg);

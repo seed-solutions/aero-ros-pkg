@@ -547,6 +547,7 @@ namespace aero
     protected: ros::ServiceClient get_spot_;
     protected: ros::ServiceClient check_move_to_;
     protected: ros::ServiceClient get_prev_lookat_topic_;
+    protected: ros::ServiceClient get_saved_neck_positions_;
     protected: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     protected: moveit::planning_interface::MoveGroup::Plan plan_;
     protected: std::string planned_group_;
