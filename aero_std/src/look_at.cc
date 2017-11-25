@@ -3,6 +3,7 @@
 #include <mutex>
 #include "aero_std/AeroMoveitInterface.hh"
 #include <std_srvs/Trigger.h>
+#include <aero_startup/AeroSendJoints.h>
 
 class LookAt {
 public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _robot)
@@ -22,7 +23,10 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
     nh_.subscribe("/aero_controller/command", 1, &LookAt::SneakValues, this);
 
   reply_prev_topic_ =
-    nh_.advertiseService("/look_at/get_prev_topic", &LookAt::ReplePrevTopic, this);
+    nh_.advertiseService("/look_at/get_prev_topic", &LookAt::ReplyPrevTopic, this);
+
+  reply_model_update__ =
+    nh_.advertiseService("/look_at/get_model_update", &LookAt::ReplyModelUpdate, this);
 
   target_thread_alive_ = false;
   target_thread_kill_ = true;
@@ -43,37 +47,37 @@ private: void SetTarget(const std_msgs::String &_msg) {
   if (_msg.data == prev_msgs_.back()) // don't do anything if same topic
     return;
 
-  if (_msg.data == "/look_at/previous") {
-    if (*prev == "/look_at/manager_disabled") { // send set value
-      robot_->setNeck(p0_.x(), p0_.y(), p0_.z());
-      robot_->sendNeckAsync();
-    } else if (*prev == "/look_at/positioned_target") {
-      CreateThreadBase(p_);
-      return;
-    } else if (*prev == "/look_at/positioned_target/map/") {
-      CreateThreadMap(p_);
-      return;
-    }
-    std_msgs::String msg; msg.data = *prev;
-    SetTarget(msg);
+  // if (_msg.data == "/look_at/previous") {
+  //   if (*prev == "/look_at/manager_disabled") { // send set value
+  //     robot_->setNeck(p0_.x(), p0_.y(), p0_.z());
+  //     robot_->sendNeckAsync();
+  //   } else if (*prev == "/look_at/positioned_target") {
+  //     CreateThreadBase(p_);
+  //     return;
+  //   } else if (*prev == "/look_at/positioned_target/map/") {
+  //     CreateThreadMap(p_);
+  //     return;
+  //   }
+  //   std_msgs::String msg; msg.data = *prev;
+  //   SetTarget(msg);
+  // } else {
+  thread_alive_mutex_.lock();
+  target_thread_kill_ = true;
+  thread_alive_mutex_.unlock();
+  // listens to different topic, no need to care about thread state
+  sub_.shutdown();
+  if (_msg.data.find("/map/") != std::string::npos) {
+    ROS_WARN("Listening to %s!!!! in map coordinate", _msg.data.c_str());
+    map_coordinate_ = true;
   } else {
-    thread_alive_mutex_.lock();
-    target_thread_kill_ = true;
-    thread_alive_mutex_.unlock();
-    // listens to different topic, no need to care about thread state
-    sub_.shutdown();
-    if (_msg.data.find("/map/") != std::string::npos) {
-      ROS_WARN("Listening to %s!!!! in map coordinate", _msg.data.c_str());
-      map_coordinate_ = true;
-    } else {
-      ROS_WARN("Listening to %s!!!! in base coordinate", _msg.data.c_str());
-      map_coordinate_ = false;
-    }
-    sub_ = nh_.subscribe(_msg.data, 1, &LookAt::Callback, this);
-    prev_msgs_.erase(prev_msgs_.begin()); // erase oldest
-    prev_msgs_.push_back(_msg.data);
-    sneak_ = (_msg.data == "/look_at/manager_disabled" ? true : false);
+    ROS_WARN("Listening to %s!!!! in base coordinate", _msg.data.c_str());
+    map_coordinate_ = false;
   }
+  sub_ = nh_.subscribe(_msg.data, 1, &LookAt::Callback, this);
+  prev_msgs_.erase(prev_msgs_.begin()); // erase oldest
+  prev_msgs_.push_back(_msg.data);
+  sneak_ = (_msg.data == "/look_at/manager_disabled" ? true : false);
+  // }
 };
 
 private: void Callback(const geometry_msgs::Point::ConstPtr &_msg) {
@@ -165,9 +169,15 @@ private: void SneakValues
     }
 };
 
-private: bool ReplePrevTopic(std_srvs::Trigger::Request &_req,
+private: bool ReplyPrevTopic(std_srvs::Trigger::Request &_req,
                              std_srvs::Trigger::Response &_res) {
   _res.message = *(prev_msgs_.end() - 2);
+  return true;
+};
+
+private: bool ReplyModelUpdate(aero_startup::AeroSendJoints::Request &_req,
+                               aero_startup::AeroSendJoints::Response &_res) {
+  _res.points.positions = {p0_.x(), p0_.y(), p0_.z()};
   return true;
 };
 
@@ -184,6 +194,8 @@ private: ros::Subscriber sneak_values_;
 private: ros::Subscriber sub_;
 
 private: ros::ServiceServer reply_prev_topic_;
+
+private: ros::ServiceServer reply_model_update__;
 
 private: aero::interface::AeroMoveitInterfacePtr robot_;
 

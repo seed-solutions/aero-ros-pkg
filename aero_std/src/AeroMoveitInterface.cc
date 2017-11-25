@@ -72,6 +72,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   get_prev_lookat_topic_ = _nh.serviceClient<std_srvs::Trigger>
     ("/look_at/get_prev_topic");
 
+  get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
+    ("/look_at/get_model_update");
+
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
     ("/move_base", true);
@@ -386,8 +389,22 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
   std_msgs::String msg;
   msg.data = _topic;
 
-  if (_topic == "" || _topic == "/look_at/manager_disabled") {
+  if (_topic == "") {
     tracking_mode_flag_ = false;
+    msg.data = "/look_at/manager_disabled";
+    lookat_target_publisher_.publish(msg);
+    lookat_topic_ = msg.data;
+    return;
+  } else if (_topic == "/look_at/manager_disabled") {
+    ROS_WARN("note, /look_at/manager_disabled only valid from prev");
+    tracking_mode_flag_ = false;
+    aero_startup::AeroSendJoints srv;
+    if (!get_saved_neck_positions_.call(srv))
+      ROS_WARN("failed to get saved neck positions.");
+    setNeck(srv.response.points.positions.at(0),
+            srv.response.points.positions.at(1),
+            srv.response.points.positions.at(2));
+    sendNeckAsync();
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
