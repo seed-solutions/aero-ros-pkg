@@ -836,7 +836,7 @@ void AeroControllerNode::WheelServoCallback(
     lower_.wheel_on();
   } else {
     // servo_on joints only, and servo off wheels
-    lower_.servo_on();
+    lower_.wheel_only_off();
   }
 
   mtx_lower_.unlock();
@@ -974,7 +974,11 @@ bool AeroControllerNode::GraspControlCallback(
   if (_req.script[1] == 4)
     return true;
 
-  usleep(3000 * 1000); // wait 3 seconds, must be 3!
+  if(_req.script[1] == 2) {//grasp
+    usleep(3000 * 1000); // wait 3 seconds, must be 3!
+  } else if(_req.script[1] == 3) {
+    usleep(1000 * 1000);
+  }
   mtx_upper_.lock();
   upper_.update_position();
   std::vector<int16_t> upper_stroke_vector_ret =
