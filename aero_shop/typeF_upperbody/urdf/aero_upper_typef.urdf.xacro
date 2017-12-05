@@ -423,7 +423,7 @@
     <origin xyz="0 0 0.010" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <!-- from -120 to 120 degrees-->
-    <limit lower="-2.0" upper="2.0" effort="100" velocity="0.9" />
+    <limit lower="-2.0" upper="2.0" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_y_joint_trans" >
@@ -491,7 +491,7 @@
     <origin xyz="0 0.05978 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <!-- from 0 to 90 degrees-->
-    <limit lower="0" upper="1.5707" effort="100" velocity="2.3" />
+    <limit lower="0" upper="1.5707" effort="100" velocity="1.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_r_joint_trans" >
@@ -659,7 +659,7 @@
     <origin xyz="0 -0.059778 0.028046" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <!-- from -90 to 0 degrees-->
-    <limit lower="-1.5707" upper="0" effort="100" velocity="2.3" />
+    <limit lower="-1.5707" upper="0" effort="100" velocity="1.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_r_joint_trans" >
