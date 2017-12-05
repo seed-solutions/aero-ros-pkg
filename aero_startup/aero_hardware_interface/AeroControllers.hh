@@ -66,6 +66,9 @@ namespace aero
     ///   if you want to servo off only wheel, call servo_on()
     public: void wheel_on();
 
+    /// @brief servo off command only wheel
+    public: void wheel_only_off();
+
     /// @brief servo toggle command with wheels
     /// @param _d0 joints 1: on, 0: off
     /// @param _d1 wheels 1: on, 0: off

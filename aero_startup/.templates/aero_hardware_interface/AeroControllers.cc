@@ -115,7 +115,13 @@ void AeroLowerController::servo_off()
 //////////////////////////////////////////////////
 void AeroLowerController::wheel_on()
 {
-  servo_command(1, 1);
+  servo_command(0x7fff, 1);
+}
+
+//////////////////////////////////////////////////
+void AeroLowerController::wheel_only_off()
+{
+  servo_command(0x7fff, 0);
 }
 
 //////////////////////////////////////////////////
