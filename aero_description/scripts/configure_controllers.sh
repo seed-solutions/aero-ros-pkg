@@ -127,7 +127,7 @@ do
     fi
 
     # shop_dir: aero_shop or your pkg path
-    # parts_dir: this must be directry under the ${shop_dir}
+    # parts_dir: this must be directly under the ${shop_dir}
     shop_dir=$(echo $line | awk '{print $1}' | cut -d/ -f1)
     parts_dir=$(echo $line | awk '{print $1}' | cut -d/ -f2)
     if [[ $shop_dir == "aero_shop" ]]
