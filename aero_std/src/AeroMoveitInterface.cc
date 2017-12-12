@@ -1063,7 +1063,7 @@ bool aero::interface::AeroMoveitInterface::cancelLifter()
   msg.points[0].positions = {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
   msg.points[0].time_from_start = ros::Duration(0.01); // duration is not used
   angle_vector_publisher_.publish(msg);
-  usleep(100 * 1000);
+  waitInterpolation_();
 
   // get current joint angles
   aero_startup::AeroSendJoints srv;
