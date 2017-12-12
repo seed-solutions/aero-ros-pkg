@@ -85,8 +85,20 @@ bool TorsoControl(aero_startup::AeroTorsoController::Request &req,
   aero_startup::AeroSendJoints srv;
   srv.request.reset_status = false;
   get_joints.call(srv);
-  float hip_ref = srv.response.points.positions.at(29);
-  float knee_ref = srv.response.points.positions.at(30);
+  // find names (joint index may change depending on robot part combination)
+  bool hip_found=false, knee_found=false;
+  float hip_ref, knee_ref;
+  for (size_t i = 0; i < srv.response.joint_names.size(); ++i)
+    if (srv.response.joint_names.at(i) == "hip_joint") {
+      hip_ref = srv.response.points.positions.at(i);
+      hip_found = true;
+    } else if (srv.response.joint_names.at(i) == "knee_joint") {
+      knee_ref = srv.response.points.positions.at(i);
+      knee_found = true;
+    }
+  if (!hip_found || !knee_found) // unexpected fatal error
+    return false;
+
   float x_now =
     link1_length * sin(hip_ref) - link2_length * sin(knee_ref - hip_ref);
   float z_now =
