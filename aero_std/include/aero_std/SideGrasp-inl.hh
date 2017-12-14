@@ -61,7 +61,7 @@ namespace aero
   };
 
   template < >
-  GraspRequest Grasp<SideGrasp>(SideGrasp _grasp)
+  inline GraspRequest Grasp<SideGrasp>(SideGrasp _grasp)
   {
     GraspRequest result;
     if (_grasp.arm != aero::arm::either) {
