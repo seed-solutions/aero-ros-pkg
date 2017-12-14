@@ -63,7 +63,7 @@ namespace aero
   };
 
   template < >
-  GraspRequest Grasp<TopGrasp>(TopGrasp _grasp)
+  inline GraspRequest Grasp<TopGrasp>(TopGrasp _grasp)
   {
     GraspRequest result;
 
