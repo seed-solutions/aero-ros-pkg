@@ -36,7 +36,7 @@ namespace aero
       lifter_z
       };
 
-  std::map<aero::joint, std::string> joint_map = {
+  const std::map<aero::joint, std::string> joint_map = {
     {aero::joint::r_shoulder_p,"r_shoulder_p_joint"},
     {aero::joint::r_shoulder_r,"r_shoulder_r_joint"},
     {aero::joint::r_shoulder_y,"r_shoulder_y_joint"},
@@ -60,7 +60,7 @@ namespace aero
     {aero::joint::lifter_z,"virtual_lifter_z_joint"}
   };
 
-  std::map<std::string, aero::joint> string_map = {
+  const std::map<std::string, aero::joint> string_map = {
     {"r_shoulder_p_joint", aero::joint::r_shoulder_p},
     {"r_shoulder_r_joint", aero::joint::r_shoulder_r},
     {"r_shoulder_y_joint" ,aero::joint::r_shoulder_y},
@@ -84,28 +84,28 @@ namespace aero
     {"virtual_lifter_z_joint" ,aero::joint::lifter_z}
   };
 
-  std::string arm2LR(aero::arm _arm)
+  inline std::string arm2LR(aero::arm _arm)
   {
     if (_arm == aero::arm::rarm) return "r";
     else if (_arm == aero::arm::larm) return "l";
     else return "";
   }
 
-  std::string arm2LeftRight(aero::arm _arm)
+  inline std::string arm2LeftRight(aero::arm _arm)
   {
     if (_arm == aero::arm::rarm) return "right";
     else if (_arm == aero::arm::larm) return "left";
     else return "";
   }
 
-  std::string arm2LarmRarm(aero::arm _arm)
+  inline std::string arm2LarmRarm(aero::arm _arm)
   {
     if (_arm == aero::arm::rarm) return "rarm";
     else if (_arm == aero::arm::larm) return "larm";
     else return "";
   }
 
-  std::string armAndRange2MoveGroup(aero::arm _arm, aero::ikrange _range)
+  inline std::string armAndRange2MoveGroup(aero::arm _arm, aero::ikrange _range)
   {
     std::string mg = arm2LarmRarm(_arm);
     if (_range == aero::ikrange::torso) mg = mg + "_with_torso";
@@ -114,7 +114,7 @@ namespace aero
     return mg;
   }
 
-  std::string armAndEEF2LinkName(aero::arm _arm, aero::eef _eef)
+  inline std::string armAndEEF2LinkName(aero::arm _arm, aero::eef _eef)
   {
     std::string ln = arm2LR(_arm);
     if (_eef == aero::eef::hand) ln = ln + "_hand_link";
@@ -125,17 +125,17 @@ namespace aero
     return ln;
   }
 
-  std::string joint2JointName(aero::joint _joint)
+  inline std::string joint2JointName(aero::joint _joint)
   {
-    return aero::joint_map[_joint];
+    return aero::joint_map.at(_joint);
   }
 
-  aero::joint jointName2Joint(std::string _joint_name)
+  inline aero::joint jointName2Joint(std::string _joint_name)
   {
-    return aero::string_map[_joint_name];
+    return aero::string_map.at(_joint_name);
   }
 
-  void jointMap2StringMap(std::map<aero::joint, double> &_j_map, std::map<std::string, double> &_s_map)
+  inline void jointMap2StringMap(std::map<aero::joint, double> &_j_map, std::map<std::string, double> &_s_map)
   {
     _s_map.clear();
     for(auto it = _j_map.begin(); it != _j_map.end(); ++it) {
@@ -143,7 +143,7 @@ namespace aero
     }
   }
 
-  void stringMap2JointMap(std::map<std::string, double> &_s_map, std::map<aero::joint, double> &_j_map)
+  inline void stringMap2JointMap(std::map<std::string, double> &_s_map, std::map<aero::joint, double> &_j_map)
   {
     _j_map.clear();
     for(auto it = _s_map.begin(); it != _s_map.end(); ++it) {
