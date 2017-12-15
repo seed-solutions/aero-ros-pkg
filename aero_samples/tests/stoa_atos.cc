@@ -11,10 +11,10 @@ void warnDiff(aero::interface::AeroMoveitInterfacePtr controller,
   double diff = fabs(get_angles.at(joint) - send_val);
   if (diff < 0.02) // around 1 degree
     ROS_INFO("diff okay in %s %lf: %lf",
-             aero::joint_map[joint].c_str(), send_val, diff);
+             aero::joint_map.at(joint).c_str(), send_val, diff);
   else
     ROS_WARN("bad diff in %s %lf: %lf",
-             aero::joint_map[joint].c_str(), send_val, diff);
+             aero::joint_map.at(joint).c_str(), send_val, diff);
 }
 
 int main(int argc, char **argv)
