@@ -399,12 +399,14 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
     ROS_WARN("note, /look_at/manager_disabled only valid from prev");
     tracking_mode_flag_ = false;
     aero_startup::AeroSendJoints srv;
-    if (!get_saved_neck_positions_.call(srv))
+    if (!get_saved_neck_positions_.call(srv)) {
       ROS_WARN("failed to get saved neck positions.");
-    setNeck(srv.response.points.positions.at(0),
-            srv.response.points.positions.at(1),
-            srv.response.points.positions.at(2));
-    sendNeckAsync();
+    } else {
+      setNeck(srv.response.points.positions.at(0),
+              srv.response.points.positions.at(1),
+              srv.response.points.positions.at(2));
+      sendNeckAsync();
+    }
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
