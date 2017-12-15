@@ -69,9 +69,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   check_move_to_ = _nh.serviceClient<nav_msgs::GetPlan>
     ("/make_plan");
 
-  get_prev_lookat_topic_ = _nh.serviceClient<std_srvs::Trigger>
-    ("/look_at/get_prev_topic");
-
   get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/look_at/get_model_update");
 
@@ -329,10 +326,15 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
     msg.y = _y;
     msg.z = _z;
 
-    if (_map_coordinate)
+    if (_map_coordinate) {
+      previous_topic_ = "/look_at/target/map:"
+        + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
       look_at_publisher_map_.publish(msg);
-    else
+    } else {
+      previous_topic_ = "/look_at/target:"
+        + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
       look_at_publisher_base_.publish(msg);
+    }
   } else {
     lookAt_(_x, _y, _z);
   }
@@ -384,8 +386,11 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync()
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
+void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bool _record_topic)
 {
+  if (_record_topic) // usually false
+    previous_topic_ = _topic;
+
   std_msgs::String msg;
   msg.data = _topic;
 
@@ -394,6 +399,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
+    previous_topic_ = "/look_at/manager_disabled";
     return;
   } else if (_topic == "/look_at/manager_disabled") {
     ROS_WARN("note, /look_at/manager_disabled only valid from prev");
@@ -410,15 +416,25 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic)
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
+    previous_topic_ = "/look_at/manager_disabled";
     return;
   } else if (_topic == "/look_at/previous") {
-    std_srvs::Trigger srv;
-    if (!get_prev_lookat_topic_.call(srv))
-      ROS_WARN("failed to get lookat topic, using log, may cause errors.");
-    else
-      lookat_topic_ = srv.response.message;
-    ROS_INFO("set look at to %s from /look_at/previous", lookat_topic_.c_str());
-    setLookAtTopic(lookat_topic_);
+    if (previous_topic_.find("/look_at/target") != std::string::npos) {
+      auto pos = previous_topic_.find(":");
+      std::string values = previous_topic_.substr(pos+1);
+      auto posx = values.find(",");
+      auto posy = values.find(",", posx+1);
+      geometry_msgs::Point msg;
+      msg.x = std::stof(values.substr(0, posx));
+      msg.y = std::stof(values.substr(posx + 1, posy - posx -1));
+      msg.z = std::stof(values.substr(posy + 1));
+      if (previous_topic_.find("map") != std::string::npos)
+        look_at_publisher_map_.publish(msg);
+      else
+        look_at_publisher_base_.publish(msg);
+    } else {
+      setLookAtTopic(previous_topic_);
+    }
     return;
   }
 

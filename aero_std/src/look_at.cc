@@ -22,15 +22,12 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
   sneak_values_ =
     nh_.subscribe("/aero_controller/command", 1, &LookAt::SneakValues, this);
 
-  reply_prev_topic_ =
-    nh_.advertiseService("/look_at/get_prev_topic", &LookAt::ReplyPrevTopic, this);
-
   reply_model_update__ =
     nh_.advertiseService("/look_at/get_model_update", &LookAt::ReplyModelUpdate, this);
 
   target_thread_alive_ = false;
   target_thread_kill_ = true;
-  prev_msgs_ = {"/look_at/manager_disabled", "/look_at/manager_disabled"};
+  prev_msgs_ = "/look_at/manager_disabled";
 
   map_coordinate_ = false;
   sneak_ = false;
@@ -40,27 +37,12 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
 public: ~LookAt() {};
 
 private: void SetTarget(const std_msgs::String &_msg) {
-  auto prev = (prev_msgs_.end() - 2);
   ROS_WARN("got %s where prev %s p0: %f %f %f",
-           _msg.data.c_str(), prev->c_str(), p0_.x(), p0_.y(), p0_.z());
+           _msg.data.c_str(), prev_msgs_.c_str(), p0_.x(), p0_.y(), p0_.z());
 
-  if (_msg.data == prev_msgs_.back()) // don't do anything if same topic
+  if (_msg.data == prev_msgs_) // don't do anything if same topic
     return;
 
-  // if (_msg.data == "/look_at/previous") {
-  //   if (*prev == "/look_at/manager_disabled") { // send set value
-  //     robot_->setNeck(p0_.x(), p0_.y(), p0_.z());
-  //     robot_->sendNeckAsync();
-  //   } else if (*prev == "/look_at/positioned_target") {
-  //     CreateThreadBase(p_);
-  //     return;
-  //   } else if (*prev == "/look_at/positioned_target/map/") {
-  //     CreateThreadMap(p_);
-  //     return;
-  //   }
-  //   std_msgs::String msg; msg.data = *prev;
-  //   SetTarget(msg);
-  // } else {
   thread_alive_mutex_.lock();
   target_thread_kill_ = true;
   thread_alive_mutex_.unlock();
@@ -74,10 +56,8 @@ private: void SetTarget(const std_msgs::String &_msg) {
     map_coordinate_ = false;
   }
   sub_ = nh_.subscribe(_msg.data, 1, &LookAt::Callback, this);
-  prev_msgs_.erase(prev_msgs_.begin()); // erase oldest
-  prev_msgs_.push_back(_msg.data);
+  prev_msgs_ = _msg.data;
   sneak_ = (_msg.data == "/look_at/manager_disabled" ? true : false);
-  // }
 };
 
 private: void Callback(const geometry_msgs::Point::ConstPtr &_msg) {
@@ -129,7 +109,7 @@ private: void CreateThread
   p_.x = _msg.x;
   p_.y = _msg.y;
   p_.z = _msg.z;
-  prev_msgs_.push_back(_topic);
+  prev_msgs_ = _topic;
 
   // build new thread
   target_thread_alive_ = true;
@@ -167,12 +147,6 @@ private: void SneakValues
     } else if (_msg->joint_names.at(i) == "neck_y_joint") {
       p0_.z() = _msg->points.back().positions.at(i);
     }
-};
-
-private: bool ReplyPrevTopic(std_srvs::Trigger::Request &_req,
-                             std_srvs::Trigger::Response &_res) {
-  _res.message = *(prev_msgs_.end() - 2);
-  return true;
 };
 
 private: bool ReplyModelUpdate(aero_startup::AeroSendJoints::Request &_req,
@@ -213,7 +187,7 @@ private: Eigen::Vector3d p0_;
 // target value for previous == "/look_at/positioned_target"
 private: geometry_msgs::Point p_;
 
-private: std::vector<std::string> prev_msgs_;
+private: std::string prev_msgs_;
 
 private: bool map_coordinate_;
 };
