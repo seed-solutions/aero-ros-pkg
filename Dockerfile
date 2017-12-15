@@ -8,6 +8,7 @@ RUN apt-get -q -qq update && apt-get -q -qq install -y \
     ros-indigo-desktop-full \
     ros-indigo-pr2-controllers-msgs \
     ros-indigo-move-base-msgs \
+    ros-indigo-moveit-full \
     bc \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/
@@ -30,3 +31,10 @@ RUN source /opt/ros/indigo/setup.bash \
 WORKDIR /catkin_ws/src/aero-ros-pkg-prerelease/aero_description
 RUN source /catkin_ws/devel/setup.bash \
     && ./setup.sh typeF
+WORKDIR /catkin_ws
+RUN source /catkin_ws/devel/setup.bash \
+    && catkin build aero_std
+RUN source /catkin_ws/devel/setup.bash \
+    && catkin run_tests aero_std
+RUN source /catkin_ws/devel/setup.bash \
+    && catkin build aero_samples
