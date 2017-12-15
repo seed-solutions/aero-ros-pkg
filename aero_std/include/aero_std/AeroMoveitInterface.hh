@@ -136,7 +136,7 @@ namespace aero
     public: void sendNeckAsync();
       /// @brief Set lookAt with external lookAt manager.
       /// @param[in] _topic Name of topic lookAt manager should subscribe.
-    public: void setLookAtTopic(std::string _topic);
+    public: void setLookAtTopic(std::string _topic, bool _record_topic=false);
       /// @brief Return last set topic for lookAt manager.
       /// @return Last set topic name.
     public: std::string getLookAtTopic();
@@ -546,7 +546,6 @@ namespace aero
     protected: ros::ServiceClient send_angle_service_;
     protected: ros::ServiceClient get_spot_;
     protected: ros::ServiceClient check_move_to_;
-    protected: ros::ServiceClient get_prev_lookat_topic_;
     protected: ros::ServiceClient get_saved_neck_positions_;
     protected: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
     protected: moveit::planning_interface::MoveGroup::Plan plan_;
@@ -564,6 +563,7 @@ namespace aero
     protected: geometry_msgs::Pose pose_using_;
     protected: bool in_action_;
     protected: std::string lookat_topic_;
+    protected: std::string previous_topic_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
