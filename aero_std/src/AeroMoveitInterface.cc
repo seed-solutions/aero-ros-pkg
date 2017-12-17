@@ -318,9 +318,14 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate)
+void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking)
 {
-  if (tracking_mode_flag_) {
+  if (_tracking) {
+    if (!tracking_mode_flag_) {
+      ROS_WARN("must call setTrackingMode to true first for tracking option");
+      return;
+    }
+
     geometry_msgs::Point msg;
     msg.x = _x;
     msg.y = _y;
@@ -341,21 +346,21 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target, bool _map_coordinate)
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target, bool _map_coordinate, bool _tracking)
 {
-  setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate);
+  setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate, _tracking);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target, bool _map_coordinate)
+void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target, bool _map_coordinate, bool _tracking)
 {
-  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()), _map_coordinate);
+  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()), _map_coordinate, _tracking);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate)
+void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate, bool _tracking)
 {
-  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z, _map_coordinate);
+  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z, _map_coordinate, _tracking);
 }
 
 //////////////////////////////////////////////////
@@ -375,19 +380,25 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendNeckAsync()
+void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
 {
+  ROS_INFO("tracking mode is %d in sendNeck", static_cast<int>(tracking_mode_flag_));
   trajectory_msgs::JointTrajectory msg;
   msg.points.resize(1);
   msg.joint_names = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
   msg.points[0].positions = {kinematic_state->getVariablePosition("neck_r_joint"), kinematic_state->getVariablePosition("neck_p_joint"), kinematic_state->getVariablePosition("neck_y_joint")};
-  msg.points[0].time_from_start = ros::Duration(1000 * 0.001);
+  msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
   angle_vector_publisher_.publish(msg);
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bool _record_topic)
 {
+  if (!tracking_mode_flag_) {
+    ROS_WARN("must call setTrackingMode to true first for setLookAtTopic");
+    return;
+  }
+
   if (_record_topic) // usually false
     previous_topic_ = _topic;
 
@@ -395,7 +406,6 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
   msg.data = _topic;
 
   if (_topic == "") {
-    tracking_mode_flag_ = false;
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
     lookat_topic_ = msg.data;
@@ -403,7 +413,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     return;
   } else if (_topic == "/look_at/manager_disabled") {
     ROS_WARN("note, /look_at/manager_disabled only valid from prev");
-    tracking_mode_flag_ = false;
+    ROS_WARN("please make sure to call setTrackingMode false");
     aero_startup::AeroSendJoints srv;
     if (!get_saved_neck_positions_.call(srv)) {
       ROS_WARN("failed to get saved neck positions.");
@@ -438,7 +448,6 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     return;
   }
 
-  tracking_mode_flag_ = true;
   lookat_target_publisher_.publish(msg);
   lookat_topic_ = _topic;
 }
@@ -539,9 +548,9 @@ void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
   // std_srvs::SetBool req;
   // req.request.data = _yes;
   // if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
-  tracking_mode_flag_ = _yes;
   if (!_yes)
     setLookAtTopic(""); // disable tracking
+  tracking_mode_flag_ = _yes;
 }
 
 //////////////////////////////////////////////////
@@ -722,6 +731,8 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 
     srv.request.points.positions.push_back(0.0);
     srv.request.joint_names.push_back("neck_y_joint");
+  } else {
+    ROS_WARN("tracking mode is on, not sending neck!");
   }
 
   if (!send_angle_service_.call(srv)) {
@@ -874,6 +885,8 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
 
     msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
     msg.joint_names.push_back("neck_y_joint");
+  } else {
+    ROS_WARN("tracking mode is on, not sending neck!");
   }
 
   angle_vector_publisher_.publish(msg);
@@ -957,8 +970,9 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     j_names.push_back("neck_r_joint");
     j_names.push_back("neck_p_joint");
     j_names.push_back("neck_y_joint");
+  } else {
+    ROS_WARN("tracking mode is on, not sending neck!");
   }
-
 
   //add lifter to trajectory
   if (_move_lifter == aero::ikrange::lifter) {
