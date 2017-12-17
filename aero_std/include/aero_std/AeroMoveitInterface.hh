@@ -519,6 +519,9 @@ namespace aero
     public: void endListen();
     public: std::string listen();
 
+      // waitInterpolation settings
+    public: inline void disableWaitInterpolation() {wait_ = false;};
+    public: inline void enableWaitInterpolation() {wait_ = true;};
 
       // callback functions
     protected: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
@@ -564,6 +567,7 @@ namespace aero
     protected: bool in_action_;
     protected: std::string lookat_topic_;
     protected: std::string previous_topic_;
+    protected: bool wait_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
