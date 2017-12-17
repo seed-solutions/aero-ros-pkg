@@ -13,6 +13,15 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
   set_target_ =
     nh_.subscribe("/look_at/set_target_topic", 1, &LookAt::SetTarget, this);
 
+  set_rpy_ =
+    nh_.subscribe("/look_at/rpy", 1, &LookAt::SetRPY, this);
+
+  set_static_base_ =
+    nh_.subscribe("/look_at/target/static", 1, &LookAt::SetStaticBase, this);
+
+  set_static_base_ =
+    nh_.subscribe("/look_at/target/static/map", 1, &LookAt::SetStaticMap, this);
+
   create_thread_base_ =
     nh_.subscribe("/look_at/target", 1, &LookAt::CreateThreadBase, this);
 
@@ -37,7 +46,7 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
 public: ~LookAt() {};
 
 private: void SetTarget(const std_msgs::String &_msg) {
-  ROS_WARN("got %s where prev %s p0: %f %f %f",
+  ROS_INFO("got %s where prev %s p0: %f %f %f",
            _msg.data.c_str(), prev_msgs_.c_str(), p0_.x(), p0_.y(), p0_.z());
 
   if (_msg.data == prev_msgs_) // don't do anything if same topic
@@ -49,10 +58,10 @@ private: void SetTarget(const std_msgs::String &_msg) {
   // listens to different topic, no need to care about thread state
   sub_.shutdown();
   if (_msg.data.find("/map/") != std::string::npos) {
-    ROS_WARN("Listening to %s!!!! in map coordinate", _msg.data.c_str());
+    ROS_INFO("Listening to %s!!!! in map coordinate", _msg.data.c_str());
     map_coordinate_ = true;
   } else {
-    ROS_WARN("Listening to %s!!!! in base coordinate", _msg.data.c_str());
+    ROS_INFO("Listening to %s!!!! in base coordinate", _msg.data.c_str());
     map_coordinate_ = false;
   }
   sub_ = nh_.subscribe(_msg.data, 1, &LookAt::Callback, this);
@@ -71,15 +80,48 @@ private: void Callback(const geometry_msgs::Point::ConstPtr &_msg) {
     robot_->setRobotStateToCurrentState();
     robot_->setLookAt(_msg->x, _msg->y, _msg->z);
   }
-  robot_->sendNeckAsync();
+  robot_->sendNeckAsync(2000);
+};
+
+private: void SetRPY(const geometry_msgs::Point::ConstPtr &_msg) {
+  thread_alive_mutex_.lock();
+  target_thread_kill_ = true;
+  thread_alive_mutex_.unlock();
+  sub_.shutdown();
+  sneak_ = false;
+  ROS_INFO("SetRPY: setting neck to %f %f %f", _msg->x, _msg->y, _msg->z);
+  robot_->setNeck(_msg->x, _msg->y, _msg->z);
+  robot_->sendNeckAsync(2000);
+};
+
+private: void SetStaticBase(const geometry_msgs::Point::ConstPtr &_msg) {
+  thread_alive_mutex_.lock();
+  target_thread_kill_ = true;
+  thread_alive_mutex_.unlock();
+  sub_.shutdown();
+  sneak_ = false;
+  map_coordinate_ = false;
+  Callback(_msg);
+};
+
+private: void SetStaticMap(const geometry_msgs::Point::ConstPtr &_msg) {
+  thread_alive_mutex_.lock();
+  target_thread_kill_ = true;
+  thread_alive_mutex_.unlock();
+  sub_.shutdown();
+  sneak_ = false;
+  map_coordinate_ = true;
+  Callback(_msg);
 };
 
 private: void CreateThreadBase(const geometry_msgs::Point _msg) {
+  sneak_ = false;
   map_coordinate_ = false;
   CreateThread(_msg, "/look_at/positioned_target");
 };
 
 private: void CreateThreadMap(const geometry_msgs::Point _msg) {
+  sneak_ = false;
   map_coordinate_ = true;
   CreateThread(_msg, "/look_at/positioned_target/map/");
 };
@@ -102,7 +144,7 @@ private: void CreateThread
     thread_alive_mutex_.unlock();
   }
   sub_.shutdown();
-  ROS_WARN("Listening to %s!!!!", _topic.c_str());
+  ROS_INFO("Listening to %s!!!!", _topic.c_str());
   sub_ = nh_.subscribe(_topic, 1, &LookAt::Callback, this);
 
   // set values
@@ -158,6 +200,12 @@ private: bool ReplyModelUpdate(aero_startup::AeroSendJoints::Request &_req,
 private: ros::NodeHandle nh_;
 
 private: ros::Subscriber set_target_;
+
+private: ros::Subscriber set_rpy_;
+
+private: ros::Subscriber set_static_base_;
+
+private: ros::Subscriber set_static_map_;
 
 private: ros::Subscriber create_thread_base_;
 
