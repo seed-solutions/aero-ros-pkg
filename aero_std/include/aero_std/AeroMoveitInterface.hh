@@ -112,19 +112,23 @@ namespace aero
       /// @param[in] _y target y in base_link coordinate
       /// @param[in] _z target z in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
-    public: void setLookAt(double _x, double _y, double _z, bool _map_coordinate=false);
+      /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
+    public: void setLookAt(double _x, double _y, double _z, bool _map_coordinate=false, bool _tracking=false);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _target target pose in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
-    public: void setLookAt(Eigen::Vector3d _target, bool _map_coordinate=false);
+      /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
+    public: void setLookAt(Eigen::Vector3d _target, bool _map_coordinate=false, bool _tracking=false);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _target target pose in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
-    public: void setLookAt(Eigen::Vector3f _target, bool _map_coordinate=false);
+      /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
+    public: void setLookAt(Eigen::Vector3f _target, bool _map_coordinate=false, bool _tracking=false);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _pose target pose in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
-    public: void setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate=false);
+      /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
+    public: void setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate=false, bool _tracking=false);
       /// @brief set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
       /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
@@ -133,7 +137,8 @@ namespace aero
       /// @param[in] _y yaw, if it's over limit, it beocomes within limit
     public: void setNeck(double _r,double _p, double _y);
       /// @brief send neck values
-    public: void sendNeckAsync();
+      /// @param[in] _time_ms execution time
+    public: void sendNeckAsync(int _time_ms=1000);
       /// @brief Set lookAt with external lookAt manager.
       /// @param[in] _topic Name of topic lookAt manager should subscribe.
     public: void setLookAtTopic(std::string _topic, bool _record_topic=false);
@@ -168,6 +173,7 @@ namespace aero
       /// @brief _i_type the list is in aero_std/include/interpolation_type.h
     public: bool setInterpolation(int _i_type);
 
+      /// @brief This function must be set to true if neck and body are moved in different threads (including within code threads). This function must be set to false manually when threads are joined or when tracking was disabled. The function is only a declaration of "neck will be moved in different threads" and has nothing to do with the actual tracking.
     public: void setTrackingMode(bool _yes);
     public: void switchOnPlane();
     public: void switchHeightOnly();
@@ -557,6 +563,7 @@ namespace aero
     protected: double lifter_thigh_link_;// lifter's upper link
     protected: double lifter_foreleg_link_;// lifter's lower link
     protected: std::string detected_speech_;
+      /// @brief flag of whether neck will be controlled by different thread or node
     protected: bool tracking_mode_flag_;
     protected: aero_startup::AeroSendJoints send_joints_srv_;
     protected: tf::TransformListener listener_;

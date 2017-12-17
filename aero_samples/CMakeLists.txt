@@ -65,3 +65,6 @@ target_link_libraries(fullbody_test_node ${catkin_LIBRARIES})
 
 add_executable(lifter_ik_test_node tests/lifter_ik.cc)
 target_link_libraries(lifter_ik_test_node ${catkin_LIBRARIES})
+
+add_executable(upper_controller_test_node tests/upper_controller_test.cc)
+target_link_libraries(upper_controller_test_node ${catkin_LIBRARIES})
