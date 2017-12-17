@@ -16,11 +16,20 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>
     ("/aero_controller/command", 1000);
 
+  look_at_publisher_rpy_ = _nh.advertise<geometry_msgs::Point>
+    ("/look_at/rpy", 10);
+
   look_at_publisher_base_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/target", 1000);
+    ("/look_at/target", 10);
 
   look_at_publisher_map_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/target/map", 1000);
+    ("/look_at/target/map", 10);
+
+  look_at_publisher_base_static_ = _nh.advertise<geometry_msgs::Point>
+    ("/look_at/target/static", 10);
+
+  look_at_publisher_map_static_ = _nh.advertise<geometry_msgs::Point>
+    ("/look_at/target/static/map", 10);
 
   speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
     ("/settings/speech", 1000);
@@ -33,10 +42,10 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
-    ("/joint_states",  1000, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
+    ("/joint_states", 1, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
 
   speech_listener_ = _nh.subscribe
-    ("/detected/speech/template",  1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
+    ("/detected/speech/template", 1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
 
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
@@ -126,6 +135,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   in_action_ = true;
 
   wait_ = true;
+  saved_wait_settings_ = true;
 
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
@@ -322,25 +332,32 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking)
 {
-  if (_tracking) {
-    if (!tracking_mode_flag_) {
-      ROS_WARN("must call setTrackingMode to true first for tracking option");
-      return;
-    }
+  ROS_INFO("setTrackingMode is %d in setLookAt, looking for %f %f %f in %s",
+           static_cast<int>(tracking_mode_flag_), _x, _y, _z,
+           (_map_coordinate ? "map" : "base"));
 
+  if (tracking_mode_flag_) {
     geometry_msgs::Point msg;
     msg.x = _x;
     msg.y = _y;
     msg.z = _z;
 
     if (_map_coordinate) {
-      previous_topic_ = "/look_at/target/map:"
-        + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
-      look_at_publisher_map_.publish(msg);
+      if (_tracking) {
+        previous_topic_ = "/look_at/target/map:"
+          + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        look_at_publisher_map_.publish(msg);
+      } else {
+        look_at_publisher_map_static_.publish(msg);
+      }
     } else {
-      previous_topic_ = "/look_at/target:"
-        + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
-      look_at_publisher_base_.publish(msg);
+      if (_tracking) {
+        previous_topic_ = "/look_at/target:"
+          + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        look_at_publisher_base_.publish(msg);
+      } else {
+        look_at_publisher_base_static_.publish(msg);
+      }
     }
   } else {
     lookAt_(_x, _y, _z);
@@ -372,8 +389,20 @@ void aero::interface::AeroMoveitInterface::resetLookAt()
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _y)
+void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _y, bool _to_node)
 {
+  if (tracking_mode_flag_) {
+    if (_to_node) {
+      ROS_WARN("setNeck called in tracking mode! updating and sending model in node!");
+      geometry_msgs::Point p;
+      p.x = _r; p.y = _p; p.z = _y;
+      look_at_publisher_rpy_.publish(p);
+      return;
+    } else {
+      ROS_WARN("setNeck called in tracking mode! are you sure of what you are doing?");
+    }
+  }
+
   kinematic_state->setVariablePosition("neck_r_joint", _r);
   kinematic_state->setVariablePosition("neck_p_joint", _p);
   kinematic_state->setVariablePosition("neck_y_joint", _y);
@@ -384,7 +413,10 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
 {
-  ROS_INFO("tracking mode is %d in sendNeck", static_cast<int>(tracking_mode_flag_));
+  if (tracking_mode_flag_) {
+    ROS_WARN("sendNeckAsync called in tracking mode! are you sure of what you are doing?");
+  }
+
   trajectory_msgs::JointTrajectory msg;
   msg.points.resize(1);
   msg.joint_names = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
@@ -420,10 +452,10 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     if (!get_saved_neck_positions_.call(srv)) {
       ROS_WARN("failed to get saved neck positions.");
     } else {
+      // neck value set and send through node
       setNeck(srv.response.points.positions.at(0),
               srv.response.points.positions.at(1),
-              srv.response.points.positions.at(2));
-      sendNeckAsync();
+              srv.response.points.positions.at(2), true);
     }
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
@@ -550,8 +582,14 @@ void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
   // std_srvs::SetBool req;
   // req.request.data = _yes;
   // if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
-  if (!_yes)
+  if (!_yes) {
+    wait_ = saved_wait_settings_;
     setLookAtTopic(""); // disable tracking
+  } else {
+    ROS_WARN("waitInterpolation disabled from setTrackingMode!");
+    saved_wait_settings_ = wait_;
+    wait_ = false;
+  }
   tracking_mode_flag_ = _yes;
 }
 

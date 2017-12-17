@@ -135,7 +135,7 @@ namespace aero
       /// @param[in] _r roll, if it's over limit, it beocomes within limit
       /// @param[in] _p pitch, if it's over limit, it beocomes within limit
       /// @param[in] _y yaw, if it's over limit, it beocomes within limit
-    public: void setNeck(double _r,double _p, double _y);
+    public: void setNeck(double _r,double _p, double _y, bool _to_node=false);
       /// @brief send neck values
       /// @param[in] _time_ms execution time
     public: void sendNeckAsync(int _time_ms=1000);
@@ -541,8 +541,11 @@ namespace aero
     // protected: ros::ServiceClient activate_tracking_client_;
     protected: ros::Publisher display_publisher_;
     protected: ros::Publisher angle_vector_publisher_;
+    protected: ros::Publisher look_at_publisher_rpy_;
     protected: ros::Publisher look_at_publisher_base_;
     protected: ros::Publisher look_at_publisher_map_;
+    protected: ros::Publisher look_at_publisher_base_static_;
+    protected: ros::Publisher look_at_publisher_map_static_;
     protected: ros::Publisher speech_publisher_;
     protected: ros::Publisher speech_detection_settings_publisher_;
     protected: ros::Publisher cmd_vel_publisher_;
@@ -575,6 +578,8 @@ namespace aero
     protected: std::string lookat_topic_;
     protected: std::string previous_topic_;
     protected: bool wait_;
+      /// @brief used for re-enabling wait_ in setTrackingMode(false)
+    protected: bool saved_wait_settings_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
