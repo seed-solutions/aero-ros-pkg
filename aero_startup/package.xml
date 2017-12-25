@@ -4,15 +4,13 @@
   <version>1.0.0</version>
   <description>The aero_startup package</description>
 
-  <license>EPL</license>
+  <license>BSD</license>
   <maintainer email="h-yaguchi@jsk.t.u-tokyo.ac.jp">
     Hiroaki Yaguchi
   </maintainer>
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>hrpsys_ros_bridge</build_depend>
-  <build_depend>hrpsys</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
@@ -25,8 +23,6 @@
   <build_depend>message_generation</build_depend>
   <build_depend>roslib</build_depend>
 
-  <run_depend>hrpsys_ros_bridge</run_depend>
-  <run_depend>hrpsys</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
