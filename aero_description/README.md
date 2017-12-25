@@ -85,8 +85,9 @@ joint information will be written into `AngleJointNames.hh`.
 
 Also `configure_controller.sh` will generate additional controllers,
 which are defined in `robot.cfg`.
-If parts dir contains `controller` dir, scripts will generate controller from it.
-
+If parts dir contains `controller` dir, scripts will copy controller from it.
+`->` operator means to set target directory under `aero_startup`,
+ex) mobile base controller will be copied into `aero_move_base` under `aero_startup`
 
 ### Angle <-> Stroke
 
