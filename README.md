@@ -58,28 +58,6 @@ source ~/.bashrc
 
 If you need clean up `aero_startup`, please use `aero_description/clean.sh`.
 
-#### Setup aero_moveit_config
-
-```bash
-# tell ROS where is aero_moveit_config directory
-roscd aero_description
-cd ../aero_moveit_config
-catkin build aero_moveit_config
-
-source ~/ros/indigo/devel/setup.bash
-
-# run setup code
-roscd aero_moveit_config/utils
-./setup_moveit_config.sh typeF
-```
-
-### Build aeroeus
-
-```
-catkin build aeroeus  # nothing to build, to recognize from rospack
-source ~/.bashrc
-```
-
 ## Control AERO
 
 ### Setup udev
