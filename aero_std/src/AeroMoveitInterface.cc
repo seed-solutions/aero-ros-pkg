@@ -291,6 +291,30 @@ bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikran
 }
 
 //////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, Eigen::Vector3d _pos, Eigen::Quaterniond _qua, std::string _eef_link, int _attempts) {
+  geometry_msgs::Pose pose;
+  tf::pointEigenToMsg(_pos, pose.position);
+  tf::quaternionEigenToMsg(_qua, pose.orientation);
+  return setFromIK(_move_group, pose, _eef_link, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, Eigen::Vector3d _pos, Eigen::Quaterniond _qua, std::string _eef_link, int _attempts) {
+  geometry_msgs::Pose pose;
+  tf::pointEigenToMsg(_pos, pose.position);
+  tf::quaternionEigenToMsg(_qua, pose.orientation);
+  return setFromIK(_arm, _range, pose, _eef_link, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, Eigen::Vector3d _pos, Eigen::Quaterniond _qua, aero::eef _eef, int _attempts) {
+  geometry_msgs::Pose pose;
+  tf::pointEigenToMsg(_pos, pose.position);
+  tf::quaternionEigenToMsg(_qua, pose.orientation);
+  return setFromIK(_arm, _range, pose, _eef, _attempts);
+}
+
+//////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool _check_lifter_ik)
 {
 
