@@ -4,13 +4,14 @@
 
 ## Description
 
-This package provides standard interfaces to use AERO
+This package provides standard interfaces to use AERO.
+Please see `aero_samples` to learn how to use.
 
 ## Library
 
 ### aero_moveit_interface
 
-This requires spot_manager and its service '/get_spot'
+This requires spot_manager and its service `/get_spot`
 
 ### object_features
 
@@ -29,7 +30,7 @@ All spots are saved as yaml into `aero_std/spot.yaml` by the default.
 
 ### GetSpot
 
-Get designated spot as geometry_msgs/Pose
+Get designated spot as `geometry_msgs/Pose`
 
 #### request
 

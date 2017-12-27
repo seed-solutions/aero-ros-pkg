@@ -3,6 +3,8 @@
 - author: Kazuhiro Sasabuchi
 
 The package manages robot hardware configuration.
+One of SEEDNOID's feature is easily change and customize its component such as hand or lower body.
+This package provides setup procedure from user hardware configuration.
 
 ## Basic Usage
 
@@ -53,6 +55,18 @@ else followings will run after these.
 
 ## Detail
 
+### Configuration
+
+User can choose hardware component from `aero_shop`.
+`typeF` is the default configuration.
+This contains following files.
+
+- `aero_upper.txt`
+- `aero-wheels.txt`
+- `robot.cfg`
+
+`robot.cfg` contains parts construction.
+
 ### Controller
 
 The robot structure is assumed to have 2 SEED controllers,
@@ -70,12 +84,10 @@ When running `make_contrllers.sh`,
 joint information will be written into `AngleJointNames.hh`.
 
 Also `configure_controller.sh` will generate additional controllers,
-which are defined in `controllers.cfg`.
-Syntax of configuration is:
-
-- `&` : MERGE into controller class
-- `+` : ADD standalone node into CMakeLists.txt and launch file
-
+which are defined in `robot.cfg`.
+If parts dir contains `controller` dir, scripts will copy controller from it.
+`->` operator means to set target directory under `aero_startup`,
+ex) mobile base controller will be copied into `aero_move_base` under `aero_startup`
 
 ### Angle <-> Stroke
 
@@ -122,37 +134,27 @@ This step is not required if you are using an existing robot configuration direc
 
 The configuration directory MUST contain followings.
 
-- controllers
-  - (controller sources)
 - headers
-  - (controller headers)
-- meshes
-  - aero_upper_meshes
-    - (upper body mesh files)
-  - aero{$LOWER}_meshes
-    - (lower body mesh files)
-- models
-  - csv
-    - {joint_name}.csv
-  - gen
-    - (generated files from VRML)
-  - wrl
-    - (VRML files)
+  - Angle2Stroke.hh
+  - Stroke2Angle.hh
+  - Constants.hh
+- moveit_config
+  - config
+    - AeroUpperRobot.srdf
+    - controllers.yaml
+    - fake_controllers.yaml
+    - joint_limits.yaml
+    - kinematics.yaml
+    - ompl_planning.yaml
 - robots
   - aero.urdf.xacro
   - aero_moveit_ik.urdf.xacro
   - aero_moveit_ik_op.urdf.xacro
   - aero_moveit_ik_ho.urdf.xacro
 - urdf
-  - aero_upper
-    - aero_upper.urdf.xacro
-    - aero_upper.gazebo.xacro
-    - aero_upper.transmission.xacro
-  - aero{$LOWER}
-    - aero{$LOWER}.urdf.xacro
-    - aero{$LOWER}.gazebo.xacro
-    - aero{$LOWER}.transmission.xacro
+  - aero-upper.urdf.xacro
+  - aero-{$LOWER}.urdf.xacro
   - common.xacro
 - aero_upper.txt
-- aero{$LOWER}.txt
-- controllers.cfg
+- aero-{$LOWER}.txt
+- robot.cfg

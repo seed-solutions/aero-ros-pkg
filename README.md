@@ -5,7 +5,11 @@
 ### Install ROS
 
 ```
-sudo apt-get install ros-indigo-desktop-full ros-indigo-roseus ros-indigo-hrpsys-ros-bridge ros-indigo-euscollada ros-indigo-pr2eus
+sudo apt-get install ros-indigo-desktop-full
+sudo apt-get install ros-indigo-pr2-controller-msgs ros-indigo-move-base-msgs
+sudo apt-get install ros-indigo-map-server ros-indigo-amcl ros-indigo-move-base ros-indigo-eband-local-planner
+sudo apt-get install ros-indigo-moveit
+sudo apt-get install ros-indigo-moveit-ros-planning-interface ros-indigo-moveit-ros-planning ros-indigo-moveit-core ros-indigo-moveit-ros-perception ros-indigo-moveit-ros-warehouse ros-indigo-moveit-kinematics
 ```
 
 ### Setup catkin workspace
@@ -26,8 +30,8 @@ source ~/ros/indigo/devel/setup.bash
 
 ```
 cd ~/ros/indigo/src
-wstool set aero-ros-pkg-prerelease https://github.com/hyaguchijsk/aero-ros-pkg-prerelease.git --git
-wstool up aero-ros-pkg-prerelease
+wstool set aero-ros-pkg https://github.com/seed-solutions/aero-ros-pkg.git --git
+wstool up aero-ros-pkg
 ```
 
 ### Build packge
@@ -35,7 +39,7 @@ wstool up aero-ros-pkg-prerelease
 #### Build aero_description
 
 ```
-cd aero-ros-pkg-prerelease
+cd aero-ros-pkg
 catkin build aero_description
 soure ~/.bashrc
 ```
@@ -53,33 +57,6 @@ source ~/.bashrc
 ```
 
 If you need clean up `aero_startup`, please use `aero_description/clean.sh`.
-
-#### Setup aero_moveit_config
-##### install
-```bash
-sudo apt-get install ros-indigo-moveit
-sudo apt-get install ros-indigo-moveit-ros-planning-interface ros-indigo-moveit-ros-planning ros-indigo-moveit-core ros-indigo-moveit-ros-perception ros-indigo-moveit-ros-warehouse ros-indigo-moveit-kinematics
-```
-##### setup directory
-```bash
-# tell ROS where is aero_moveit_config directory
-cd aero_description
-cd ../aero_moveit_config
-catkin bt
-
-source ~/ros/indigo/devel/setup.bash
-
-# run setup code
-roscd aero_moveit_config/utils
-./setup_moveit_config.sh typeF
-```
-
-### Build aeroeus
-
-```
-catkin build aeroeus  # nothing to build, to recognize from rospack
-source ~/.bashrc
-```
 
 ## Control AERO
 
@@ -102,24 +79,49 @@ rosrun rviz rviz
 then add RobotModel, change Robot Description to `aero_description`.
 
 
-### Run euslisp
+## Samples
+
+### Build Samples
 
 ```
-roscd aeroeus
-roseus aero-interface.l
+catkin build aero_samples
 ```
 
-To initialize eus interface,
+### Run Minimum Sample
 
 ```
-(aero-init)
-(load-controllers)
-(objects (list *aero*))
+rosrun aero_samples minimum_sample_node
 ```
 
-Then, you can control AERO from euslisp, like
+### Control from Command Line
+
+#### Move Joint
 
 ```
-(send *aero* :reset-manip-pose)
-(send *ri* :angle-vector (send *aero* :angle-vector) 5000)
+rostopic pub /aero_controller/command trajectory_msgs/JointTrajectory "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+joint_names:
+- 'r_wrist_y_joint'
+points:
+- positions: [0.5]
+  velocities: [0]
+  accelerations: [0]
+  effort: [0]
+  time_from_start: {secs: 1, nsecs: 0}"
 ```
+
+#### Move Torso
+
+```
+rosservice call /aero_torso_controller  "x: 0.0
+z: -200.0
+coordinate: 'world:2000'"
+```
+
+### Writing Codes
+
+see `aero_samples` and `aero_std` documentation
