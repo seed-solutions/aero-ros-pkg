@@ -41,6 +41,14 @@ int main(int argc, char **argv)
   // aero::eef::pick is the tip of finger when hand angle is zero
   bool ik_result = robot->setFromIK(aero::arm::rarm, aero::ikrange::torso, pose1, aero::eef::grasp);
 
+  // you can use Eigen::Vector3d and Eigen::Quaternion instead of geometry_msgs::Pose for ik target.
+  // sample code
+  //
+  // Eigen::Vector3d pos(0.57, -0.15, 1.1);
+  // Eigen::Quaterniond qua(1.0, 0.0, 0.0, 0.0);
+  // bool ik_result = robot->setFromIK(aero::arm::rarm, aero::ikrange::torso, pos, qua, aero::eef::grasp);
+  //
+
   if (ik_result) {// if ik successed, send the joint values to real robot
     ROS_INFO("ik success !");
     robot->sendAngleVector(aero::arm::rarm, aero::ikrange::torso, 3000);
