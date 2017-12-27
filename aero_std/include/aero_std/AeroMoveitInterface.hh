@@ -548,9 +548,6 @@ namespace aero
       // with linux_kinect
     public: void speakAsync(std::string _speech);
     public: void speak(std::string _speech, float _wait_sec);
-    public: void beginListen();
-    public: void endListen();
-    public: std::string listen();
 
       // waitInterpolation settings
     public: inline void disableWaitInterpolation() {wait_ = false;};
@@ -558,14 +555,12 @@ namespace aero
 
       // callback functions
     protected: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
-    protected: void listenerCallBack_(const std_msgs::String::ConstPtr& _msg);
 
     protected: void inActionCallback_(const std_msgs::Bool::ConstPtr& _msg);
 
     protected: ros::ServiceClient hand_grasp_client_;
     protected: ros::ServiceClient joint_states_client_;
     protected: ros::ServiceClient interpolation_client_;
-    // protected: ros::ServiceClient activate_tracking_client_;
     protected: ros::Publisher display_publisher_;
     protected: ros::Publisher angle_vector_publisher_;
     protected: ros::Publisher look_at_publisher_rpy_;
@@ -574,11 +569,9 @@ namespace aero
     protected: ros::Publisher look_at_publisher_base_static_;
     protected: ros::Publisher look_at_publisher_map_static_;
     protected: ros::Publisher speech_publisher_;
-    protected: ros::Publisher speech_detection_settings_publisher_;
     protected: ros::Publisher cmd_vel_publisher_;
     protected: ros::Publisher lookat_target_publisher_;
     protected: ros::Subscriber joint_states_subscriber_;
-    protected: ros::Subscriber speech_listener_;
     protected: ros::Subscriber in_action_listener_;
     protected: ros::ServiceClient waist_service_;
     protected: ros::ServiceClient lifter_ik_service_;
@@ -595,7 +588,6 @@ namespace aero
     protected: sensor_msgs::JointState joint_states_;
     protected: double lifter_thigh_link_;// lifter's upper link
     protected: double lifter_foreleg_link_;// lifter's lower link
-    protected: std::string detected_speech_;
       /// @brief flag of whether neck will be controlled by different thread or node
     protected: bool tracking_mode_flag_;
     protected: aero_startup::AeroSendJoints send_joints_srv_;
