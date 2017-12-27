@@ -44,9 +44,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
 
-  in_action_listener_ = _nh.subscribe
-    ("/aero_controller/in_action", 1, &aero::interface::AeroMoveitInterface::inActionCallback_, this);
-
   // service clients
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
     ("/aero_hand_controller");
@@ -71,6 +68,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/look_at/get_model_update");
+
+  in_action_service_ = _nh.serviceClient<std_srvs::Trigger>("/aero_controller/get_in_action");
 
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
@@ -120,8 +119,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   lifter_foreleg_link_ = 0.25;
 
   tracking_mode_flag_ = false;
-
-  in_action_ = true;
 
   wait_ = true;
   saved_wait_settings_ = true;
@@ -1304,19 +1301,22 @@ bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
   bool check_timeout = false;
-  if(_timeout_ms > 0) check_timeout = true;
+  if (_timeout_ms > 0) check_timeout = true;
   ros::Duration timeout = ros::Duration(_timeout_ms * 0.001);
   ros::Time start = ros::Time::now();
 
-
-  while(ros::ok()) {
+  std_srvs::Trigger srv;
+  while (ros::ok()) {
     usleep(50 * 1000);// 20Hz
-    ros::spinOnce();
-    if(!in_action_) {
-      ROS_INFO("%s: finished", __FUNCTION__);
-      return true;
+    if (in_action_service_.call(srv)) {
+      bool in_action = srv.response.success;
+      if (!in_action) {
+        ROS_INFO("%s: finished", __FUNCTION__);
+        return true;
+      }
     }
-    if(check_timeout && start + timeout < ros::Time::now()) {
+
+    if (check_timeout && start + timeout < ros::Time::now()) {
       ROS_WARN("%s: timeout! %d[ms]", __FUNCTION__, _timeout_ms);
       break;
     }
@@ -2142,10 +2142,4 @@ void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wai
 void aero::interface::AeroMoveitInterface::JointStateCallback_(const sensor_msgs::JointState::ConstPtr& _msg)
 {
   joint_states_ = *_msg;
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::inActionCallback_(const std_msgs::Bool::ConstPtr& _msg)
-{
-  in_action_ = _msg->data;
 }

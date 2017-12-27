@@ -556,8 +556,6 @@ namespace aero
       // callback functions
     protected: void JointStateCallback_(const sensor_msgs::JointState::ConstPtr &_msg);
 
-    protected: void inActionCallback_(const std_msgs::Bool::ConstPtr& _msg);
-
     protected: ros::ServiceClient hand_grasp_client_;
     protected: ros::ServiceClient joint_states_client_;
     protected: ros::ServiceClient interpolation_client_;
@@ -572,7 +570,6 @@ namespace aero
     protected: ros::Publisher cmd_vel_publisher_;
     protected: ros::Publisher lookat_target_publisher_;
     protected: ros::Subscriber joint_states_subscriber_;
-    protected: ros::Subscriber in_action_listener_;
     protected: ros::ServiceClient waist_service_;
     protected: ros::ServiceClient lifter_ik_service_;
     protected: ros::ServiceClient send_angle_service_;
@@ -593,12 +590,13 @@ namespace aero
     protected: aero_startup::AeroSendJoints send_joints_srv_;
     protected: tf::TransformListener listener_;
     protected: geometry_msgs::Pose pose_using_;
-    protected: bool in_action_;
     protected: std::string lookat_topic_;
     protected: std::string previous_topic_;
     protected: bool wait_;
       /// @brief used for re-enabling wait_ in setTrackingMode(false)
     protected: bool saved_wait_settings_;
+
+    protected: ros::ServiceClient in_action_service_;
 
     };
     typedef std::shared_ptr<AeroMoveitInterface> AeroMoveitInterfacePtr;
