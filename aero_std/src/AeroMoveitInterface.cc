@@ -596,6 +596,7 @@ void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
   // req.request.data = _yes;
   // if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
   if (!_yes) {
+    ROS_WARN("disabling tracking mode!");
     wait_ = saved_wait_settings_;
     setLookAtTopic(""); // disable tracking
   } else {
