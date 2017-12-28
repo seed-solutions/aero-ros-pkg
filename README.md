@@ -1,5 +1,7 @@
 # aero-ros-pkg
 
+[![Build Status](https://travis-ci.org/seed-solutions/aero-ros-pkg.svg?branch=master)](https://travis-ci.org/seed-solutions/aero-ros-pkg)
+
 ## Pre-requirement
 
 ### Install ROS
