@@ -1,4 +1,4 @@
-# aero-ros-pkg-prerelease
+# aero-ros-pkg
 
 ## Pre-requirement
 
