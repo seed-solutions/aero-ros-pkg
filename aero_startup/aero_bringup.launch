@@ -17,5 +17,5 @@
   <include file="$(find aero_moveit_config)/launch/moveit_planning_execution.launch"/>
 
   <!--wait interpolation-->
-  <node pkg="aero_std" type="wait_interpolation" name="wait_interpolation_manager"/>
+  <node pkg="aero_startup" type="wait_interpolation" name="wait_interpolation_manager"/>
 </launch>
