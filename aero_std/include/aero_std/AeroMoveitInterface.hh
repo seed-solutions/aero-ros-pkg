@@ -202,7 +202,11 @@ namespace aero
 
       /// @brief This function must be set to true if neck and body are moved in different threads (including within code threads). This function must be set to false manually when threads are joined or when tracking was disabled. The function is only a declaration of "neck will be moved in different threads" and has nothing to do with the actual tracking.
     public: void setTrackingMode(bool _yes);
+      /// @brief add priority to lifter ik mode. when in OnPlane mode, lifter moves x and z but z is limited.
+      /// @attention when you call setFromIK with aero:ikrange::lifter, both modes are tried but the one with has priority is used previously.
     public: void switchOnPlane();
+      /// @brief add priority to lifter ik mode. when in HeightOnly mode, lifter moves only z but z is full range.
+      /// @attention when you call setFromIK with aero:ikrange::lifter, both modes are tried but the one with has priority is used previously.
     public: void switchHeightOnly();
 
       // ------------------------------------------------------------
