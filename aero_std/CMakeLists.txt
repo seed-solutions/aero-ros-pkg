@@ -88,6 +88,9 @@ target_link_libraries(test_spot ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES} spot_l
 add_executable(look_at src/look_at.cc)
 target_link_libraries(look_at ${catkin_LIBRARIES} aero_moveit_interface)
 
+add_executable(wait_interpolation src/wait_interpolation.cc)
+target_link_libraries(wait_interpolation ${catkin_LIBRARIES} aero_moveit_interface)
+
 add_library(object_features
   src/ObjectFeatures.cc
 )
