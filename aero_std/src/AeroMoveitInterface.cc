@@ -31,9 +31,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   look_at_publisher_map_static_ = _nh.advertise<geometry_msgs::Point>
     ("/look_at/target/static/map", 10);
 
-  speech_detection_settings_publisher_ = _nh.advertise<std_msgs::String>
-    ("/settings/speech", 1000);
-
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
 
@@ -44,14 +41,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states", 1, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
 
-  speech_listener_ = _nh.subscribe
-    ("/detected/speech/template", 1000, &aero::interface::AeroMoveitInterface::listenerCallBack_, this);
-
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
-
-  in_action_listener_ = _nh.subscribe
-    ("/aero_controller/in_action", 1, &aero::interface::AeroMoveitInterface::inActionCallback_, this);
 
   // service clients
   hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
@@ -62,9 +53,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   interpolation_client_ = _nh.serviceClient<aero_startup::AeroInterpolation>
     ("/aero_controller/interpolation");
-
-  // activate_tracking_client_ = _nh.serviceClient<std_srvs::SetBool>
-  //   ("/look_at/set_tracking");
 
   lifter_ik_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_kinematics");
@@ -80,6 +68,8 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/look_at/get_model_update");
+
+  in_action_service_ = _nh.serviceClient<std_srvs::Trigger>("/aero_controller/get_in_action");
 
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
@@ -128,11 +118,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   lifter_thigh_link_ = 0.25;
   lifter_foreleg_link_ = 0.25;
 
-  detected_speech_ = "";
-
   tracking_mode_flag_ = false;
-
-  in_action_ = true;
 
   wait_ = true;
   saved_wait_settings_ = true;
@@ -607,6 +593,7 @@ void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
   // req.request.data = _yes;
   // if (activate_tracking_client_.call(req)) tracking_mode_flag_ = _yes;
   if (!_yes) {
+    ROS_WARN("disabling tracking mode!");
     wait_ = saved_wait_settings_;
     setLookAtTopic(""); // disable tracking
   } else {
@@ -1314,19 +1301,22 @@ bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
   bool check_timeout = false;
-  if(_timeout_ms > 0) check_timeout = true;
+  if (_timeout_ms > 0) check_timeout = true;
   ros::Duration timeout = ros::Duration(_timeout_ms * 0.001);
   ros::Time start = ros::Time::now();
 
-
-  while(ros::ok()) {
+  std_srvs::Trigger srv;
+  while (ros::ok()) {
     usleep(50 * 1000);// 20Hz
-    ros::spinOnce();
-    if(!in_action_) {
-      ROS_INFO("%s: finished", __FUNCTION__);
-      return true;
+    if (in_action_service_.call(srv)) {
+      bool in_action = srv.response.success;
+      if (!in_action) {
+        ROS_INFO("%s: finished", __FUNCTION__);
+        return true;
+      }
     }
-    if(check_timeout && start + timeout < ros::Time::now()) {
+
+    if (check_timeout && start + timeout < ros::Time::now()) {
       ROS_WARN("%s: timeout! %d[ms]", __FUNCTION__, _timeout_ms);
       break;
     }
@@ -2148,42 +2138,8 @@ void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wai
   usleep(static_cast<int>(_wait_sec * 1000) * 1000);
 }
 
-/////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::beginListen() {
-  std_msgs::String topic;
-  topic.data = "/template/on";
-  speech_detection_settings_publisher_.publish(topic);
-};
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::endListen() {
-  std_msgs::String topic;
-  topic.data = "/template/off";
-  speech_detection_settings_publisher_.publish(topic);
-};
-
-//////////////////////////////////////////////////
-std::string aero::interface::AeroMoveitInterface::listen() {
-  ros::spinOnce();
-  std::string result = detected_speech_;
-  detected_speech_ = "";
-  return result;
-};
-
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::JointStateCallback_(const sensor_msgs::JointState::ConstPtr& _msg)
 {
   joint_states_ = *_msg;
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::listenerCallBack_(const std_msgs::String::ConstPtr& _msg)
-{
-  detected_speech_ = _msg->data;
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::inActionCallback_(const std_msgs::Bool::ConstPtr& _msg)
-{
-  in_action_ = _msg->data;
 }

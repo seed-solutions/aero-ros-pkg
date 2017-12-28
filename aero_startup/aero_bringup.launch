@@ -16,8 +16,6 @@
 
   <include file="$(find aero_moveit_config)/launch/moveit_planning_execution.launch"/>
 
-  <!--ps4eye sensor-->
-  <!--include file="$(find aero_startup)/aero_sensors/launch/start_ps4eye.launch"/>
-  <node pkg="topic_tools" type="throttle" name="ps4eye_throttle"
-        args="messages /stereo/points2 2.0" /-->
+  <!--wait interpolation-->
+  <node pkg="aero_startup" type="wait_interpolation" name="wait_interpolation_manager"/>
 </launch>

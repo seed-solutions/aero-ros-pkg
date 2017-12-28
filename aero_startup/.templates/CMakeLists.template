@@ -62,6 +62,8 @@ else()
   message(FATAL "c++11 required but not supported")
 endif()
 
+add_executable(wait_interpolation aero_controller_manager/wait_interpolation.cc)
+target_link_libraries(wait_interpolation ${catkin_LIBRARIES})
 
 # Executables
 

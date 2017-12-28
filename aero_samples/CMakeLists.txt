@@ -34,6 +34,12 @@ target_link_libraries(look_at_sample_node ${catkin_LIBRARIES})
 add_executable(look_at_external_sample_node src/look_at_external.cc)
 target_link_libraries(look_at_external_sample_node ${catkin_LIBRARIES})
 
+add_executable(look_at_topic_sample_node src/look_at_topic.cc)
+target_link_libraries(look_at_topic_sample_node ${catkin_LIBRARIES})
+
+add_executable(async_neck_control_sample_node src/async_neck_control.cc)
+target_link_libraries(async_neck_control_sample_node ${catkin_LIBRARIES})
+
 add_executable(top_grasp_sample_node src/top_grasp.cc)
 target_link_libraries(top_grasp_sample_node ${catkin_LIBRARIES})
 
