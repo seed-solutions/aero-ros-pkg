@@ -55,6 +55,9 @@ target_link_libraries(async_lifter_cancel_node ${catkin_LIBRARIES})
 add_executable(set_marker_sample_node src/set_marker.cc)
 target_link_libraries(set_marker_sample_node ${catkin_LIBRARIES})
 
+add_executable(convert_world_sample_node src/convert_world.cc)
+target_link_libraries(convert_world_sample_node ${catkin_LIBRARIES})
+
 # tests
 
 add_executable(stoa_atos_test_node tests/stoa_atos.cc)
