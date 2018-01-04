@@ -7,8 +7,12 @@ cache:
 services:
   - docker
 
-before_install:
-  - docker pull osrf/ros:indigo-desktop-full
+env:
+  - DISTR=indigo BASEIMG=osrf/ros:indigo-desktop-full
+  - DISTR=kinetic BASEIMG=ros:kinetic
+
+before_script:
+  - docker pull ${BASEIMG}
 
 script:
-  - docker build --tag ros:aero .
+  - docker build -f Dockerfile.${DISTR} --tag ros:aero_${DISTR} .
