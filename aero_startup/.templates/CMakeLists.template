@@ -6,7 +6,7 @@ project(aero_startup)
 # catkin ROS
 find_package(catkin REQUIRED COMPONENTS
   rospy roscpp tf std_msgs sensor_msgs roslib
-  trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs
+  trajectory_msgs geometry_msgs nav_msgs control_msgs
   move_base_msgs
   message_generation
 )
@@ -41,12 +41,12 @@ endif()
 catkin_package(
   CATKIN_DEPENDS
   roscpp tf std_msgs sensor_msgs roslib
-  trajectory_msgs geometry_msgs nav_msgs pr2_controllers_msgs move_base_msgs
+  trajectory_msgs geometry_msgs nav_msgs control_msgs move_base_msgs
   DEPENDS
   INCLUDE_DIRS
 )
 
-include_directories(${aero_startup_SOURCE_DIR})
+include_directories(${catkin_INCLUDE_DIRS} ${aero_startup_SOURCE_DIR})
 
 # add c++ dependencies :
 include(CheckCXXCompilerFlag)

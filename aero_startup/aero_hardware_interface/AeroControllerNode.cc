@@ -14,12 +14,12 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
 
   ROS_INFO(" create publisher");
   state_pub_ =
-      nh_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
+      nh_.advertise<control_msgs::JointTrajectoryControllerState>(
           "state", 10);
 
   ROS_INFO(" create stroke publisher");
   stroke_state_pub_ =
-      nh_.advertise<pr2_controllers_msgs::JointTrajectoryControllerState>(
+      nh_.advertise<control_msgs::JointTrajectoryControllerState>(
           "stroke_state", 10);
 
   ROS_INFO(" create error publisher");
@@ -46,7 +46,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
          boost::bind(&AeroControllerNode::JointTrajectoryCallback, this, _1),
          ros::VoidPtr(),
          &jointtraj_queue_);
-  jointtraj_sub_ = nh_.subscribe(jointtraj_ops_);    
+  jointtraj_sub_ = nh_.subscribe(jointtraj_ops_);
   jointtraj_spinner_.start();
 
   ROS_INFO(" create wheel servo sub");
@@ -701,7 +701,7 @@ void AeroControllerNode::JointStateOnce()
 
   // first handle the stroke publisher
   // in this way, we don't have to concatenate new vectors
-  pr2_controllers_msgs::JointTrajectoryControllerState stroke_state;
+  control_msgs::JointTrajectoryControllerState stroke_state;
   stroke_state.header.stamp = ros::Time::now();
   stroke_state.joint_names.resize(AERO_DOF);
   stroke_state.desired.positions.resize(AERO_DOF);
@@ -743,7 +743,7 @@ void AeroControllerNode::JointStateOnce()
       upper_.get_number_of_angle_joints() +
       lower_.get_number_of_angle_joints();
 
-  pr2_controllers_msgs::JointTrajectoryControllerState state;
+  control_msgs::JointTrajectoryControllerState state;
   state.header.stamp = ros::Time::now();
   state.joint_names.resize(number_of_angle_joints);
   state.desired.positions.resize(number_of_angle_joints);

@@ -2068,7 +2068,7 @@ bool aero::interface::AeroMoveitInterface::goPosTurnOnly_(double _rad, int _time
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::plan(std::string _move_group){
-  bool success = getMoveGroup(_move_group).plan(plan_);
+  bool success = bool(getMoveGroup(_move_group).plan(plan_));
   if (success) planned_group_ = _move_group;
   else planned_group_ = "";
   return success;

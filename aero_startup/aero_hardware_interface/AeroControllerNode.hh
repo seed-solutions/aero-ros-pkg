@@ -25,7 +25,7 @@
 
 #include <ros/ros.h>
 #include <trajectory_msgs/JointTrajectory.h>
-#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
+#include <control_msgs/JointTrajectoryControllerState.h>
 
 #include <ros/callback_queue.h>
 #include <ros/subscribe_options.h>

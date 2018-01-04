@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # add yaml-cpp dependencies :
 find_package(PkgConfig REQUIRED)
