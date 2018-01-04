@@ -67,6 +67,11 @@ include_directories(
 
 #link_directories(${catkin_LIBRARY_DIRS})
 
+# check ros_distro
+if("$ENV{ROS_DISTRO}" STRGREATER "jade")
+  add_definitions(-DKINETIC)
+endif()
+
 add_definitions(-std=c++11)
 
 add_library(aero_moveit_interface

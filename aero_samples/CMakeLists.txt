@@ -11,6 +11,11 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 add_definitions(-std=c++11)
 
+# check ros_distro
+if("$ENV{ROS_DISTRO}" STRGREATER "jade")
+  add_definitions(-DKINETIC)
+endif()
+
 # samples
 
 add_executable(minimum_sample_node src/minimum.cc)

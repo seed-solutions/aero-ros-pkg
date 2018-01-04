@@ -1,7 +1,11 @@
 #ifndef _AERO_MOVEIT_INTERFACE_
 #define _AERO_MOVEIT_INTERFACE_
 
+#ifdef KINETIC
+#include <moveit/move_group_interface/move_group_interface.h>
+#else
 #include <moveit/move_group_interface/move_group.h>
+#endif
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 #include <moveit_msgs/DisplayRobotState.h>
@@ -36,6 +40,12 @@
 #include <nav_msgs/GetPlan.h>
 namespace aero
 {
+#ifdef KINETIC
+  typedef moveit::planning_interface::MoveGroupInterface AeroMoveGroup;
+#else
+  typedef moveit::planning_interface::MoveGroup AeroMoveGroup;
+#endif
+
   typedef std::vector<std::map<aero::joint, double>> trajectory;
   namespace interface
   {
@@ -254,12 +264,12 @@ namespace aero
       /// @brief get move group for moveit
       /// @param[in] _move_group move group name
       /// @return desired move group
-    public: moveit::planning_interface::MoveGroup &getMoveGroup(std::string _move_group);
+    public: AeroMoveGroup &getMoveGroup(std::string _move_group);
       /// @brief get move group for moveit
       /// @param[in] _arm arm which desired move group is associated
       /// @param[in] _range arm only, with torso, and with lifter are usable
       /// @return desired move group
-    public: moveit::planning_interface::MoveGroup &getMoveGroup(aero::arm _arm, aero::ikrange _range);
+    public: AeroMoveGroup &getMoveGroup(aero::arm _arm, aero::ikrange _range);
 
       // ------------------------------------------------------------
       // send to real robot
@@ -514,16 +524,16 @@ namespace aero
     public: robot_state::RobotStatePtr kinematic_state_op;
 
       // MoveGroup
-    public: moveit::planning_interface::MoveGroup larm;
-    public: moveit::planning_interface::MoveGroup larm_with_torso;
-    public: moveit::planning_interface::MoveGroup larm_with_lifter;
-    public: moveit::planning_interface::MoveGroup rarm;
-    public: moveit::planning_interface::MoveGroup rarm_with_torso;
-    public: moveit::planning_interface::MoveGroup rarm_with_lifter;
-    public: moveit::planning_interface::MoveGroup lifter;
-    public: moveit::planning_interface::MoveGroup upper_body;
-    public: moveit::planning_interface::MoveGroup torso;
-    public: moveit::planning_interface::MoveGroup head;
+    public: AeroMoveGroup larm;
+    public: AeroMoveGroup larm_with_torso;
+    public: AeroMoveGroup larm_with_lifter;
+    public: AeroMoveGroup rarm;
+    public: AeroMoveGroup rarm_with_torso;
+    public: AeroMoveGroup rarm_with_lifter;
+    public: AeroMoveGroup lifter;
+    public: AeroMoveGroup upper_body;
+    public: AeroMoveGroup torso;
+    public: AeroMoveGroup head;
 
       // JointModelGroup
     public: const robot_state::JointModelGroup* jmg_larm;
@@ -581,7 +591,7 @@ namespace aero
     protected: ros::ServiceClient check_move_to_;
     protected: ros::ServiceClient get_saved_neck_positions_;
     protected: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
-    protected: moveit::planning_interface::MoveGroup::Plan plan_;
+    protected: AeroMoveGroup::Plan plan_;
     protected: std::string planned_group_;
     protected: bool height_only_;
     protected: std::vector<std::vector<double>> trajectory_;
