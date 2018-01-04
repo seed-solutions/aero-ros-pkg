@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
+#include <control_msgs/JointTrajectoryControllerState.h>
 
 #include "AeroJointStatePublisher.hh"
 
@@ -31,7 +31,7 @@ void AeroJointStatePublisher::Init()
 
 //////////////////////////////////////////////////
 void AeroJointStatePublisher::JointStateCallback
-(const pr2_controllers_msgs::JointTrajectoryControllerState _msg)
+(const control_msgs::JointTrajectoryControllerState _msg)
 {
 }
 

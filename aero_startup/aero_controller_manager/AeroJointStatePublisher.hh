@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
+#include <control_msgs/JointTrajectoryControllerState.h>
 
 namespace aero
 {
@@ -20,7 +20,7 @@ namespace aero
     private: void Init();
 
     private: void JointStateCallback(
-        const pr2_controllers_msgs::JointTrajectoryControllerState _msg);
+        const control_msgs::JointTrajectoryControllerState _msg);
 
     private: ros::NodeHandle nh_;
 

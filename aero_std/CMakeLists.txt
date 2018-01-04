@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # add yaml-cpp dependencies :
 find_package(PkgConfig REQUIRED)
@@ -66,6 +66,11 @@ include_directories(
 )
 
 #link_directories(${catkin_LIBRARY_DIRS})
+
+# check ros_distro
+if("$ENV{ROS_DISTRO}" STRGREATER "jade")
+  add_definitions(-DKINETIC)
+endif()
 
 add_definitions(-std=c++11)
 

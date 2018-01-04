@@ -721,7 +721,7 @@ Eigen::Quaterniond aero::interface::AeroMoveitInterface::getEEFOrientation(aero:
 }
 
 /////////////////////////////////////////////////
-moveit::planning_interface::MoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(std::string _move_group){
+aero::AeroMoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(std::string _move_group){
   if (_move_group == "larm") {
     return this->larm;
   } else if (_move_group == "larm_with_torso") {
@@ -749,7 +749,7 @@ moveit::planning_interface::MoveGroup &aero::interface::AeroMoveitInterface::get
 }
 
 /////////////////////////////////////////////////
-moveit::planning_interface::MoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(aero::arm _arm, aero::ikrange _range)
+aero::AeroMoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(aero::arm _arm, aero::ikrange _range)
 {
   std::string gname =  aero::armAndRange2MoveGroup(_arm, _range);
 
@@ -2068,7 +2068,7 @@ bool aero::interface::AeroMoveitInterface::goPosTurnOnly_(double _rad, int _time
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::plan(std::string _move_group){
-  bool success = getMoveGroup(_move_group).plan(plan_);
+  bool success = bool(getMoveGroup(_move_group).plan(plan_));
   if (success) planned_group_ = _move_group;
   else planned_group_ = "";
   return success;
