@@ -755,8 +755,7 @@ void AeroControllerNode::SpeedOverwriteCallback(
   std::vector<std::thread> new_threads;
   for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th) {
     // update elapsed time to new time scale
-    if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant))
-      th->at_split_num = static_cast<uint16_t>(th->at_split_num / _msg->data);
+    th->at_split_num = static_cast<uint16_t>(th->at_split_num / _msg->data);
 
     for (auto traj = th->trajectories.begin();
          traj != th->trajectories.end(); ++traj)
