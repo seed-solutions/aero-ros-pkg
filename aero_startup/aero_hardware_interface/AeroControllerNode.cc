@@ -237,16 +237,23 @@ void AeroControllerNode::JointTrajectoryThread(
     if (it->second - (it-1)->second < 10
         || _interpolation.at(k)->is(aero::interpolation::i_constant)
         ) {
+      // check if elapsed time should be considered
+      int elapsed_csec = _split_start_from;
+      int runtime_csec;
+      if (elapsed_csec >= csec_per_frame)
+        runtime_csec = std::max(static_cast<int>(csec_per_frame), it->second - (it-1)->second + 5 + 1 - elapsed_csec); // skip elapsed time
+      else
+        runtime_csec = it->second - (it-1)->second + 5 + 1; // 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
       mtx_upper_.lock();
-      upper_.set_position(it->first, it->second - (it-1)->second + 5 + 1);// 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
+      upper_.set_position(it->first, runtime_csec);
       mtx_upper_.unlock();
 
       // check for kill every csec_per_frame
-      int runtime_msec = (static_cast<int32_t>((it->second - (it-1)->second)) - 2) * 10;
+      int runtime_msec = (runtime_csec - 2) * 10;
       int loops = runtime_msec / static_cast<int32_t>(csec_per_frame * 10);
       int remain_msec = runtime_msec - loops * static_cast<int32_t>(csec_per_frame * 10);
       if (loops > 0) {
-        for (size_t loop_count = 0; loop_count < loops; ++loop_count) {
+        for (int loop_count = 0; loop_count < loops; ++loop_count) {
           // check if any kill signal was provided to current thread
           mtx_threads_.lock();
           for (auto th = registered_threads_.begin();
@@ -255,7 +262,7 @@ void AeroControllerNode::JointTrajectoryThread(
               if (th->kill) {
                 // save info of killing thread
                 mtx_thread_graveyard_.lock();
-                thread_graveyard_.push_back({_stroke_trajectory, _interpolation, k, 1, this_id});
+                thread_graveyard_.push_back({_stroke_trajectory, _interpolation, k, loop_count * csec_per_frame + elapsed_csec, this_id});
                 mtx_thread_graveyard_.unlock();
                 // remove this thread info
                 registered_threads_.erase(th);
@@ -676,6 +683,10 @@ void AeroControllerNode::JointTrajectoryCallback(
     for (auto j = th->trajectories[0].first.begin();
          j != th->trajectories[0].first.end(); ++j)
       if (*j == 0x7fff) ++unused_joint_num;
+    // i_constant at_split_num tracks elapsed time
+    // elapsed time is used for speed overwrite but not for command overwrite
+    if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant))
+      th->at_split_num = 1; // make sure to reset elapsed time
     // if remapped trajectory is still valid (= has moving joints)
     if (unused_joint_num != th->trajectories[0].first.size()) {
       new_threads.push_back(std::thread([&](
@@ -743,6 +754,10 @@ void AeroControllerNode::SpeedOverwriteCallback(
   // create new threads
   std::vector<std::thread> new_threads;
   for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th) {
+    // update elapsed time to new time scale
+    if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant))
+      th->at_split_num = static_cast<uint16_t>(th->at_split_num / _msg->data);
+
     for (auto traj = th->trajectories.begin();
          traj != th->trajectories.end(); ++traj)
       traj->second = static_cast<uint16_t>(traj->second / _msg->data);
