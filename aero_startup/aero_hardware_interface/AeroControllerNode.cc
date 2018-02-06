@@ -8,7 +8,8 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
                                        const std::string& _port_upper,
                                        const std::string& _port_lower) :
   nh_(_nh), upper_(_port_upper), lower_(_port_lower), wheel_spinner_(1, &wheel_queue_),
-  jointtraj_spinner_(1, &jointtraj_queue_)
+  jointtraj_spinner_(1, &jointtraj_queue_),
+  speed_overwrite_spinner_(1, &speed_overwrite_queue_)
 {
   ROS_INFO("starting aero_hardware_interface");
 
@@ -48,6 +49,18 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
          &jointtraj_queue_);
   jointtraj_sub_ = nh_.subscribe(jointtraj_ops_);
   jointtraj_spinner_.start();
+
+  // asynchronous speed overwrite command during trajectory run
+  ROS_INFO(" create speed overwrite sub");
+  speed_overwrite_ops_ =
+    ros::SubscribeOptions::create<std_msgs::Float32>(
+         "speed_overwrite",
+         10,
+         boost::bind(&AeroControllerNode::SpeedOverwriteCallback, this, _1),
+         ros::VoidPtr(),
+         &speed_overwrite_queue_);
+  speed_overwrite_sub_ = nh_.subscribe(speed_overwrite_ops_);
+  speed_overwrite_spinner_.start();
 
   ROS_INFO(" create wheel servo sub");
   wheel_servo_sub_ =
@@ -687,6 +700,71 @@ void AeroControllerNode::JointTrajectoryCallback(
       new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
 
   ROS_INFO("----finishing joint trajectory callback----");
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::SpeedOverwriteCallback(
+    const std_msgs::Float32::ConstPtr& _msg)
+{
+  ROS_WARN("----speed overwrite callback----");
+
+  // make sure msg is safe
+  if (_msg->data < 0.00001) {
+    ROS_ERROR("  speed factor must be larger than 0! e.g. slower 0.5, faster 2.0");
+    return;
+  }
+
+  // kill all running threads
+  std::vector<int> kill_thread_id;
+  mtx_threads_.lock();
+  for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th) {
+    th->kill = true;
+    kill_thread_id.push_back(th->id);
+  }
+  mtx_threads_.unlock();
+
+  auto time_begin = std::chrono::high_resolution_clock::now();
+
+  while (1) {
+    mtx_thread_graveyard_.lock();
+    if (thread_graveyard_.size() == kill_thread_id.size() ||
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now() - time_begin).count()
+        > 500) { // a thread might have finished before kill
+      mtx_thread_graveyard_.unlock();
+      break;
+    }
+    mtx_thread_graveyard_.unlock();
+    usleep(10 * 1000); // sleep 10 ms and wait for update
+  }
+
+  // rewrite graveyard command time
+  mtx_thread_graveyard_.lock();
+  // create new threads
+  std::vector<std::thread> new_threads;
+  for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th) {
+    for (auto traj = th->trajectories.begin();
+         traj != th->trajectories.end(); ++traj)
+      traj->second = static_cast<uint16_t>(traj->second / _msg->data);
+    new_threads.push_back(std::thread([&](
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
+        int _trajectory_start_from,
+        int _split_start_from)
+      {
+        JointTrajectoryThread(_interpolation, _stroke_trajectory,
+                              _trajectory_start_from, _split_start_from);
+      }, th->interpolation, th->trajectories, th->at_trajectory_num, th->at_split_num));
+  }
+  // free graveyard
+  thread_graveyard_.clear();
+  mtx_thread_graveyard_.unlock();
+
+  // resend commands with rewrited time
+  std::for_each(
+      new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
+
+  ROS_INFO("----finishing speed overwrite callback----");
 }
 
 //////////////////////////////////////////////////

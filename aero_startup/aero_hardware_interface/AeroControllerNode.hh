@@ -42,6 +42,8 @@
 #include "aero_startup/AeroSendJoints.h"
 #include "aero_startup/AeroGraspController.h"
 
+#include <std_msgs/Float32.h>
+
 #include <chrono>
 
 namespace aero
@@ -261,6 +263,19 @@ namespace aero
     private: std::mutex mtx_send_joints_status_;
 
     private: ros::Timer in_action_timer_;
+
+      // for speed overwrite
+
+    private: ros::SubscribeOptions speed_overwrite_ops_;
+
+    private: ros::CallbackQueue speed_overwrite_queue_;
+
+    private: ros::AsyncSpinner speed_overwrite_spinner_;
+
+    private: ros::Subscriber speed_overwrite_sub_;
+
+    private: void SpeedOverwriteCallback(
+	const std_msgs::Float32::ConstPtr& _msg);
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;
