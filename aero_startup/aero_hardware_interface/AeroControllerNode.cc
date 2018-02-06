@@ -233,26 +233,28 @@ void AeroControllerNode::JointTrajectoryThread(
       int loops = runtime_msec / static_cast<int32_t>(csec_per_frame * 10);
       int remain_msec = runtime_msec - loops * static_cast<int32_t>(csec_per_frame * 10);
       if (loops > 0) {
-        // check if any kill signal was provided to current thread
-        mtx_threads_.lock();
-        for (auto th = registered_threads_.begin();
-             th != registered_threads_.end(); ++th)
-          if (th->id == this_id) {
-            if (th->kill) {
-              // save info of killing thread
-              mtx_thread_graveyard_.lock();
-              thread_graveyard_.push_back({_stroke_trajectory, _interpolation, k, 1, this_id});
-              mtx_thread_graveyard_.unlock();
-              // remove this thread info
-              registered_threads_.erase(th);
-              mtx_threads_.unlock();
-              ROS_WARN("upper joint trajectory thread: detected kill signal during command!");
-              return;
+        for (size_t loop_count = 0; loop_count < loops; ++loop_count) {
+          // check if any kill signal was provided to current thread
+          mtx_threads_.lock();
+          for (auto th = registered_threads_.begin();
+               th != registered_threads_.end(); ++th)
+            if (th->id == this_id) {
+              if (th->kill) {
+                // save info of killing thread
+                mtx_thread_graveyard_.lock();
+                thread_graveyard_.push_back({_stroke_trajectory, _interpolation, k, 1, this_id});
+                mtx_thread_graveyard_.unlock();
+                // remove this thread info
+                registered_threads_.erase(th);
+                mtx_threads_.unlock();
+                ROS_WARN("upper joint trajectory thread: detected kill signal during command!");
+                return;
+              }
+              break;
             }
-            break;
-          }
-        mtx_threads_.unlock();
-        usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000);
+          mtx_threads_.unlock();
+          usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000);
+        }
       }
       if (remain_msec > 0)
         usleep(remain_msec);
@@ -672,6 +674,8 @@ void AeroControllerNode::JointTrajectoryCallback(
         JointTrajectoryThread(_interpolation, _stroke_trajectory,
                               _trajectory_start_from, _split_start_from);
       }, th->interpolation, th->trajectories, th->at_trajectory_num, th->at_split_num));
+    } else if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant)) {
+      upper_.servo_on(); // cancel movement
     }
   }
   // free graveyard
