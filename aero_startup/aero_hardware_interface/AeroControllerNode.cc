@@ -227,7 +227,35 @@ void AeroControllerNode::JointTrajectoryThread(
       mtx_upper_.lock();
       upper_.set_position(it->first, it->second - (it-1)->second + 5 + 1);// 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
       mtx_upper_.unlock();
-      usleep(static_cast<int32_t>((it->second - (it-1)->second)) * 10 * 1000 - 20000);
+
+      // check for kill every csec_per_frame
+      int runtime_msec = (static_cast<int32_t>((it->second - (it-1)->second)) - 2) * 10;
+      int loops = runtime_msec / static_cast<int32_t>(csec_per_frame * 10);
+      int remain_msec = runtime_msec - loops * static_cast<int32_t>(csec_per_frame * 10);
+      if (loops > 0) {
+        // check if any kill signal was provided to current thread
+        mtx_threads_.lock();
+        for (auto th = registered_threads_.begin();
+             th != registered_threads_.end(); ++th)
+          if (th->id == this_id) {
+            if (th->kill) {
+              // save info of killing thread
+              mtx_thread_graveyard_.lock();
+              thread_graveyard_.push_back({_stroke_trajectory, _interpolation, k, 1, this_id});
+              mtx_thread_graveyard_.unlock();
+              // remove this thread info
+              registered_threads_.erase(th);
+              mtx_threads_.unlock();
+              ROS_WARN("upper joint trajectory thread: detected kill signal during command!");
+              return;
+            }
+            break;
+          }
+        mtx_threads_.unlock();
+        usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000);
+      }
+      if (remain_msec > 0)
+        usleep(remain_msec);
       continue;
     }
     // find number of splits in this trajectory
