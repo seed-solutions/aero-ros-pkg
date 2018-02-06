@@ -154,6 +154,8 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   global_thread_cnt_ = 0;
   send_joints_status_ = false;
 
+  lower_killed_thread_info_ = {{}, {}, 0, 0, 0};
+
   ROS_INFO(" done");
 }
 
@@ -277,7 +279,7 @@ void AeroControllerNode::JointTrajectoryThread(
         }
       }
       if (remain_msec > 0)
-        usleep(remain_msec);
+        usleep(remain_msec * 1000);
       continue;
     }
     // find number of splits in this trajectory
@@ -351,27 +353,64 @@ void AeroControllerNode::LowerTrajectoryThread(
   ROS_INFO("starting lower joint trajectory thread");
   auto start_time = aero::time::now();
 
+  int csec_per_frame = 10;
+
   for (auto it = _stroke_trajectory.begin() + 1;
        it != _stroke_trajectory.end(); ++it) {
-    // check for kill signal
+    // check for kill every csec_per_frame
     mtx_lower_thread_.lock();
+    int elapsed_csec = lower_killed_thread_info_.at_split_num;
+    uint16_t csec_in_frame =
+      it->second - (it-1)->second - static_cast<uint16_t>(elapsed_csec);
+    // 20ms sleep in set_position, subtract
+    int msec_in_frame = static_cast<int>(csec_in_frame - 2) * 10;
+    int loops = msec_in_frame / (csec_per_frame * 10);
+    int remain_msec = msec_in_frame - loops * csec_per_frame * 10;
+
+    // check for kill signal
     if (lower_thread_.kill) {
-      ROS_WARN("lower joint trajectory thread: detected kill signal during trajectory!");
+      ROS_WARN("lower joint trajectory thread: detected kill signal one!");
+      lower_killed_thread_info_.trajectories = _stroke_trajectory;
+      lower_killed_thread_info_.at_trajectory_num =
+        static_cast<int>(it - _stroke_trajectory.begin());
+      lower_killed_thread_info_.at_split_num = elapsed_csec;
+      lower_thread_.kill = false;
       mtx_lower_thread_.unlock();
-      break;
+      return;
     }
     mtx_lower_thread_.unlock();
+
     // send
-    uint16_t csec_in_frame = it->second - (it-1)->second;
     mtx_lower_.lock();
     lower_.set_position(it->first, csec_in_frame  + 10);
     mtx_lower_.unlock();
-    // 20ms sleep in set_position, subtract
-    usleep(static_cast<int32_t>(csec_in_frame) * 10 * 1000 - 20000);
+ 
+    // check for kill during send
+    for (int loop_count = 0; loop_count < loops; ++loop_count) {
+      // check for kill signal
+      mtx_lower_thread_.lock();
+      if (lower_thread_.kill) {
+        ROS_WARN("lower joint trajectory thread: detected kill signal two!");
+        lower_killed_thread_info_.trajectories = _stroke_trajectory;
+        lower_killed_thread_info_.at_trajectory_num =
+          static_cast<int>(it - _stroke_trajectory.begin());
+        lower_killed_thread_info_.at_split_num =
+          loop_count * csec_per_frame + elapsed_csec;
+        lower_thread_.kill = false;
+        mtx_lower_thread_.unlock();
+        return;
+      }
+      mtx_lower_thread_.unlock();
+      usleep(csec_per_frame * 10 * 1000);
+    }
+
+    if (remain_msec > 0)
+      usleep(remain_msec * 1000);
   }
 
   mtx_lower_thread_.lock();
   lower_thread_.id = 0; // thread finish
+  lower_killed_thread_info_ = {{}, {}, 0, 0, 0};
   mtx_lower_thread_.unlock();
 
   ROS_INFO("finished lower joint trajectory thread %f",
@@ -528,6 +567,10 @@ void AeroControllerNode::JointTrajectoryCallback(
         mtx_lower_thread_.unlock();
         // cancel lower movement
         lower_.servo_on();
+        mtx_lower_thread_.lock();
+        lower_thread_.id = 0;
+        lower_killed_thread_info_ = {{}, {}, 0, 0, 0};
+        mtx_lower_thread_.unlock();
       } else {
         lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
       }
@@ -725,7 +768,41 @@ void AeroControllerNode::SpeedOverwriteCallback(
     return;
   }
 
-  // kill all running threads
+  // on backgroun, kill lower thread if running
+  std::thread lower_process([&](){
+      mtx_lower_thread_.lock();
+      if (lower_thread_.id == 1) // if running
+        lower_thread_.kill = true;
+      mtx_lower_thread_.unlock();
+
+      // // in case lower trajectories are short 
+      // mtx_lower_.lock();
+      // lower_.servo_on();
+      // mtx_lower_.unlock();
+
+      auto time_begin = std::chrono::high_resolution_clock::now();
+      while (1) {
+        mtx_lower_thread_.lock();
+        if (lower_thread_.kill ||
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::high_resolution_clock::now() - time_begin).count()
+            > 500) { // a thread might have finished before kill
+          mtx_lower_thread_.unlock();
+          break;
+        }
+        mtx_lower_thread_.unlock();
+        usleep(10 * 1000); // sleep 10 ms and wait for update
+      }
+      // rewrite lower thread command time
+      // update elapsed time to new time scale
+      lower_killed_thread_info_.at_split_num /= _msg->data;
+      for (auto traj = lower_killed_thread_info_.trajectories.begin();
+           traj != lower_killed_thread_info_.trajectories.end(); ++traj)
+        traj->second = static_cast<uint16_t>(traj->second / _msg->data);
+      mtx_lower_thread_.unlock();
+    });
+
+  // kill all running upper threads
   std::vector<int> kill_thread_id;
   mtx_threads_.lock();
   for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th) {
@@ -735,14 +812,12 @@ void AeroControllerNode::SpeedOverwriteCallback(
   mtx_threads_.unlock();
 
   auto time_begin = std::chrono::high_resolution_clock::now();
-
   while (1) {
     mtx_thread_graveyard_.lock();
     if (thread_graveyard_.size() == kill_thread_id.size() ||
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - time_begin).count()
         > 500) { // a thread might have finished before kill
-      mtx_thread_graveyard_.unlock();
       break;
     }
     mtx_thread_graveyard_.unlock();
@@ -750,7 +825,6 @@ void AeroControllerNode::SpeedOverwriteCallback(
   }
 
   // rewrite graveyard command time
-  mtx_thread_graveyard_.lock();
   // create new threads
   std::vector<std::thread> new_threads;
   for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th) {
@@ -773,6 +847,17 @@ void AeroControllerNode::SpeedOverwriteCallback(
   // free graveyard
   thread_graveyard_.clear();
   mtx_thread_graveyard_.unlock();
+
+  // create new lower thread
+  lower_process.join();
+  mtx_lower_thread_.lock();
+  std::thread send_lower([&](
+    std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory) {
+      LowerTrajectoryThread(_stroke_trajectory);
+    }, lower_killed_thread_info_.trajectories);
+  lower_killed_thread_info_.trajectories.clear(); // re-fresh data
+  mtx_lower_thread_.unlock();
+  send_lower.detach();
 
   // resend commands with rewrited time
   std::for_each(

@@ -257,6 +257,8 @@ namespace aero
 
     private: thread_info lower_thread_;
 
+    private: killed_thread_info lower_killed_thread_info_;
+
       // @brief wether sendJoints is active or not
     private: bool send_joints_status_;
 
