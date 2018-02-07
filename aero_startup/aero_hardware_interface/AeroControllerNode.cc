@@ -154,7 +154,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
   global_thread_cnt_ = 0;
   send_joints_status_ = false;
 
-  lower_killed_thread_info_ = {{}, {}, 0, 0, 0};
+  lower_killed_thread_info_ = {{}, {}, 1, 0, 0};
 
   ROS_INFO(" done");
 }
@@ -355,7 +355,17 @@ void AeroControllerNode::LowerTrajectoryThread(
 
   int csec_per_frame = 10;
 
-  for (auto it = _stroke_trajectory.begin() + 1;
+  mtx_lower_thread_.lock();
+  int traj_start_from = lower_killed_thread_info_.at_trajectory_num;
+  if (traj_start_from >= _stroke_trajectory.size()) {
+    lower_thread_.id = 0; // bad command, finish thread
+    mtx_lower_thread_.unlock();
+    ROS_WARN("bad lower trajectory detected! trajectory size is 0?");
+    return;
+  }
+  mtx_lower_thread_.unlock();
+
+  for (auto it = _stroke_trajectory.begin() + traj_start_from;
        it != _stroke_trajectory.end(); ++it) {
     // check for kill every csec_per_frame
     mtx_lower_thread_.lock();
@@ -410,7 +420,7 @@ void AeroControllerNode::LowerTrajectoryThread(
 
   mtx_lower_thread_.lock();
   lower_thread_.id = 0; // thread finish
-  lower_killed_thread_info_ = {{}, {}, 0, 0, 0};
+  lower_killed_thread_info_ = {{}, {}, 1, 0, 0};
   mtx_lower_thread_.unlock();
 
   ROS_INFO("finished lower joint trajectory thread %f",
@@ -569,7 +579,7 @@ void AeroControllerNode::JointTrajectoryCallback(
         lower_.servo_on();
         mtx_lower_thread_.lock();
         lower_thread_.id = 0;
-        lower_killed_thread_info_ = {{}, {}, 0, 0, 0};
+        lower_killed_thread_info_ = {{}, {}, 1, 0, 0};
         mtx_lower_thread_.unlock();
       } else {
         lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
@@ -768,7 +778,7 @@ void AeroControllerNode::SpeedOverwriteCallback(
     return;
   }
 
-  // on backgroun, kill lower thread if running
+  // on background, kill lower thread if running
   std::thread lower_process([&](){
       mtx_lower_thread_.lock();
       if (lower_thread_.id == 1) // if running
@@ -783,7 +793,7 @@ void AeroControllerNode::SpeedOverwriteCallback(
       auto time_begin = std::chrono::high_resolution_clock::now();
       while (1) {
         mtx_lower_thread_.lock();
-        if (lower_thread_.kill ||
+        if (!lower_thread_.kill ||
             std::chrono::duration_cast<std::chrono::milliseconds>(
               std::chrono::high_resolution_clock::now() - time_begin).count()
             > 500) { // a thread might have finished before kill
@@ -859,7 +869,7 @@ void AeroControllerNode::SpeedOverwriteCallback(
   mtx_lower_thread_.unlock();
   send_lower.detach();
 
-  // resend commands with rewrited time
+  // resend commands with rewritten time
   std::for_each(
       new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
 
