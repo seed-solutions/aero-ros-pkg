@@ -86,6 +86,8 @@ namespace aero
       int at_split_num;
 
       uint thread_id;
+
+      float factor; // for speed overwrite
     };
 
     /// @brief Aero controller node,
@@ -111,11 +113,12 @@ namespace aero
       /// @param _stroke_trajectory information of trajectory
       /// @param _trajectory_start_from skips trajectory
       /// @param _split_start_from skips split for first trajectory
+      /// @param _factor current speed factor (for speed overwrite)
     private: void JointTrajectoryThread(
         std::vector<aero::interpolation::InterpolationPtr> _interpolation,
         std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
         int _trajectory_start_from,
-        int _split_start_from);
+        int _split_start_from, float _factor=1.0f);
 
     private: void LowerTrajectoryThread(
         std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory);
