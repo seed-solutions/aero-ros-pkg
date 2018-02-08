@@ -42,6 +42,8 @@
 #include "aero_startup/AeroSendJoints.h"
 #include "aero_startup/AeroGraspController.h"
 
+#include <std_msgs/Float32.h>
+
 #include <chrono>
 
 namespace aero
@@ -84,6 +86,8 @@ namespace aero
       int at_split_num;
 
       uint thread_id;
+
+      float factor; // for speed overwrite
     };
 
     /// @brief Aero controller node,
@@ -109,11 +113,12 @@ namespace aero
       /// @param _stroke_trajectory information of trajectory
       /// @param _trajectory_start_from skips trajectory
       /// @param _split_start_from skips split for first trajectory
+      /// @param _factor current speed factor (for speed overwrite)
     private: void JointTrajectoryThread(
         std::vector<aero::interpolation::InterpolationPtr> _interpolation,
         std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
         int _trajectory_start_from,
-        int _split_start_from);
+        int _split_start_from, float _factor=1.0f);
 
     private: void LowerTrajectoryThread(
         std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory);
@@ -255,12 +260,27 @@ namespace aero
 
     private: thread_info lower_thread_;
 
+    private: killed_thread_info lower_killed_thread_info_;
+
       // @brief wether sendJoints is active or not
     private: bool send_joints_status_;
 
     private: std::mutex mtx_send_joints_status_;
 
     private: ros::Timer in_action_timer_;
+
+      // for speed overwrite
+
+    private: ros::SubscribeOptions speed_overwrite_ops_;
+
+    private: ros::CallbackQueue speed_overwrite_queue_;
+
+    private: ros::AsyncSpinner speed_overwrite_spinner_;
+
+    private: ros::Subscriber speed_overwrite_sub_;
+
+    private: void SpeedOverwriteCallback(
+	const std_msgs::Float32::ConstPtr& _msg);
     };
 
     typedef std::shared_ptr<AeroControllerNode> AeroControllerNodePtr;

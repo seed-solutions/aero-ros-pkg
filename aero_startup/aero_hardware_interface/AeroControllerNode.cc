@@ -8,7 +8,8 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
                                        const std::string& _port_upper,
                                        const std::string& _port_lower) :
   nh_(_nh), upper_(_port_upper), lower_(_port_lower), wheel_spinner_(1, &wheel_queue_),
-  jointtraj_spinner_(1, &jointtraj_queue_)
+  jointtraj_spinner_(1, &jointtraj_queue_),
+  speed_overwrite_spinner_(1, &speed_overwrite_queue_)
 {
   ROS_INFO("starting aero_hardware_interface");
 
@@ -48,6 +49,18 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
          &jointtraj_queue_);
   jointtraj_sub_ = nh_.subscribe(jointtraj_ops_);
   jointtraj_spinner_.start();
+
+  // asynchronous speed overwrite command during trajectory run
+  ROS_INFO(" create speed overwrite sub");
+  speed_overwrite_ops_ =
+    ros::SubscribeOptions::create<std_msgs::Float32>(
+         "speed_overwrite",
+         10,
+         boost::bind(&AeroControllerNode::SpeedOverwriteCallback, this, _1),
+         ros::VoidPtr(),
+         &speed_overwrite_queue_);
+  speed_overwrite_sub_ = nh_.subscribe(speed_overwrite_ops_);
+  speed_overwrite_spinner_.start();
 
   ROS_INFO(" create wheel servo sub");
   wheel_servo_sub_ =
@@ -125,7 +138,7 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
 
   if (get_state) {
     ROS_INFO(" create timer sub");
-	//shiigi 0.1 -> 0.01
+    //shiigi 0.1 -> 0.01
     timer_ =
         nh_.createTimer(ros::Duration(0.01),
                             &AeroControllerNode::JointStateCallback, this);
@@ -140,6 +153,8 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
 
   global_thread_cnt_ = 0;
   send_joints_status_ = false;
+
+  lower_killed_thread_info_ = {{}, {}, 1, 0, 0, 1.0f};
 
   ROS_INFO(" done");
 }
@@ -163,7 +178,7 @@ void AeroControllerNode::JointTrajectoryThread(
     std::vector<aero::interpolation::InterpolationPtr> _interpolation,
     std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
     int _trajectory_start_from,
-    int _split_start_from)
+    int _split_start_from, float _factor)
 {
   ROS_INFO("starting upper joint trajectory thread");
   auto start_time = aero::time::now();
@@ -195,12 +210,12 @@ void AeroControllerNode::JointTrajectoryThread(
           // save info of killing thread
           mtx_thread_graveyard_.lock();
           thread_graveyard_.push_back({_stroke_trajectory, _interpolation,
-                static_cast<int>(it - _stroke_trajectory.begin()), 1, this_id});
+                static_cast<int>(it - _stroke_trajectory.begin()), 1, this_id, _factor});
           mtx_thread_graveyard_.unlock();
           // remove this thread info
           registered_threads_.erase(th);
           mtx_threads_.unlock();
-	  ROS_WARN("upper joint trajectory thread: detected kill signal during trajectory!");
+          ROS_WARN("upper joint trajectory thread: detected kill signal during trajectory!");
           return;
         }
         break;
@@ -222,12 +237,49 @@ void AeroControllerNode::JointTrajectoryThread(
     // from here, main process for trajectory it
     // any movement faster than 100ms(10cs) will not interpolate = linear
     if (it->second - (it-1)->second < 10
-	|| _interpolation.at(k)->is(aero::interpolation::i_constant)
-	) {
+        || _interpolation.at(k)->is(aero::interpolation::i_constant)
+        ) {
+      // check if elapsed time should be considered
+      int elapsed_csec = _split_start_from;
+      int runtime_csec;
+      if (elapsed_csec >= csec_per_frame)
+        runtime_csec = std::max(static_cast<int>(csec_per_frame), it->second - (it-1)->second + 5 + 1 - elapsed_csec); // skip elapsed time
+      else
+        runtime_csec = it->second - (it-1)->second + 5 + 1; // 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
       mtx_upper_.lock();
-      upper_.set_position(it->first, it->second - (it-1)->second + 5 + 1);// 5 csec(50[ms]) is to synchronize upper and lower and 1csec to smoothing trajectory
+      upper_.set_position(it->first, runtime_csec);
       mtx_upper_.unlock();
-      usleep(static_cast<int32_t>((it->second - (it-1)->second)) * 10 * 1000 - 20000);
+
+      // check for kill every csec_per_frame
+      int runtime_msec = (runtime_csec - 2) * 10;
+      int loops = runtime_msec / static_cast<int32_t>(csec_per_frame * 10);
+      int remain_msec = runtime_msec - loops * static_cast<int32_t>(csec_per_frame * 10);
+      if (loops > 0) {
+        for (int loop_count = 0; loop_count < loops; ++loop_count) {
+          // check if any kill signal was provided to current thread
+          mtx_threads_.lock();
+          for (auto th = registered_threads_.begin();
+               th != registered_threads_.end(); ++th)
+            if (th->id == this_id) {
+              if (th->kill) {
+                // save info of killing thread
+                mtx_thread_graveyard_.lock();
+                thread_graveyard_.push_back({_stroke_trajectory, _interpolation, k, loop_count * csec_per_frame + elapsed_csec, this_id, _factor});
+                mtx_thread_graveyard_.unlock();
+                // remove this thread info
+                registered_threads_.erase(th);
+                mtx_threads_.unlock();
+                ROS_WARN("upper joint trajectory thread: detected kill signal during command!");
+                return;
+              }
+              break;
+            }
+          mtx_threads_.unlock();
+          usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000);
+        }
+      }
+      if (remain_msec > 0)
+        usleep(remain_msec * 1000);
       continue;
     }
     // find number of splits in this trajectory
@@ -244,12 +296,12 @@ void AeroControllerNode::JointTrajectoryThread(
             // save info of killing thread
             mtx_thread_graveyard_.lock();
             thread_graveyard_.push_back({_stroke_trajectory,
-                  _interpolation, k, static_cast<int>(j), this_id});
+                  _interpolation, k, static_cast<int>(j), this_id, _factor});
             mtx_thread_graveyard_.unlock();
             // remove this thread info
             registered_threads_.erase(th);
             mtx_threads_.unlock();
-	    ROS_WARN("upper joint trajectory thread: detected kill signal during interpolation!");
+            ROS_WARN("upper joint trajectory thread: detected kill signal during interpolation!");
             return;
           }
           break;
@@ -273,9 +325,9 @@ void AeroControllerNode::JointTrajectoryThread(
       mtx_upper_.unlock();
       // 20ms sleep in set_position, subtract
       if(j != splits) {
-	usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000 - 20000);
+        usleep(static_cast<int32_t>(csec_per_frame) * 10 * 1000 - 20000);
       } else {// total time - used time
-	usleep(static_cast<int32_t>(it->second - (it-1)->second - (splits - 1) * csec_per_frame) * 10 * 1000 - 20000);
+        usleep(static_cast<int32_t>(it->second - (it-1)->second - (splits - 1) * csec_per_frame) * 10 * 1000 - 20000);
       }
     } // splits
     _split_start_from = 1;
@@ -291,7 +343,7 @@ void AeroControllerNode::JointTrajectoryThread(
   mtx_threads_.unlock();
 
   ROS_INFO("finished upper joint trajectory thread %f",
-	   aero::time::ms(aero::time::now() - start_time));
+           aero::time::ms(aero::time::now() - start_time));
 }
 
 /////////////////////////////////////////////////
@@ -301,31 +353,78 @@ void AeroControllerNode::LowerTrajectoryThread(
   ROS_INFO("starting lower joint trajectory thread");
   auto start_time = aero::time::now();
 
-  for (auto it = _stroke_trajectory.begin() + 1;
+  int csec_per_frame = 10;
+
+  mtx_lower_thread_.lock();
+  int traj_start_from = lower_killed_thread_info_.at_trajectory_num;
+  if (traj_start_from >= _stroke_trajectory.size()) {
+    lower_thread_.id = 0; // bad command, finish thread
+    mtx_lower_thread_.unlock();
+    ROS_WARN("bad lower trajectory detected! trajectory size is 0?");
+    return;
+  }
+  mtx_lower_thread_.unlock();
+
+  for (auto it = _stroke_trajectory.begin() + traj_start_from;
        it != _stroke_trajectory.end(); ++it) {
-    // check for kill signal
+    // check for kill every csec_per_frame
     mtx_lower_thread_.lock();
+    int elapsed_csec = lower_killed_thread_info_.at_split_num;
+    uint16_t csec_in_frame =
+      it->second - (it-1)->second - static_cast<uint16_t>(elapsed_csec);
+    // 20ms sleep in set_position, subtract
+    int msec_in_frame = static_cast<int>(csec_in_frame - 2) * 10;
+    int loops = msec_in_frame / (csec_per_frame * 10);
+    int remain_msec = msec_in_frame - loops * csec_per_frame * 10;
+
+    // check for kill signal
     if (lower_thread_.kill) {
-      ROS_WARN("lower joint trajectory thread: detected kill signal during trajectory!");
+      ROS_WARN("lower joint trajectory thread: detected kill signal one!");
+      lower_killed_thread_info_.trajectories = _stroke_trajectory;
+      lower_killed_thread_info_.at_trajectory_num =
+        static_cast<int>(it - _stroke_trajectory.begin());
+      lower_killed_thread_info_.at_split_num = elapsed_csec;
+      lower_thread_.kill = false;
       mtx_lower_thread_.unlock();
-      break;
+      return;
     }
     mtx_lower_thread_.unlock();
+
     // send
-    uint16_t csec_in_frame = it->second - (it-1)->second;
     mtx_lower_.lock();
     lower_.set_position(it->first, csec_in_frame  + 10);
     mtx_lower_.unlock();
-    // 20ms sleep in set_position, subtract
-    usleep(static_cast<int32_t>(csec_in_frame) * 10 * 1000 - 20000);
+ 
+    // check for kill during send
+    for (int loop_count = 0; loop_count < loops; ++loop_count) {
+      // check for kill signal
+      mtx_lower_thread_.lock();
+      if (lower_thread_.kill) {
+        ROS_WARN("lower joint trajectory thread: detected kill signal two!");
+        lower_killed_thread_info_.trajectories = _stroke_trajectory;
+        lower_killed_thread_info_.at_trajectory_num =
+          static_cast<int>(it - _stroke_trajectory.begin());
+        lower_killed_thread_info_.at_split_num =
+          loop_count * csec_per_frame + elapsed_csec;
+        lower_thread_.kill = false;
+        mtx_lower_thread_.unlock();
+        return;
+      }
+      mtx_lower_thread_.unlock();
+      usleep(csec_per_frame * 10 * 1000);
+    }
+
+    if (remain_msec > 0)
+      usleep(remain_msec * 1000);
   }
 
   mtx_lower_thread_.lock();
   lower_thread_.id = 0; // thread finish
+  lower_killed_thread_info_ = {{}, {}, 1, 0, 0, 1.0f};
   mtx_lower_thread_.unlock();
 
   ROS_INFO("finished lower joint trajectory thread %f",
-	   aero::time::ms(aero::time::now() - start_time));
+           aero::time::ms(aero::time::now() - start_time));
 }
 
 //////////////////////////////////////////////////
@@ -447,9 +546,9 @@ void AeroControllerNode::JointTrajectoryCallback(
 
     // split strokes into upper and lower
     std::vector<int16_t> upper_stroke_vector(
-	strokes.begin(), strokes.begin() + AERO_DOF_UPPER);
+        strokes.begin(), strokes.begin() + AERO_DOF_UPPER);
     std::vector<int16_t> lower_stroke_vector(
-	strokes.begin() + AERO_DOF_UPPER, strokes.end());
+        strokes.begin() + AERO_DOF_UPPER, strokes.end());
 
     double time_sec = _msg->points[i].time_from_start.toSec();
     uint16_t time_csec = static_cast<uint16_t>(time_sec * 100.0);
@@ -478,6 +577,10 @@ void AeroControllerNode::JointTrajectoryCallback(
         mtx_lower_thread_.unlock();
         // cancel lower movement
         lower_.servo_on();
+        mtx_lower_thread_.lock();
+        lower_thread_.id = 0;
+        lower_killed_thread_info_ = {{}, {}, 1, 0, 0, 1.0f};
+        mtx_lower_thread_.unlock();
       } else {
         lower_stroke_trajectory.push_back({lower_stroke_vector, time_csec});
       }
@@ -633,6 +736,10 @@ void AeroControllerNode::JointTrajectoryCallback(
     for (auto j = th->trajectories[0].first.begin();
          j != th->trajectories[0].first.end(); ++j)
       if (*j == 0x7fff) ++unused_joint_num;
+    // i_constant at_split_num tracks elapsed time
+    // elapsed time is used for speed overwrite but not for command overwrite
+    if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant))
+      th->at_split_num = 1; // make sure to reset elapsed time
     // if remapped trajectory is still valid (= has moving joints)
     if (unused_joint_num != th->trajectories[0].first.size()) {
       new_threads.push_back(std::thread([&](
@@ -644,6 +751,8 @@ void AeroControllerNode::JointTrajectoryCallback(
         JointTrajectoryThread(_interpolation, _stroke_trajectory,
                               _trajectory_start_from, _split_start_from);
       }, th->interpolation, th->trajectories, th->at_trajectory_num, th->at_split_num));
+    } else if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant)) {
+      upper_.servo_on(); // cancel movement
     }
   }
   // free graveyard
@@ -655,6 +764,119 @@ void AeroControllerNode::JointTrajectoryCallback(
       new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
 
   ROS_INFO("----finishing joint trajectory callback----");
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::SpeedOverwriteCallback(
+    const std_msgs::Float32::ConstPtr& _msg)
+{
+  ROS_WARN("----speed overwrite callback----");
+
+  // make sure msg is safe
+  if (_msg->data < 0.00001 || _msg->data > 1.00001) {
+    ROS_ERROR("  speed factor must be between 0.0 and 1.0");
+    return;
+  }
+
+  // on background, kill lower thread if running
+  std::thread lower_process([&](){
+      mtx_lower_thread_.lock();
+      if (lower_thread_.id == 1) // if running
+        lower_thread_.kill = true;
+      mtx_lower_thread_.unlock();
+
+      // // in case lower trajectories are short 
+      // mtx_lower_.lock();
+      // lower_.servo_on();
+      // mtx_lower_.unlock();
+
+      auto time_begin = std::chrono::high_resolution_clock::now();
+      while (1) {
+        mtx_lower_thread_.lock();
+        if (!lower_thread_.kill ||
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::high_resolution_clock::now() - time_begin).count()
+            > 500) { // a thread might have finished before kill
+          mtx_lower_thread_.unlock();
+          break;
+        }
+        mtx_lower_thread_.unlock();
+        usleep(10 * 1000); // sleep 10 ms and wait for update
+      }
+      // rewrite lower thread command time
+      // update elapsed time to new time scale
+      lower_killed_thread_info_.at_split_num /=
+        _msg->data / lower_killed_thread_info_.factor;
+      for (auto traj = lower_killed_thread_info_.trajectories.begin();
+           traj != lower_killed_thread_info_.trajectories.end(); ++traj)
+        traj->second = static_cast<uint16_t>(
+            traj->second / (_msg->data / lower_killed_thread_info_.factor));
+      lower_killed_thread_info_.factor = _msg->data;
+      mtx_lower_thread_.unlock();
+    });
+
+  // kill all running upper threads
+  std::vector<int> kill_thread_id;
+  mtx_threads_.lock();
+  for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th) {
+    th->kill = true;
+    kill_thread_id.push_back(th->id);
+  }
+  mtx_threads_.unlock();
+
+  auto time_begin = std::chrono::high_resolution_clock::now();
+  while (1) {
+    mtx_thread_graveyard_.lock();
+    if (thread_graveyard_.size() == kill_thread_id.size() ||
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now() - time_begin).count()
+        > 500) { // a thread might have finished before kill
+      break;
+    }
+    mtx_thread_graveyard_.unlock();
+    usleep(10 * 1000); // sleep 10 ms and wait for update
+  }
+
+  // rewrite graveyard command time
+  // create new threads
+  std::vector<std::thread> new_threads;
+  for (auto th = thread_graveyard_.begin(); th != thread_graveyard_.end(); ++th) {
+    // update elapsed time to new time scale
+    th->at_split_num = static_cast<uint16_t>(th->at_split_num / (_msg->data / th->factor));
+
+    for (auto traj = th->trajectories.begin();
+         traj != th->trajectories.end(); ++traj)
+      traj->second = static_cast<uint16_t>(traj->second / (_msg->data / th->factor));
+    new_threads.push_back(std::thread([&](
+        std::vector<aero::interpolation::InterpolationPtr> _interpolation,
+        std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory,
+        int _trajectory_start_from,
+        int _split_start_from, float _factor)
+      {
+        JointTrajectoryThread(_interpolation, _stroke_trajectory,
+                              _trajectory_start_from, _split_start_from, _factor);
+      }, th->interpolation, th->trajectories, th->at_trajectory_num, th->at_split_num, _msg->data));
+  }
+  // free graveyard
+  thread_graveyard_.clear();
+  mtx_thread_graveyard_.unlock();
+
+  // create new lower thread
+  lower_process.join();
+  mtx_lower_thread_.lock();
+  std::thread send_lower([&](
+    std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory) {
+      LowerTrajectoryThread(_stroke_trajectory);
+    }, lower_killed_thread_info_.trajectories);
+  lower_killed_thread_info_.trajectories.clear(); // re-fresh data
+  mtx_lower_thread_.unlock();
+  send_lower.detach();
+
+  // resend commands with rewritten time
+  std::for_each(
+      new_threads.begin(), new_threads.end(), [](std::thread& t){ t.detach(); });
+
+  ROS_INFO("----finishing speed overwrite callback----");
 }
 
 //////////////////////////////////////////////////
