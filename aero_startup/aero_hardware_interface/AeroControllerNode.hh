@@ -279,6 +279,10 @@ namespace aero
 
     private: ros::Subscriber speed_overwrite_sub_;
 
+    private: std::mutex mtx_thread_postpone_;
+
+    private: bool thread_postpone_;
+
     private: void SpeedOverwriteCallback(
 	const std_msgs::Float32::ConstPtr& _msg);
     };
