@@ -133,6 +133,15 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
           &AeroControllerNode::StatusResetCallback,
           this);
 
+  ROS_INFO(" create collision mode sub");
+  collision_mode_set_sub_ =
+      nh_.subscribe(
+          "set_collision_mode",
+          10,
+          &AeroControllerNode::SetCollisionModeCallback,
+          this);
+  collision_abort_mode_ = 0;
+
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
 
@@ -224,12 +233,15 @@ void AeroControllerNode::JointTrajectoryThread(
 
     // check if any collision happened during send trajectory
     mtx_upper_.lock();
-    mtx_lower_.lock();
     bool collision_status = upper_.get_status();
     mtx_upper_.unlock();
-    mtx_lower_.unlock();
-    if (collision_status) {
+    if (collision_status && collision_abort_mode_ != 0) {
       ROS_ERROR("upper joint trajectory thread: abort trajectory collision!");
+      if (collision_abort_mode_ == 1) {
+        mtx_upper_.lock();
+        upper_.reset_status();
+        mtx_upper_.unlock();
+      }
       break;
     }
 
@@ -1134,6 +1146,19 @@ void AeroControllerNode::StatusResetCallback(
 
   mtx_upper_.unlock();
   mtx_lower_.unlock();
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::SetCollisionModeCallback(
+    const std_msgs::Int32::ConstPtr& _msg)
+{
+  if (_msg->data < 0 || _msg->data > 2) {
+    ROS_ERROR("Invalid collision abort mode %d. Not set!", _msg->data);
+    return;
+  }
+
+  ROS_WARN("Changing collision abort mode to %d. Note, this callback should never be called when a robot is moving.", _msg->data);
+  collision_abort_mode_ = _msg->data;
 }
 
 //////////////////////////////////////////////////
