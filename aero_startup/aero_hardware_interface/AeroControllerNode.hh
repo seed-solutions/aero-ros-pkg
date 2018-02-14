@@ -170,6 +170,9 @@ namespace aero
     private: void StatusResetCallback(
 	const std_msgs::Empty::ConstPtr& _msg);
 
+    private: void SetCollisionModeCallback(
+        const std_msgs::Int32::ConstPtr& _msg);
+
     private: bool SendJointsCallback(
         aero_startup::AeroSendJoints::Request &_req,
         aero_startup::AeroSendJoints::Response &_res);
@@ -220,6 +223,8 @@ namespace aero
 
     private: ros::Subscriber status_reset_sub_;
 
+    private: ros::Subscriber collision_mode_set_sub_;
+
     private: ros::ServiceServer interpolation_server_;
 
     private: ros::ServiceServer send_joints_server_;
@@ -269,6 +274,9 @@ namespace aero
 
     private: ros::Timer in_action_timer_;
 
+      /// @brief 0:no abort, 1:abort and reset, 2:abort but external reset 
+    private: int collision_abort_mode_;
+
       // for speed overwrite
 
     private: ros::SubscribeOptions speed_overwrite_ops_;
@@ -278,6 +286,10 @@ namespace aero
     private: ros::AsyncSpinner speed_overwrite_spinner_;
 
     private: ros::Subscriber speed_overwrite_sub_;
+
+    private: std::mutex mtx_thread_postpone_;
+
+    private: bool thread_postpone_;
 
     private: void SpeedOverwriteCallback(
 	const std_msgs::Float32::ConstPtr& _msg);

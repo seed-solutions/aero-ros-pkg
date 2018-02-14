@@ -133,6 +133,15 @@ AeroControllerNode::AeroControllerNode(const ros::NodeHandle& _nh,
           &AeroControllerNode::StatusResetCallback,
           this);
 
+  ROS_INFO(" create collision mode sub");
+  collision_mode_set_sub_ =
+      nh_.subscribe(
+          "set_collision_mode",
+          10,
+          &AeroControllerNode::SetCollisionModeCallback,
+          this);
+  collision_abort_mode_ = 0;
+
   bool get_state = true;
   nh_.param<bool> ("get_state", get_state, true);
 
@@ -224,12 +233,15 @@ void AeroControllerNode::JointTrajectoryThread(
 
     // check if any collision happened during send trajectory
     mtx_upper_.lock();
-    mtx_lower_.lock();
     bool collision_status = upper_.get_status();
     mtx_upper_.unlock();
-    mtx_lower_.unlock();
-    if (collision_status) {
+    if (collision_status && collision_abort_mode_ != 0) {
       ROS_ERROR("upper joint trajectory thread: abort trajectory collision!");
+      if (collision_abort_mode_ == 1) {
+        mtx_upper_.lock();
+        upper_.reset_status();
+        mtx_upper_.unlock();
+      }
       break;
     }
 
@@ -770,25 +782,45 @@ void AeroControllerNode::JointTrajectoryCallback(
 void AeroControllerNode::SpeedOverwriteCallback(
     const std_msgs::Float32::ConstPtr& _msg)
 {
-  ROS_WARN("----speed overwrite callback----");
+  ROS_WARN("----speed overwrite callback---- factor:%f", _msg->data);
+
+  // make sure robot is in action when SpeedOverwrite is called
+  bool upper=true, lower=true;
+  mtx_threads_.lock();
+  if (registered_threads_.size() == 0)
+    upper = false;
+  mtx_threads_.unlock();
+  mtx_lower_thread_.lock();
+  if (lower_thread_.id == 0)
+    lower = false;
+  mtx_lower_thread_.unlock();
+  if (!upper && !lower) {
+    ROS_ERROR("  cannot overwrite speed when robot is not in action!");
+    return;
+  }
 
   // make sure msg is safe
-  if (_msg->data < 0.00001 || _msg->data > 1.00001) {
+  if (_msg->data < -0.00001 || _msg->data > 1.00001) {
     ROS_ERROR("  speed factor must be between 0.0 and 1.0");
     return;
   }
+  static const float abort_threshold = 0.1f;
+  mtx_thread_postpone_.lock();
+  if (thread_postpone_ && _msg->data < abort_threshold) {
+    ROS_ERROR("  it is illegal to set factor 0.0 twice in a row!");
+    return;
+    mtx_thread_postpone_.unlock();
+  }
+  mtx_thread_postpone_.unlock();
 
   // on background, kill lower thread if running
   std::thread lower_process([&](){
       mtx_lower_thread_.lock();
-      if (lower_thread_.id == 1) // if running
+      mtx_thread_postpone_.lock();
+      if (lower_thread_.id == 1 && !thread_postpone_) // if running
         lower_thread_.kill = true;
+      mtx_thread_postpone_.unlock();
       mtx_lower_thread_.unlock();
-
-      // // in case lower trajectories are short 
-      // mtx_lower_.lock();
-      // lower_.servo_on();
-      // mtx_lower_.unlock();
 
       auto time_begin = std::chrono::high_resolution_clock::now();
       while (1) {
@@ -803,6 +835,14 @@ void AeroControllerNode::SpeedOverwriteCallback(
         mtx_lower_thread_.unlock();
         usleep(10 * 1000); // sleep 10 ms and wait for update
       }
+
+      if (_msg->data < abort_threshold) { // avoid overflow, act as 0.0
+        mtx_lower_.lock();
+        lower_.servo_on();
+        mtx_lower_.unlock();
+        return;
+      }
+
       // rewrite lower thread command time
       // update elapsed time to new time scale
       lower_killed_thread_info_.at_split_num /=
@@ -817,10 +857,12 @@ void AeroControllerNode::SpeedOverwriteCallback(
 
   // kill all running upper threads
   std::vector<int> kill_thread_id;
+  std::vector<thread_info> dummy; // for 0.0 factor
   mtx_threads_.lock();
   for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th) {
     th->kill = true;
     kill_thread_id.push_back(th->id);
+    dummy.push_back(*th);
   }
   mtx_threads_.unlock();
 
@@ -836,6 +878,31 @@ void AeroControllerNode::SpeedOverwriteCallback(
     mtx_thread_graveyard_.unlock();
     usleep(10 * 1000); // sleep 10 ms and wait for update
   }
+
+  if (_msg->data < abort_threshold) { // avoid overflow, act as 0.0
+    mtx_thread_graveyard_.unlock();
+    mtx_upper_.lock();
+    upper_.servo_on();
+    mtx_upper_.unlock();
+    lower_process.join();
+    mtx_thread_postpone_.lock();
+    mtx_threads_.lock();
+    // dummy thread alive (speed 0.0 is technically non-dead)
+    for (auto th = dummy.begin(); th != dummy.end(); ++th)
+      registered_threads_.push_back(*th);
+    mtx_threads_.unlock();
+    thread_postpone_ = true;
+    mtx_thread_postpone_.unlock();
+    return;
+  }
+
+  mtx_thread_postpone_.lock();
+  if (thread_postpone_) {
+    mtx_threads_.lock();
+    registered_threads_.clear(); // clear dummy
+    mtx_threads_.unlock();
+  }
+  mtx_thread_postpone_.unlock();
 
   // rewrite graveyard command time
   // create new threads
@@ -863,6 +930,9 @@ void AeroControllerNode::SpeedOverwriteCallback(
 
   // create new lower thread
   lower_process.join();
+  mtx_thread_postpone_.lock();
+  thread_postpone_ = false;
+  mtx_thread_postpone_.unlock();
   mtx_lower_thread_.lock();
   std::thread send_lower([&](
     std::vector<std::pair<std::vector<int16_t>, uint16_t> > _stroke_trajectory) {
@@ -1076,6 +1146,19 @@ void AeroControllerNode::StatusResetCallback(
 
   mtx_upper_.unlock();
   mtx_lower_.unlock();
+}
+
+//////////////////////////////////////////////////
+void AeroControllerNode::SetCollisionModeCallback(
+    const std_msgs::Int32::ConstPtr& _msg)
+{
+  if (_msg->data < 0 || _msg->data > 2) {
+    ROS_ERROR("Invalid collision abort mode %d. Not set!", _msg->data);
+    return;
+  }
+
+  ROS_WARN("Changing collision abort mode to %d. Note, this callback should never be called when a robot is moving.", _msg->data);
+  collision_abort_mode_ = _msg->data;
 }
 
 //////////////////////////////////////////////////
