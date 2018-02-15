@@ -58,6 +58,10 @@ printf "\nCreating urdf ...\n"
 
 ./scripts/create_urdf.sh $dir $upper_name $lower_name
 
+printf "\nCreating EusLISP model ...\n"
+
+./scripts/create_eusmodel.sh $dir
+
 printf "\nSetting up aero_moveit_config ...\n"
 
 ./scripts/setup_moveit_config.sh $dir

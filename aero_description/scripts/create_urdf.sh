@@ -6,7 +6,7 @@
 
 # generates : aero_description/urdf
 # generates : aero_description/meshes
-# generates : aero_description/urdf
+# generates : aero_description/robots
 
 dir=$1
 upper_file=$(rospack find aero_description)/${dir}/$2.txt
