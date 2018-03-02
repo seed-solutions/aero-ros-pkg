@@ -34,10 +34,14 @@
 #include <aero_startup/AeroTorsoController.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Float32.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Trigger.h>
 #include <aero_std/GetSpot.h>
 #include <nav_msgs/GetPlan.h>
+
+#include <mutex>
+
 namespace aero
 {
 #ifdef KINETIC
@@ -347,6 +351,10 @@ namespace aero
     protected: void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
     protected: void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
 
+      // @brief overwrite command speed on real robot
+      // @param[in] _speed_factor < 1.0 for slow down, > 1.0 for speed up
+    public: void overwriteSpeed(float _speed_factor);
+
       /// @brief send lifter position to real robot
       /// @attention when lifter is initial position (stretched), x and z are zero.
       /// @param[in] _x desired x position in meters
@@ -415,6 +423,9 @@ namespace aero
     public: bool waitInterpolation(int _timeout_ms=0);
       /// @brief prototype for waitInterpolation
     protected: bool waitInterpolation_(int _timeout_ms=0);
+
+      /// @brief waitInterpolation_ for wait off mode
+    protected: void sleepInterpolation(int _time_ms);
 
       /// @brief send grasp command to real robot
       /// @param[in] _arm aero::arm::(rarm|larm)
@@ -583,6 +594,7 @@ namespace aero
     protected: ros::Publisher speech_publisher_;
     protected: ros::Publisher cmd_vel_publisher_;
     protected: ros::Publisher lookat_target_publisher_;
+    protected: ros::Publisher overwrite_speed_publisher_;
     protected: ros::Subscriber joint_states_subscriber_;
     protected: ros::ServiceClient waist_service_;
     protected: ros::ServiceClient lifter_ik_service_;
@@ -609,6 +621,12 @@ namespace aero
     protected: bool wait_;
       /// @brief used for re-enabling wait_ in setTrackingMode(false)
     protected: bool saved_wait_settings_;
+
+      /// @brief for handling speed overwrite on synchronous w/o wait
+    protected: std::mutex so_mutex_;
+    protected: float so_factor_;
+    protected: float so_retime_scale_;
+    protected: bool so_update_;
 
     protected: ros::ServiceClient in_action_service_;
 
