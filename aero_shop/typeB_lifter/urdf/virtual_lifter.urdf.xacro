@@ -44,7 +44,7 @@
       <child link="leg_base_link"/>
       <origin xyz="0.0 0.0 -0.0" rpy="0 -0 0 "/>
       <axis   xyz="0 0 1"/>
-      <limit lower="${z_min}" upper="${z_max}" effort="100" velocity="0.15" />
+      <limit lower="${z_min}" upper="${z_max}" effort="100" velocity="0.11" />
       <dynamics damping="0.2" friction="0" />
     </joint>
 
@@ -54,7 +54,7 @@
       <!--origin xyz="0.0 0.0 0.58018" rpy="0 -0 0 "/-->
       <origin xyz="0.0 0.0 0.5" rpy="0 -0 0 "/>
       <axis   xyz="1 0 0"/>
-      <limit lower="${x_min}" upper="${x_max}" effort="100" velocity="0.15" />
+      <limit lower="${x_min}" upper="${x_max}" effort="100" velocity="0.11" />
       <dynamics damping="0.2" friction="0" />
     </joint>
 

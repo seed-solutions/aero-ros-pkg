@@ -1885,7 +1885,7 @@ geometry_msgs::Pose aero::interface::AeroMoveitInterface::getLocationPose(std::s
 bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad, int _timeout_ms)
 {
   // if turn only, move without path planning
-  if (_x == 0.0 && _y == 0.0) return goPosTurnOnly_(_rad, _timeout_ms);
+  // if (_x == 0.0 && _y == 0.0) return goPosTurnOnly_(_rad, _timeout_ms);
 
   goPosAsync(_x, _y, _rad);
 
