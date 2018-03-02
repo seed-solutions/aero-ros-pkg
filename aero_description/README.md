@@ -34,6 +34,8 @@ If you want to clean up, use `clean.sh`.
   - copy euslisp models into `aero_description/models`
 - `create_urdf.sh`
   - copy `urdf`, `robots`, and `meshes` into `aero_description`
+- `create_eusmodel.sh`
+  - [Optional] generate eusmodel `aero.l` if exist `robots/aero.{urdf.xacro,yaml}`.
 - `install_srv.sh`
   - create `aero_startup/CMakeLists` and add service files
 
