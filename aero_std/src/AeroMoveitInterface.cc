@@ -37,6 +37,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   lookat_target_publisher_ = _nh.advertise<std_msgs::String>
     ("/look_at/set_target_topic", 10);
 
+  overwrite_speed_publisher_ = _nh.advertise<std_msgs::Float32>
+    ("/aero_controller/speed_overwrite", 10);
+
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states", 1, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
@@ -122,6 +125,10 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   wait_ = true;
   saved_wait_settings_ = true;
+
+  so_update_ = false;
+  so_factor_ = 1.0f;
+  so_retime_scale_ = 1.0f;
 
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
@@ -802,7 +809,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero:
     usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
-    usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+    sleepInterpolation(_time_ms);
   }
 }
 
@@ -814,7 +821,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::i
     usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
-    usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+    sleepInterpolation(_time_ms);
   }
 }
 
@@ -826,7 +833,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint,
     usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
-    usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+    sleepInterpolation(_time_ms);
   }
 }
 
@@ -838,7 +845,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map
     usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
-    usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+    sleepInterpolation(_time_ms);
   }
 }
 
@@ -979,7 +986,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
     usleep(static_cast<int>(time * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
-    usleep(static_cast<int>(time) * 1000 + 1000);
+    sleepInterpolation(time);
   }
   return true;
 }
@@ -992,7 +999,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
     usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
-    usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+    sleepInterpolation(_time_ms);
   }
   return true;
 }
@@ -1081,6 +1088,23 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
   return sendTrajectoryAsync(_trajectory, times, _move_lifter);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_overwrite)
+{
+  std_msgs::Float32 msg;
+  msg.data = _speed_overwrite;
+  overwrite_speed_publisher_.publish(msg);
+  so_mutex_.lock();
+  if (_speed_overwrite < 0.1) {
+    so_retime_scale_ = 0.0;
+  } else {
+    so_retime_scale_ = msg.data / so_factor_;
+    so_factor_ = msg.data;
+    so_update_ = true;
+  }
+  so_mutex_.unlock();
 }
 
 //////////////////////////////////////////////////
@@ -1226,7 +1250,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
       usleep(static_cast<int>(time * 0.8) * 1000);
       waitInterpolation_();
     } else {
-      usleep(static_cast<int>(time) * 1000 + 1000);
+      sleepInterpolation(time);
     }
     return true;
   }
@@ -1241,7 +1265,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
       usleep(static_cast<int>(_time_ms * 0.8) * 1000);
       waitInterpolation_();
     } else {
-      usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+      sleepInterpolation(_time_ms);
     }
     return true;
   }
@@ -1322,6 +1346,39 @@ bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
     }
   }
   return false;
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sleepInterpolation(int _time_ms)
+{
+  so_mutex_.lock();
+  so_factor_ = 1.0f;
+  so_retime_scale_ = 1.0f;
+  so_mutex_.unlock();
+  int count = 0;
+  int update_ms = 100;
+  int update_count = _time_ms / update_ms;
+  for (int i = 0; i < update_count; ) {
+    so_mutex_.lock();
+    if (so_update_) {
+      update_count = i + static_cast<int>((update_count - i) / so_retime_scale_);
+      so_update_ = false;
+    }
+    so_mutex_.unlock();
+    usleep(update_ms * 1000);
+    so_mutex_.lock();
+    if (so_retime_scale_ > 0.00001) { // if not 0.0
+      ++count;
+      ++i;
+    }
+    so_mutex_.unlock();
+  }
+  usleep(std::max(0, _time_ms - count * update_ms) + 1000);
+  so_mutex_.lock();
+  so_factor_ = 1.0f;
+  so_retime_scale_ = 1.0f;
+  so_mutex_.unlock();
+  // usleep(static_cast<int>(_time_ms) * 1000 + 1000);
 }
 
 //////////////////////////////////////////////////
