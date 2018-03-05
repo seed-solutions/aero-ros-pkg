@@ -16,9 +16,9 @@
        xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
-  
+
   <xacro:macro name="lifter" params="base_link">
-    
+
     <link name="${base_link}">
       <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -43,7 +43,7 @@
       <mu2>0.9</mu2>
     </gazebo>
 
-    <link name="leg_foreleg_link">
+    <link name="leg_shank_link">
       <visual>
         <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
@@ -62,7 +62,7 @@
         <inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
       </inertial>
     </link>
-    <gazebo reference="leg_foreleg_link">
+    <gazebo reference="leg_shank_link">
       <mu1>0.9</mu1>
       <mu2>0.9</mu2>
     </gazebo>
@@ -138,7 +138,7 @@
       <mu1>0.9</mu1>
       <mu2>0.9</mu2>
     </gazebo>
-    
+
     <link name="lifter_top_link">
       <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -168,30 +168,21 @@
       <child  link="lifter_top_link"/>
       <origin xyz="0 0 0.055" rpy="0 0 0"/>
     </joint>
-    <joint name="hip_joint" type="revolute">
+
+    <joint name="knee_joint_mimic" type="continuous">
       <parent link="leg_thigh_link"/>
       <child link="leg_base_link"/>
       <origin xyz="0 0 0.25" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
-      <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
-      <dynamics damping="0.2" friction="0" />
+      <mimic joint="knee_joint" multiplier="-1" offset="0"/>
     </joint>
-    <transmission type="pr2_mechanism_model/SimpleTransmission" name="hip_joint_trans" >
-      <actuator name="hip_joint_motor" />
-      <joint name="hip_joint" />
-      <mechanicalReduction>1</mechanicalReduction>
-    </transmission>
-    <gazebo reference="hip_joint">
-      <implicitSpringDamper>0.4</implicitSpringDamper>
-    </gazebo>
-<!--
-    <joint name="knee_joint" type="revolute">
-      <parent link="leg_foreleg_link"/>
-      <child  link="leg_knee_link"/>
-      <origin xyz="0 0 0.25" rpy="0 0 0"/>
-      <axis   xyz="0 1 0"/>
-      <limit lower="0" upper="3.14159" effort="100" velocity="0.5" />
-      <dynamics damping="0.2" friction="0" />
+
+    <joint name="knee_joint" type="revolute"> <!-- rename "knee_joint_thigh_dummy" -->
+      <parent link="leg_knee_link"/>
+      <child  link="leg_thigh_link"/>
+      <origin xyz="0 0 0.12" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <limit effort="100" lower="-1.5707" upper="0" velocity="0.5"/>
     </joint>
     <transmission type="pr2_mechanism_model/SimpleTransmission" name="knee_joint_trans" >
       <actuator name="knee_joint_motor" />
@@ -201,10 +192,10 @@
     <gazebo reference="knee_joint">
       <implicitSpringDamper>0.4</implicitSpringDamper>
     </gazebo>
--->
+
     <joint name="ankle_joint" type="revolute">
       <parent link="${base_link}"/>
-      <child  link="leg_foreleg_link"/>
+      <child  link="leg_shank_link"/>
       <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
       <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
@@ -221,24 +212,16 @@
 
 <!--- mimic joints -->
 <!-- requried -->
-    <joint name="knee_joint_foreleg_dummy" type="continuous">
-      <parent link="leg_foreleg_link"/>
+    <joint name="ankle_joint_mimic" type="continuous">
+      <parent link="leg_shank_link"/>
       <child  link="leg_knee_link"/>
       <origin xyz="0 0 0.25" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
       <mimic joint="ankle_joint" multiplier="-1" offset="0" />
     </joint>
 
-    <joint name="knee_joint_thigh_dummy" type="continuous">
-      <parent link="leg_knee_link"/>
-      <child  link="leg_thigh_link"/>
-      <origin xyz="0 0 0.12" rpy="0 0 0"/>
-      <axis xyz="0 -1 0"/>
-      <mimic joint="hip_joint" multiplier="-1" offset="0" />
-    </joint>
-
 <!-- redundant -->
-    <link name="leg_foreleg_link_dummy">
+    <link name="leg_shank_link_dummy">
       <visual>
         <geometry>
           <mesh filename="package://aero_description/meshes/typeB_lifter/lifter_bone_dummy.dae" scale="1 1 1" />
@@ -257,17 +240,17 @@
 
     <joint name="ankle_joint_dummy" type="continuous">
       <parent link="${base_link}"/>
-      <child link="leg_foreleg_link_dummy"/>
+      <child link="leg_shank_link_dummy"/>
       <origin xyz="0.03182 0 0.08182" rpy="0 0 0"/>
       <axis xyz="0 -1 0"/>
       <mimic joint="ankle_joint" multiplier="1" offset="0" />
     </joint>
-    <joint name="hip_joint_dummy" type="continuous">
+    <joint name="knee_joint_dummy" type="continuous">
       <parent link="leg_knee_link"/>
       <child link="leg_thigh_link_dummy"/>
       <origin xyz="0.03182 0 0.08818" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
-      <mimic joint="hip_joint" multiplier="1" offset="0" />
+      <mimic joint="knee_joint" multiplier="-1" offset="0" />
     </joint>
 
   </xacro:macro>
