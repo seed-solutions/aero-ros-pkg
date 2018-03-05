@@ -119,7 +119,11 @@ namespace aero
 
      public: int get_number_of_angle_joints();
 
+     public: int get_number_of_strokes();
+
      public: int32_t get_ordered_angle_id(std::string _name);
+
+     public: bool get_joint_name(int32_t _joint_id, std::string &_name);
 
      public: bool get_status();
 

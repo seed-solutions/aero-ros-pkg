@@ -257,6 +257,12 @@ int AeroControllerProto::get_number_of_angle_joints()
 }
 
 //////////////////////////////////////////////////
+int AeroControllerProto::get_number_of_strokes()
+{
+  return stroke_joint_indices_.size();
+}
+
+//////////////////////////////////////////////////
 int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
 {
   auto it = angle_joint_indices_.find(_name);
@@ -264,6 +270,18 @@ int32_t AeroControllerProto::get_ordered_angle_id(std::string _name)
     return angle_joint_indices_[_name];
   }
   return -1;
+}
+
+//////////////////////////////////////////////////
+bool AeroControllerProto::get_joint_name(int32_t _joint_id, std::string &_name)
+{
+  for (auto it = angle_joint_indices_.begin();
+       it != angle_joint_indices_.end(); it++ ) {
+    if (it->second == _joint_id) {
+      _name = it->first;
+      return true;
+    }
+  }
 }
 
 //////////////////////////////////////////////////
