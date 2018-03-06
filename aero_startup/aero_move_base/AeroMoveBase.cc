@@ -10,9 +10,14 @@ using namespace navigation;
 /// @param _nh ROS Node Handle
 AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh) :
   nh_(_nh),
-  vx_(0), vy_(0), vth_(0), x_(0), y_(0), th_(0)
+  vx_(0), vy_(0), vth_(0), x_(0), y_(0), th_(0), base_config_()
 {
-  this->Init();
+  base_config_.Init(ros_rate_,
+                    odom_rate_,
+                    safe_rate_,
+                    safe_duration_,
+                    num_of_wheels_,
+                    wheel_names_);
 
   wheel_cmd_.joint_names = wheel_names_;
 
@@ -67,9 +72,14 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
     servo_.data = true;
     servo_pub_.publish(servo_);
   }
+  std::vector<int16_t> int_vel;
+  int_vel.resize(cur_vel_.size());
 
   // convert velocity to wheel
-  this->VelocityToWheel(_cmd_vel, cur_vel_);
+  base_config_.VelocityToWheel(vx_, vy_, vth_, int_vel);
+  for(int i = 0; i < cur_vel_.size(); i++) {
+    cur_vel_[i] = static_cast<double>(int_vel[i]);
+  }
 
   wheel_cmd_.points[0].positions = cur_vel_;
   wheel_cmd_.points[0].time_from_start = ros::Duration(ros_rate_);

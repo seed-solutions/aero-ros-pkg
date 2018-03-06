@@ -20,6 +20,8 @@
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 
+#include "AeroBaseController.hh" // class AeroBaseConfig
+
 namespace aero
 {
 namespace navigation
@@ -107,7 +109,7 @@ class AeroMoveBase
  private: int num_of_wheels_;
 
   /// @param rate for move base action
- private: float ros_rate_;
+ private: double ros_rate_;
 
   /// @param node handle
  private: ros::NodeHandle nh_;
@@ -140,7 +142,7 @@ class AeroMoveBase
  private: ros::Timer odom_timer_;
 
   /// @param rate for odom
- private: float odom_rate_;
+ private: double odom_rate_;
 
   /// @param servo status
  private: std_msgs::Bool servo_;
@@ -153,14 +155,15 @@ class AeroMoveBase
  private: ros::Timer safe_timer_;
 
   /// @param rate for safety check
- private: float safe_rate_;
+ private: double safe_rate_;
 
   /// @param max duration for safety stop
- private: float safe_duration_;
+ private: double safe_duration_;
 
   /// @param time stamp of the latest recieved cmd_vel msg
  private: ros::Time time_stamp_;
 
+ private: AeroBaseConfig base_config_;
 };
 
 typedef std::shared_ptr<AeroMoveBase> AeroMoveBasePtr;
