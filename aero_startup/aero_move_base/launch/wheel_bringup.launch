@@ -3,7 +3,7 @@
 <launch>
 
   <!--  URG Settings -->
-  <arg name="~ip_address" default="192.168.101.193" />
+  <arg name="~ip_address" default="192.168.10.53" />
   <arg name="~frame_id" default="wheels_base_laser_link" />
 
   <node name="urg_node" pkg="urg_node" type="urg_node" >
