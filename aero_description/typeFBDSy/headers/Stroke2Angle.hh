@@ -32,7 +32,7 @@ namespace aero
       float neck_pitch_stroke =
         (scale * can_neck_right + scale * can_neck_left) * 0.5;
       float deg2Rad = M_PI / 180.0;
-      float hip_angle = deg2Rad * LegInvTable(scale * can_up);
+      float knee_angle  = - deg2Rad * LegInvTable(scale * can_up);
       float ankle_angle = deg2Rad * LegInvTable(scale * can_down);
 
       // can_order -> ros_order
@@ -96,8 +96,7 @@ namespace aero
       meta =
         deg2Rad * (scale * can_r_thumb * 5.556 + 15.0);
 
-      meta = hip_angle;
-      meta = ankle_angle + hip_angle;
+      meta = knee_angle;
       meta = ankle_angle;
     };
 
