@@ -1,0 +1,70 @@
+<launch>
+  <node pkg="aero_ros_controller" type="aero_ros_controller"
+        name="aero_ros_controller"
+        output="screen" >
+    <param name="port_lower" value="/dev/aero_lower" />
+    <param name="port_upper" value="/dev/aero_upper" />
+    <param name="controller_rate" value="14" />
+  </node>
+
+  <rosparam>
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 50
+    rarm_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - r_shoulder_p_joint
+        - r_shoulder_r_joint
+        - r_shoulder_y_joint
+        - r_elbow_joint
+        - r_wrist_y_joint
+        - r_wrist_p_joint
+        - r_wrist_r_joint
+##        - r_hand_y_joint # jsk
+    larm_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - l_shoulder_p_joint
+        - l_shoulder_r_joint
+        - l_shoulder_y_joint
+        - l_elbow_joint
+        - l_wrist_y_joint
+        - l_wrist_p_joint
+        - l_wrist_r_joint
+##        - l_hand_y_joint # jsk
+    head_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - neck_y_joint
+        - neck_p_joint
+        - neck_r_joint
+    waist_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - waist_y_joint
+        - waist_p_joint
+        - waist_r_joint
+    lifter_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - knee_joint
+        - ankle_joint
+  </rosparam>
+
+  <include file="$(find aero_moveit_config_new)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+
+  <node name="aero_state_publisher"
+        pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <node name="cm_spawner" pkg="controller_manager"
+        type="spawner" args="joint_state_controller larm_controller rarm_controller head_controller waist_controller lifter_controller" />
+
+  <test test-name="test_robot_interface"
+        name="test_robot_interface"
+        time-limit="360"
+        pkg="aero_ros_controller" type="test_robot_interface" >
+  </test>
+</launch>
