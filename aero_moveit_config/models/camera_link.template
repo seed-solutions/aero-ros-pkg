@@ -1,5 +1,0 @@
-<joint name="camera_joint" type="fixed">
-  <parent  link="head_link"/>
-  <child link="camera_link"/>
-  <origin xyz="0.0 0.0 0.0" rpy="0 0 0 "/>
-</joint>
