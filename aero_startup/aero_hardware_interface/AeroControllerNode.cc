@@ -764,7 +764,7 @@ void AeroControllerNode::JointTrajectoryCallback(
                               _trajectory_start_from, _split_start_from);
       }, th->interpolation, th->trajectories, th->at_trajectory_num, th->at_split_num));
     } else if (th->interpolation.at(th->at_trajectory_num)->is(aero::interpolation::i_constant)) {
-      upper_.servo_on(); // cancel movement
+      // upper_.servo_on(); // cancel movement
     }
   }
   // free graveyard
