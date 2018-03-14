@@ -15,35 +15,35 @@
     <group name="larm">
         <chain base_link="body_link" tip_link="l_hand_link" />
     </group>
-    <group name="torso">
+    <group name="waist">
         <chain base_link="waist_link" tip_link="body_link" />
     </group>
-    <group name="rarm_with_torso">
+    <group name="rarm_with_waist">
         <group name="rarm" />
-        <group name="torso" />
+        <group name="waist" />
     </group>
-    <group name="larm_with_torso">
+    <group name="larm_with_waist">
         <group name="larm" />
-        <group name="torso" />
+        <group name="waist" />
     </group>
     <group name="both_arms">
         <group name="larm" />
         <group name="rarm" />
     </group>
-    <group name="both_arms_with_torso">
+    <group name="both_arms_with_waist">
         <group name="larm" />
         <group name="rarm" />
-        <group name="torso" />
+        <group name="waist" />
     </group>
     <group name="lifter">
         <chain base_link="lifter_base_link" tip_link="lifter_top_link" />
     </group>
-    <group name="rarm_torso_lifter">
-        <group name="rarm_with_torso" />
+    <group name="rarm_waist_lifter">
+        <group name="rarm_with_waist" />
         <group name="lifter" />
     </group>
-    <group name="larm_torso_lifter">
-        <group name="larm_with_torso" />
+    <group name="larm_waist_lifter">
+        <group name="larm_with_waist" />
         <group name="lifter" />
     </group>
     <group name="head">
@@ -52,7 +52,7 @@
     <group name="lifter_ee">
         <link name="waist_link" />
     </group>
-    <group name="torso_ee">
+    <group name="waist_ee">
         <link name="body_link" />
     </group>
     <group name="head_ee">
@@ -80,11 +80,28 @@
         <link name="l_thumb_tip_link" />
         <link name="l_index_tip_link" />
     </group>
+    <group name="torso">
+      <group name="waist" />
+      <group name="lifter" />
+    </group>
     <group name="upper_body">
         <group name="rarm" />
         <group name="larm" />
-        <group name="torso" />
+        <group name="waist" />
     </group>
+    <group name="whole_body">
+        <group name="rarm" />
+        <group name="larm" />
+        <group name="waist" />
+        <group name="lifter" />
+    </group>
+    <!--group name="whole_body_with_base">
+        <group name="rarm" />
+        <group name="larm" />
+        <group name="waist" />
+        <group name="lifter" />
+        <group name="base" />
+    </group-->
     <!--GROUP STATES: Purpose: Define a named state for a particular group, in terms of joint values. This is useful to define states like 'folded arms'-->
     <group_state name="reset-pose" group="upper_body">
         <joint name="l_elbow_joint" value="-2.3562" />
@@ -128,7 +145,7 @@
         <joint name="neck_r_joint" value="0" />
         <joint name="neck_y_joint" value="0" />
     </group_state>
-    <group_state name="reset-pose-torso" group="upper_body">
+    <group_state name="reset-pose-waist" group="upper_body">
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
@@ -136,7 +153,7 @@
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="right_eef" parent_link="r_hand_link" group="rhand" parent_group="rarm" />
     <end_effector name="left_eef" parent_link="l_hand_link" group="lhand" parent_group="larm" />
-    <end_effector name="torso_eef" parent_link="body_link" group="torso_ee" parent_group="torso" />
+    <end_effector name="waist_eef" parent_link="body_link" group="waist_ee" parent_group="waist" />
     <end_effector name="lifter_eef" parent_link="lifter_top_link" group="lifter_ee" parent_group="lifter" />
     <end_effector name="head_eef" parent_link="head_link" group="head_ee" parent_group="head" />
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
