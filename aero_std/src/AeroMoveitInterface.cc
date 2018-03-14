@@ -219,7 +219,57 @@ void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::strin
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts){
+bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform epose;
+  setFromIK(_move_group, epose, _eef_link, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef), _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, aero::Vector3 _pos, aero::Quaternion _qua, std::string _eef_link, int _attempts) {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  geometry_msgs::Pose pose;
+  tf::pointEigenToMsg(_pos, pose.position);
+  tf::quaternionEigenToMsg(_qua, pose.orientation);
+  return setFromIK(_move_group, pose, _eef_link, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, aero::Vector3 _pos, aero::Quaternion _qua, std::string _eef_link, int _attempts) {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  geometry_msgs::Pose pose;
+  tf::pointEigenToMsg(_pos, pose.position);
+  tf::quaternionEigenToMsg(_qua, pose.orientation);
+  return setFromIK(_arm, _range, pose, _eef_link, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, aero::Vector3 _pos, aero::Quaternion _qua, aero::eef _eef, int _attempts) {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  geometry_msgs::Pose pose;
+  tf::pointEigenToMsg(_pos, pose.position);
+  tf::quaternionEigenToMsg(_qua, pose.orientation);
+  return setFromIK(_arm, _range, pose, _eef, _attempts);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, const aero::Transform &_pose, std::string _eef_link, int _attempts)
+{
   const robot_state::JointModelGroup* jmg_tmp;
   bool lifter_ik = false;
 
@@ -272,39 +322,15 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, ge
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, const aero::Transform &_pose, std::string _eef_link, int _attempts)
 {
   return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link, _attempts);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts)
+bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, const aero::Transform &_pose, aero::eef _eef, int _attempts)
 {
   return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef), _attempts);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, Eigen::Vector3d _pos, Eigen::Quaterniond _qua, std::string _eef_link, int _attempts) {
-  geometry_msgs::Pose pose;
-  tf::pointEigenToMsg(_pos, pose.position);
-  tf::quaternionEigenToMsg(_qua, pose.orientation);
-  return setFromIK(_move_group, pose, _eef_link, _attempts);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, Eigen::Vector3d _pos, Eigen::Quaterniond _qua, std::string _eef_link, int _attempts) {
-  geometry_msgs::Pose pose;
-  tf::pointEigenToMsg(_pos, pose.position);
-  tf::quaternionEigenToMsg(_qua, pose.orientation);
-  return setFromIK(_arm, _range, pose, _eef_link, _attempts);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, Eigen::Vector3d _pos, Eigen::Quaterniond _qua, aero::eef _eef, int _attempts) {
-  geometry_msgs::Pose pose;
-  tf::pointEigenToMsg(_pos, pose.position);
-  tf::quaternionEigenToMsg(_qua, pose.orientation);
-  return setFromIK(_arm, _range, pose, _eef, _attempts);
 }
 
 //////////////////////////////////////////////////
@@ -802,116 +828,63 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms)
-{
-  sendAngleVectorAsync(_arm, _range, _time_ms);
+void aero::interface::AeroMoveitInterface::sendAngleVectorSync_(int _time_ms)
+{ // TODO inline
   if (wait_) {
+    ROS_DEBUG("sendAngleVectorSync_,wait_ %d", _time_ms);
     usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
     waitInterpolation_();
   } else {
+    ROS_DEBUG("sendAngleVectorSync_,!wait_ %d", _time_ms);
     sleepInterpolation(_time_ms);
   }
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::ikrange _move_waist)
-{
-  sendAngleVectorAsync(_time_ms, _move_waist);
-  if (wait_) {
-    usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
-    waitInterpolation_();
-  } else {
-    sleepInterpolation(_time_ms);
-  }
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
-{
-  sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
-  if (wait_) {
-    usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
-    waitInterpolation_();
-  } else {
-    sleepInterpolation(_time_ms);
-  }
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
-{
-  sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
-  if (wait_) {
-    usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
-    waitInterpolation_();
-  } else {
-    sleepInterpolation(_time_ms);
-  }
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms)
+void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async)
 {
   sendAngleVectorAsync_( aero::armAndRange2MoveGroup(_arm, _range), _time_ms);
+  if (!_async) sendAngleVectorSync_(_time_ms);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist)
+void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::ikrange _move_waist, bool _async)
+{
+  sendAngleVectorAsync_(_time_ms, _move_waist);
+  if (!_async) sendAngleVectorSync_(_time_ms);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(int _time_ms, aero::ikrange _move_waist)
 {
   std::vector<double> av_mg;
   kinematic_state->copyJointGroupPositions("upper_body", av_mg);
   std::vector<std::string> j_names;
   j_names = getMoveGroup("upper_body").getJointNames();
 
-  if (_move_waist == aero::ikrange::lifter)
-    {
-      std::map<aero::joint, double> av_lif;
-      getLifter(av_lif);
-      av_mg.reserve(av_mg.size() + 2);
-      av_mg.push_back(av_lif[aero::joint::lifter_x]);
-      av_mg.push_back(av_lif[aero::joint::lifter_z]);
-      std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
-      j_names.reserve(j_names.size() + 2);
-      j_names.push_back(j_lif[0]);
-      j_names.push_back(j_lif[1]);
-    }
+  if (_move_waist == aero::ikrange::lifter) {
+    std::map<aero::joint, double> av_lif;
+    getLifter(av_lif);
+    av_mg.reserve(av_mg.size() + 2);
+    av_mg.push_back(av_lif[aero::joint::lifter_x]);
+    av_mg.push_back(av_lif[aero::joint::lifter_z]);
+    std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
+    j_names.reserve(j_names.size() + 2);
+    j_names.push_back(j_lif[0]);
+    j_names.push_back(j_lif[1]);
+  }
 
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _move_group, int _time_ms)
 {
-  setRobotStateVariables(_av_map);
-  sendAngleVectorAsync(_time_ms, _move_waist);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
-{
-  setRobotStateVariables(_av_map.joints);
-  setHand(aero::arm::larm, _av_map.l_hand);
-  setHand(aero::arm::rarm, _av_map.r_hand);
-  // add upper body
   std::vector<double> av_mg;
-  kinematic_state->copyJointGroupPositions("upper_body", av_mg);
+  kinematic_state->copyJointGroupPositions(_move_group, av_mg);
   std::vector<std::string> j_names;
-  j_names = getMoveGroup("upper_body").getJointNames();
-  // add hands
-  av_mg.push_back(_av_map.l_hand);
-  av_mg.push_back(_av_map.r_hand);
-  j_names.push_back("l_thumb_joint");
-  j_names.push_back("r_thumb_joint");
-  // add lifter
-  if (_move_waist == aero::ikrange::lifter) {
-    std::map<aero::joint, double> av_lif;
-    getLifter(av_lif);
-    av_mg.push_back(av_lif[aero::joint::lifter_x]);
-    av_mg.push_back(av_lif[aero::joint::lifter_z]);
-    std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
-    j_names.push_back(j_lif[0]);
-    j_names.push_back(j_lif[1]);
-  }
+  j_names = getMoveGroup(_move_group).getJointNames();
+
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
@@ -925,7 +898,6 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
   msg.points[0].positions.resize(_av.size());
   msg.points[0].positions = _av;
   msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
-
 
   // lifter
   auto itr_x = std::find(_joint_names.begin(), _joint_names.end(), "virtual_lifter_x_joint");
@@ -963,49 +935,79 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
   }
 
   angle_vector_publisher_.publish(msg);
-
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _move_group, int _time_ms)
+void aero::interface::AeroMoveitInterface::sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
 {
-  std::vector<double> av_mg;
-  kinematic_state->copyJointGroupPositions(_move_group, av_mg);
-  std::vector<std::string> j_names;
-  j_names = getMoveGroup(_move_group).getJointNames();
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
+  sendAngleVectorSync_(_time_ms);
+}
 
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
+  sendAngleVectorSync_(_time_ms);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  sendAngleVectorAsync_( aero::armAndRange2MoveGroup(_arm, _range), _time_ms);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  sendAngleVectorAsync_(_time_ms, _move_waist);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  setRobotStateVariables(_av_map);
+  sendAngleVectorAsync(_time_ms, _move_waist);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  setRobotStateVariables(_av_map.joints);
+  setHand(aero::arm::larm, _av_map.l_hand);
+  setHand(aero::arm::rarm, _av_map.r_hand);
+  // add upper body
+  std::vector<double> av_mg;
+  kinematic_state->copyJointGroupPositions("upper_body", av_mg);
+  std::vector<std::string> j_names;
+  j_names = getMoveGroup("upper_body").getJointNames();
+  // add hands
+  av_mg.push_back(_av_map.l_hand);
+  av_mg.push_back(_av_map.r_hand);
+  j_names.push_back("l_thumb_joint");
+  j_names.push_back("r_thumb_joint");
+  // add lifter
+  if (_move_waist == aero::ikrange::lifter) {
+    std::map<aero::joint, double> av_lif;
+    getLifter(av_lif);
+    av_mg.push_back(av_lif[aero::joint::lifter_x]);
+    av_mg.push_back(av_lif[aero::joint::lifter_z]);
+    std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
+    j_names.push_back(j_lif[0]);
+    j_names.push_back(j_lif[1]);
+  }
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
-{
-  if (!sendTrajectoryAsync(_trajectory, _times, _move_lifter)) return false;
-  int time = std::accumulate(_times.begin(), _times.end(), 0);
-  if (wait_) {
-    usleep(static_cast<int>(time * 0.8) * 1000);// wait 80 percent
-    waitInterpolation_();
-  } else {
-    sleepInterpolation(time);
-  }
-  return true;
-}
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
-{
-  if (!sendTrajectoryAsync(_trajectory, _time_ms, _move_lifter)) return false;
-  if (wait_) {
-    usleep(static_cast<int>(_time_ms * 0.8) * 1000);// wait 80 percent
-    waitInterpolation_();
-  } else {
-    sleepInterpolation(_time_ms);
-  }
-  return true;
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
+bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter, bool _async)
 {
   if (_trajectory.size() != _times.size()) {
     ROS_WARN("trajectory length[%d] doesnt match with times length[%d]",
@@ -1079,15 +1081,32 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
     msg.points[i].time_from_start = ros::Duration(ms_total * 0.001);
   }
   angle_vector_publisher_.publish(msg);
+
+  int time = std::accumulate(_times.begin(), _times.end(), 0);
+  if(!_async) sendAngleVectorSync_(time);
   return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter, bool _async)
+{
+  int num = static_cast<int>(_trajectory.size());
+  std::vector<int> times(num, _time_ms/num);
+  return sendTrajectory(_trajectory, times, _move_lifter, _async);
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendTrajectory(_trajectory, _times, _move_lifter, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
 {
-  int num = static_cast<int>(_trajectory.size());
-  std::vector<int> times(num, _time_ms/num);
-  return sendTrajectoryAsync(_trajectory, times, _move_lifter);
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendTrajectory(_trajectory, _time_ms, _move_lifter, true);
 }
 
 //////////////////////////////////////////////////
@@ -1108,17 +1127,18 @@ void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_overwrite
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int _time_ms)
+bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int _time_ms, bool _local, bool _async)
 {
-  return sendLifter(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
-}
+  if (_local) {
+    std::map<aero::joint, double> pos;
+    getLifter(pos);
+    _x += pos[aero::joint::lifter_x];
+    _z += pos[aero::joint::lifter_z];
+  }
 
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_ms)
-{
   aero_startup::AeroTorsoController srv;
-  srv.request.x = _x;
-  srv.request.z = _z;
+  srv.request.x = _x*1000;
+  srv.request.z = _z*1000;
   if (_time_ms == 0) srv.request.coordinate = "world";
   else srv.request.coordinate = "world:" + std::to_string(_time_ms);
   if (!waist_service_.call(srv)) {
@@ -1128,59 +1148,55 @@ bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_
 
   if (srv.response.status == "success") {
     setLifter(_x/1000.0, _z/1000.0);
-    if (wait_) {
-      if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000 * 0.8) * 1000);
-      else usleep(static_cast<int>(_time_ms * 0.8) * 1000);
-      waitInterpolation_();
-    } else {
-      if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000 + 1000);
-      else usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+    ////
+    if(!_async) {
+      if (wait_) {
+        if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000 * 0.8) * 1000);
+        else usleep(static_cast<int>(_time_ms * 0.8) * 1000);
+        waitInterpolation_();
+      } else {
+        if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000 + 1000);
+        else usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+      }
     }
-
     return true;
   }
   return false;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_ms)
+{
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(double _x, double _z, int _time_ms)
 {
-  return sendLifterLocal(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(_x, _z, _time_ms, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(int _x, int _z, int _time_ms)
 {
-  std::map<aero::joint,double> pos;
-  getLifter(pos);
-  return sendLifter(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(double _x, double _z, int _time_ms)
 {
-  return sendLifterAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(_x, _z, _time_ms, false, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(int _x, int _z, int _time_ms)
 {
-  aero_startup::AeroTorsoController srv;
-  srv.request.x = _x;
-  srv.request.z = _z;
-  if (_time_ms == 0) srv.request.coordinate = "world";
-  else srv.request.coordinate = "world:" + std::to_string(_time_ms);
-
-  if (!waist_service_.call(srv)) {
-    ROS_ERROR("move waist failed service call");
-    return false;
-  }
-
-  if (srv.response.status == "success") {
-    setLifter(_x, _z);
-    return true;
-  }
-  return false;
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, false, true);
 }
 
 //////////////////////////////////////////////////
@@ -1229,20 +1245,21 @@ bool aero::interface::AeroMoveitInterface::cancelLifter()
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, double _z, int _time_ms)
 {
-  return sendLifterLocalAsync(static_cast<int>(_x * 1000), static_cast<int>(_z * 1000), _time_ms);
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(_x, _z, _time_ms, true, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  std::map<aero::joint, double> pos;
-  getLifter(pos);
-  return sendLifterAsync(static_cast<int>(pos[aero::joint::lifter_x] * 1000) + _x, static_cast<int>(pos[aero::joint::lifter_z] * 1000) + _z, _time_ms);
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, true, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
 {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   if(!sendLifterTrajectoryAsync(_trajectory, _times)) return false;
   else {
     int time = std::accumulate(_times.begin(), _times.end(), 0);
@@ -1259,6 +1276,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
 {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   if(!sendLifterTrajectoryAsync(_trajectory, _time_ms)) return false;
   else {
     if (wait_) {
@@ -1274,6 +1292,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
 {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   setInterpolation(aero::interpolation::i_linear);
 
   trajectory_msgs::JointTrajectory msg;
@@ -1311,6 +1330,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
 {
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
   return sendLifterTrajectoryAsync(_trajectory, times);
@@ -1319,7 +1339,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
   usleep(100 * 1000);// to avoid getting wrong controller state;
-  return waitInterpolation(_timeout_ms);
+  return waitInterpolation_(_timeout_ms);
 }
 
 //////////////////////////////////////////////////
