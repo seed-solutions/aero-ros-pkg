@@ -146,19 +146,10 @@ namespace aero
       /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
       /// @param[in] _pos IK target position
       /// @param[in] _qua IK target quaternion
-      /// @param[in] _eef_link end effector link name, this link gets closer to _pose
-      /// @param[in] _attempts the number of times IK is attempted
-      /// @return true is solved, false is unsolvable
-    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, const Transform &_pose, std::string _eef_link="", int _attempts=10);
-      /// @brief solve IK and set result to robot model's angles
-      /// @param[in] _arm aero::arm::rarm or aero::arm::larm
-      /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
-      /// @param[in] _pos IK target position
-      /// @param[in] _qua IK target quaternion
       /// @param[in] _eef_link this link gets closer to _pose. you can use aero::eef::(hand|grasp|pick)
       /// @param[in] _attempts the number of times IK is attempted
       /// @return true is solved, false is unsolvable
-    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, const Transform &_pose, aero::eef _eef, int _attempts=10);
+    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, const Transform &_pose, aero::eef _eef=aero::eef::none, int _attempts=10);
 
       /// @brief set robot model's lifter position
       /// @param[in] _x x meters from top of lifter

@@ -322,15 +322,11 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, co
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, const aero::Transform &_pose, std::string _eef_link, int _attempts)
-{
-  return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose, _eef_link, _attempts);
-}
-
-//////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, const aero::Transform &_pose, aero::eef _eef, int _attempts)
 {
-  return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef), _attempts);
+  //return setFromIK(_arm, _range, _pose, armAndEEF2LinkName(_arm, _eef), _attempts);
+  return setFromIK(aero::armAndRange2MoveGroup(_arm, _range), _pose,
+                   armAndEEF2LinkName(_arm, _eef), _attempts);
 }
 
 //////////////////////////////////////////////////
