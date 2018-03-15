@@ -15,11 +15,11 @@ namespace aero
   typedef Eigen::AngleAxisd    AngleAxis;
   typedef Eigen::Matrix<double, 6, 1> Vector6;
 
-  enum struct arm : int {rarm, larm, either};
+  enum struct arm : int {rarm, larm, either, both};
 
   enum struct ikrange : int {arm, torso, lifter};
 
-  enum struct eef : int {hand, grasp, pick, index, thumb};
+  enum struct eef : int {hand, grasp, pick, index, thumb, none};
 
   enum struct joint : int {r_shoulder_p,
       r_shoulder_r,
@@ -125,11 +125,25 @@ namespace aero
   inline std::string armAndEEF2LinkName(aero::arm _arm, aero::eef _eef)
   {
     std::string ln = arm2LR(_arm);
-    if (_eef == aero::eef::hand) ln = ln + "_hand_link";
-    else if (_eef == aero::eef::grasp) ln = ln + "_eef_grasp_link";
-    else if (_eef == aero::eef::pick) ln = ln + "_eef_pick_link";
-    else if (_eef == aero::eef::index) ln = ln + "_index_tip_link";
-    else if (_eef == aero::eef::thumb) ln = ln + "_thumb_tip_link";
+    switch (_eef) {
+    case aero::eef::hand:
+      ln = ln + "_hand_link";
+      break;
+    case aero::eef::grasp:
+      ln = ln + "_eef_grasp_link";
+      break;
+    case aero::eef::pick:
+      ln = ln + "_eef_pick_link";
+      break;
+    case aero::eef::index:
+      ln = ln + "_index_tip_link";
+      break;
+    case aero::eef::thumb:
+      ln = ln + "_thumb_tip_link";
+      break;
+    default:
+      ln = "";
+    }
     return ln;
   }
 
