@@ -63,8 +63,15 @@ AeroMoveBase::~AeroMoveBase()
 /// @brief control with cmd_vel
 void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 {
-  vx_ = _cmd_vel->linear.x;
-  vy_ = _cmd_vel->linear.y;
+  if (std::isnan(_cmd_vel->linear.x) ||
+      std::isnan(_cmd_vel->linear.y) ||
+      std::isnan(_cmd_vel->angular.z)) {
+    ROS_ERROR("there is nan in /cmd_vel: ( %f %f %f )",
+              _cmd_vel->linear.x, _cmd_vel->linear.x, _cmd_vel->angular.z);
+    return;
+  }
+  vx_  = _cmd_vel->linear.x;
+  vy_  = _cmd_vel->linear.y;
   vth_ = _cmd_vel->angular.z;
 
   //check servo state
@@ -121,9 +128,15 @@ void AeroMoveBase::CalculateOdometry(const ros::TimerEvent& _event)
   delta_y = (vx_ * sin(th_) + vy_ * cos(th_)) * dt;
   delta_th = vth_ * dt;
 
-  x_ += delta_x;
-  y_ += delta_y;
+  x_  += delta_x;
+  y_  += delta_y;
   th_ += delta_th;
+
+  if (std::isnan(x_) ||
+      std::isnan(y_) ||
+      std::isnan(th_)) {
+    ROS_ERROR("there is nan in odom: ( %f %f %f )", x_, y_, th_);
+  }
 
   // odometry is 6DOF so we'll need a quaternion created from yaw
   geometry_msgs::Quaternion odom_quat
