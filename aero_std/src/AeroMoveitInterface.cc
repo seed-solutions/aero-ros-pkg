@@ -1370,7 +1370,7 @@ void aero::interface::AeroMoveitInterface::sleepInterpolation(int _time_ms)
     }
     so_mutex_.unlock();
   }
-  usleep(std::max(0, _time_ms - count * update_ms) + 1000);
+  usleep((std::max(0, _time_ms - count * update_ms) + 1000) * 1000);
   so_mutex_.lock();
   so_factor_ = 1.0f;
   so_retime_scale_ = 1.0f;
