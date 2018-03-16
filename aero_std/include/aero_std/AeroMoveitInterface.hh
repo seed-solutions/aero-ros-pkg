@@ -29,16 +29,19 @@
 #include <aero_std/IKSettings.hh>
 #include <aero_std/GraspRequest.hh>
 #include <aero_std/interpolation_type.h>
-#include <aero_startup/AeroSendJoints.h>
-#include <aero_startup/AeroHandController.h>
-#include <aero_startup/AeroTorsoController.h>
+
+// msgs
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
+// srvs
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Trigger.h>
 #include <aero_std/GetSpot.h>
 #include <nav_msgs/GetPlan.h>
+#include <aero_startup/AeroSendJoints.h>
+#include <aero_startup/AeroTorsoController.h>
+#include <aero_startup/HandControl.h>
 
 #include <mutex>
 
@@ -468,6 +471,10 @@ namespace aero
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _rad desired angle in radian
     public: bool sendHand(aero::arm _arm, double _rad);
+      /// @brief protected function calling HandControl service
+      /// @param[in] _arm aero::arm::(rarm|larm)
+      /// @param[in] _srv
+    protected: bool callHandSrv_(const aero::arm &_arm, aero_startup::HandControl &_srv);
 
     public: bool solveIKSequence(aero::GraspRequest &_grasp);
     public: std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);

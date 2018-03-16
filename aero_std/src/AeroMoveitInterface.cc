@@ -48,7 +48,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
     ("/aero_torso_controller");
 
   // service clients
-  hand_grasp_client_ = _nh.serviceClient<aero_startup::AeroHandController>
+  hand_grasp_client_ = _nh.serviceClient<aero_startup::HandControl>
     ("/aero_hand_controller");
 
   joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
@@ -1397,73 +1397,36 @@ void aero::interface::AeroMoveitInterface::sleepInterpolation(int _time_ms)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
 {
-  //return true;
-  aero_startup::AeroHandController srv;
-  if (_arm == aero::arm::rarm)   srv.request.hand = "right";
-  else srv.request.hand = "left";
-  srv.request.command = "grasp:" + std::to_string(_power);
+  aero_startup::HandControl srv;
+  srv.request.command = aero_startup::HandControlRequest::COMMAND_GRASP;
+  srv.request.power   = _power;
   srv.request.thre_warn = -0.9;
   srv.request.thre_fail = 0.2;
 
-  if (!hand_grasp_client_.call(srv)) {
-    ROS_ERROR("open/close hand failed service call");
-    return false;
-  }
-
-  if (srv.response.status.find("success") != std::string::npos ||
-      srv.response.status.find("bad") != std::string::npos) {
-    ROS_INFO("%s", srv.response.status.c_str());
-    return true;
-  }
-
-  ROS_ERROR("%s", srv.response.status.c_str());
-  return false;
+  return callHandSrv_(_arm, srv);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendGraspFast(aero::arm _arm, int _power, float _thre_fail)
 {
-  aero_startup::AeroHandController srv;
-  if (_arm == aero::arm::rarm)   srv.request.hand = "right";
-  else srv.request.hand = "left";
-  srv.request.command = "grasp-fast:" + std::to_string(_power);
+  aero_startup::HandControl srv;
+  srv.request.command = aero_startup::HandControlRequest::COMMAND_GRASP_FAST;
+  srv.request.power   = _power;
   srv.request.thre_fail = _thre_fail;
   srv.request.larm_angle = getHand(aero::arm::larm) * 180.0 / M_PI;
   srv.request.rarm_angle = getHand(aero::arm::rarm) * 180.0 / M_PI;
 
-  if (!hand_grasp_client_.call(srv)) {
-    ROS_ERROR("open/close hand failed service call");
-    return false;
-  }
-
-  if (srv.response.status.find("success") != std::string::npos) {
-    ROS_INFO("%s", srv.response.status.c_str());
-    return true;
-  }
-
-  ROS_ERROR("%s", srv.response.status.c_str());
-  return false;
+  return callHandSrv_(_arm, srv);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm)
 {
-  aero_startup::AeroHandController srv;
-  if (_arm == aero::arm::rarm)   srv.request.hand = "right";
-  else srv.request.hand = "left";
-  srv.request.command = "ungrasp";
+  aero_startup::HandControl srv;
+  srv.request.command = aero_startup::HandControlRequest::COMMAND_UNGRASP;
+  srv.request.power   = 0;
 
-  if (!hand_grasp_client_.call(srv)) {
-    ROS_ERROR("open/close hand failed service call");
-    return false;
-  }
-
-  if (srv.response.status.find("success") != std::string::npos) {
-    return true;
-  }
-
-  ROS_ERROR("%s", srv.response.status.c_str());
-  return false;
+  return callHandSrv_(_arm, srv);
 }
 
 //////////////////////////////////////////////////
@@ -1476,28 +1439,32 @@ bool aero::interface::AeroMoveitInterface::sendHand(aero::arm _arm, double _rad)
     return false;
   }
 
-  aero_startup::AeroHandController srv;
-  if (_arm == aero::arm::rarm)   srv.request.hand = "right";
-  else srv.request.hand = "left";
+  aero_startup::HandControl srv;
+  srv.request.command = aero_startup::HandControlRequest::COMMAND_GRASP_ANGLE;
+  srv.request.power   = 0;
   srv.request.thre_warn = 0.0;
   srv.request.thre_fail = 0.0;
-  srv.request.command = "grasp-angle";
   srv.request.larm_angle = _rad * 180.0 / M_PI;
   srv.request.rarm_angle = _rad * 180.0 / M_PI;
 
-  if (!hand_grasp_client_.call(srv)) {
+  return callHandSrv_(_arm, srv);
+}
+
+bool aero::interface::AeroMoveitInterface::callHandSrv_(const aero::arm &_arm, aero_startup::HandControl &_srv)
+{
+  if (_arm == aero::arm::rarm) _srv.request.hand = aero_startup::HandControlRequest::HAND_RIGHT;
+  else _srv.request.hand = aero_startup::HandControlRequest::HAND_LEFT;
+
+  if (!hand_grasp_client_.call(_srv)) {
     ROS_ERROR("open/close hand failed service call");
     return false;
   }
 
-  if (srv.response.status.find("success") != std::string::npos) {
-    return true;
-  }
+  if (_srv.response.success) return true;
 
-  ROS_ERROR("%s", srv.response.status.c_str());
+  ROS_ERROR("HAND_SERVICE: %s", _srv.response.status.c_str());
   return false;
 }
-
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
 {

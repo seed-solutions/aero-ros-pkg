@@ -40,7 +40,7 @@
 
 #include "aero_startup/AeroInterpolation.h"
 #include "aero_startup/AeroSendJoints.h"
-#include "aero_startup/AeroGraspController.h"
+#include "aero_startup/GraspControl.h"
 
 #include <std_msgs/Float32.h>
 
@@ -182,8 +182,8 @@ namespace aero
         aero_startup::AeroSendJoints::Response &_res);
 
     private: bool GraspControlCallback(
-        aero_startup::AeroGraspController::Request& _req,
-        aero_startup::AeroGraspController::Response& _res);
+        aero_startup::GraspControl::Request& _req,
+        aero_startup::GraspControl::Response& _res);
 
     private: AeroUpperController upper_;
 
