@@ -1,0 +1,12 @@
+## position where executing command
+int16 position
+## command type
+int16 script
+### command types for command
+int16 SCRIPT_GRASP=2
+int16 SCRIPT_UNGRASP=3
+int16 SCRIPT_CANCEL=4
+## power???
+int16 power
+---
+float32[] angles
