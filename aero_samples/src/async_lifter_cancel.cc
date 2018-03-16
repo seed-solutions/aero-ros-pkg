@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   robot->cancelLifter();
 
   // get current lifter position
-  std::map<aero::joint, double> pos;
+  aero::joint_angle_map pos;
   robot->getLifter(pos);
   ROS_INFO("was going for -0.4, cancelled at %f", pos.at(aero::joint::lifter_z));
   usleep(3000 * 1000);

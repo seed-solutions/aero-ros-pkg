@@ -4,7 +4,7 @@ void warnDiff(aero::interface::AeroMoveitInterfacePtr controller,
               aero::joint joint, double send_val)
 {
   // get current angles
-  std::map<aero::joint, double> get_angles;
+  aero::joint_angle_map get_angles;
   controller->setRobotStateToCurrentState();
   controller->getRobotStateVariables(get_angles);
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     // find limit bounds
     auto bounds = controller->kinematic_model->getVariableBounds(j->second);
 
-    std::map<aero::joint, double> joint_angles;
+    aero::joint_angle_map joint_angles;
     controller->getResetManipPose(joint_angles);
     // take time for first send
     joint_angles.at(j->first) = bounds.min_position_;

@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   robot->speakAsync("Starting test 2. Sigmoid interpolation.");
 
   robot->setInterpolation(aero::interpolation::i_sigmoid);
-  std::map<aero::joint, double> av;
+  aero::joint_angle_map av;
   robot->getResetManipPose(av);
   av[aero::joint::r_shoulder_p] = -89.0 * M_PI / 180;
   av[aero::joint::r_shoulder_r] = -45.0 * M_PI / 180;
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   sleep(2);
 
   // note: sendResetManipPose calls sendJoints, which cannot interrupt
-  std::map<aero::joint, double> av0;
+  aero::joint_angle_map av0;
   robot->getResetManipPose(av0);
   robot->setRobotStateVariables(av0);
   robot->sendAngleVector(5000);

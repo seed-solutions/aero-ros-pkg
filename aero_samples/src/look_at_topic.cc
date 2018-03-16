@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   Eigen::Vector3d obj0 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
 
   ROS_INFO("moving arm"); // send to different pose
-  std::map<aero::joint, double> joints;
+  aero::joint_angle_map joints;
   joints[aero::joint::r_elbow] = -1.745;
   robot->setRobotStateVariables(joints);
   robot->sendAngleVector(3000);
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
   // change robot pose (lookAt should be updated in background)
   ROS_INFO("moving torso"); // send to different pose
-  std::map<aero::joint, double> joints2;
+  aero::joint_angle_map joints2;
   joints2[aero::joint::waist_p] = 0.524;
   robot->setRobotStateVariables(joints2);
   robot->sendAngleVector(10000);

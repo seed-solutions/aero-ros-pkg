@@ -50,7 +50,7 @@ namespace aero
   typedef moveit::planning_interface::MoveGroup AeroMoveGroup;
 #endif
 
-  typedef std::vector<std::map<aero::joint, double>> trajectory;
+  typedef std::vector<aero::joint_angle_map> trajectory;
   namespace interface
   {
     class AeroMoveitInterface
@@ -73,7 +73,7 @@ namespace aero
     public: void setRobotStateVariables(std::map<std::string, double> &_map);
       /// @brief set robot model's angles, recommend using this!
       /// @param[in] _map map<joint name, radian>
-    public: void setRobotStateVariables(std::map<aero::joint, double> &_map);
+    public: void setRobotStateVariables(aero::joint_angle_map &_map);
 
       /// @brief set current real robot's angles to robot model's angles
     public: void setRobotStateToCurrentState();
@@ -250,20 +250,20 @@ namespace aero
     public: void getRobotStateVariables(std::map<std::string, double> &_map);
       /// @brief get joint angles from robot model, recommend
       /// @param[out] _map joint angles map
-    public: void getRobotStateVariables(std::map<aero::joint, double> &_map);
+    public: void getRobotStateVariables(aero::joint_angle_map &_map);
       /// @brief get joint angles from robot model including hand angles
       /// @param[out] _map joint angles map
     public: void getRobotStateVariables(aero::fullarm &_map);
 
       /// @brief get named target "reset-pose", its basic pose of robot
       /// @param[out] _map joint angles map
-    public: void getResetManipPose(std::map<aero::joint, double> &_map);
+    public: void getResetManipPose(aero::joint_angle_map &_map);
 
       /// @brief get waist position in base_link coordinate in robot model
       /// @return waist position
     public: Vector3 getWaistPosition();
       /// @brief get lifter relative position from top of the lifter in robot model
-    public: void getLifter(std::map<aero::joint, double>& _xz);
+    public: void getLifter(aero::joint_angle_map& _xz);
 
       /// @brief get hand angle in robot model
       /// param[in] _arm which arm aero::arm::(rarm|larm)
@@ -314,7 +314,7 @@ namespace aero
       /// @param[in] _av_map map which has joint name and joint angle value
       /// @param[in] _time_ms execution time, and wait this time
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
-    public: void sendAngleVector(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+    public: void sendAngleVector(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
       /// @brief send joint angles including hand angles in _av_map to real robot (this method is deprecated)
       /// @param[in] _av_map map which has joint name and joint angle value
       /// @param[in] _time_ms execution time, and wait this time
@@ -335,7 +335,7 @@ namespace aero
       /// @param[in] _av_map map which has joint name and joint angle value
       /// @param[in] _time_ms execution time, this function returns soon after called
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
-    public: void sendAngleVectorAsync(std::map<aero::joint, double> _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
+    public: void sendAngleVectorAsync(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
       /// @brief send joint angles including hand angles in _av_map to real robot  (this method is deprecated)
       /// @param[in] _av_map map which has joint name and joint angle value
       /// @param[in] _time_ms execution time, this function returns soon after called
@@ -343,7 +343,7 @@ namespace aero
     public: void sendAngleVectorAsync(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso);
 
       /// @brief send joints trajectory to real robot
-      /// @attention trajectory type is std::vector<std::map<aero::joint, double>>
+      /// @attention trajectory type is std::vector<aero::joint_angle_map>
       /// @param[in] _trajectory joints trajectory will be executed
       /// @param[in] _times execution time. the size of times vector need to be equal to the size of trajectory
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move

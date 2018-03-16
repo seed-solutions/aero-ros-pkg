@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   // set real robot's joint angles to the robot model in interface 
   robot->setRobotStateToCurrentState();
 
-  std::map<aero::joint, double> joint_angles;
+  aero::joint_angle_map joint_angles;
 
   // test elbow and shoulder joints
   double l_elbow_to = -1.745;
