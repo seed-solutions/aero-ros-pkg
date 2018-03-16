@@ -1,8 +1,0 @@
-string hand
-string command
-float32 thre_fail
-float32 thre_warn
-float32 larm_angle
-float32 rarm_angle
----
-string status
