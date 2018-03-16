@@ -377,7 +377,8 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
       }
     }
   } else {
-    lookAt_(_x, _y, _z);
+    auto neck = solveLookAt(Eigen::Vector3d(_x, _y, _z));
+    setNeck(0.0, std::get<1>(neck), std::get<2>(neck));
   }
 }
 
@@ -425,6 +426,32 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
   kinematic_state->setVariablePosition("neck_y_joint", _y);
 
   kinematic_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+}
+
+//////////////////////////////////////////////////
+std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt(Eigen::Vector3d obj)
+{
+  double neck2eye = 0.2;
+  double body2neck = 0.35;
+
+  // get base position in robot coords
+  updateLinkTransforms();
+  std::string body_link = "body_link";
+  Eigen::Vector3d base2body_p = kinematic_state->getGlobalLinkTransform(body_link).translation();
+  Eigen::Matrix3d base2body_mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
+  Eigen::Quaterniond base2body_q(base2body_mat);
+
+  Eigen::Vector3d pos_obj_rel = base2body_q.inverse() * (obj - base2body_p) - Eigen::Vector3d(0.0, 0.0, body2neck);
+
+  double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
+  double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
+                        + pos_obj_rel.y() * pos_obj_rel.y()
+                        + pos_obj_rel.z() * pos_obj_rel.z());
+  double theta = acos(neck2eye / dis_obj);
+  double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
+  double pitch = 1.5708 + pitch_obj - theta;
+
+  return std::tuple<double, double, double>(0.0, pitch, yaw);
 }
 
 //////////////////////////////////////////////////
@@ -521,36 +548,6 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::volatileTransformToBase(do
                                 map2base.orientation.z);
   // convert to map coordinates
   return map2base_q.inverse() * (Eigen::Vector3d(_x, _y, _z) - map2base_p);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::lookAt_(double _x ,double _y, double _z)
-{
-  Eigen::Vector3d obj;
-  obj.x() = _x;
-  obj.y() = _y;
-  obj.z() = _z;
-  double neck2eye = 0.2;
-  double body2neck = 0.35;
-
-  // get base position in robot coords
-  updateLinkTransforms();
-  std::string body_link = "body_link";
-  Eigen::Vector3d base2body_p = kinematic_state->getGlobalLinkTransform(body_link).translation();
-  Eigen::Matrix3d base2body_mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
-  Eigen::Quaterniond base2body_q(base2body_mat);
-
-  Eigen::Vector3d pos_obj_rel = base2body_q.inverse() * (obj - base2body_p) - Eigen::Vector3d(0.0, 0.0, body2neck);
-
-  double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
-  double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
-                        + pos_obj_rel.y() * pos_obj_rel.y()
-                        + pos_obj_rel.z() * pos_obj_rel.z());
-  double theta = acos(neck2eye / dis_obj);
-  double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
-  double pitch = 1.5708 + pitch_obj - theta;
-
-  setNeck(0.0, pitch, yaw);
 }
 
 //////////////////////////////////////////////////
@@ -1373,7 +1370,7 @@ void aero::interface::AeroMoveitInterface::sleepInterpolation(int _time_ms)
     }
     so_mutex_.unlock();
   }
-  usleep(std::max(0, _time_ms - count * update_ms) + 1000);
+  usleep((std::max(0, _time_ms - count * update_ms) + 1000) * 1000);
   so_mutex_.lock();
   so_factor_ = 1.0f;
   so_retime_scale_ = 1.0f;
