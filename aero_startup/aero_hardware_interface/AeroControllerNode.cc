@@ -292,6 +292,7 @@ void AeroControllerNode::JointTrajectoryThread(
       }
       if (remain_msec > 0)
         usleep(remain_msec * 1000);
+      _split_start_from = 0;
       continue;
     }
     // find number of splits in this trajectory
@@ -382,6 +383,7 @@ void AeroControllerNode::LowerTrajectoryThread(
     // check for kill every csec_per_frame
     mtx_lower_thread_.lock();
     int elapsed_csec = lower_killed_thread_info_.at_split_num;
+    lower_killed_thread_info_.at_split_num = 0; // set for next frame
     uint16_t csec_in_frame =
       it->second - (it-1)->second - static_cast<uint16_t>(elapsed_csec);
     // 20ms sleep in set_position, subtract
@@ -794,7 +796,10 @@ void AeroControllerNode::SpeedOverwriteCallback(
   if (lower_thread_.id == 0)
     lower = false;
   mtx_lower_thread_.unlock();
-  if (!upper && !lower) {
+  mtx_thread_postpone_.lock();
+  bool postpone = thread_postpone_;
+  mtx_thread_postpone_.unlock();
+  if (!upper && !lower && !postpone) {
     ROS_ERROR("  cannot overwrite speed when robot is not in action!");
     return;
   }
@@ -805,21 +810,16 @@ void AeroControllerNode::SpeedOverwriteCallback(
     return;
   }
   static const float abort_threshold = 0.1f;
-  mtx_thread_postpone_.lock();
-  if (thread_postpone_ && _msg->data < abort_threshold) {
+  if (postpone && _msg->data < abort_threshold) {
     ROS_ERROR("  it is illegal to set factor 0.0 twice in a row!");
     return;
-    mtx_thread_postpone_.unlock();
   }
-  mtx_thread_postpone_.unlock();
 
   // on background, kill lower thread if running
-  std::thread lower_process([&](){
+  std::thread lower_process([&](bool _postpone){
       mtx_lower_thread_.lock();
-      mtx_thread_postpone_.lock();
-      if (lower_thread_.id == 1 && !thread_postpone_) // if running
+      if (lower_thread_.id == 1 && !_postpone) // if running
         lower_thread_.kill = true;
-      mtx_thread_postpone_.unlock();
       mtx_lower_thread_.unlock();
 
       auto time_begin = std::chrono::high_resolution_clock::now();
@@ -845,6 +845,7 @@ void AeroControllerNode::SpeedOverwriteCallback(
 
       // rewrite lower thread command time
       // update elapsed time to new time scale
+      mtx_lower_thread_.lock();
       lower_killed_thread_info_.at_split_num /=
         _msg->data / lower_killed_thread_info_.factor;
       for (auto traj = lower_killed_thread_info_.trajectories.begin();
@@ -853,31 +854,38 @@ void AeroControllerNode::SpeedOverwriteCallback(
             traj->second / (_msg->data / lower_killed_thread_info_.factor));
       lower_killed_thread_info_.factor = _msg->data;
       mtx_lower_thread_.unlock();
-    });
+    }, postpone);
+
+  if (_msg->data < abort_threshold) {
+    // set postpone flag before thread clear to avoid wait escape
+    // speed 0.0 is technically non-dead
+    mtx_thread_postpone_.lock();
+    thread_postpone_ = true;
+    mtx_thread_postpone_.unlock();
+  }
 
   // kill all running upper threads
   std::vector<int> kill_thread_id;
-  std::vector<thread_info> dummy; // for 0.0 factor
   mtx_threads_.lock();
   for (auto th = registered_threads_.begin(); th != registered_threads_.end(); ++th) {
     th->kill = true;
     kill_thread_id.push_back(th->id);
-    dummy.push_back(*th);
   }
   mtx_threads_.unlock();
 
   auto time_begin = std::chrono::high_resolution_clock::now();
-  while (1) {
-    mtx_thread_graveyard_.lock();
-    if (thread_graveyard_.size() == kill_thread_id.size() ||
-        std::chrono::duration_cast<std::chrono::milliseconds>(
+  if (!postpone)
+    while (1) {
+      mtx_thread_graveyard_.lock();
+      if (thread_graveyard_.size() == kill_thread_id.size() ||
+          std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - time_begin).count()
-        > 500) { // a thread might have finished before kill
-      break;
+          > 500) { // a thread might have finished before kill
+        break;
+      }
+      mtx_thread_graveyard_.unlock();
+      usleep(10 * 1000); // sleep 10 ms and wait for update
     }
-    mtx_thread_graveyard_.unlock();
-    usleep(10 * 1000); // sleep 10 ms and wait for update
-  }
 
   if (_msg->data < abort_threshold) { // avoid overflow, act as 0.0
     mtx_thread_graveyard_.unlock();
@@ -885,24 +893,8 @@ void AeroControllerNode::SpeedOverwriteCallback(
     upper_.servo_on();
     mtx_upper_.unlock();
     lower_process.join();
-    mtx_thread_postpone_.lock();
-    mtx_threads_.lock();
-    // dummy thread alive (speed 0.0 is technically non-dead)
-    for (auto th = dummy.begin(); th != dummy.end(); ++th)
-      registered_threads_.push_back(*th);
-    mtx_threads_.unlock();
-    thread_postpone_ = true;
-    mtx_thread_postpone_.unlock();
     return;
   }
-
-  mtx_thread_postpone_.lock();
-  if (thread_postpone_) {
-    mtx_threads_.lock();
-    registered_threads_.clear(); // clear dummy
-    mtx_threads_.unlock();
-  }
-  mtx_thread_postpone_.unlock();
 
   // rewrite graveyard command time
   // create new threads
@@ -1074,14 +1066,14 @@ void AeroControllerNode::PublishInAction(const ros::TimerEvent& event)
 
   // send joints is active or not.
   bool send_joints;
-  if(!mtx_send_joints_status_.try_lock()) {// when mutex cant be locked, thread should be active.
+  if (!mtx_send_joints_status_.try_lock()) {// when mutex cant be locked, thread should be active.
     send_joints = true;
   } else {// lock
     send_joints = send_joints_status_;
     mtx_send_joints_status_.unlock();
   }
 
-  if(send_joints) {
+  if (send_joints) {
     msg.data = true;
     in_action_pub_.publish(msg);
     return;
@@ -1089,13 +1081,13 @@ void AeroControllerNode::PublishInAction(const ros::TimerEvent& event)
 
   // count upper trajectory threads number
   int upper;
-  if(!mtx_threads_.try_lock()) {// when mutex cant be locked, thread should be active.
+  if (!mtx_threads_.try_lock()) {// when mutex cant be locked, thread should be active.
     upper = 1;
   } else {//lock
     upper = static_cast<int>(registered_threads_.size());
     mtx_threads_.unlock();
   }
-  if( upper > 0) {
+  if (upper > 0) {
     msg.data = true;
     in_action_pub_.publish(msg);
     return;
@@ -1103,13 +1095,26 @@ void AeroControllerNode::PublishInAction(const ros::TimerEvent& event)
 
   // lower trajectory thread is active or not
   int lower;
-  if(!mtx_lower_thread_.try_lock()) {// when mutex cant be locked, thread should be active.
+  if (!mtx_lower_thread_.try_lock()) {// when mutex cant be locked, thread should be active.
     lower = 1;
   } else {
     lower = lower_thread_.id;
     mtx_lower_thread_.unlock();
   }
-  if( lower > 0) {
+  if (lower > 0) {
+    msg.data = true;
+    in_action_pub_.publish(msg);
+    return;
+  }
+
+  bool in_overwrite = false;
+  if (!mtx_thread_postpone_.try_lock()) {// when mutex cant be locked, thread should be active.
+    in_overwrite = true;
+  } else {//lock
+    in_overwrite = thread_postpone_;
+    mtx_thread_postpone_.unlock();
+  }
+  if (in_overwrite) {
     msg.data = true;
     in_action_pub_.publish(msg);
     return;
