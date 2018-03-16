@@ -42,7 +42,8 @@ namespace aero
       waist_p,
       waist_r,
       lifter_x,
-      lifter_z
+      lifter_z,
+      unknown
       };
 
   // typedef std::map<std::string, double> stringmap; // robot_interface::...
@@ -199,21 +200,29 @@ namespace aero
 
   //inline std::string joint2JointName(aero::joint _joint)
   inline std::string joint2str(aero::joint _joint)
-  { // TODO error handling
+  {
+    // if joint_map is correct, error does not occur
+    // add joint existing check by user, if ( _joint != aero::joint::unknown ) {
     return aero::joint_map.at(_joint);
   }
 
   //inline aero::joint jointName2Joint(std::string _joint_name)
   inline aero::joint str2joint(std::string _joint_name)
-  {// TODO error handling
-    return aero::string_map.at(_joint_name);
+  {
+    auto it = aero::string_map.find(_joint_name);
+    if (it == aero::string_map.end()) {
+      return aero::joint::unknown;
+    }
+    return it->second;
   }
 
   inline void jointMap2StringMap(joint_angle_map &_j_map, std::map<std::string, double> &_s_map)
   {
     _s_map.clear();
     for(auto it = _j_map.begin(); it != _j_map.end(); ++it) {
-      _s_map[joint2str(it->first)] = it->second;
+      if ( it->first != aero::joint::unknown ) {
+        _s_map[joint2str(it->first)] = it->second;
+      }
     }
   }
 
@@ -221,7 +230,10 @@ namespace aero
   {
     _j_map.clear();
     for(auto it = _s_map.begin(); it != _s_map.end(); ++it) {
-      _j_map[str2joint(it->first)] = it->second;
+      const aero::joint &j = str2joint(it->first);
+      if ( j != aero::joint::unknown ) {
+        _j_map[j] = it->second;
+      }
     }
   }
 
