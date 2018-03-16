@@ -34,6 +34,9 @@ public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _rob
   reply_model_update__ =
     nh_.advertiseService("/look_at/get_model_update", &LookAt::ReplyModelUpdate, this);
 
+  speed_factor_ =
+    nh_.subscribe("/aero_controller/speed_overwrite", 1, &LookAt::CheckSpeed, this);
+
   target_thread_alive_ = false;
   target_thread_kill_ = true;
   prev_msgs_ = "/look_at/manager_disabled";
@@ -80,7 +83,8 @@ private: void Callback(const geometry_msgs::Point::ConstPtr &_msg) {
     robot_->setRobotStateToCurrentState();
     robot_->setLookAt(_msg->x, _msg->y, _msg->z);
   }
-  robot_->sendNeckAsync(2000);
+  if (factor_ > 0.000001)
+    robot_->sendNeckAsync(2000 * factor_);
 };
 
 private: void SetRPY(const geometry_msgs::Point::ConstPtr &_msg) {
@@ -91,7 +95,8 @@ private: void SetRPY(const geometry_msgs::Point::ConstPtr &_msg) {
   sneak_ = false;
   ROS_INFO("SetRPY: setting neck to %f %f %f", _msg->x, _msg->y, _msg->z);
   robot_->setNeck(_msg->x, _msg->y, _msg->z);
-  robot_->sendNeckAsync(2000);
+  if (factor_ > 0.000001)
+    robot_->sendNeckAsync(2000 * factor_);
 };
 
 private: void SetStaticBase(const geometry_msgs::Point::ConstPtr &_msg) {
@@ -197,6 +202,10 @@ private: bool ReplyModelUpdate(aero_startup::AeroSendJoints::Request &_req,
   return true;
 };
 
+private: void CheckSpeed(const std_msgs::Float32::ConstPtr &_msg) {
+  factor_ = _msg->data;
+};
+
 private: ros::NodeHandle nh_;
 
 private: ros::Subscriber set_target_;
@@ -212,6 +221,8 @@ private: ros::Subscriber create_thread_base_;
 private: ros::Subscriber create_thread_map_;
 
 private: ros::Subscriber sneak_values_;
+
+private: ros::Subscriber speed_factor_;
 
 private: ros::Subscriber sub_;
 
@@ -238,6 +249,8 @@ private: geometry_msgs::Point p_;
 private: std::string prev_msgs_;
 
 private: bool map_coordinate_;
+
+private: float factor_;
 };
 
 int main(int argc, char **argv) {

@@ -194,6 +194,9 @@ namespace aero
       /// @param[in] _p pitch, if it's over limit, it beocomes within limit
       /// @param[in] _y yaw, if it's over limit, it beocomes within limit
     public: void setNeck(double _r,double _p, double _y, bool _to_node=false);
+      /// @brief function to calculate look at
+      /// @param[in] _obj target x,y,z in base_link coordinate
+    public: std::tuple<double, double, double> solveLookAt(Eigen::Vector3d _obj);
       /// @brief send neck values
       /// @param[in] _time_ms execution time
     public: void sendNeckAsync(int _time_ms=1000);
@@ -209,11 +212,6 @@ namespace aero
       /// @param[in] _z z value in map coordinate.
       /// @return Converted base value, valid as long as robot is in same position.
     public: Vector3 volatileTransformToBase(double _x, double _y, double _z);
-      /// @brief protected function to calculate look at
-      /// @param[in] _x target x in base_link coordinate
-      /// @param[in] _y target y in base_link coordinate
-      /// @param[in] _z target z in base_link coordinate
-    protected: void lookAt_(double _x, double _y, double _z);
 
       /// @brief set the value to robot model's hand angle
       /// @param[in] _arm aero::arm::(rarm|larm)
