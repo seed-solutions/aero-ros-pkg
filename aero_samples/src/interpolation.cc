@@ -10,10 +10,12 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  //robot->sendResetManipPose();
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
 
   // preparation
   aero::joint_angle_map angles;
@@ -27,19 +29,24 @@ int main(int argc, char **argv)
   // all types are listed in aero_std/include/aero_std/interpolation_type.h
   // --- linear ---
   ROS_INFO("type linear");
-  robot->setInterpolation(aero::interpolation::i_linear);
+  //robot->setInterpolation(aero::interpolation::i_linear); // TODO: not implemented yet
   sleep(1);
-  robot->sendAngleVector(angles, 5000);
-  robot->sendResetManipPose();
+  robot->setRobotStateVariables(angles);
+  robot->sendAngleVector(5000);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
 
   // --- sigmoid ---
   ROS_INFO("type sigmoid");
-  robot->setInterpolation(aero::interpolation::i_sigmoid);
+  //robot->setInterpolation(aero::interpolation::i_sigmoid); // TODO: not implemented yet
   sleep(1);
-  robot->sendAngleVector(angles, 5000);
-  robot->sendResetManipPose();
+  robot->setRobotStateVariables(angles);
+  robot->sendAngleVector(5000);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
 
-  robot->setInterpolation(aero::interpolation::i_constant);
+  //robot->setInterpolation(aero::interpolation::i_constant); // TODO: not implemented yet
 
   ROS_INFO("demo node finished");
   ros::shutdown();

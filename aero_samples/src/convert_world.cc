@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init interfaces
-  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
   aero::vision::ObjectFeaturesPtr features(new aero::vision::ObjectFeatures(nh, robot));
   // wait the publisher connects to rosmaster
   usleep(1000 * 1000);

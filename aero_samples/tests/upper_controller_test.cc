@@ -9,7 +9,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "controller_test");
   ros::NodeHandle nh;
 
-  aero::interface::AeroMoveitInterfacePtr robot
+  aero::interface::AeroMoveitInterface::Ptr robot
     (new aero::interface::AeroMoveitInterface(nh));
   sleep(1);
 

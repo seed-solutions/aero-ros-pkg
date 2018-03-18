@@ -1,6 +1,6 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
-void warnDiff(aero::interface::AeroMoveitInterfacePtr controller,
+void warnDiff(aero::interface::AeroMoveitInterface::Ptr controller,
               aero::joint joint, double send_val)
 {
   // get current angles
@@ -24,10 +24,12 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr controller(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr controller(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  controller->sendResetManipPose();
-  sleep(1);
+  controller->setPoseVariables(aero::pose::reset_manip);
+  controller->sendAngleVector(3000);
+  sleep(3);
+
 
   // check diff of stoa and atos for each joint
   float resolution = 0.01745; 
@@ -62,7 +64,9 @@ int main(int argc, char **argv)
   }
 
   ROS_INFO("reseting robot pose");
-  controller->sendResetManipPose();
+  controller->setPoseVariables(aero::pose::reset_manip);
+  controller->sendAngleVector(3000);
+  sleep(3);
   ROS_INFO("demo node finished");
   ros::shutdown();
   return 0;

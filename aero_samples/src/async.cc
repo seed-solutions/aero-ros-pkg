@@ -10,10 +10,12 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
+
 
   // preparation
   aero::joint_angle_map angles;
@@ -23,11 +25,14 @@ int main(int argc, char **argv)
   angles[aero::joint::r_elbow]= -0.2618;
 
   // send first angles with 5 seconds
-  robot->sendAngleVectorAsync(angles, 5000);
+  robot->setRobotStateVariables(angles);
+  robot->sendAngleVector(5000);
   sleep(3);
 
   // overwrite angles before reaching goal
-  robot->sendResetManipPose();
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
 
   ROS_INFO("demo node finished");
   ros::shutdown();

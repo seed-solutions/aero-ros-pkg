@@ -25,11 +25,12 @@ int main(int argc, char **argv)
   lifter_srv = nh.serviceClient<aero_startup::AeroTorsoController>("/aero_torso_controller");
 
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr controller(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr controller(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
-  controller->sendResetManipPose();
+  controller->setPoseVariables(aero::pose::reset_manip);
+  controller->sendAngleVector(3000);
   controller->sendLifter(0.0, 0.0);
-  sleep(1);
+  sleep(3);
 
   // solve lifter I.K. in range
   double resolution = 0.01;
@@ -48,8 +49,10 @@ int main(int argc, char **argv)
     }
 
   ROS_INFO("reseting robot pose");
-  controller->sendResetManipPose();
+  controller->setPoseVariables(aero::pose::reset_manip);
+  controller->sendAngleVector(3000);
   controller->sendLifter(0.0, 0.0);
+  sleep(3);
   ROS_INFO("demo node finished");
   ros::shutdown();
   return 0;

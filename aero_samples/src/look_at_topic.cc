@@ -14,12 +14,13 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
 
   // create poses to look at
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
   Eigen::Vector3d obj0 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
 
   ROS_INFO("moving arm"); // send to different pose
@@ -54,8 +55,9 @@ int main(int argc, char **argv)
 
   // reset robot pose
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
 
   // set positioned look at on background
   robot->setTrackingMode(true);
@@ -76,8 +78,9 @@ int main(int argc, char **argv)
 
   // finish
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
 
   streamer.join();
 

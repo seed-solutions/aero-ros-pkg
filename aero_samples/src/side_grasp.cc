@@ -11,9 +11,11 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
-  robot->sendResetManipPose();
-  sleep(1);
+  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
+  //robot->sendResetManipPose();
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendAngleVector(3000);
+  sleep(3);
 
 
   // grasp object from side
@@ -32,14 +34,17 @@ int main(int argc, char **argv)
 
   robot->openHand(req.arm);
 
-  if (robot->sendPickIK(req)) {
+  if (//robot->sendPickIK(req) // TODO: not implemented yet
+      true) {
     ROS_INFO("success");
     robot->sendGrasp(req.arm);
     sleep(3);
     robot->openHand(req.arm);
     sleep(1);
     ROS_INFO("reseting robot pose");
-    robot->sendResetManipPose();
+    robot->setPoseVariables(aero::pose::reset_manip);
+    robot->sendAngleVector(3000);
+    sleep(3);
   }
   else ROS_INFO("failed");
 

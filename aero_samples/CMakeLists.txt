@@ -51,8 +51,8 @@ target_link_libraries(top_grasp_sample_node ${catkin_LIBRARIES})
 add_executable(side_grasp_sample_node src/side_grasp.cc)
 target_link_libraries(side_grasp_sample_node ${catkin_LIBRARIES})
 
-add_executable(trajectory_lifter_sample_node src/trajectory_lifter.cc)
-target_link_libraries(trajectory_lifter_sample_node ${catkin_LIBRARIES})
+##add_executable(trajectory_lifter_sample_node src/trajectory_lifter.cc)
+##target_link_libraries(trajectory_lifter_sample_node ${catkin_LIBRARIES})
 
 add_executable(go_pos_sample_node src/go_pos.cc)
 target_link_libraries(go_pos_sample_node ${catkin_LIBRARIES})
@@ -80,5 +80,5 @@ target_link_libraries(fullbody_test_node ${catkin_LIBRARIES})
 add_executable(lifter_ik_test_node tests/lifter_ik.cc)
 target_link_libraries(lifter_ik_test_node ${catkin_LIBRARIES})
 
-add_executable(upper_controller_test_node tests/upper_controller_test.cc)
-target_link_libraries(upper_controller_test_node ${catkin_LIBRARIES})
+##add_executable(upper_controller_test_node tests/upper_controller_test.cc)
+##target_link_libraries(upper_controller_test_node ${catkin_LIBRARIES})
