@@ -1,11 +1,13 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
 //////////////////////////////////////////////////
-aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd):
-  larm("larm"),larm_with_torso("larm_with_torso"),larm_with_lifter("larm_with_lifter"),
-  rarm("rarm"),rarm_with_torso("rarm_with_torso"),rarm_with_lifter("rarm_with_lifter"),
-  lifter("lifter"),upper_body("upper_body"),torso("torso"),head("head")
+aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd)
 {
+  ROS_INFO("start creating robot_interface");
+
+  ri.reset(new aero::AeroRobotInterface(_nh));
+
+#if 0
   // publishers
   speech_publisher_ = _nh.advertise<std_msgs::String>
     ("/windows/voice", 1000);
@@ -15,7 +17,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   angle_vector_publisher_ = _nh.advertise<trajectory_msgs::JointTrajectory>
     ("/aero_controller/command", 1000);
+#endif
 
+#if USING_LOOKAT
   look_at_publisher_rpy_ = _nh.advertise<geometry_msgs::Point>
     ("/look_at/rpy", 10);
 
@@ -31,26 +35,33 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   look_at_publisher_map_static_ = _nh.advertise<geometry_msgs::Point>
     ("/look_at/target/static/map", 10);
 
-  cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
-    ("/cmd_vel", 1000);
-
   lookat_target_publisher_ = _nh.advertise<std_msgs::String>
     ("/look_at/set_target_topic", 10);
+#endif
+
+#if USING_BASE
+  cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
+    ("/cmd_vel", 1000);
+#endif
 
   overwrite_speed_publisher_ = _nh.advertise<std_msgs::Float32>
     ("/aero_controller/speed_overwrite", 10);
 
+#if 0
   // subscribers
   joint_states_subscriber_ = _nh.subscribe
     ("/joint_states", 1, &aero::interface::AeroMoveitInterface::JointStateCallback_, this);
 
   waist_service_ = _nh.serviceClient<aero_startup::AeroTorsoController>
     ("/aero_torso_controller");
+#endif
 
   // service clients
+#if USING_HAND
   hand_grasp_client_ = _nh.serviceClient<aero_startup::HandControl>
     ("/aero_hand_controller");
-
+#endif
+#if 0
   joint_states_client_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/aero_controller/get_joints");
 
@@ -62,65 +73,91 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
 
   send_angle_service_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/aero_controller/send_joints");
-
+#endif
+#if USING_BASE
   get_spot_ = _nh.serviceClient<aero_std::GetSpot>
     ("/get_spot");
 
   check_move_to_ = _nh.serviceClient<nav_msgs::GetPlan>
     ("/make_plan");
-
+#endif
+#if USING_LOOKAT
   get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
     ("/look_at/get_model_update");
-
+#endif
+#if 0
   in_action_service_ = _nh.serviceClient<std_srvs::Trigger>("/aero_controller/get_in_action");
-
+#endif
+#if USING_BASE
   // action client
   ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
     ("/move_base", true);
-
+#endif
   // load robot model
   ROS_INFO("start loading robot model");
-  robot_model_loader_ = robot_model_loader::RobotModelLoader(_rd);
-  kinematic_model = robot_model_loader_.getModel();
+  robot_model_loader::RobotModelLoader rmlder(_rd);
+  kinematic_model = rmlder.getModel();
   kinematic_state = robot_state::RobotStatePtr(new robot_state::RobotState(kinematic_model));
   kinematic_state->setToDefaultValues();// set all joints to 0.0
 
-  ROS_INFO("start loading robot model for height only");
-  robot_model_loader_ho_ = robot_model_loader::RobotModelLoader(_rd + "_height_only");
-  kinematic_model_ho = robot_model_loader_ho_.getModel();
-  kinematic_state_ho = robot_state::RobotStatePtr(new robot_state::RobotState(kinematic_model_ho));
-  kinematic_state_ho->setToDefaultValues();// set all joints to 0.0
-
-  ROS_INFO("start loading robot model for on plane");
-  robot_model_loader_op_ = robot_model_loader::RobotModelLoader(_rd + "_on_plane");
-  kinematic_model_op = robot_model_loader_op_.getModel();
-  kinematic_state_op = robot_state::RobotStatePtr(new robot_state::RobotState(kinematic_model_op));
-  kinematic_state_op->setToDefaultValues();// set all joints to 0.0
-
   // JointModelGroup
   ROS_INFO("start loading joint model groups");
+
+#define _ADD_JMG_MAP(name)                      \
+  { jmg_##name = kinematic_model->getJointModelGroup(#name); \
+    if ( !jmg_##name ) {                                     \
+      ROS_ERROR("JointModelGroup: " #name " is not found");  \
+    } else {                                                 \
+      joint_model_group_map[#name] = jmg_##name;             \
+    }                                                        \
+  }
+
+  _ADD_JMG_MAP(larm);
+  _ADD_JMG_MAP(larm_with_waist);
+  _ADD_JMG_MAP(larm_waist_lifter);
+  _ADD_JMG_MAP(rarm);
+  _ADD_JMG_MAP(rarm_with_waist);
+  _ADD_JMG_MAP(rarm_waist_lifter);
+
+  _ADD_JMG_MAP(lifter);
+  _ADD_JMG_MAP(waist);
+  _ADD_JMG_MAP(torso);
+  _ADD_JMG_MAP(both_arms);
+  _ADD_JMG_MAP(upper_body);
+  _ADD_JMG_MAP(whole_body);
+  _ADD_JMG_MAP(head);
+#if 0
   jmg_larm = kinematic_model->getJointModelGroup("larm");
-  jmg_larm_with_torso = kinematic_model->getJointModelGroup("larm_with_torso");
-  jmg_larm_with_lifter = kinematic_model->getJointModelGroup("larm_with_lifter");
-  jmg_larm_with_lifter_ho = kinematic_model_ho->getJointModelGroup("larm_with_lifter");
-  jmg_larm_with_lifter_op = kinematic_model_op->getJointModelGroup("larm_with_lifter");
+  jmg_larm_with_waist = kinematic_model->getJointModelGroup("larm_with_waist");
+  jmg_larm_waist_lifter = kinematic_model->getJointModelGroup("larm_waist_lifter");
   jmg_rarm = kinematic_model->getJointModelGroup("rarm");
-  jmg_rarm_with_torso = kinematic_model->getJointModelGroup("rarm_with_torso");
-  jmg_rarm_with_lifter = kinematic_model->getJointModelGroup("rarm_with_lifter");
-  jmg_rarm_with_lifter_ho = kinematic_model_ho->getJointModelGroup("rarm_with_lifter");
-  jmg_rarm_with_lifter_op = kinematic_model_op->getJointModelGroup("rarm_with_lifter");
+  jmg_rarm_with_waist = kinematic_model->getJointModelGroup("rarm_with_waist");
+  jmg_rarm_waist_lifter = kinematic_model->getJointModelGroup("rarm_waist_lifter");
+
   jmg_lifter = kinematic_model->getJointModelGroup("lifter");
+  jmg_waist = kinematic_model->getJointModelGroup("waist");
+  jmg_torso = kinematic_model->getJointModelGroup("torso");
+  jmg_both_arms = kinematic_model->getJointModelGroup("both_arms");
+  jmg_upper_body = kinematic_model->getJointModelGroup("upper_body");
+  jmg_whole_body = kinematic_model->getJointModelGroup("whole_body");
+  jmg_head = kinematic_model->getJointModelGroup("head");
+
+  joint_model_group_map["larm"] = jmg_larm;
+  joint_model_group_map["larm_with_waist"] = jmg_larm_with_waist;
+  joint_model_group_map["larm_waist_lifter"] = jmg_larm_waist_lifter;
+  joint_model_group_map["rarm"] = jmg_rarm;
+  joint_model_group_map["rarm_with_waist"] = jmg_rarm_with_waist;
+  joint_model_group_map["rarm_waist_lifter"] = jmg_rarm_waist_lifter;
+  joint_model_group_map["lifter"] = jmg_lifter;
+  joint_model_group_map["waist"] = jmg_waist;
+  joint_model_group_map["torso"] = jmg_torso;
+  joint_model_group_map["both_arms"] = jmg_both_arms;
+  joint_model_group_map["upper_body"] = jmg_upper_body;
+  joint_model_group_map["whole_body"] = jmg_whole_body;
+  joint_model_group_map["head"] = jmg_head;
+#endif
 
   //variables
-  planned_group_ = "";
-  height_only_ = false;
-  trajectory_ = std::vector<std::vector<double>>();
-  trajectory_groups_ = std::vector<std::string>();
-  joint_states_ = sensor_msgs::JointState();
-
-  lifter_thigh_link_ = 0.25;
-  lifter_foreleg_link_ = 0.25;
-
   tracking_mode_flag_ = false;
 
   wait_ = true;
@@ -141,19 +178,19 @@ aero::interface::AeroMoveitInterface::~AeroMoveitInterface()
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setRobotStateVariables(std::vector<double> &_av)
+void aero::interface::AeroMoveitInterface::setRobotStateVariables(const std::vector<double> &_av)
 {
   kinematic_state->setVariablePositions(_av);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setRobotStateVariables(std::map<std::string, double> &_map)
+void aero::interface::AeroMoveitInterface::setRobotStateVariables(const std::map<std::string, double> &_map)
 {
   kinematic_state->setVariablePositions(_map);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setRobotStateVariables(aero::joint_angle_map &_map)
+void aero::interface::AeroMoveitInterface::setRobotStateVariables(const aero::joint_angle_map &_map)
 {
   std::map<std::string, double> map;
   aero::jointMap2StringMap(_map, map);
@@ -163,61 +200,23 @@ void aero::interface::AeroMoveitInterface::setRobotStateVariables(aero::joint_an
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 {
-  // get current joint states
-  aero_startup::AeroSendJoints srv;
-  if(!joint_states_client_.call(srv)) {
-    ROS_WARN("getting joint states service failed");
-    return;
-  }
-  srv.response;
-
-  // update upper body
-  std::map<std::string, double> map;
-  for (auto it = aero::string_map.begin(); it != aero::string_map.end(); ++it) {
-    auto itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), it->first);
-    if (itr == srv.response.joint_names.end()) continue;
-    map[it->first] = srv.response.points.positions[static_cast<int>(itr - srv.response.joint_names.begin())];
-  }
-
-  // update hands
-  std::vector<std::string> hand_joints = {"r_thumb_joint","r_indexbase_joint","r_indexmid_joint","r_indexend_joint", "l_thumb_joint","l_indexbase_joint","l_indexmid_joint","l_indexend_joint"};
-  for(std::string jn: hand_joints) {
-    auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), jn);
-    if(hitr != srv.response.joint_names.end()) map[jn] = srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())];
-  }
-
-  kinematic_state->setVariablePositions(map);
-
-  // update lifter
-  auto hip_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "hip_joint");
-  auto knee_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "knee_joint");
-
-  double hip = srv.response.points.positions[static_cast<int>(hip_itr - srv.response.joint_names.begin())];
-  double knee = srv.response.points.positions[static_cast<int>(knee_itr - srv.response.joint_names.begin())];
-  double x = -lifter_foreleg_link_ * sin(knee - hip)
-    + lifter_thigh_link_ * sin(hip);
-  double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
-    + lifter_thigh_link_ * (cos(hip) - 1.0);
-  setLifter(x, z);
-
-  // update necks
-  std::vector<std::string> neck_joints = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
-  for(std::string jn: neck_joints) {
-    auto hitr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), jn);
-    if(hitr != srv.response.joint_names.end()) map[jn] = srv.response.points.positions[static_cast<int>(hitr - srv.response.joint_names.begin())];
-  }
-
+  // TODO for hand ???
+  robot_interface::joint_angle_map map;
+  ri->getActualPositions(map);
   kinematic_state->setVariablePositions(map);
 
   updateLinkTransforms();
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::string _move_group, std::string _target)
+void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(const std::string &_move_group, const std::string &_target)
 {
-  kinematic_state->setVariablePositions(getMoveGroup(_move_group).getNamedTargetValues(_target));
+  std::map<std::string, double> jnamemap;
+  getJointModelGroup(_move_group)->getVariableDefaultPositions(_target, jnamemap);
+  kinematic_state->setVariablePositions(jnamemap);
 }
 
+#if 0 // deprecate
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
 {
@@ -266,58 +265,25 @@ bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikran
   tf::quaternionEigenToMsg(_qua, pose.orientation);
   return setFromIK(_arm, _range, pose, _eef, _attempts);
 }
+#endif
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, const aero::Transform &_pose, std::string _eef_link, int _attempts)
 {
-  const robot_state::JointModelGroup* jmg_tmp;
+  const robot_state::JointModelGroup* jmg_tmp = getJointModelGroup(_move_group);
   bool lifter_ik = false;
 
-  if (_move_group == "larm") {
-    jmg_tmp = jmg_larm;
-  } else if (_move_group == "larm_with_torso") {
-    jmg_tmp = jmg_larm_with_torso;
-  } else if (_move_group == "larm_with_lifter") {
-    lifter_ik = true;
-    if (height_only_) jmg_tmp = jmg_larm_with_lifter_ho;
-    else jmg_tmp = jmg_larm_with_lifter_op;
-  } else if (_move_group == "rarm") {
-    jmg_tmp = jmg_rarm;
-  } else if (_move_group == "rarm_with_torso") {
-    jmg_tmp = jmg_rarm_with_torso;
-  } else if (_move_group == "rarm_with_lifter") {
-    lifter_ik = true;
-    if (height_only_) jmg_tmp = jmg_rarm_with_lifter_ho;
-    else jmg_tmp = jmg_rarm_with_lifter_op;
-  } else {
-    ROS_WARN("IK error :: move_group [%s] doesn't exist", _move_group.c_str());
+  if (jmg_tmp == NULL) {
     return false;
   }
 
-  if (lifter_ik) kinematic_state->enforceBounds(jmg_tmp);
-
   bool found_ik;
-  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
-  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
-  if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
-  if (found_ik || !lifter_ik) return found_ik;
-
-  // if with lifter and first ik failed, trying another lifter's limit
-  if (height_only_) switchOnPlane();
-  else switchHeightOnly();
-
-  if (_move_group == "larm_with_lifter") {
-    if (height_only_) jmg_tmp = jmg_larm_with_lifter_ho;
-    else jmg_tmp = jmg_larm_with_lifter_op;
-  } else if (_move_group == "rarm_with_lifter") {
-    if (height_only_) jmg_tmp = jmg_rarm_with_lifter_ho;
-    else jmg_tmp = jmg_rarm_with_lifter_op;
+  if (_eef_link == "") {
+    found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
+  } else {
+    found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
   }
-
-  kinematic_state->enforceBounds(jmg_tmp);
-  if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
-  else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
-  if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
+  //if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
   return found_ik;
 }
 
@@ -332,8 +298,8 @@ bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikran
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool _check_lifter_ik)
 {
-
   std::vector<double> ans_xz;
+#if 0
   if (!lifter_ik_(_x, _z, ans_xz)) {
     return false;
   }
@@ -344,30 +310,36 @@ bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool 
   };
 
   kinematic_state->setVariablePositions(map);
-  return true;
+#endif
+  return lifter_ik_(_x, _z, ans_xz);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz)
 {
+  ROS_DEBUG("lifter ik %f %f", _x, _z);
+  aero::Transform initial_trans = aero::Translation(0, 0, 0.725) * aero::Quaternion::Identity(); // typeB_lifter
+  aero::Transform diff_trans = aero::Translation(_x, 0, _z) * aero::Quaternion::Identity();
+  aero::Transform base2top = initial_trans * diff_trans;
 
-  aero_startup::AeroTorsoController srv;
-  srv.request.x = static_cast<int>(_x * 1000);
-  srv.request.z = static_cast<int>(_z * 1000);
-  if (!lifter_ik_service_.call(srv)) {
-    ROS_ERROR("lifter ik failed service call");
-    return false;
-  }
+  const aero::Transform &base_trans = kinematic_state->getGlobalLinkTransform("lifter_base_link");
+  aero::Transform _pose = base_trans * base2top;
 
-  if (srv.response.status == "success") {
-    _ans_xz.reserve(2);
-    _ans_xz[0] = srv.response.x;
-    _ans_xz[1] = srv.response.z;
-    return true;
-  }
-  return false;
+  ROS_DEBUG_STREAM("pose: " << _pose);
+
+  int _attempts = 3;
+  bool found_ik = kinematic_state->setFromIK(jmg_lifter, _pose, _attempts, 0.1);
+
+  ROS_DEBUG("lifter: found_ik %d", found_ik);
+
+  _ans_xz.resize(2);
+  _ans_xz[0] = _x;
+  _ans_xz[0] = _z;
+
+  return found_ik;
 }
 
+#if USING_LOOKAT // lookat
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking)
 {
@@ -488,7 +460,7 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
   msg.joint_names = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
   msg.points[0].positions = {kinematic_state->getVariablePosition("neck_r_joint"), kinematic_state->getVariablePosition("neck_p_joint"), kinematic_state->getVariablePosition("neck_y_joint")};
   msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
-  angle_vector_publisher_.publish(msg);
+  // angle_vector_publisher_.publish(msg); // TODO
 }
 
 //////////////////////////////////////////////////
@@ -571,26 +543,7 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::volatileTransformToBase(do
   // convert to map coordinates
   return map2base_q.inverse() * (Eigen::Vector3d(_x, _y, _z) - map2base_p);
 }
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, double _radian)
-{
-  std::string rl;
-  if (_arm == aero::arm::rarm) rl = "r";
-  else rl = "l";
-  kinematic_state->setVariablePosition(rl + "_thumb_joint", _radian);
-  kinematic_state->setVariablePosition(rl + "_indexbase_joint", -_radian);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
-{
-  auto itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), "r_thumb_joint");
-  setHand(aero::arm::rarm, joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())]);
-
-  itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), "l_thumb_joint");
-  setHand(aero::arm::larm, joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())]);
-}
+#endif // lookat
 
 /////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::updateLinkTransforms()
@@ -598,6 +551,7 @@ void aero::interface::AeroMoveitInterface::updateLinkTransforms()
   kinematic_state->updateLinkTransforms();
 }
 
+#if 0
 /////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
 {
@@ -611,6 +565,7 @@ bool aero::interface::AeroMoveitInterface::setInterpolation(int _i_type)
 
   return true;
 }
+#endif
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
@@ -630,6 +585,7 @@ void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
   tracking_mode_flag_ = _yes;
 }
 
+#if 0
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::switchOnPlane()
 {
@@ -641,12 +597,12 @@ void aero::interface::AeroMoveitInterface::switchHeightOnly()
 {
   height_only_ = true;
 }
+#endif
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<double> &_av)
 {
-
-  double* tmp;
+  double* tmp; // TODO: not compatible robot-interface angle-vector?
   int num = static_cast<int>(kinematic_model->getVariableCount());
   tmp = kinematic_state->getVariablePositions();
   _av.clear();
@@ -658,18 +614,18 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<do
 void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<std::string, double> &_map)
 {
   _map.clear();
-  std::vector<std::string> upper_names, lifter_names;
-  upper_names = getMoveGroup("upper_body").getJointNames();
-  lifter_names = getMoveGroup("lifter").getJointNames();
+  const std::vector<std::string> &names = jmg_whole_body->getVariableNames();
 
-  std::vector<std::string> names;
-  names.reserve(upper_names.size() + lifter_names.size());
-  std::copy(upper_names.begin(), upper_names.end(), std::back_inserter(names));
-  std::copy(lifter_names.begin(), lifter_names.end(), std::back_inserter(names));
-
-  for (auto it=names.begin(); it != names.end(); ++it) {
-    _map[*it] = kinematic_state->getVariablePosition(*it);
+  for (int i =0; i < names.size(); i++) {
+    _map[names[i]] = kinematic_state->getVariablePosition(names[i]);
   }
+#if 0 // ALL NAMES
+  const std::vector<std::string> &names = kinematic_state->getVariableNames();
+  double *pos = kinematic_state->getVariablePositions();
+  for (int i =0; i < names.size(); i++) {
+    _map[names[i]] = pos[i];
+  }
+#endif
 }
 
 //////////////////////////////////////////////////
@@ -679,7 +635,7 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(aero::joint_an
   getRobotStateVariables(map_tmp);
   aero::stringMap2JointMap(map_tmp, _map);
 }
-
+#if 0
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::getRobotStateVariables(aero::fullarm &_map)
 {
@@ -689,15 +645,47 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(aero::fullarm 
   _map.l_hand = getHand(aero::arm::larm);
   _map.r_hand = getHand(aero::arm::rarm);
 }
+#endif
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setPoseVariables(const aero::pose &_pose)
+{
+  switch(_pose) {
+  case aero::pose::reset:
+    setRobotStateToNamedTarget("upper_body", "reset-manip-pose");
+    break;
+  case aero::pose::reset_manip:
+    setRobotStateToNamedTarget("upper_body", "reset-pose");
+    break;
+  case aero::pose::move:
+    setRobotStateToNamedTarget("upper_body", "move-safe");
+    break;
+  case aero::pose::initial:
+    setRobotStateToNamedTarget("upper_body", "initial");
+    break;
+  default:
+    break;
+  }
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::getPoseVariables(const aero::pose &_pose, aero::joint_angle_map &_map)
+{
+  aero::joint_angle_map save;
+  getRobotStateVariables(save); // store variables
+  setPoseVariables(_pose);
+  getRobotStateVariables(_map); // setup return variable
+  setRobotStateVariables(save); // restore variables
+}
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::getResetManipPose(aero::joint_angle_map &_map)
 {
   aero::joint_angle_map save;
-  getRobotStateVariables(save);
-  setRobotStateToNamedTarget("upper_body", "reset-pose");
-  getRobotStateVariables(_map);
-  setRobotStateVariables(save);
+  getRobotStateVariables(save); // store variables
+  //setRobotStateToNamedTarget("upper_body", "reset-pose");
+  setPoseVariables(aero::pose::reset_manip);
+  getRobotStateVariables(_map); // setup return variable
+  setRobotStateVariables(save); // restore variables
 }
 
 //////////////////////////////////////////////////
@@ -745,7 +733,7 @@ Eigen::Quaterniond aero::interface::AeroMoveitInterface::getEEFOrientation(aero:
   Eigen::Quaterniond vec(mat);
   return vec;
 }
-
+#if 0 // moveit
 /////////////////////////////////////////////////
 aero::AeroMoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(std::string _move_group){
   if (_move_group == "larm") {
@@ -781,7 +769,9 @@ aero::AeroMoveGroup &aero::interface::AeroMoveitInterface::getMoveGroup(aero::ar
 
   return getMoveGroup(gname);
 }
+#endif // moveit
 
+#if 0 // deprecate
 /////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 {
@@ -819,6 +809,7 @@ void aero::interface::AeroMoveitInterface::sendResetManipPose(int _time_ms)
 
   usleep(_time_ms * 1000);
 }
+#endif
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorSync_(int _time_ms)
@@ -853,18 +844,15 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(int _time_ms, a
   std::vector<double> av_mg;
   kinematic_state->copyJointGroupPositions("upper_body", av_mg);
   std::vector<std::string> j_names;
-  j_names = getMoveGroup("upper_body").getJointNames();
+  j_names = jmg_upper_body->getVariableNames();
 
   if (_move_waist == aero::ikrange::lifter) {
-    aero::joint_angle_map av_lif;
-    getLifter(av_lif);
-    av_mg.reserve(av_mg.size() + 2);
-    av_mg.push_back(av_lif[aero::joint::lifter_x]);
-    av_mg.push_back(av_lif[aero::joint::lifter_z]);
-    std::vector<std::string> j_lif{"virtual_lifter_x_joint", "virtual_lifter_z_joint"};
-    j_names.reserve(j_names.size() + 2);
-    j_names.push_back(j_lif[0]);
-    j_names.push_back(j_lif[1]);
+    std::vector<double> extra_av_mg;
+    kinematic_state->copyJointGroupPositions("lifter", av_mg);
+    std::vector<std::string> extra_j_names;
+    j_names = jmg_lifter->getVariableNames();
+    std::copy(extra_av_mg.begin(),   extra_av_mg.end(),   std::back_inserter(av_mg));
+    std::copy(extra_j_names.begin(), extra_j_names.end(), std::back_inserter(j_names));
   }
 
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
@@ -876,7 +864,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
   std::vector<double> av_mg;
   kinematic_state->copyJointGroupPositions(_move_group, av_mg);
   std::vector<std::string> j_names;
-  j_names = getMoveGroup(_move_group).getJointNames();
+  j_names = getJointModelGroup(_move_group)->getVariableNames();
 
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
@@ -884,52 +872,11 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
 {
-  trajectory_msgs::JointTrajectory msg;
-  msg.points.resize(1);
-  msg.joint_names.resize(_av.size());
-  msg.joint_names = _joint_names;
-  msg.points[0].positions.resize(_av.size());
-  msg.points[0].positions = _av;
-  msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
-
-  // lifter
-  auto itr_x = std::find(_joint_names.begin(), _joint_names.end(), "virtual_lifter_x_joint");
-  auto itr_z = std::find(_joint_names.begin(), _joint_names.end(), "virtual_lifter_z_joint");
-
-  size_t index_x = std::distance(_joint_names.begin(), itr_x);
-  size_t index_z = std::distance(_joint_names.begin(), itr_z);
-
-  if (index_x != _joint_names.size()) {
-    // lifter ik check
-    std::vector<double> res;
-    bool result = lifter_ik_(_av[static_cast<int>(index_x)], _av[static_cast<int>(index_z)], res);
-    if (!result) {
-      ROS_WARN("lifter IK couldnt be solved  x:%f  z:%f",
-               _av[static_cast<int>(index_x)], _av[static_cast<int>(index_z)]);
-      return;
-    }
-    msg.joint_names[static_cast<int>(index_x)] = "hip_joint";
-    msg.joint_names[static_cast<int>(index_z)] = "knee_joint";
-    msg.points[0].positions[static_cast<int>(index_x)] = res[0];
-    msg.points[0].positions[static_cast<int>(index_z)] = res[1];
-  }
-
-  if (!tracking_mode_flag_) {
-    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
-    msg.joint_names.push_back("neck_r_joint");
-
-    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
-    msg.joint_names.push_back("neck_p_joint");
-
-    msg.points[0].positions.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
-    msg.joint_names.push_back("neck_y_joint");
-  } else {
-    ROS_WARN("tracking mode is on, not sending neck!");
-  }
-
-  angle_vector_publisher_.publish(msg);
+  // TODO: for tracking mode
+  ros::Time start_time = ros::Time::now() + ros::Duration(0.05); // TODO: starting 0.05sec after now
+  ri->sendAngles(_joint_names, _av, _time_ms*0.001, start_time);
 }
-
+#if 0 // deprecate
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist)
 {
@@ -997,97 +944,31 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::fullarm _a
   }
   sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
-
+#endif // deprecate
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter, bool _async)
 {
-  if (_trajectory.size() != _times.size()) {
-    ROS_WARN("trajectory length[%d] doesnt match with times length[%d]",
-             static_cast<int>(_trajectory.size()), static_cast<int>(_times.size()));
-    return false;
-  }
+  // TODO:
 
-  std::vector<std::vector<double>> xzs;
-  if (_move_lifter == aero::ikrange::lifter) {// lifter ik check
-    xzs.reserve(static_cast<int>(_trajectory.size()));
-    for (auto point : _trajectory) {
-      setRobotStateVariables(point);
-      aero::joint_angle_map lif;
-      getLifter(lif);
-      std::vector<double> xz;
-      if (!lifter_ik_(lif[aero::joint::lifter_x], lif[aero::joint::lifter_z], xz)) {
-        ROS_WARN("lifter_ik failed");
-        return false;
-      }
-      xzs.push_back(std::vector<double>{xz[0], xz[1]});
-    }
-  }
-
-  //get trajectory
-  std::vector<std::vector<double>> tra;
-  tra.reserve(_trajectory.size());
-  for (auto point : _trajectory) {
-    setRobotStateVariables(point);
-    std::vector<double> av;
-    kinematic_state->copyJointGroupPositions("upper_body", av);
-    if (!tracking_mode_flag_) {
-      av.push_back(kinematic_state->getVariablePosition("neck_r_joint"));
-      av.push_back(kinematic_state->getVariablePosition("neck_p_joint"));
-      av.push_back(kinematic_state->getVariablePosition("neck_y_joint"));
-    }
-    tra.push_back(av);
-  }
-
-  //get joint names
-  std::vector<std::string> j_names;
-  j_names = getMoveGroup("upper_body").getJointNames();
-  if (!tracking_mode_flag_) {
-    j_names.push_back("neck_r_joint");
-    j_names.push_back("neck_p_joint");
-    j_names.push_back("neck_y_joint");
-  } else {
-    ROS_WARN("tracking mode is on, not sending neck!");
-  }
-
-  //add lifter to trajectory
-  if (_move_lifter == aero::ikrange::lifter) {
-    j_names.reserve(static_cast<int>(j_names.size()) + 2);
-    j_names.push_back("hip_joint");
-    j_names.push_back("knee_joint");
-    for (int i = 0; i < static_cast<int>(tra.size()); ++i) {
-      tra[i].reserve(static_cast<int>(tra[i].size()) + 2);
-      tra[i].push_back(xzs[i][0]);
-      tra[i].push_back(xzs[i][1]);
-    }
-  }
-  trajectory_msgs::JointTrajectory msg;
-  msg.points.resize(tra.size());
-  msg.joint_names.resize(j_names.size());
-  msg.joint_names = j_names;
-  int ms_total = 0;
-  for (int i = 0; i < static_cast<int>(tra.size()); ++i) {
-    msg.points[i].positions.resize(static_cast<int>(tra[i].size()));
-    msg.points[i].positions = tra[i];
-    ms_total += _times[i];
-    ROS_INFO("ms_total %d", ms_total);
-    msg.points[i].time_from_start = ros::Duration(ms_total * 0.001);
-  }
-  angle_vector_publisher_.publish(msg);
-
-  int time = std::accumulate(_times.begin(), _times.end(), 0);
-  if(!_async) sendAngleVectorSync_(time);
   return true;
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter, bool _async)
 {
-  int num = static_cast<int>(_trajectory.size());
-  std::vector<int> times(num, _time_ms/num);
+  int sz = _trajectory.size();
+  if (sz < 1) {
+    return false;
+  }
+  std::vector<int> times(sz);
+  for(int i = 0; i < sz; i++) {
+    times.push_back(_time_ms/sz);
+  }
+
   return sendTrajectory(_trajectory, times, _move_lifter, _async);
 }
-
+#if 0 // deprecate
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
 {
@@ -1101,7 +982,7 @@ bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory 
   ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendTrajectory(_trajectory, _time_ms, _move_lifter, true);
 }
-
+#endif
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_overwrite)
 {
@@ -1122,41 +1003,28 @@ void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_overwrite
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int _time_ms, bool _local, bool _async)
 {
-  if (_local) {
-    aero::joint_angle_map pos;
-    getLifter(pos);
-    _x += pos[aero::joint::lifter_x];
-    _z += pos[aero::joint::lifter_z];
-  }
-
-  aero_startup::AeroTorsoController srv;
-  srv.request.x = _x*1000;
-  srv.request.z = _z*1000;
-  if (_time_ms == 0) srv.request.coordinate = "world";
-  else srv.request.coordinate = "world:" + std::to_string(_time_ms);
-  if (!waist_service_.call(srv)) {
-    ROS_ERROR("move waist failed service call");
-    return false;
-  }
-
-  if (srv.response.status == "success") {
-    setLifter(_x/1000.0, _z/1000.0);
-    ////
+  // TODO: _local, _async
+  std::map<std::string, double> _map;
+  getRobotStateVariables(_map);
+  ROS_DEBUG("sendLifter %f %f %d", _x, _z, _time_ms);
+  if(setLifter(_x, _z)) {
+    ROS_DEBUG("sendLifter: set success");
+    std::vector<double> av;
+    const std::vector<std::string> &names = jmg_lifter->getVariableNames();
+    kinematic_state->copyJointGroupPositions("lifter", av);
+    ros::Time start_time = ros::Time::now() + ros::Duration(0.05); // starting 0.05sec after now
+    ROS_DEBUG("sendLifter: send");
+    ri->sendAngles(names, av, _time_ms*0.001, start_time);
     if(!_async) {
-      if (wait_) {
-        if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000 * 0.8) * 1000);
-        else usleep(static_cast<int>(_time_ms * 0.8) * 1000);
-        waitInterpolation_();
-      } else {
-        if (_time_ms == 0) usleep(static_cast<int>(srv.response.time_sec * 1000) * 1000 + 1000);
-        else usleep(static_cast<int>(_time_ms) * 1000 + 1000);
-      }
+      ri->wait_interpolation("lifter");
+      ROS_DEBUG("sendLifter: wait end");
     }
+    setRobotStateVariables(_map); // revert state
     return true;
   }
-  return false;
+  return true;
 }
-
+#if 0 // deprecate
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_ms)
 {
@@ -1191,7 +1059,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterAsync(int _x, int _z, int _
   ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, false, true);
 }
-
+#endif
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::cancelLifter()
 {
@@ -1199,42 +1067,11 @@ bool aero::interface::AeroMoveitInterface::cancelLifter()
   // why not use AeroSendJoints? -> to safe exit trajectory
   // but actually, cancel joints is not supported with AeroSendJoints
 
-  trajectory_msgs::JointTrajectory msg;
-  msg.points.resize(1);
-  msg.joint_names.resize(2);
-  msg.joint_names = {"hip_joint", "knee_joint"};
-  msg.points[0].positions.resize(2);
-  msg.points[0].positions = {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
-  msg.points[0].time_from_start = ros::Duration(0.01); // duration is not used
-  angle_vector_publisher_.publish(msg);
-  if (wait_) {
-    waitInterpolation_();
-  } else {
-    usleep(200 * 1000);
-  }
-
-  // get current joint angles
-  aero_startup::AeroSendJoints srv;
-  if (!joint_states_client_.call(srv)) {
-    ROS_ERROR("getJoints failed service call");
-    return false;
-  }
-
-  // update lifter
-  auto hip_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "hip_joint");
-  auto knee_itr = std::find(srv.response.joint_names.begin(), srv.response.joint_names.end(), "knee_joint");
-  double hip = srv.response.points.positions[static_cast<int>(hip_itr - srv.response.joint_names.begin())];
-  double knee = srv.response.points.positions[static_cast<int>(knee_itr - srv.response.joint_names.begin())];
-  double x = -lifter_foreleg_link_ * sin(knee - hip)
-    + lifter_thigh_link_ * sin(hip);
-  double z = lifter_foreleg_link_ * (cos(knee - hip) - 1.0)
-    + lifter_thigh_link_ * (cos(hip) - 1.0);
-  setLifter(x, z);
-
-  updateLinkTransforms();
+  // TODO: .....
   return true;
 }
 
+#if 0 // deprecate
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, double _z, int _time_ms)
 {
@@ -1328,6 +1165,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
   std::vector<int> times(num, _time_ms/num);
   return sendLifterTrajectoryAsync(_trajectory, times);
 }
+#endif
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
@@ -1337,28 +1175,7 @@ bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
-  bool check_timeout = false;
-  if (_timeout_ms > 0) check_timeout = true;
-  ros::Duration timeout = ros::Duration(_timeout_ms * 0.001);
-  ros::Time start = ros::Time::now();
-
-  std_srvs::Trigger srv;
-  while (ros::ok()) {
-    usleep(50 * 1000);// 20Hz
-    if (in_action_service_.call(srv)) {
-      bool in_action = srv.response.success;
-      if (!in_action) {
-        ROS_INFO("%s: finished", __FUNCTION__);
-        return true;
-      }
-    }
-
-    if (check_timeout && start + timeout < ros::Time::now()) {
-      ROS_WARN("%s: timeout! %d[ms]", __FUNCTION__, _timeout_ms);
-      break;
-    }
-  }
-  return false;
+  return ri->wait_interpolation( _timeout_ms/1000.0 );
 }
 
 //////////////////////////////////////////////////
@@ -1392,6 +1209,30 @@ void aero::interface::AeroMoveitInterface::sleepInterpolation(int _time_ms)
   so_retime_scale_ = 1.0f;
   so_mutex_.unlock();
   // usleep(static_cast<int>(_time_ms) * 1000 + 1000);
+}
+
+#if USING_HAND // hand
+ //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setHand(aero::arm _arm, double _radian)
+{
+  // robot dependant
+  std::string rl;
+  if (_arm == aero::arm::rarm) rl = "r";
+  else rl = "l";
+  kinematic_state->setVariablePosition(rl + "_thumb_joint", _radian);
+  kinematic_state->setVariablePosition(rl + "_indexbase_joint", -_radian);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
+{
+#if 0 // TODO? or Not used anywhere
+  auto itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), "r_thumb_joint");
+  setHand(aero::arm::rarm, joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())]);
+
+  itr = std::find(joint_states_.name.begin(), joint_states_.name.end(), "l_thumb_joint");
+  setHand(aero::arm::larm, joint_states_.position[static_cast<int>(itr - joint_states_.name.begin())]);
+#endif
 }
 
 //////////////////////////////////////////////////
@@ -1465,6 +1306,9 @@ bool aero::interface::AeroMoveitInterface::callHandSrv_(const aero::arm &_arm, a
   ROS_ERROR("HAND_SERVICE: %s", _srv.response.status.c_str());
   return false;
 }
+#endif // hand
+
+#if USING_GRASP // grasp
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
 {
@@ -1820,8 +1664,12 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
 
   return true;
 }
+#endif // grasp
 
+#if USING_BASE // base
 //////////////////////////////////////////////////
+// geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose
+//  (Transform &_tr, const std::string &_origin = "map", const std::string _&base = "base_link", _wait_tm = 5.0
 geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose(std::string _map)
 {
   tf::StampedTransform tr;
@@ -1831,7 +1679,7 @@ geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose(std::st
   }
   catch (tf::TransformException ex){
     ROS_ERROR("%s",ex.what());
-    ros::Duration(1.0).sleep();
+    ros::Duration(1.0).sleep(); // not need
     return geometry_msgs::Pose();
   }
 
@@ -1852,6 +1700,7 @@ geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose(std::st
 }
 
 //////////////////////////////////////////////////
+//bool aero::interface::AeroMoveitInterface::getSpotPose(Transform &_tr, const std::string &_location)
 geometry_msgs::Pose aero::interface::AeroMoveitInterface::getLocationPose(std::string _location)
 {
   aero_std::GetSpot gs;
@@ -1861,6 +1710,7 @@ geometry_msgs::Pose aero::interface::AeroMoveitInterface::getLocationPose(std::s
   return pose;
 }
 
+// void aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad, int _timeout_ms, bool async)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad, int _timeout_ms)
 {
@@ -1879,6 +1729,7 @@ bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _ra
   return true;
 }
 
+// void aero::interface::AeroMoveitInterface::moveTo(Transform tr, bool _async)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::moveToAsync(std::string _location)
 {
@@ -1936,6 +1787,7 @@ void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, doub
   ROS_INFO("Sending goal");
   ac_->sendGoal(goal);
 }
+
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::isMoving()
 {
@@ -1944,6 +1796,7 @@ bool aero::interface::AeroMoveitInterface::isMoving()
   return !finished;// moving != finished
 }
 
+// bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thre)
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thre)
 {
@@ -1984,7 +1837,9 @@ void aero::interface::AeroMoveitInterface::go()
   moveToAsync(pose_using_);
 }
 
+
 //////////////////////////////////////////////////
+// distanceToDestination
 float aero::interface::AeroMoveitInterface::toDestination(std::string _location)
 {
   geometry_msgs::Point loc = getLocationPose(_location).position;
@@ -2102,7 +1957,9 @@ bool aero::interface::AeroMoveitInterface::goPosTurnOnly_(double _rad, int _time
   ROS_WARN("goPos turn only didn't finish before timeout %d ms", _timeout_ms);
   return false;
 }
+#endif // base
 
+#if 0 // moveit
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::plan(std::string _move_group){
   bool success = bool(getMoveGroup(_move_group).plan(plan_));
@@ -2151,7 +2008,9 @@ bool aero::interface::AeroMoveitInterface::move(std::string _move_group){
   success = execute();
   return success;
 }
+#endif
 
+#if 0
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::speakAsync(std::string _speech)
 {
@@ -2174,9 +2033,413 @@ void aero::interface::AeroMoveitInterface::speak(std::string _speech, float _wai
   speech_publisher_.publish(msg);
   usleep(static_cast<int>(_wait_sec * 1000) * 1000);
 }
+#endif
 
+#if 0
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::JointStateCallback_(const sensor_msgs::JointState::ConstPtr& _msg)
 {
   joint_states_ = *_msg;
 }
+#endif
+
+/////////////////////////////////////////////////
+const robot_state::JointModelGroup* aero::interface::AeroMoveitInterface::getJointModelGroup(const std::string &_move_group)
+{
+  auto it = joint_model_group_map.find(_move_group);
+  if (it != joint_model_group_map.end()) {
+    return it->second;
+  }
+  const robot_state::JointModelGroup* tmpj = kinematic_model->getJointModelGroup(_move_group);
+  if (!tmpj) {
+    joint_model_group_map[_move_group] = tmpj;
+    return tmpj;
+  }
+  ROS_WARN("error :: joint_model_group [%s] doesn't exist", _move_group.c_str());
+  return NULL;
+}
+/////////////////////////////////////////////////
+const robot_state::JointModelGroup* aero::interface::AeroMoveitInterface::getJointModelGroup(aero::arm _arm, aero::ikrange _range)
+{
+  return getJointModelGroup(aero::moveGroup(_arm, _range));
+}
+
+#define DUMMY_LOOKAT 0
+#define DUMMY_BASE   0
+#define DUMMY_HAND   0
+
+
+
+
+
+//////////////////// rewrite grasp
+
+#if USING_GRASP // grasp
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
+{
+  // save initial angles
+  std::vector<double> av_ini;
+  getRobotStateVariables(av_ini);
+
+  std::string eef;
+  eef = aero::eefLink(_grasp.arm, _grasp.eef);
+
+  std::vector<double> result_mid_av(1);
+  std::string result_mid_range;
+  aero::Transform grapsMid;
+  // graspMid = _grasp.mid_pose //
+  if (solveIKOneSequence(_grasp.arm, graspMid, _grasp.mid_ik_range,
+                         av_ini, eef, result_mid_range, result_mid_av)) {
+    ROS_INFO("mid ik failed");
+    kinematic_state->setVariablePositions(av_ini);
+    return false;
+  }
+
+  std::vector<double> result_end_av(1);
+  std::string result_end_range;
+    aero::Transform grapsEnd;
+  // graspEnd = _grasp.end_pose //
+  std::vector<double> av_mid; // use av_mid as initial state for IK
+  getRobotStateVariables(av_mid);
+  if (solveIKOneSequence(_grasp.arm, grapsEnd, _grasp.end_ik_range,
+                         av_mid, eef, result_end_range, result_end_av)) {
+    ROS_INFO("end ik failed");
+    kinematic_state->setVariablePositions(av_ini);
+    return false;
+  }
+
+#if 0
+  trajectory_.clear();
+  trajectory_.reserve(2);
+  trajectory_.push_back(result_mid);
+  trajectory_.push_back(result_end);
+
+  trajectory_groups_.clear();
+  trajectory_groups_.reserve(2);
+  trajectory_groups_.push_back(res_m);
+  trajectory_groups_.push_back(res_e);
+#endif
+
+  kinematic_state->setVariablePositions(av_ini);// return robot model to inital state
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::solveIKOneSequence
+(aero::arm _arm, aero::Transform &_pose,
+ aero::ikrange _ik_range, const std::vector<double> &_av_initial, const std::string &_eef_link,
+ std::string &_result_range, std::vector<double> &_result)
+{
+  bool status;
+
+  // ik with arm
+  kinematic_state->setVariablePositions(_av_ini);
+  status = setFromIK(_arm, aero::ikrange::arm, _pose, _eef_link);
+  if (status) {
+    getRobotStateVariables(_result);
+    _result_range = aero::moveGroup(_arm, aero::ikrange::arm);
+    return true;
+  }
+  if (_ik_range == aero::ikrange::arm) return false;
+
+  // ik with waist
+  kinematic_state->setVariablePositions(_av_ini);
+  status = setFromIK(_arm, aero::ikrange::waist, _pose, _eef_link);
+  if (status) {
+    getRobotStateVariables(_result);
+    _result_range = aero::moveGroup(_arm, aero::ikrange::waist);
+    return true;
+  }
+  if (_ik_range == aero::ikrange::waist) return false;
+
+  // ik with lifter
+  kinematic_state->setVariablePositions(_av_ini);
+  status = setFromIK(_arm, aero::ikrange::lifter, _pose, _eef_link);
+  if (status) {
+    getRobotStateVariables(_result);
+    _result_range = aero::moveGroup(_arm, aero::ikrange::lifter);
+    return true;
+  }
+
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs) // sync
+{
+  // send angles saved in trajectory_ to real robot
+  // information about arm and lifter is saved in trajectory_groups_
+
+  if (trajectory_.empty()) {
+    ROS_ERROR("no motion plan found");
+    return false;
+  }
+
+  for (int i = 0; i < trajectory_.size(); ++i) {
+    setRobotStateVariables(trajectory_[i]);
+    sendAngleVectorAsync_(trajectory_groups_[i], _msecs[i]);
+    usleep(_msecs[i] * 1000);
+    sleep(1);
+  }
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp)
+{
+  // save initial angles
+  aero::joint_angle_map av_ini;
+  getRobotStateVariables(av_ini);
+
+  aero::joint_angle_map av_mid_map, av_end_map;
+  aero::Transform trans_mid, trans_end;
+  // trans_end = _grasp.end_pose
+  // trans_mid = _grasp.end_pose
+  ROS_INFO("start solving IK");
+
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, trans_end, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(trans_end);
+  getRobotStateVariables(av_end_map);
+
+  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, trans_mid, _grasp.eef)) {
+    ROS_INFO("mid ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(trans_mid);
+  getRobotStateVariables(av_mid_map);
+
+  ROS_INFO("start making trajectory");
+  aero::trajectory trajectory;
+  std::vector<int> times;
+  int mid_time = 4000;
+  int end_time = 4000;
+  int num = 5;
+  trajectory.reserve(num+1);
+  times.reserve(num+1);
+  trajectory.push_back(av_mid);
+  times.push_back(mid_time);
+
+  setRobotStateVariables(av_mid);
+  aero::Transform tmp, diff;
+  geometry_msgs::Pose tmp, diff;
+  tmp = _grasp.mid_pose;
+  diff.position.x = (_grasp.end_pose.position.x - _grasp.mid_pose.position.x) / num;
+  diff.position.y = (_grasp.end_pose.position.y - _grasp.mid_pose.position.y) / num;
+  diff.position.z = (_grasp.end_pose.position.z - _grasp.mid_pose.position.z) / num;
+  Eigen::Quaterniond qua_mid{_grasp.mid_pose.orientation.w,
+      _grasp.mid_pose.orientation.x ,_grasp.mid_pose.orientation.y ,_grasp.mid_pose.orientation.z};
+  Eigen::Quaterniond qua_end{_grasp.end_pose.orientation.w,
+      _grasp.end_pose.orientation.x ,_grasp.end_pose.orientation.y ,_grasp.end_pose.orientation.z};
+
+  int last_solved_num = -1;
+  ROS_INFO("mid pose %f %f %f, %f %f %f %f",
+           _grasp.mid_pose.position.x ,_grasp.mid_pose.position.y ,_grasp.mid_pose.position.z
+           ,_grasp.mid_pose.orientation.w,_grasp.mid_pose.orientation.x ,_grasp.mid_pose.orientation.y ,_grasp.mid_pose.orientation.z);
+
+  for (int i=0; i < num - 1; ++i) {
+    tmp.position.x += diff.position.x;
+    tmp.position.y += diff.position.y;
+    tmp.position.z += diff.position.z;
+    Eigen::Quaterniond qua_path = qua_mid.slerp( static_cast<double>(i+1)/num, qua_end);
+    tmp.orientation.w = qua_path.w();
+    tmp.orientation.x = qua_path.x();
+    tmp.orientation.y = qua_path.y();
+    tmp.orientation.z = qua_path.z();
+
+    ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
+             tmp.position.x ,tmp.position.y ,tmp.position.z
+             ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
+
+    if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
+    setLookAt(tmp);
+    aero::joint_angle_map av_inner;
+    getRobotStateVariables(av_inner);
+
+    trajectory.push_back(av_inner);
+    times.push_back((end_time / num) * (i - last_solved_num));
+    last_solved_num = i;
+  }
+
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, _grasp.end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(_grasp.end_pose);
+  getRobotStateVariables(av_end);//save end
+
+  trajectory.push_back(av_end);
+  times.push_back((end_time / num) * (4 - last_solved_num));
+  ROS_INFO("end pose %f %f %f, %f %f %f %f",
+           _grasp.end_pose.position.x ,_grasp.end_pose.position.y ,_grasp.end_pose.position.z
+           ,_grasp.end_pose.orientation.w,_grasp.end_pose.orientation.x ,_grasp.end_pose.orientation.y ,_grasp.end_pose.orientation.z);
+
+  ROS_INFO("trajectory: %d relay points", static_cast<int>(times.size()) - 2);
+
+
+  openHand(_grasp.arm);
+
+
+  return sendTrajectory(trajectory, times, _grasp.end_ik_range);;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_grasp, double _push_height)
+{
+  // save initial angles
+  aero::joint_angle_map av_ini;
+  getRobotStateVariables(av_ini);
+
+  aero::joint_angle_map av_mid,av_end,av_place;
+
+  geometry_msgs::Pose mid_pose,end_pose,place_pose;
+  mid_pose = _grasp.mid_pose;
+  mid_pose.position.z += _push_height;
+  end_pose = _grasp.end_pose;
+  end_pose.position.z += _push_height;
+  place_pose = _grasp.end_pose;
+
+
+  ROS_INFO("solving IK");
+
+  if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, mid_pose, _grasp.eef)) {
+    ROS_INFO("mid ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(mid_pose);
+  getRobotStateVariables(av_mid);//save mid
+
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, end_pose, _grasp.eef)) {
+    ROS_INFO("end ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  setLookAt(end_pose);
+  getRobotStateVariables(av_end);//save end
+
+
+  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, place_pose, _grasp.eef)) {
+    ROS_INFO("place ik failed");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+  getRobotStateVariables(av_place);//save end
+
+  ROS_INFO("grasping IKs succeeded");
+
+  ROS_INFO("making trajectory");
+  aero::trajectory trajectory;
+  std::vector<int> times;
+  int mid_time = 4000;
+  int end_time = 8000;
+  int place_time = 2000;
+  int num = 10;
+  trajectory.reserve(num+1);
+  times.reserve(num+1);
+  trajectory.push_back(av_mid);
+  times.push_back(mid_time);
+
+  setRobotStateVariables(av_mid);
+  geometry_msgs::Pose tmp, diff;
+  tmp = mid_pose;
+  diff.position.x = (end_pose.position.x - mid_pose.position.x) / num;
+  diff.position.y = (end_pose.position.y - mid_pose.position.y) / num;
+  diff.position.z = (end_pose.position.z - mid_pose.position.z) / num;
+  Eigen::Quaterniond qua_mid{mid_pose.orientation.w,
+      mid_pose.orientation.x ,mid_pose.orientation.y ,mid_pose.orientation.z};
+  Eigen::Quaterniond qua_end{end_pose.orientation.w,
+      end_pose.orientation.x ,end_pose.orientation.y ,end_pose.orientation.z};
+  int last_solved_num = -1;
+  ROS_INFO("mid pose %f %f %f, %f %f %f %f",
+           mid_pose.position.x ,mid_pose.position.y ,mid_pose.position.z
+           ,mid_pose.orientation.w,mid_pose.orientation.x ,mid_pose.orientation.y ,mid_pose.orientation.z);
+  aero::ikrange range =  _grasp.end_ik_range;
+  double lif_x_mid;
+  double lif_z_mid;
+  double lif_x_end;
+  double lif_z_end;
+  if (range == aero::ikrange::lifter) {
+    range = aero::ikrange::torso;
+    lif_x_mid = av_mid[aero::joint::lifter_x];
+    lif_z_mid = av_end[aero::joint::lifter_z];
+    lif_x_end = av_mid[aero::joint::lifter_x];
+    lif_z_end = av_end[aero::joint::lifter_z];
+  }
+  for (int i=0; i < num - 1; ++i) {
+    tmp.position.x += diff.position.x;
+    tmp.position.y += diff.position.y;
+    tmp.position.z += diff.position.z;
+    Eigen::Quaterniond qua_path = qua_mid.slerp( static_cast<double>(i+1)/num, qua_end);
+    tmp.orientation.w = qua_path.w();
+    tmp.orientation.x = qua_path.x();
+    tmp.orientation.y = qua_path.y();
+    tmp.orientation.z = qua_path.z();
+
+    ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
+             tmp.position.x ,tmp.position.y ,tmp.position.z
+             ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
+    if (_grasp.end_ik_range == aero::ikrange::lifter) {
+      double lif_x = lif_x_mid + (lif_x_end - lif_x_mid) * (i + 1);
+      double lif_z = lif_z_mid + (lif_z_end - lif_z_mid) * (i + 1);
+      setLifter(lif_x, lif_z);
+    }
+    continue;
+    if (!setFromIK(_grasp.arm, range, tmp, _grasp.eef)) continue;
+    aero::joint_angle_map av_inner;
+    getRobotStateVariables(av_inner);
+    trajectory.push_back(av_inner);
+    times.push_back((end_time / num) * (i - last_solved_num));
+    last_solved_num = i;
+  }
+
+  trajectory.push_back(av_end);
+  times.push_back((end_time / num) * (4 - last_solved_num));
+  ROS_INFO("end pose %f %f %f, %f %f %f %f",
+           end_pose.position.x ,end_pose.position.y ,end_pose.position.z
+           ,end_pose.orientation.w,end_pose.orientation.x ,end_pose.orientation.y ,end_pose.orientation.z);
+
+  trajectory.push_back(av_place);
+  times.push_back((place_time / num) * (4 - last_solved_num));
+  ROS_INFO("place pose %f %f %f, %f %f %f %f",
+           place_pose.position.x ,place_pose.position.y ,place_pose.position.z
+           ,place_pose.orientation.w,place_pose.orientation.x ,place_pose.orientation.y ,place_pose.orientation.z);
+
+  ROS_INFO("trajectory: %d relay points", static_cast<int>(times.size()) - 2);
+
+  if (!sendTrajectory(trajectory, times, _grasp.end_ik_range)) {
+    ROS_WARN("lifter ik failed, why???????");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+
+  openHand(_grasp.arm);
+  sleep(1);
+
+  aero::trajectory trajectory_return;
+  std::vector<int> times_return;
+  int trajectory_size = static_cast<int>(trajectory.size());
+  int return_size = trajectory_size - 1;
+  trajectory_return.reserve(return_size);
+  times_return.reserve(return_size);
+  for (int i = 0; i < return_size; ++i) {
+    trajectory_return.push_back(trajectory[trajectory_size - 2 - i]);
+    times_return.push_back(times[trajectory_size - 1 - i]);
+  }
+
+  if (!sendTrajectory(trajectory_return, times_return, _grasp.end_ik_range)) {
+    ROS_WARN("lifter ik failed, why???????");
+    setRobotStateVariables(av_ini);
+    return false;
+  }
+
+  return true;
+}
+#endif // grasp

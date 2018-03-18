@@ -6,7 +6,7 @@
 #include <aero_startup/AeroSendJoints.h>
 
 class LookAt {
-public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _robot)
+public: LookAt(ros::NodeHandle _nh, aero::interface::AeroMoveitInterface::Ptr _robot)
   : nh_(_nh) {
   robot_ = _robot;
 
@@ -230,7 +230,7 @@ private: ros::ServiceServer reply_prev_topic_;
 
 private: ros::ServiceServer reply_model_update__;
 
-private: aero::interface::AeroMoveitInterfacePtr robot_;
+private: aero::interface::AeroMoveitInterface::Ptr robot_;
 
 private: std::mutex thread_alive_mutex_;
 
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "lookat_manager");
   ros::NodeHandle nh;
 
-  aero::interface::AeroMoveitInterfacePtr robot
+  aero::interface::AeroMoveitInterface::Ptr robot
     (new aero::interface::AeroMoveitInterface(nh));
   std::shared_ptr<LookAt> lookat(new LookAt(nh, robot));
 

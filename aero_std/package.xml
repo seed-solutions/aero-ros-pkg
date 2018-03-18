@@ -25,8 +25,10 @@
   <build_depend>moveit_ros_planning</build_depend>
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>aero_startup</build_depend>
+  <build_depend>aero_ros_controller</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>eigen_conversions</build_depend>
+  <build_depend>control_msgs</build_depend>
 
   <run_depend>geometry_msgs</run_depend>
   <run_depend>message_runtime</run_depend>
@@ -44,7 +46,9 @@
   <run_depend>moveit_ros_planning</run_depend>
   <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>aero_startup</run_depend>
+  <run_depend>aero_ros_controller</run_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>eigen_conversions</run_depend>
+  <run_depend>control_msgs</run_depend>
 
 </package>

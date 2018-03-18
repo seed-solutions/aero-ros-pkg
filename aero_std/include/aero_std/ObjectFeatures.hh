@@ -14,7 +14,7 @@ namespace aero
     {
     public: explicit ObjectFeatures(ros::NodeHandle _nh);
 
-    public: explicit ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _interface);
+    public: explicit ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterface::Ptr _interface);
 
     public: ~ObjectFeatures();
 
@@ -35,7 +35,7 @@ namespace aero
 
     private: ros::NodeHandle nh_;
 
-    private: aero::interface::AeroMoveitInterfacePtr interface_;
+    private: aero::interface::AeroMoveitInterface::Ptr interface_;
 
     private: ros::Publisher marker_publisher_;
 

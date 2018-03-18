@@ -16,8 +16,11 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   moveit_core moveit_ros_planning moveit_ros_planning_interface
   aero_startup
+  aero_ros_controller
   visualization_msgs
   message_generation
+
+  control_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -56,7 +59,7 @@ catkin_package(
  LIBRARIES aero_moveit_interface object_features spot_list
  CATKIN_DEPENDS
  geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs
- moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs
+ moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs aero_ros_controller
 )
 
 include_directories(
@@ -97,3 +100,10 @@ add_library(object_features
   src/ObjectFeatures.cc
 )
 target_link_libraries(object_features ${catkin_LIBRARIES} aero_moveit_interface)
+
+###
+#add_library(robot_interface src/RobotInterface.cc)
+#target_link_libraries(robot_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+##add_executable(aero_moveit_test src/AeroMoveitTest.cc)
+##target_link_libraries(aero_moveit_test ${catkin_LIBRARIES} ${Boost_LIBRARIES} )

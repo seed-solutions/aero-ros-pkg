@@ -18,7 +18,7 @@ ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh)
 /// @brief constructor with AeroMoveitInterface
 /// @param _nh Node handle
 /// @param _interface AeroMoveitInterface
-ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterfacePtr _interface)
+ObjectFeatures::ObjectFeatures(ros::NodeHandle _nh, aero::interface::AeroMoveitInterface::Ptr _interface)
   : nh_(_nh)
 {
   interface_ = _interface;

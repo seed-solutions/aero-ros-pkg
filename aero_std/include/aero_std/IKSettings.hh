@@ -17,10 +17,11 @@ namespace aero
 
   enum struct arm : int {rarm, larm, either, both_arms};
 
-  enum struct ikrange : int {arm, torso, lifter};
+  enum struct ikrange : int {arm, waist, torso, lifter};
 
   enum struct eef : int {hand, grasp, pick, index, thumb, none};
 
+  enum struct pose : int {reset, reset_manip, move, initial};
   /// robot dependant
   enum struct joint : int {r_shoulder_p,
       r_shoulder_r,
@@ -41,8 +42,10 @@ namespace aero
       waist_y,
       waist_p,
       waist_r,
-      lifter_x,
-      lifter_z,
+      ankle,
+      knee,
+      lifter_x, // backward compatibility
+      lifter_z, // backward compatibility
       unknown
       };
 
@@ -70,6 +73,8 @@ namespace aero
     {aero::joint::waist_y,"waist_y_joint"},
     {aero::joint::waist_p,"waist_p_joint"},
     {aero::joint::waist_r,"waist_r_joint"},
+    {aero::joint::knee,"knee_joint"},
+    {aero::joint::ankle,"ankle_joint"},
     {aero::joint::lifter_x,"virtual_lifter_x_joint"},
     {aero::joint::lifter_z,"virtual_lifter_z_joint"}
   };
@@ -95,11 +100,13 @@ namespace aero
     {"waist_y_joint" ,aero::joint::waist_y},
     {"waist_p_joint" ,aero::joint::waist_p},
     {"waist_r_joint" ,aero::joint::waist_r},
+    {"knee_joint" ,aero::joint::knee},
+    {"ankle_joint" ,aero::joint::ankle},
     {"virtual_lifter_x_joint" ,aero::joint::lifter_x},
     {"virtual_lifter_z_joint" ,aero::joint::lifter_z}
   };
 
-  inline std::string arm2lr_(aero::arm _arm)
+  inline const std::string arm2lr_(aero::arm _arm)
   {
     switch(_arm) {
     case aero::arm::rarm:
@@ -118,7 +125,7 @@ namespace aero
     }
   }
 
-  inline std::string arm2leftright_(aero::arm _arm)
+  inline const std::string arm2leftright_(aero::arm _arm)
   {
     switch(_arm) {
     case aero::arm::rarm:
@@ -137,7 +144,7 @@ namespace aero
     }
   }
 
-  inline std::string arm2string_(aero::arm _arm)
+  inline const std::string arm2string_(aero::arm _arm)
   {
     switch(_arm) {
     case aero::arm::rarm:
@@ -146,8 +153,9 @@ namespace aero
     case aero::arm::larm:
       return "larm";
       break;
-      //case aero::arm::either:
-      //break;
+    case aero::arm::either:
+      return "either";
+      break;
     case aero::arm::both_arms:
       return "both_arms";
       break;
@@ -157,10 +165,13 @@ namespace aero
     }
   }
 
-  inline std::string moveGroup(aero::arm _arm, aero::ikrange _range)
+  inline const std::string moveGroup(aero::arm _arm, aero::ikrange _range)
   {
-    std::string mg = arm2string_(_arm);
+    std::string mg( arm2string_(_arm) );
     switch(_range) {
+    case aero::ikrange::waist:
+      mg = mg + "_with_waist";
+      break;
     case aero::ikrange::torso:
       mg = mg + "_with_torso";
       break;
@@ -173,9 +184,9 @@ namespace aero
     return mg;
   }
 
-  inline std::string eefLink(aero::arm _arm, aero::eef _eef)
+  inline const std::string eefLink(aero::arm _arm, aero::eef _eef)
   {
-    std::string ln = arm2lr_(_arm);
+    std::string ln( arm2lr_(_arm) );
     switch (_eef) {
     case aero::eef::hand:
       ln = ln + "_hand_link";
@@ -199,7 +210,7 @@ namespace aero
   }
 
   //inline std::string joint2JointName(aero::joint _joint)
-  inline std::string joint2str(aero::joint _joint)
+  inline const std::string &joint2str(aero::joint _joint)
   {
     // if joint_map is correct, error does not occur
     // add joint existing check by user, if ( _joint != aero::joint::unknown ) {
@@ -207,7 +218,7 @@ namespace aero
   }
 
   //inline aero::joint jointName2Joint(std::string _joint_name)
-  inline aero::joint str2joint(std::string _joint_name)
+  inline aero::joint str2joint(const std::string &_joint_name)
   {
     auto it = aero::string_map.find(_joint_name);
     if (it == aero::string_map.end()) {
@@ -216,7 +227,7 @@ namespace aero
     return it->second;
   }
 
-  inline void jointMap2StringMap(joint_angle_map &_j_map, std::map<std::string, double> &_s_map)
+  inline void jointMap2StringMap(const joint_angle_map &_j_map, std::map<std::string, double> &_s_map)
   {
     _s_map.clear();
     for(auto it = _j_map.begin(); it != _j_map.end(); ++it) {
@@ -226,7 +237,7 @@ namespace aero
     }
   }
 
-  inline void stringMap2JointMap(std::map<std::string, double> &_s_map, joint_angle_map &_j_map)
+  inline void stringMap2JointMap(const std::map<std::string, double> &_s_map, joint_angle_map &_j_map)
   {
     _j_map.clear();
     for(auto it = _s_map.begin(); it != _s_map.end(); ++it) {
@@ -242,6 +253,34 @@ namespace aero
     double l_hand;
     double r_hand;
   };
+
+  inline void mid_coords(double _rate, const aero::Transform &_t_a, const aero::Transform &_t_b,
+                         aero::Transform &_res) {
+    aero::Vector3 va(_t_a.translation());
+    aero::Vector3 vb(_t_b.translation());
+    aero::Quaternion qa(_t_a.linear());
+    aero::Quaternion qb(_t_b.linear());
+
+    aero::Translation tr(va * (1 - _rate) + vb * _rate);
+    aero::Quaternion  q(qa.slerp(_rate, qb));
+
+    _res = tr * q;
+  }
 }
 
+static std::ostream& operator<<(std::ostream& os, const aero::Transform &tr)
+{
+  Eigen::Vector3d tt = tr.translation();
+  Eigen::Quaterniond qq(tr.linear());
+  os << "(cons #f("
+     << tt(0) << " "
+     << tt(1) << " "
+     << tt(2) << ")";
+  os << " #f("
+     << qq.w() << " "
+     << qq.x() << " "
+     << qq.y() << " "
+     << qq.z() << "))";
+  return os;
+}
 #endif
