@@ -34,17 +34,20 @@ class AeroGrasp
 
  public: bool GraspControlCallback(aero_startup::GraspControl::Request&  _req,
                                    aero_startup::GraspControl::Response& _res) {
-   ROS_WARN("Grasp");
+   ROS_WARN("AeroGrasp: Grasp pos: %d, script %d, power: %d",
+            _req.position, _req.script, _req.power);
 
+   ROS_WARN("AeroGrasp: setMaxSingleCurrent");
    hw_->setMaxSingleCurrent(_req.position, _req.power);
 
    usleep(200 * 1000); // 200ms sleep ???
 
-   ROS_WARN("Script");
+   ROS_WARN("AeroGrasp: handScript");
    hw_->handScript(_req.position, _req.script);
 
    // return if cancel script
    if (_req.script == aero_startup::GraspControlRequest::SCRIPT_CANCEL) {
+     ROS_WARN("AeroGrasp: End Grasp");
      return true;
    }
 
@@ -54,7 +57,7 @@ class AeroGrasp
      usleep(1000 * 1000);
    }
 
-   ROS_WARN("End Grasp");
+   ROS_WARN("AeroGrasp: End Grasp");
    _res.angles.resize(2);
 #if 0
    _res.angles[0] = upper_angles[13];
