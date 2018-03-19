@@ -41,6 +41,7 @@
 #include <controller_manager/controller_manager.h>
 #include "aero_robot_hardware.h"
 #include "AeroMoveBaseRH.hh"
+#include "AeroGrasp.hh"
 
 using namespace aero_robot_hardware;
 
@@ -64,6 +65,10 @@ int main(int argc, char** argv)
 
 #if 1 /// add base
   aero::navigation::AeroMoveBase base_node(robot_nh, &hw);
+#endif
+
+#if 1 /// add grasp
+  aero::grasp::AeroGrasp grasp_node(robot_nh, &hw);
 #endif
 
   ros::AsyncSpinner spinner(1);

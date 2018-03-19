@@ -195,7 +195,7 @@ void AeroRobotHW::readPos(const ros::Time& time, const ros::Duration& period, bo
   ROS_DEBUG("read");
 
   mutex_lower_.lock();
-
+  mutex_upper_.lock();
   // TODO: thrading?? or making no wait
   if (update) {
 #if 0 // NO_THREAD
@@ -218,7 +218,7 @@ void AeroRobotHW::readPos(const ros::Time& time, const ros::Duration& period, bo
   // get lower actual positions
   std::vector<int16_t> lower_act_strokes =
     controller_lower_->get_actual_stroke_vector();
-
+  mutex_upper_.unlock();
   mutex_lower_.unlock();
 
   // whole body strokes
@@ -343,6 +343,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
 
   uint16_t time_csec = static_cast<uint16_t>((OVERWRAP_SCALE_ * CONTROL_PERIOD_US_)/(1000*10));
   mutex_lower_.lock();
+  mutex_upper_.lock();
   {
 #if 0 // NO_THREAD
     controller_upper_->set_position(upper_strokes, time_csec);
@@ -359,6 +360,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
     usleep( 1000 * 2 ); // why needed?
   }
 #endif
+  mutex_upper_.unlock();
   mutex_lower_.unlock();
 
   // read

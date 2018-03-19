@@ -60,13 +60,16 @@ else()
   message(FATAL "c++11 required but not supported")
 endif()
 
+## Library
+add_library(robot_interface src/RobotInterface.cc )
+target_link_libraries(robot_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 ## Executable
 add_executable(${PROJECT_NAME} src/aero_ros_controller.cpp src/aero_robot_hardware.cpp src/AeroMoveBaseRH.cc)
 target_link_libraries(${PROJECT_NAME} aero_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-## Library
-add_library(robot_interface src/RobotInterface.cc )
-target_link_libraries(robot_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(aero_hand_controller_node src/AeroHandController.cc)
+target_link_libraries(aero_hand_controller_node robot_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Install
 install(TARGETS ${PROJECT_NAME}

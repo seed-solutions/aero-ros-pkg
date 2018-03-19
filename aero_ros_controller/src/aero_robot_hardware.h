@@ -139,6 +139,17 @@ public:
   void startWheelServo();
   void stopWheelServo();
 
+  void handScript(uint16_t _sendnum, uint16_t _script) {
+    mutex_upper_.lock();
+    controller_upper_->Hand_Script(_sendnum, _script);
+    mutex_upper_.unlock();
+  }
+  void setMaxSingleCurrent(uint16_t _sendnum, uint16_t _power) {
+    mutex_upper_.lock();
+    controller_upper_->set_max_single_current(_sendnum, _power);
+    mutex_upper_.unlock();
+  }
+
   double getPeriod() { return ((double)CONTROL_PERIOD_US_) / (1000 * 1000); }
   double getOverWrapScale() { return OVERWRAP_SCALE_; }
 
@@ -188,6 +199,7 @@ protected:
   int   BASE_COMMAND_PERIOD_MS_;
 
   std::mutex mutex_lower_;
+  std::mutex mutex_upper_;
 };
 
 typedef boost::shared_ptr<AeroRobotHW> AeroRobotHWPtr;

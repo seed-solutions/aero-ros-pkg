@@ -52,6 +52,16 @@
       joints:
         - knee_joint
         - ankle_joint
+    lhand_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - l_indexbase_joint
+        - l_thumb_joint
+    rhand_controller:
+      type: position_controllers/JointTrajectoryController
+      joints:
+        - r_indexbase_joint
+        - r_thumb_joint
   </rosparam>
 
   <include file="$(find aero_moveit_config_new)/launch/planning_context.launch">
@@ -62,6 +72,10 @@
        pkg="robot_state_publisher" type="robot_state_publisher" />
 
   <node name="cm_spawner" pkg="controller_manager"
-        type="spawner" args="joint_state_controller larm_controller rarm_controller head_controller waist_controller lifter_controller" />
+        type="spawner" args="joint_state_controller larm_controller rarm_controller head_controller waist_controller lifter_controller lhand_controller rhand_controller" />
+
+  <node name="aero_hand_controller"
+        pkg="aero_ros_controller" type="aero_hand_controller_node"
+        output="screen" />
 
 </launch>
