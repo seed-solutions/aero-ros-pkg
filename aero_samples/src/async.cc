@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   sleep(1);
 
   // preparation
-  std::map<aero::joint, double> angles;
+  aero::joint_angle_map angles;
   robot->getRobotStateVariables(angles);
   angles[aero::joint::r_shoulder_p] = -1.4;
   angles[aero::joint::r_shoulder_r] = -0.7854;

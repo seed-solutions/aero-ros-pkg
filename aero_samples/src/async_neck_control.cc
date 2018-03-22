@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
   // change robot pose (head angles should be updated in background)
   ROS_INFO("moving torso"); // send to different pose
-  std::map<aero::joint, double> joints2;
+  aero::joint_angle_map joints2;
   joints2[aero::joint::waist_p] = 0.524;
   robot_mutex.lock();
   robot->sendAngleVectorAsync(joints2, 5000);

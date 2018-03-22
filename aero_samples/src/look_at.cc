@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   sleep(1);
 
   // preparation
-  std::map<aero::joint, double> joints_rh, joints_lh;
+  aero::joint_angle_map joints_rh, joints_lh;
   robot->getRobotStateVariables(joints_rh);
   joints_lh = joints_rh;
 
