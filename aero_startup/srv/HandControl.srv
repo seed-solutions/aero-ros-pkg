@@ -1,0 +1,23 @@
+## 
+int32 hand
+int32 HAND_RIGHT=1
+int32 HAND_LEFT=2
+int32 HAND_BOTH=3
+##
+int32 command
+int32 COMMAND_GRASP=1
+int32 COMMAND_GRASP_FAST=2
+int32 COMMAND_GRASP_ANGLE=3
+int32 COMMAND_UNGRASP=4
+## power
+int32 power
+## failuer threshold
+float32 thre_fail
+## warning threshold
+float32 thre_warn
+##
+float32 larm_angle
+float32 rarm_angle
+---
+bool success
+string status

@@ -1269,26 +1269,27 @@ bool AeroControllerNode::InterpolationCallback(
 
 //////////////////////////////////////////////////
 bool AeroControllerNode::GraspControlCallback(
-    aero_startup::AeroGraspController::Request& _req,
-    aero_startup::AeroGraspController::Response& _res)
+    aero_startup::GraspControl::Request& _req,
+    aero_startup::GraspControl::Response& _res)
 {
   mtx_upper_.lock();
-  upper_.set_max_single_current(_req.script[0], _req.power);
+  upper_.set_max_single_current(_req.position, _req.power);
   mtx_upper_.unlock();
   usleep(200 * 1000);
   mtx_upper_.lock();
-  upper_.Hand_Script(_req.script[0], _req.script[1]);
+  upper_.Hand_Script(_req.position, _req.script);
   mtx_upper_.unlock();
 
   // return if cancel script
-  if (_req.script[1] == 4)
+  if (_req.script == aero_startup::GraspControlRequest::SCRIPT_CANCEL)
     return true;
 
-  if(_req.script[1] == 2) {//grasp
+  if(_req.script == aero_startup::GraspControlRequest::SCRIPT_GRASP) {
     usleep(3000 * 1000); // wait 3 seconds, must be 3!
-  } else if(_req.script[1] == 3) {
+  } else if(_req.script == aero_startup::GraspControlRequest::SCRIPT_UNGRASP) {
     usleep(1000 * 1000);
   }
+
   mtx_upper_.lock();
   upper_.update_position();
   std::vector<int16_t> upper_stroke_vector_ret =
