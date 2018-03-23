@@ -43,7 +43,8 @@ catkin_package(
   roscpp tf std_msgs sensor_msgs roslib
   trajectory_msgs geometry_msgs nav_msgs control_msgs move_base_msgs
   DEPENDS
-  INCLUDE_DIRS
+  INCLUDE_DIRS ./
+  LIBRARIES aero_controllers
 )
 
 include_directories(${catkin_INCLUDE_DIRS} ${aero_startup_SOURCE_DIR})
@@ -62,8 +63,18 @@ else()
   message(FATAL "c++11 required but not supported")
 endif()
 
-add_executable(wait_interpolation aero_controller_manager/wait_interpolation.cc)
-target_link_libraries(wait_interpolation ${catkin_LIBRARIES})
+add_library(aero_controllers
+  aero_hardware_interface/AeroControllers.cc
+  aero_hardware_interface/AeroControllerProto.cc
+  aero_hardware_interface/AngleJointNames.cc
+  aero_hardware_interface/Stroke2Angle.cc
+  aero_hardware_interface/Angle2Stroke.cc
+  )
+target_link_libraries(aero_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(aero_controllers ${PROJECT_NAME}_gencpp)
+
+##add_executable(wait_interpolation aero_controller_manager/wait_interpolation.cc)
+##target_link_libraries(wait_interpolation ${catkin_LIBRARIES})
 
 # Executables
 
