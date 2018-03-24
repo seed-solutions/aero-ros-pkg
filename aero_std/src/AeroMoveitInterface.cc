@@ -238,21 +238,9 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3d _target, bool _map_coordinate, bool _tracking)
+void aero::interface::AeroMoveitInterface::setLookAt(aero::Vector3 _target, bool _map_coordinate, bool _tracking)
 {
   setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate, _tracking);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(Eigen::Vector3f _target, bool _map_coordinate, bool _tracking)
-{
-  setLookAt(static_cast<double>(_target.x()), static_cast<double>(_target.y()), static_cast<double>(_target.z()), _map_coordinate, _tracking);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(geometry_msgs::Pose _pose, bool _map_coordinate, bool _tracking)
-{
-  setLookAt(_pose.position.x, _pose.position.y, _pose.position.z, _map_coordinate, _tracking);
 }
 
 //////////////////////////////////////////////////
