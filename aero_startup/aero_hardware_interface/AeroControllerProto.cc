@@ -69,9 +69,24 @@ void SEED485Controller::read(std::vector<uint8_t>& _read_data)
 {
   _read_data.resize(RAW_DATA_LENGTH);
 
+  int size = 0;
   if (ser_.is_open()) {
     boost::mutex::scoped_lock lock(mtx_);
-    ser_.read_some(buffer(_read_data, RAW_DATA_LENGTH));
+    while(size < RAW_DATA_LENGTH) {
+      usleep(100); // sleep 100 us
+      int size_read;
+      std::vector<uint8_t> read_buffer(RAW_DATA_LENGTH);
+      size_read = ser_.read_some(buffer(read_buffer, RAW_DATA_LENGTH));
+      if ((size + size_read) <= RAW_DATA_LENGTH) {
+        std::copy(read_buffer.begin(), read_buffer.begin()+size_read,
+                  _read_data.begin() + size);
+      } else {
+        std::cerr << "Proto: ERROR: data length, size : " << size << ", size_read " << size_read << std::endl;
+        flush();
+        break;
+      }
+      size += size_read;
+    }
   }
 
   if (verbose_) {
@@ -359,10 +374,11 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
 
   if (header != 0xdffd) {
     // seed_.flush();
+    std::cerr << "Proto: ERROR: invalid header" << std::endl;
     return;
   }
 
-  if (cmd == CMD_MOVE_ABS ||
+  if (cmd == CMD_MOVE_ABS_POS ||
       cmd == CMD_GET_POS ||
       cmd == CMD_GET_CUR ||
       cmd == CMD_GET_TMP ||
@@ -414,7 +430,7 @@ void AeroControllerProto::get_command(uint8_t _cmd, uint8_t _sub,
 
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
   seed_.send_command(_cmd, _sub, 0, dat);
-  usleep(1000 * 20);  // wait
+  //usleep(1000 * 20);  // wait
   get_data(_stroke_vector);
 }
 
@@ -435,17 +451,48 @@ void AeroControllerProto::set_position(
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
   stroke_to_raw_(_stroke_vector, dat);
   seed_.flush();
-  seed_.send_command(CMD_MOVE_ABS, _time, dat);
+  seed_.send_command(CMD_MOVE_ABS_POS_RET, _time, dat);
 
   // for ROS
-  usleep(1000 * 20);
   if (seed_.is_debug_mode()) {
+    usleep(1000 * 20);
     // in debug mode, get_data returns before writing stroke vector,
     // and controller must copy ref_vector into cur_vector
     stroke_cur_vector_.assign(stroke_ref_vector_.begin(),
                               stroke_ref_vector_.end());
   } else {
     get_data(stroke_cur_vector_);
+  }
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::set_position_no_wait(
+    std::vector<int16_t>& _stroke_vector, uint16_t _time)
+{
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+
+  // for ROS
+  for (size_t i = 0; i < _stroke_vector.size(); ++i) {
+    if (_stroke_vector[i] != 0x7fff) {
+      stroke_ref_vector_[i] = _stroke_vector[i];
+    }
+  }
+
+  // for seed
+  std::vector<uint8_t> dat(RAW_DATA_LENGTH);
+  stroke_to_raw_(_stroke_vector, dat);
+  seed_.flush();
+  seed_.send_command(CMD_MOVE_ABS_POS, _time, dat);
+
+  // for ROS
+  if (seed_.is_debug_mode()) {
+    // in debug mode, get_data returns before writing stroke vector,
+    // and controller must copy ref_vector into cur_vector
+    stroke_cur_vector_.assign(stroke_ref_vector_.begin(),
+                              stroke_ref_vector_.end());
+  } else {
+    // no return
+    //get_data(stroke_cur_vector_);
   }
 }
 
