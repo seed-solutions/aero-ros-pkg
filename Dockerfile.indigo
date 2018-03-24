@@ -9,9 +9,7 @@ RUN apt-get -q -qq update && apt-get -q -qq install -y \
     ros-indigo-pr2-controllers-msgs \
     ros-indigo-move-base-msgs \
     ros-indigo-moveit-full \
-    bc \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/
+    bc
 RUN easy_install pip \
     && pip install -U pip setuptools \
     && pip install catkin_pkg catkin_tools
@@ -25,12 +23,19 @@ COPY . /catkin_ws/src/aero-ros-pkg-prerelease/
 # catkin build
 WORKDIR /catkin_ws
 RUN source /opt/ros/indigo/setup.bash \
+    && rosdep install -q -y -r --from-paths src --ignore-src \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/
+
+RUN source /opt/ros/indigo/setup.bash \
     && catkin config --init
 RUN source /opt/ros/indigo/setup.bash \
     && catkin build aero_description
+
 WORKDIR /catkin_ws/src/aero-ros-pkg-prerelease/aero_description
 RUN source /catkin_ws/devel/setup.bash \
     && ./setup.sh typeF
+
 WORKDIR /catkin_ws
 RUN source /catkin_ws/devel/setup.bash \
     && catkin build aero_std
