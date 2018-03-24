@@ -160,10 +160,16 @@ namespace aero
      protected: void get_command(uint8_t _cmd, uint8_t _sub,
                                  std::vector<int16_t>& _stroke_vector);
 
-      /// @brief set position command
+      /// @brief set position command (waiting return of current position)
       /// @param _stroke_vector stroke vector, MUST be DOF bytes
       /// @param _time time[ms]
      public: void set_position(std::vector<int16_t>& _stroke_vector,
+                               uint16_t _time);
+
+      /// @brief set position command (no wait)
+      /// @param _stroke_vector stroke vector, MUST be DOF bytes
+      /// @param _time time[ms]
+     public: void set_position_no_wait(std::vector<int16_t>& _stroke_vector,
                                uint16_t _time);
 
       /// @brief send Motor_Cur command
