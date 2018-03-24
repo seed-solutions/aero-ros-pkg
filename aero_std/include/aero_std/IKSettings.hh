@@ -270,8 +270,8 @@ namespace aero
 
 static std::ostream& operator<<(std::ostream& os, const aero::Transform &tr)
 {
-  Eigen::Vector3d tt = tr.translation();
-  Eigen::Quaterniond qq(tr.linear());
+  aero::Vector3 tt = tr.translation();
+  aero::Quaternion qq(tr.linear());
   os << "(cons #f("
      << tt(0) << " "
      << tt(1) << " "

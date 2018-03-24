@@ -61,8 +61,19 @@ public:
     controller_group_["both_arms"]  = {"rarm", "larm"};
     controller_group_["upper_body"] = {"rarm", "larm", "waist", "head"};
     controller_group_["torso"]      = {"waist", "lifter"};
+    controller_group_["without_head"]    = {"rarm", "larm", "waist", "lifter"};
   }
 
+  bool sendAngles_wo_head(const std::vector < std::string> &_names,
+                          const std::vector< double> &_positions,
+                          const double _tm, const ros::Time &_start)
+  {
+    for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+      if(it->first != "head") {
+        it->second->sendAngles(_names, _positions, _tm, _start);
+      }
+    }
+  }
 public:
   robot_interface::TrajectoryClient::Ptr larm; // 8
   robot_interface::TrajectoryClient::Ptr rarm; // 8
