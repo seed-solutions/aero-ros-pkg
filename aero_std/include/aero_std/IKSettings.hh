@@ -184,6 +184,35 @@ namespace aero
     return mg;
   }
 
+  inline void controllerGroup(std::vector<std::string > _names, aero::ikrange _range, bool _head)
+  {
+    switch (_range) {
+    case aero::ikrange::arm:
+      _names.push_back("rarm");
+      _names.push_back("larm");
+      break;
+    case aero::ikrange::waist:
+      _names.push_back("rarm");
+      _names.push_back("larm");
+      _names.push_back("waist");
+      break;
+    case aero::ikrange::lifter:
+      _names.push_back("rarm");
+      _names.push_back("larm");
+      _names.push_back("lifter");
+      break;
+    case aero::ikrange::torso:
+      _names.push_back("rarm");
+      _names.push_back("larm");
+      _names.push_back("waist");
+      _names.push_back("lifter");
+      break;
+    }
+    if(_head) {
+      _names.push_back("head");
+    }
+  }
+
   inline const std::string eefLink(aero::arm _arm, aero::eef _eef)
   {
     std::string ln( arm2lr_(_arm) );

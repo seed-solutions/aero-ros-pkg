@@ -1,7 +1,7 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
 //////////////////////////////////////////////////
-aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd)
+aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, const std::string &_rd)
 {
   ROS_INFO("start creating robot_interface");
 
@@ -47,9 +47,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle _nh, s
   hand_grasp_client_ = _nh.serviceClient<aero_startup::HandControl>
     ("/aero_hand_controller");
 #endif
-
-  overwrite_speed_publisher_ = _nh.advertise<std_msgs::Float32>
-    ("/aero_controller/speed_overwrite", 10);
 
   // load robot model
   ROS_INFO("start loading robot model");
@@ -303,20 +300,14 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
   if (tracking_mode_flag_) {
     ROS_WARN("sendNeckAsync called in tracking mode! are you sure of what you are doing?");
   }
-#if 0
-  trajectory_msgs::JointTrajectory msg;
-  msg.points.resize(1);
-  msg.joint_names = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
-  msg.points[0].positions = {kinematic_state->getVariablePosition("neck_r_joint"), kinematic_state->getVariablePosition("neck_p_joint"), kinematic_state->getVariablePosition("neck_y_joint")};
-  msg.points[0].time_from_start = ros::Duration(_time_ms * 0.001);
-  // angle_vector_publisher_.publish(msg); // TODO
-#endif
+
   const std::vector<std::string > jnames = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
   const std::vector<double > angles = {kinematic_state->getVariablePosition("neck_r_joint"),
                                        kinematic_state->getVariablePosition("neck_p_joint"),
                                        kinematic_state->getVariablePosition("neck_y_joint")};
   ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
-  ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
+  //ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
+  ri->head->sendAngles(jnames, angles, _time_ms * 0.001, start_time); // send only head
 }
 
 //////////////////////////////////////////////////
@@ -590,7 +581,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(int _time_ms, a
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _move_group, int _time_ms)
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(const std::string &_move_group, int _time_ms)
 {
   std::vector<double> av_mg;
   kinematic_state->copyJointGroupPositions(_move_group, av_mg);
@@ -601,9 +592,18 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::string _mo
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<double> _av, std::vector<std::string> _joint_names, int _time_ms)
+void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(const std::vector<double> &_av,
+                                                                 const std::vector<std::string> &_joint_names, int _time_ms)
 {
+  // TODO: should lock?
   ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
+  // fill sent_command
+  sent_command_.send_type  = aero::interface::send_type::angles;
+  sent_command_.start_time = start_time;
+  sent_command_.duration   = _time_ms*0.001;
+  sent_command_.angle_vector = _av;
+  sent_command_.joint_names  = _joint_names;
+  //
   if (!tracking_mode_flag_) {
     ri->sendAngles(_joint_names, _av, _time_ms*0.001, start_time);
   } else {
@@ -613,15 +613,44 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter, bool _async)
+bool aero::interface::AeroMoveitInterface::sendTrajectory(const aero::trajectory &_trajectory, const std::vector<int> &_times,
+                                                          aero::ikrange _move_lifter, bool _async)
 {
-  // TODO:
-
+  std::vector<robot_interface::angle_vector > avs;
+  for(int i = 0; i < _trajectory.size(); i++) {
+    robot_interface::joint_angle_map map;
+    robot_interface::angle_vector av;
+    aero::jointMap2StringMap(_trajectory[i], map);
+    ri->convertToAngleVector(map, av);
+    avs.push_back(av);
+  }
+  int total_tm = 0;
+  robot_interface::time_vector tms;
+  for(int i = 0; i < _times.size(); i++) {
+    tms.push_back(_times[i]/1000.0);
+    total_tm += _times[i];
+  }
+  std::vector<std::string > names;
+  aero::controllerGroup(names, _move_lifter, !tracking_mode_flag_);
+  ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
+  // TODO:: should lock?
+  // fill sent_command
+  sent_command_.send_type  = aero::interface::send_type::sequence;
+  sent_command_.start_time = start_time;
+  sent_command_.angle_vector_sequence = avs;
+  sent_command_.controller_names = names;
+  sent_command_.time_sequence = tms;
+  //
+  ri->send_angle_vector_sequence(avs, tms, names, start_time);
+  if(!_async) {
+    waitInterpolation_(total_tm);
+  }
   return true;
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter, bool _async)
+bool aero::interface::AeroMoveitInterface::sendTrajectory(const aero::trajectory &_trajectory, int _time_ms,
+                                                          aero::ikrange _move_lifter, bool _async)
 {
   int sz = _trajectory.size();
   if (sz < 1) {
@@ -633,25 +662,6 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
   }
 
   return sendTrajectory(_trajectory, times, _move_lifter, _async);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_overwrite)
-{
-#if 0
-  std_msgs::Float32 msg;
-  msg.data = _speed_overwrite;
-  overwrite_speed_publisher_.publish(msg);
-  so_mutex_.lock();
-  if (_speed_overwrite < 0.1) {
-    so_retime_scale_ = 0.0;
-  } else {
-    so_retime_scale_ = msg.data / so_factor_;
-    so_factor_ = msg.data;
-    so_update_ = true;
-  }
-  so_mutex_.unlock();
-#endif
 }
 
 //////////////////////////////////////////////////
@@ -699,9 +709,9 @@ bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
   if (tracking_mode_flag_) {
-    return ri->wait_interpolation("without_head", _timeout_ms/1000.0 );
+    return ri->wait_interpolation("without_head", _timeout_ms*1.1/1000.0 );
   } else {
-    return ri->wait_interpolation( _timeout_ms/1000.0 );
+    return ri->wait_interpolation( _timeout_ms*1.1/1000.0 );
   }
 }
 
@@ -1128,41 +1138,35 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
   std::string eef;
   eef = aero::eefLink(_grasp.arm, _grasp.eef);
 
-  std::vector<double> result_mid_av(1);
+  aero::joint_angle_map result_mid;
   std::string result_mid_range;
-  aero::Transform grapsMid;
-  // graspMid = _grasp.mid_pose //
+  aero::Transform grapsMid = _grasp.mid_pose;
+
   if (solveIKOneSequence(_grasp.arm, graspMid, _grasp.mid_ik_range,
-                         av_ini, eef, result_mid_range, result_mid_av)) {
+                         av_ini, eef, result_mid_range, result_mid)) {
     ROS_INFO("mid ik failed");
     kinematic_state->setVariablePositions(av_ini);
     return false;
   }
 
-  std::vector<double> result_end_av(1);
+  aero::joint_angle_map result_end;
   std::string result_end_range;
-    aero::Transform grapsEnd;
-  // graspEnd = _grasp.end_pose //
+  aero::Transform grapsEnd = _grasp.end_pose;
+
   std::vector<double> av_mid; // use av_mid as initial state for IK
   getRobotStateVariables(av_mid);
   if (solveIKOneSequence(_grasp.arm, grapsEnd, _grasp.end_ik_range,
-                         av_mid, eef, result_end_range, result_end_av)) {
+                         av_mid, eef, result_end_range, result_end)) {
     ROS_INFO("end ik failed");
     kinematic_state->setVariablePositions(av_ini);
     return false;
   }
 
-#if 0
   trajectory_.clear();
-  trajectory_.reserve(2);
+  //trajectory_.reserve(2);
   trajectory_.push_back(result_mid);
   trajectory_.push_back(result_end);
 
-  trajectory_groups_.clear();
-  trajectory_groups_.reserve(2);
-  trajectory_groups_.push_back(res_m);
-  trajectory_groups_.push_back(res_e);
-#endif
 
   kinematic_state->setVariablePositions(av_ini);// return robot model to inital state
   return true;
@@ -1172,7 +1176,7 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
 bool aero::interface::AeroMoveitInterface::solveIKOneSequence
 (aero::arm _arm, aero::Transform &_pose,
  aero::ikrange _ik_range, const std::vector<double> &_av_initial, const std::string &_eef_link,
- std::string &_result_range, std::vector<double> &_result)
+ std::string &_result_range, aero::joint_angle_map &_result)
 {
   bool status;
 
@@ -1218,13 +1222,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
     ROS_ERROR("no motion plan found");
     return false;
   }
-
-  for (int i = 0; i < trajectory_.size(); ++i) {
-    setRobotStateVariables(trajectory_[i]);
-    sendAngleVectorAsync_(trajectory_groups_[i], _msecs[i]);
-    usleep(_msecs[i] * 1000);
-    sleep(1);
-  }
+  sendTrajectory(trajectory_, _msecs, aero::ikrange::torso, false);
 
   return true;
 }
@@ -1486,3 +1484,133 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   return true;
 }
 #endif // grasp
+
+void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_factor)
+{
+  ros::Time start_time = sent_command_.start_time;
+
+  double remain_time;
+  switch(sent_command_.send_type) {
+  case aero::interface::send_type::angles:
+    remain_time =
+      ((start_time + ros::Duration(sent_command_.duration))
+       - ros::Time::now()).toSec();
+    break;
+  case aero::interface::send_type::sequence:
+    {
+      double duration = 0;
+      for(int i = 0; i < sent_command_.time_sequence.size(); i++) {
+        duration += sent_command_.time_sequence[i];
+      }
+      remain_time =
+        ((start_time + ros::Duration(duration)) - ros::Time::now()).toSec();
+    }
+    break;
+  case aero::interface::send_type::stop_angles:
+  case aero::interface::send_type::stop_sequence:
+    remain_time = sent_command_.duration;
+    break;
+  default:
+    ROS_WARN("no sent command");
+    return;
+    break;
+  }
+
+  if( remain_time <= 0 ) {
+    ROS_WARN("sent finished");
+    return;
+  }
+
+  if(_speed_factor == 0.0) {
+    switch(sent_command_.send_type) {
+    case aero::interface::send_type::stop_angles:
+    case aero::interface::send_type::stop_sequence:
+      // do nothing
+      break;
+    case aero::interface::send_type::angles:
+      sent_command_.send_type = aero::interface::send_type::stop_angles;
+      // TODO: stop motion
+      break;
+    case aero::interface::send_type::sequence:
+      sent_command_.send_type = aero::interface::send_type::stop_sequence;
+      // TODO: stop motion
+      break;
+    }
+    return;
+  }
+
+  // setting for restart
+  switch(sent_command_.send_type) {
+  case aero::interface::send_type::stop_angles:
+    sent_command_.send_type = aero::interface::send_type::angles;
+    // TODO:
+    break;
+  case aero::interface::send_type::stop_sequence:
+    sent_command_.send_type = aero::interface::send_type::sequence;
+    // TODO:
+    break;
+  }
+
+  // overwrite sent_command_
+  switch(sent_command_.send_type) {
+  case aero::interface::send_type::angles:
+    {
+      ros::Time start_time = ros::Time::now();
+      sent_command_.duration = remain_time / _speed_factor;
+      // sendAnglevectorAsync_
+      if (!tracking_mode_flag_) {
+        ri->sendAngles(sent_command_.joint_names,
+                       sent_command_.angle_vector,
+                       sent_command_.duration,
+                       start_time);
+      } else {
+        // while in tracking_mode, send angles other than head
+        ri->sendAngles_wo_head(sent_command_.joint_names,
+                               sent_command_.angle_vector,
+                               sent_command_.duration,
+                               start_time);
+      }
+    }
+    break;
+  case aero::interface::send_type::sequence:
+    {
+      ros::Time time_now = ros::Time::now();
+      double spent_time = (time_now - sent_command_.start_time).toSec();
+      int start_idx = -1;
+      double duration = 0;
+      for(int i = 0; i < sent_command_.time_sequence.size(); i++) {
+        duration += sent_command_.time_sequence[i];
+        if(duration > spent_time) {
+          start_idx = i;
+          break;
+        }
+      }
+      if(start_idx > 0) {
+        std::vector<double > tms;
+        std::vector<robot_interface::angle_vector > avs;
+        for(int i = start_idx; i < sent_command_.time_sequence.size(); i++) {
+          if (i == start_idx) {
+            double tm = (duration - spent_time) / _speed_factor;
+            if(tm > 0.05) { // add if remaining time is more than 0.05
+              tms.push_back(tm);
+              avs.push_back(sent_command_.angle_vector_sequence[i]);
+            }
+          } else {
+            tms.push_back(sent_command_.time_sequence[i] / _speed_factor);
+            avs.push_back(sent_command_.angle_vector_sequence[i]);
+          }
+        }
+        if(avs.size() > 0) {
+          sent_command_.start_time = time_now;
+          sent_command_.angle_vector_sequence = avs;
+          //sent_command_.controller_names = names;
+          sent_command_.time_sequence = tms;
+          ri->send_angle_vector_sequence(avs, tms, sent_command_.controller_names, time_now);
+        }
+      } else {
+        //
+      }
+    }
+    break;
+  }
+}

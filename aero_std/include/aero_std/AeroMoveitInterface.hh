@@ -27,6 +27,7 @@
 #include <aero_std/GetSpot.h>
 #include <nav_msgs/GetPlan.h>
 #include <aero_startup/HandControl.h>
+#include <aero_startup/AeroSendJoints.h>
 
 // ros controller
 #include <aero_std/AeroRobotInterface.hh>
@@ -46,6 +47,25 @@ namespace aero
   typedef std::vector<aero::joint_angle_map> trajectory;
   namespace interface
   {
+    enum struct send_type : int {none, angles, sequence, stop_angles, stop_sequence};
+
+    struct ControllerCommand
+    {
+    public:
+      ros::Time start_time;
+      aero::interface::send_type send_type;
+
+      // for send_type == aero::interface::send_type::angles
+      std::vector<double > angle_vector;
+      std::vector<std::string > joint_names;
+      double duration;
+
+      // for send_type == aero::interface::send_type::sequence
+      std::vector<robot_interface::angle_vector > angle_vector_sequence;
+      std::vector<std::string > controller_names;
+      std::vector<double > time_sequence;
+    };
+
     class AeroMoveitInterface
     {
     public: typedef std::shared_ptr<AeroMoveitInterface> Ptr;
@@ -53,7 +73,7 @@ namespace aero
       /// @brief constructor
       /// @param[in] _nh ros node handler
       /// @param[in] _rd robot_description's name, "${_rd}", "${_rd}_ho" and "${_rd}_op" will be loaded
-    public: explicit AeroMoveitInterface(ros::NodeHandle _nh, std::string _rd="robot_description");
+    public: explicit AeroMoveitInterface(ros::NodeHandle &_nh, const std::string &_rd="robot_description");
     public: ~AeroMoveitInterface();
 
       // ------------------------------------------------------------
@@ -214,7 +234,7 @@ namespace aero
       /// @attention joints using are determined by args. for example when sendAnglevector(aero::arm::rarm, aero:ikrange::lifter, 3000) is called,
       /// upperbody without left arm will move
       /// @param[in] _arm witch arm to use
-      /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|torso|lifter)
+      /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|waist|torso|lifter)
       /// @param[in] _time_ms execution time, and wait this time
     public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=false); // _av in kinematic_state is used
       /// @brief send joint angles in robot model to real robot
@@ -229,22 +249,20 @@ namespace aero
       /// @param[in] _times execution time. the size of times vector need to be equal to the size of trajectory
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
       /// @return when times.size is not equal to trajectory.size, return false
-    public: bool sendTrajectory(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::torso, bool _async = false);
+    public: bool sendTrajectory(const aero::trajectory &_trajectory, const std::vector<int> &_times,
+                                aero::ikrange _move_lifter=aero::ikrange::torso, bool _async = false);
       /// @brief send joints trajectory to real robot
       /// @param[in] _trajectory joints trajectory will be executed
       /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
-    public: bool sendTrajectory(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::torso, bool _async = false);
+    public: bool sendTrajectory(const aero::trajectory &_trajectory, int _time_ms,
+                                aero::ikrange _move_lifter=aero::ikrange::torso, bool _async = false);
 
       /// @brief protected function. the base function of sendAngleVectorAsync
     protected: void sendAngleVectorSync_(int _time_ms);
     protected: void sendAngleVectorAsync_(int _time_ms, aero::ikrange _move_waist); // _av in kinematic_state is used
-    protected: void sendAngleVectorAsync_(std::string _move_group, int _time_ms); // _av in kinematic_state is used
-    protected: void sendAngleVectorAsync_(const std::vector<double> _av, const std::vector<std::string> _joint_names, const int _time_ms);
-
-      // @brief overwrite command speed on real robot
-      // @param[in] _speed_factor < 1.0 for slow down, > 1.0 for speed up
-    public: void overwriteSpeed(float _speed_factor);
+    protected: void sendAngleVectorAsync_(const std::string &_move_group, int _time_ms); // _av in kinematic_state is used
+    protected: void sendAngleVectorAsync_(const std::vector<double> &_av, const std::vector<std::string> &_joint_names, const int _time_ms);
 
       /// @brief send lifter position to real robot
       /// @attention when lifter is initial position (stretched), x and z are zero.
@@ -373,10 +391,12 @@ namespace aero
     protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 #endif
 
-      // these varables are to use moveit libralies
-      // don't care
-      /// basic
-    public: robot_model::RobotModelPtr kinematic_model;// robot model
+      // @brief overwrite command speed on real robot
+      // @param[in] _speed_factor < 1.0 for slow down, > 1.0 for speed up
+    public: void overwriteSpeed(float _speed_factor);
+
+      // robot_model
+    public: robot_model::RobotModelPtr kinematic_model;
     public: robot_state::RobotStatePtr kinematic_state;
 
       // JointModelGroup
@@ -426,11 +446,11 @@ namespace aero
     protected: geometry_msgs::Pose pose_using_;
 #endif
     protected: bool tracking_mode_flag_;
+    protected: aero::trajectory trajectory_;
 
-    protected: ros::Publisher overwrite_speed_publisher_;
-
-    protected: boost::shared_ptr< aero::AeroRobotInterface> ri;
+    protected: boost::shared_ptr<aero::AeroRobotInterface > ri;
     protected: double send_trajectory_offset_;
+    protected: ControllerCommand sent_command_;
     };
   }
 }

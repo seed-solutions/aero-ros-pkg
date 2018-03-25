@@ -64,6 +64,18 @@ public:
     controller_group_["without_head"]    = {"rarm", "larm", "waist", "lifter"};
   }
 
+  AeroRobotInterface(ros::NodeHandle &_nh, bool _only_head) : robot_interface::RobotInterface(_nh) {
+    if (_only_head) {
+      // head
+      head.reset(new robot_interface::TrajectoryClient(_nh,
+                                      "head_controller/follow_joint_trajectory",
+                                      "head_controller/state",
+                                      { "neck_y_joint", "neck_p_joint", "neck_r_joint"}
+                                      ));
+      this->add_controller("head",   head);
+    }
+  }
+
   bool sendAngles_wo_head(const std::vector < std::string> &_names,
                           const std::vector< double> &_positions,
                           const double _tm, const ros::Time &_start)
