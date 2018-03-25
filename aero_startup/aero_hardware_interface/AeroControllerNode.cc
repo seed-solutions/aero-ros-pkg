@@ -962,7 +962,7 @@ void AeroControllerNode::JointStateOnce()
   // update current position when upper body is not being controlled
   // when upper body is controlled, current position is auto-updated
   mtx_threads_.lock();
-  if (registered_threads_.size() == 0) {
+  // if (registered_threads_.size() == 0) {
     // commands take 20ms sleep, threading to save time
     std::thread t1([&](){
         upper_.update_position();
@@ -972,7 +972,7 @@ void AeroControllerNode::JointStateOnce()
       });
     t1.join();
     t2.join();
-  }
+  // }
   mtx_threads_.unlock();
 
   // get upper actual positions
