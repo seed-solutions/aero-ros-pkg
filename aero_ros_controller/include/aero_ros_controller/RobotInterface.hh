@@ -204,8 +204,10 @@ public:
   virtual void send_angle_vector(const angle_vector &_av, const double _tm, const ros::Time &_start);
 
   using TrajectoryBase::send_angle_vector_sequence;
-  virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const std::string &_name);
-  virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const std::vector< std::string> &_names);
+  virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq,
+                                          const std::string &_name, const ros::Time &_start);
+  virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq,
+                                          const std::vector< std::string> &_names, const ros::Time &_start);
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const ros::Time &_start);
 
   virtual void getReferencePositions( std::map < std::string, double> &_map);

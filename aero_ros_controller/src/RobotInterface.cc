@@ -175,7 +175,7 @@ TrajectoryClient::~TrajectoryClient()
   boost::mutex::scoped_lock lock(state_mtx_);
   state_sub_.shutdown();
   state_spinner_->stop();
-  ROS_WARN("~ %s", name_.c_str());
+  //ROS_WARN("~ %s", name_.c_str());
 }
 
 void TrajectoryClient::getReferencePositions( joint_angle_map &_map)
@@ -299,7 +299,7 @@ RobotInterface::~RobotInterface()
   boost::mutex::scoped_lock lock(states_mtx_);
   joint_states_sub_.shutdown();
   joint_states_spinner_->stop();
-  ROS_WARN("~ RobotInterface ptr: %lx", (void *)this);
+  //ROS_WARN("~ RobotInterface ptr: %lX", (void *)this);
 }
 
 bool RobotInterface::defineJointList(std::vector < std::string > &_jl)
@@ -421,21 +421,21 @@ void RobotInterface::send_angle_vector(const angle_vector &_av, const double _tm
 }
 
 void RobotInterface::send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq,
-                                                const std::string &_name)
+                                                const std::string &_name, const ros::Time &_start)
 {
   std::vector< std::string> names;
   group2names_(_name, names);
   if(names.size() == 0) {
     std::vector< std::string> nms;
     nms.push_back(_name);
-    send_angle_vector_sequence(_av_seq, _tm_seq, nms);
+    send_angle_vector_sequence(_av_seq, _tm_seq, nms, _start);
   } else {
-    send_angle_vector_sequence(_av_seq, _tm_seq, names);
+    send_angle_vector_sequence(_av_seq, _tm_seq, names, _start);
   }
 }
 
 void RobotInterface::send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq,
-                                                const std::vector< std::string> &_names)
+                                                const std::vector< std::string> &_names, const ros::Time &_start)
 {
   for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
     auto fname = std::find(_names.begin(), _names.end(), it->second->getName());
@@ -447,7 +447,7 @@ void RobotInterface::send_angle_vector_sequence(const angle_vector_sequence &_av
           controller_av_seq.push_back(controller_av);
         }
       }
-      it->second->send_angle_vector_sequence(controller_av_seq, _tm_seq);
+      it->second->send_angle_vector_sequence(controller_av_seq, _tm_seq, _start);
     }
   }
 }
