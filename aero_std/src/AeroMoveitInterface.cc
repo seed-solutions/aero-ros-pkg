@@ -221,29 +221,28 @@ void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(std::strin
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   aero::Transform epose;
-  tf::poseMsgToEigen(_pose, epose);
-  return setFromIK(_move_group, epose, _eef_link, _attempts);
+  setFromIK(_move_group, epose, _eef_link, _attempts);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return setFromIK(aero::moveGroup(_arm, _range), _pose, _eef_link, _attempts);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return setFromIK(_arm, _range, _pose, aero::eefLink(_arm, _eef), _attempts);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, aero::Vector3 _pos, aero::Quaternion _qua, std::string _eef_link, int _attempts) {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   geometry_msgs::Pose pose;
   tf::pointEigenToMsg(_pos, pose.position);
   tf::quaternionEigenToMsg(_qua, pose.orientation);
@@ -252,7 +251,7 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, ae
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, aero::Vector3 _pos, aero::Quaternion _qua, std::string _eef_link, int _attempts) {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   geometry_msgs::Pose pose;
   tf::pointEigenToMsg(_pos, pose.position);
   tf::quaternionEigenToMsg(_qua, pose.orientation);
@@ -261,7 +260,7 @@ bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikran
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::setFromIK(aero::arm _arm, aero::ikrange _range, aero::Vector3 _pos, aero::Quaternion _qua, aero::eef _eef, int _attempts) {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   geometry_msgs::Pose pose;
   tf::pointEigenToMsg(_pos, pose.position);
   tf::quaternionEigenToMsg(_qua, pose.orientation);
@@ -301,16 +300,7 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, co
   if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
   else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
   if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
-  if (found_ik || !lifter_ik) {
-    if(!found_ik) {
-      aero::Vector3 pos(_pose.translation());
-      aero::Quaternion qq(_pose.linear());
-      ROS_ERROR("ik failed, group: %s eef: %s, pose #f(%f %f %f) #f(%f %f %f %f)",
-                _move_group.c_str(), _eef_link.c_str(),
-                pos.x(), pos.y(), pos.z(), qq.w(), qq.x(), qq.y(), qq.z());
-    }
-    return found_ik;
-  }
+  if (found_ik || !lifter_ik) return found_ik;
 
   // if with lifter and first ik failed, trying another lifter's limit
   if (height_only_) switchOnPlane();
@@ -328,15 +318,6 @@ bool aero::interface::AeroMoveitInterface::setFromIK(std::string _move_group, co
   if (_eef_link == "") found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
   else found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
   if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
-
-  if(!found_ik) {
-    aero::Vector3 pos(_pose.translation());
-    aero::Quaternion qq(_pose.linear());
-    ROS_ERROR("ik failed, group: %s eef: %s, pose #f(%f %f %f) #f(%f %f %f %f)",
-              _move_group.c_str(), _eef_link.c_str(),
-              pos.x(), pos.y(), pos.z(), qq.w(), qq.x(), qq.y(), qq.z());
-  }
-
   return found_ik;
 }
 
@@ -952,7 +933,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(std::vector<dou
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
   sendAngleVectorSync_(_time_ms);
 }
@@ -960,7 +941,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(aero::joint_angle_map
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   sendAngleVectorAsync(_av_map, _time_ms, _move_waist);
   sendAngleVectorSync_(_time_ms);
 }
@@ -968,21 +949,21 @@ void aero::interface::AeroMoveitInterface::sendAngleVector(aero::fullarm _av_map
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   sendAngleVectorAsync_( aero::moveGroup(_arm, _range), _time_ms);
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   sendAngleVectorAsync_(_time_ms, _move_waist);
 }
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   setRobotStateVariables(_av_map);
   sendAngleVectorAsync(_time_ms, _move_waist);
 }
@@ -990,7 +971,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::joint_angl
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync(aero::fullarm _av_map, int _time_ms, aero::ikrange _move_waist)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   setRobotStateVariables(_av_map.joints);
   setHand(aero::arm::larm, _av_map.l_hand);
   setHand(aero::arm::rarm, _av_map.r_hand);
@@ -1110,14 +1091,14 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(aero::trajectory _traj
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendTrajectory(_trajectory, _times, _move_lifter, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendTrajectory(_trajectory, _time_ms, _move_lifter, true);
 }
 
@@ -1179,35 +1160,35 @@ bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifter(int _x, int _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(double _x, double _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(_x, _z, _time_ms, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocal(int _x, int _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(double _x, double _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(_x, _z, _time_ms, false, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterAsync(int _x, int _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, false, true);
 }
 
@@ -1257,21 +1238,21 @@ bool aero::interface::AeroMoveitInterface::cancelLifter()
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(double _x, double _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(_x, _z, _time_ms, true, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterLocalAsync(int _x, int _z, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   return sendLifter(static_cast<double>(_x * 0.001), static_cast<double>(_z * 0.001), _time_ms, true, true);
 }
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   if(!sendLifterTrajectoryAsync(_trajectory, _times)) return false;
   else {
     int time = std::accumulate(_times.begin(), _times.end(), 0);
@@ -1288,7 +1269,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   if(!sendLifterTrajectoryAsync(_trajectory, _time_ms)) return false;
   else {
     if (wait_) {
@@ -1304,7 +1285,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectory(std::vector<std:
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   setInterpolation(aero::interpolation::i_linear);
 
   trajectory_msgs::JointTrajectory msg;
@@ -1342,7 +1323,7 @@ bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
 {
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_ERROR_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   int num = static_cast<int>(_trajectory.size());
   std::vector<int> times(num, _time_ms/num);
   return sendLifterTrajectoryAsync(_trajectory, times);
