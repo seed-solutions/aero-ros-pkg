@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: aero_description
+    relative_path: ../aero_description/aero.urdf
+  SRDF:
+    relative_path: config/AeroUpperRobot.srdf
+  CONFIG:
+    author_name: "JSK lab. "
+    author_email: youhei@jsk.imi.i.u-tokyo.ac.jp
+    generated_timestamp: 1519974689
