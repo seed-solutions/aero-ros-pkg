@@ -89,7 +89,7 @@ bool AeroRobotHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)//
     } else if (controller_lower_->get_joint_name(i, name)) {
       joint_list_[i] = name;
     } else {
-      std::cerr << "[WARN] name of joint " << i << "can not find!" << std::endl;
+      ROS_WARN_STREAM("name of joint " << i << "can not find!");
     }
   }
 
@@ -192,7 +192,7 @@ bool AeroRobotHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)//
 void AeroRobotHW::readPos(const ros::Time& time, const ros::Duration& period, bool update)
 {
   /////
-  ROS_DEBUG("read");
+  ROS_DEBUG("read %d", update);
 
   mutex_lower_.lock();
   mutex_upper_.lock();
@@ -277,7 +277,7 @@ void AeroRobotHW::readPos(const ros::Time& time, const ros::Duration& period, bo
 
 void AeroRobotHW::read(const ros::Time& time, const ros::Duration& period)
 {
-  readPos(time, period, true);
+  // readPos(time, period, true);
   return;
 }
 
@@ -364,35 +364,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
   mutex_lower_.unlock();
 
   // read
-  //readPos(time, period, false);
-#if 0
-  for(unsigned int j=0; j < number_of_angles_; j++) {
-    switch (joint_control_methods_[j]) {
-    case POSITION:
-      {
-        // write position to hw
-        shm_->ref_angle[j] = joint_position_command_[j];
-      }
-      break;
-    case VELOCITY:
-      {
-      }
-      break;
-    case EFFORT:
-      {
-      }
-      break;
-    case POSITION_PID:
-      {
-      }
-      break;
-    case VELOCITY_PID:
-      {
-      }
-      break;
-    } // switch
-  } // for
-#endif
+  readPos(time, period, false);
 }
 
 void AeroRobotHW::writeWheel(const std::vector< std::string> &_names, const std::vector<int16_t> &_vel, double _tm_sec) {
