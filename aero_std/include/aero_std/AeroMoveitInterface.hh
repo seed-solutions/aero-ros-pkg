@@ -145,12 +145,14 @@ namespace aero
       /// @param[in] _z target z in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
       /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
-    public: void setLookAt(double _x, double _y, double _z, bool _map_coordinate=false, bool _tracking=false);
+      /// @param[in] _record_topic True for referencing as previous.
+    public: void setLookAt(double _x, double _y, double _z, bool _map_coordinate=false, bool _tracking=false, bool _record_topic=true);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _target target pose in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
       /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
-    public: void setLookAt(const aero::Vector3 &_target, bool _map_coordinate=false, bool _tracking=false);
+      /// @param[in] _record_topic True for referencing as previous.
+    public: void setLookAt(const aero::Vector3 &_target, bool _map_coordinate=false, bool _tracking=false, bool _record_topic=true);
       /// @brief set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
       /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
@@ -449,10 +451,9 @@ namespace aero
     protected: ros::Publisher lookat_target_publisher_;
 
     protected: ros::ServiceClient get_saved_neck_positions_;
-
+#endif
     protected: std::string lookat_topic_;
     protected: std::string previous_topic_;
-#endif
     protected: boost::shared_ptr<aero::lookat_commander::AeroLookatCommander > alc;
 
 #if USING_BASE

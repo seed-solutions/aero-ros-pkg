@@ -31,6 +31,7 @@ namespace aero
     public: bool setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos);
     public: bool setNeckRPY(double _r, double _p, double _y);
     public: bool setLookAtTopic(const std::string &_topic);
+    public: std::tuple<double, double, double> getNeck();
 
     protected: ros::CallbackQueue eventqueue_;
     protected: void timerCallback(const ros::TimerEvent& ev);

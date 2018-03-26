@@ -233,7 +233,7 @@ void aero::interface::AeroMoveitInterface::setLookAt_(double _x, double _y, doub
   setNeck_(0.0, std::get<1>(neck), std::get<2>(neck), _robot_state);
 }
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking)
+void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking, bool _record_topic)
 {
   ROS_INFO("setTrackingMode is %d in setLookAt, looking for %f %f %f in %s",
            static_cast<int>(tracking_mode_flag_), _x, _y, _z,
@@ -247,8 +247,10 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
     aero::Vector3 pos(_x, _y, _z);
     if (_map_coordinate) {
       if (_tracking) {
-        //previous_topic_ = "/look_at/target/map:"
-        //+ std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        if (_record_topic) {
+          previous_topic_ = "/look_at/target/map:"
+            + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        }
         //look_at_publisher_map_.publish(msg);
         // look_at_mode
         alc->setTrackingMode(aero::tracking::map, pos);
@@ -259,8 +261,10 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
       }
     } else {
       if (_tracking) {
-        //previous_topic_ = "/look_at/target:"
-        //+ std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        if (_record_topic) {
+          previous_topic_ = "/look_at/target:"
+            + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        }
         //look_at_publisher_base_.publish(msg);
         // look_at_mode
         alc->setTrackingMode(aero::tracking::base, pos);
@@ -276,9 +280,9 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(const aero::Vector3 &_target, bool _map_coordinate, bool _tracking)
+void aero::interface::AeroMoveitInterface::setLookAt(const aero::Vector3 &_target, bool _map_coordinate, bool _tracking, bool _record_topic)
 {
-  setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate, _tracking);
+  setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate, _tracking, _record_topic);
 }
 
 //////////////////////////////////////////////////
@@ -380,7 +384,6 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bool _record_topic)
 {
-#if 0
   if (!tracking_mode_flag_) {
     ROS_WARN("must call setTrackingMode to true first for setLookAtTopic");
     return;
@@ -389,32 +392,36 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
   if (_record_topic) // usually false
     previous_topic_ = _topic;
 
-  std_msgs::String msg;
-  msg.data = _topic;
+  // std_msgs::String msg;
+  // msg.data = _topic;
 
   if (_topic == "") {
-    msg.data = "/look_at/manager_disabled";
-    lookat_target_publisher_.publish(msg);
+    // msg.data = "/look_at/manager_disabled";
+    // lookat_target_publisher_.publish(msg);
     //
-    lookat_topic_ = msg.data;
+    // lookat_topic_ = msg.data;
+    lookat_topic_ = _topic;
     previous_topic_ = "/look_at/manager_disabled";
     return;
   } else if (_topic == "/look_at/manager_disabled") {
     ROS_WARN("note, /look_at/manager_disabled only valid from prev");
     ROS_WARN("please make sure to call setTrackingMode false");
-    aero_startup::AeroSendJoints srv;
-    if (!get_saved_neck_positions_.call(srv)) {
-      ROS_WARN("failed to get saved neck positions.");
-    } else {
-      // neck value set and send through node
-      setNeck(srv.response.points.positions.at(0),
-              srv.response.points.positions.at(1),
-              srv.response.points.positions.at(2), true);
-    }
-    msg.data = "/look_at/manager_disabled";
-    lookat_target_publisher_.publish(msg);
+    // aero_startup::AeroSendJoints srv;
+    // if (!get_saved_neck_positions_.call(srv)) {
+    //   ROS_WARN("failed to get saved neck positions.");
+    // } else {
+    //   // neck value set and send through node
+    //   setNeck(srv.response.points.positions.at(0),
+    //           srv.response.points.positions.at(1),
+    //           srv.response.points.positions.at(2), true);
+    // }
+    // msg.data = "/look_at/manager_disabled";
+    // lookat_target_publisher_.publish(msg);
     //
-    lookat_topic_ = msg.data;
+    // lookat_topic_ = msg.data;
+    auto neck = alc->getNeck();
+    setNeck(std::get<0>(neck), std::get<1>(neck), std::get<2>(neck), true);
+    lookat_topic_ = _topic;
     previous_topic_ = "/look_at/manager_disabled";
     return;
   } else if (_topic == "/look_at/previous") {
@@ -423,14 +430,19 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
       std::string values = previous_topic_.substr(pos+1);
       auto posx = values.find(",");
       auto posy = values.find(",", posx+1);
-      geometry_msgs::Point msg;
-      msg.x = std::stof(values.substr(0, posx));
-      msg.y = std::stof(values.substr(posx + 1, posy - posx -1));
-      msg.z = std::stof(values.substr(posy + 1));
+      // geometry_msgs::Point msg;
+      // msg.x = std::stof(values.substr(0, posx));
+      // msg.y = std::stof(values.substr(posx + 1, posy - posx -1));
+      // msg.z = std::stof(values.substr(posy + 1));
+      Eigen::Vector3d targ(std::stof(values.substr(0, posx)),
+                           std::stof(values.substr(posx + 1, posy - posx -1)),
+                           std::stof(values.substr(posy + 1)));
       if (previous_topic_.find("map") != std::string::npos)
-        look_at_publisher_map_.publish(msg);
+        // look_at_publisher_map_.publish(msg);
+        alc->setTrackingMode(aero::tracking::map, targ);
       else
-        look_at_publisher_base_.publish(msg);
+        // look_at_publisher_base_.publish(msg);
+        alc->setTrackingMode(aero::tracking::base, targ);
     } else {
       setLookAtTopic(previous_topic_);
     }
@@ -441,7 +453,6 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
   // look_at_mode_
   lookat_topic_ = _topic;
   alc->setLookAtTopic(_topic); //// TODO
-#endif
 }
 
 //////////////////////////////////////////////////
