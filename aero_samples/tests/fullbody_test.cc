@@ -47,9 +47,11 @@ int main(int argc, char **argv)
   ROS_INFO("--- RESET MANIP POSE ---");
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->sendAngleVector(3000);
-  // sleep(3);
+  robot->waitInterpolation();
+  sleep(1);
 
-  robot->sendLifter(0.0,0.0);
+  robot->sendLifter(0.0, 0.0);
+  robot->waitInterpolation();
 
   // set real robot's joint angles to the robot model in interface 
   robot->setRobotStateToCurrentState();
@@ -76,8 +78,8 @@ int main(int argc, char **argv)
   robot->setRobotStateVariables(joint_angles);
   ALLPJOINT();
   ALLSJOINT();
-  robot->sendAngleVector(3000);
-
+  robot->sendAngleVector(1400);
+  robot->waitInterpolation();
 
   ROS_INFO("--- SHOULDER PITCH JOINT ---");
   joint_angles[aero::joint::l_shoulder_p] = l_shoulder_p_to;
@@ -85,8 +87,8 @@ int main(int argc, char **argv)
   robot->setRobotStateVariables(joint_angles);
   ALLPJOINT();
   ALLSJOINT();
-  robot->sendAngleVector(3000);
-
+  robot->sendAngleVector(1400);
+  robot->waitInterpolation();
 
   ROS_INFO("--- SHOULDER ROLL JOINT ---");
   joint_angles[aero::joint::l_shoulder_r] = l_shoulder_r_to;
@@ -94,8 +96,8 @@ int main(int argc, char **argv)
   robot->setRobotStateVariables(joint_angles);
   ALLPJOINT();
   ALLSJOINT();
-  robot->sendAngleVector(3000);
-
+  robot->sendAngleVector(1400);
+  robot->waitInterpolation();
 
   ROS_INFO("--- SHOULDER YAW JOINTS ---");
   joint_angles[aero::joint::l_shoulder_y] = l_shoulder_y_to;
@@ -103,14 +105,16 @@ int main(int argc, char **argv)
   robot->setRobotStateVariables(joint_angles);
   ALLPJOINT();
   ALLSJOINT();
-  robot->sendAngleVector(3000);
+  robot->sendAngleVector(1400);
+  robot->waitInterpolation();
 
   ROS_INFO("--- RESET MANIP POSE ---");
   robot->setPoseVariables(aero::pose::reset_manip);
   ALLPJOINT();
   ALLSJOINT();
-  robot->sendAngleVector(3000);
-  sleep(3);
+  robot->sendAngleVector(2000);
+  robot->waitInterpolation();
+  sleep(1);
 
   // test wrist and neck joints and hand
   double l_wrist_r_to = -0.5;
@@ -126,6 +130,7 @@ int main(int argc, char **argv)
   ALLPJOINT();
   ALLSJOINT();
   robot->sendAngleVector(2000);
+  robot->waitInterpolation();
 
   ROS_INFO("--- WRIST YAW JOINTS ---");
   joint_angles[aero::joint::l_wrist_y] = l_wrist_y_to;
@@ -134,13 +139,12 @@ int main(int argc, char **argv)
   ALLPJOINT();
   ALLSJOINT();
   robot->sendAngleVector(2000);
-
-  //ros::shutdown();
-  //exit(0);
+  robot->waitInterpolation();
 
   ROS_INFO("--- looking at left hand ---");
   robot->setLookAt(robot->getEEFPosition(aero::arm::larm, aero::eef::pick));
   robot->sendAngleVector(1000);
+  robot->waitInterpolation();
 
   ROS_INFO("--- testing left hand ---");
   robot->sendGrasp(aero::arm::larm);
@@ -151,6 +155,7 @@ int main(int argc, char **argv)
   ROS_INFO("--- looking at right hand ---");
   robot->setLookAt(robot->getEEFPosition(aero::arm::rarm, aero::eef::pick));
   robot->sendAngleVector(1000);
+  robot->waitInterpolation();
 
 
   ROS_INFO("--- testing right hand ---");
@@ -163,6 +168,7 @@ int main(int argc, char **argv)
   ROS_INFO("--- reseting robot pose ---");
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->sendAngleVector(1000);
+  robot->waitInterpolation();
   sleep(1);
 
 
@@ -173,47 +179,59 @@ int main(int argc, char **argv)
 
   robot->getRobotStateVariables(joint_angles);
 
-  ROS_INFO("--- WAIST YAW JOINT ---");
+  ROS_INFO("--- WAIST YAW JOINT 0 ---");
   joint_angles[aero::joint::waist_y] = waist_y_l_to;
   robot->setRobotStateVariables(joint_angles);
   robot->sendAngleVector(2000);
+  robot->waitInterpolation();
+
+  ROS_INFO("--- WAIST YAW JOINT 1 ---");
   joint_angles[aero::joint::waist_y] = waist_y_r_to;
   robot->setRobotStateVariables(joint_angles);
   robot->sendAngleVector(3000);
+  robot->waitInterpolation();
+
+  ROS_INFO("--- WAIST YAW JOINT 2 ---");
   joint_angles[aero::joint::waist_y] = 0.0;
   robot->setRobotStateVariables(joint_angles);
   robot->sendAngleVector(2000);
+  robot->waitInterpolation();
 
   ROS_INFO("--- WAIST PITCH JOINT ---");
   joint_angles[aero::joint::waist_p] = waist_p_to;
   robot->setRobotStateVariables(joint_angles);
   robot->sendAngleVector(2000);
+  robot->waitInterpolation();
 
   ROS_INFO("--- RESET MANIP POSE ---");
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->sendAngleVector(2000);
-  sleep(2);
-
+  robot->waitInterpolation();
 
   // test lifter
   ROS_INFO("lifter x:0.0 z:-0.4");
   robot->sendLifter(0.0, -0.4, 3000);
+  robot->waitInterpolation();
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:0.0 z:-0.2");
   robot->sendLifter(0.0, -0.2, 3000);
+  robot->waitInterpolation();
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:-0.1 z:-0.2");
   robot->sendLifter(-0.1, -0.2, 3000);
+  robot->waitInterpolation();
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:0.1 z:-0.2");
   robot->sendLifter(0.1, -0.2, 3000);
+  robot->waitInterpolation();
   usleep(500 * 1000);
 
   ROS_INFO("lifter x:0.0 z:0.0");
   robot->sendLifter(0.0, 0.0, 3000);
+  robot->waitInterpolation();
   usleep(500 * 1000);
 
   ROS_INFO("demo node finished");
