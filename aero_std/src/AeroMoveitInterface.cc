@@ -1,7 +1,11 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
 //////////////////////////////////////////////////
+#if USING_BASE
 aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, const std::string &_rd)
+#else
+aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, const std::string &_rd) : aero::base_commander::AeroBaseCommander(_nh)
+#endif
 {
   ROS_INFO("start creating robot_interface");
 
@@ -131,6 +135,17 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState(robot_state::RobotStatePtr &_robot_state)
+{
+  // TODO for hand ???
+  robot_interface::joint_angle_map map;
+  ri->getActualPositions(map);
+  _robot_state->setVariablePositions(map);
+
+  _robot_state->updateLinkTransforms();
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setRobotStateToNamedTarget(const std::string &_move_group, const std::string &_target)
 {
   std::map<std::string, double> jnamemap;
@@ -204,6 +219,13 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 
 #if USING_LOOKAT // lookat
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAt_(double _x, double _y, double _z,
+                                                      robot_state::RobotStatePtr &_robot_state)
+{
+  auto neck = solveLookAt_(aero::Vector3(_x, _y, _z), _robot_state);
+  setNeck_(0.0, std::get<1>(neck), std::get<2>(neck), _robot_state);
+}
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking)
 {
   ROS_INFO("setTrackingMode is %d in setLookAt, looking for %f %f %f in %s",
@@ -221,26 +243,29 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
         previous_topic_ = "/look_at/target/map:"
           + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
         look_at_publisher_map_.publish(msg);
+        // look_at_mode
       } else {
         look_at_publisher_map_static_.publish(msg);
+        // look_at_mode
       }
     } else {
       if (_tracking) {
         previous_topic_ = "/look_at/target:"
           + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
         look_at_publisher_base_.publish(msg);
+        // look_at_mode
       } else {
         look_at_publisher_base_static_.publish(msg);
+        // look_at_mode
       }
     }
   } else {
-    auto neck = solveLookAt(Eigen::Vector3d(_x, _y, _z));
-    setNeck(0.0, std::get<1>(neck), std::get<2>(neck));
+    setLookAt_(_x, _y, _z, kinematic_state);
   }
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(aero::Vector3 _target, bool _map_coordinate, bool _tracking)
+void aero::interface::AeroMoveitInterface::setLookAt(const aero::Vector3 &_target, bool _map_coordinate, bool _tracking)
 {
   setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate, _tracking);
 }
@@ -260,33 +285,49 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
       geometry_msgs::Point p;
       p.x = _r; p.y = _p; p.z = _y;
       look_at_publisher_rpy_.publish(p);
+      // look_at_mode
       return;
     } else {
       ROS_WARN("setNeck called in tracking mode! are you sure of what you are doing?");
     }
   }
 
-  kinematic_state->setVariablePosition("neck_r_joint", _r);
-  kinematic_state->setVariablePosition("neck_p_joint", _p);
-  kinematic_state->setVariablePosition("neck_y_joint", _y);
-
-  kinematic_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+  setNeck_(_r, _p, _y, kinematic_state);
 }
 
 //////////////////////////////////////////////////
-std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt(Eigen::Vector3d obj)
+void aero::interface::AeroMoveitInterface::setNeck_(double _r,double _p, double _y,
+                                                    robot_state::RobotStatePtr &_robot_state)
+{
+  _robot_state->setVariablePosition("neck_r_joint", _r);
+  _robot_state->setVariablePosition("neck_p_joint", _p);
+  _robot_state->setVariablePosition("neck_y_joint", _y);
+
+  _robot_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
+}
+
+//////////////////////////////////////////////////
+std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt(const aero::Vector3 &obj)
+{
+  return solveLookAt_(obj, kinematic_state);
+}
+
+//////////////////////////////////////////////////
+std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt_(const aero::Vector3 &obj,
+                                                                                      robot_state::RobotStatePtr &_robot_state)
 {
   double neck2eye = 0.2;
   double body2neck = 0.35;
 
   // get base position in robot coords
-  updateLinkTransforms();
-  std::string body_link = "body_link";
-  Eigen::Vector3d base2body_p = kinematic_state->getGlobalLinkTransform(body_link).translation();
-  Eigen::Matrix3d base2body_mat = kinematic_state->getGlobalLinkTransform(body_link).rotation();
-  Eigen::Quaterniond base2body_q(base2body_mat);
+  _robot_state->updateLinkTransforms();
 
-  Eigen::Vector3d pos_obj_rel = base2body_q.inverse() * (obj - base2body_p) - Eigen::Vector3d(0.0, 0.0, body2neck);
+  std::string body_link = "body_link";
+  aero::Vector3 base2body_p = _robot_state->getGlobalLinkTransform(body_link).translation();
+  aero::Matrix3 base2body_mat = _robot_state->getGlobalLinkTransform(body_link).rotation();
+  aero::Quaternion base2body_q(base2body_mat);
+
+  aero::Vector3 pos_obj_rel = base2body_q.inverse() * (obj - base2body_p) - Eigen::Vector3d(0.0, 0.0, body2neck);
 
   double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
   double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
@@ -300,19 +341,27 @@ std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLo
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendNeckAsync_(int _time_ms,
+                                                          robot_state::RobotStatePtr &_robot_state)
+{
+  const std::vector<std::string > jnames = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
+  const std::vector<double > angles = {_robot_state->getVariablePosition("neck_r_joint"),
+                                       _robot_state->getVariablePosition("neck_p_joint"),
+                                       _robot_state->getVariablePosition("neck_y_joint")};
+  { // lock
+    ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
+    //ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
+    ri->head->sendAngles(jnames, angles, _time_ms * 0.001, start_time); // send only head
+  }
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
 {
   if (tracking_mode_flag_) {
     ROS_WARN("sendNeckAsync called in tracking mode! are you sure of what you are doing?");
   }
-
-  const std::vector<std::string > jnames = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
-  const std::vector<double > angles = {kinematic_state->getVariablePosition("neck_r_joint"),
-                                       kinematic_state->getVariablePosition("neck_p_joint"),
-                                       kinematic_state->getVariablePosition("neck_y_joint")};
-  ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
-  //ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
-  ri->head->sendAngles(jnames, angles, _time_ms * 0.001, start_time); // send only head
+  sendNeckAsync_(_time_ms, kinematic_state);
 }
 
 //////////////////////////////////////////////////
@@ -332,6 +381,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
   if (_topic == "") {
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
+    //
     lookat_topic_ = msg.data;
     previous_topic_ = "/look_at/manager_disabled";
     return;
@@ -349,6 +399,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     }
     msg.data = "/look_at/manager_disabled";
     lookat_target_publisher_.publish(msg);
+    //
     lookat_topic_ = msg.data;
     previous_topic_ = "/look_at/manager_disabled";
     return;
@@ -373,6 +424,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
   }
 
   lookat_target_publisher_.publish(msg);
+  // look_at_mode_
   lookat_topic_ = _topic;
 }
 
@@ -381,7 +433,7 @@ std::string aero::interface::AeroMoveitInterface::getLookAtTopic()
 {
   return lookat_topic_;
 }
-
+#if USING_BASE
 //////////////////////////////////////////////////
 aero::Vector3 aero::interface::AeroMoveitInterface::volatileTransformToBase(double _x, double _y, double _z) {
   geometry_msgs::Pose map2base = getCurrentPose();
@@ -395,7 +447,7 @@ aero::Vector3 aero::interface::AeroMoveitInterface::volatileTransformToBase(doub
   // convert to map coordinates
   return map2base_q.inverse() * (Eigen::Vector3d(_x, _y, _z) - map2base_p);
 }
-
+#endif
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
 {

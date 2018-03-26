@@ -2,7 +2,7 @@
 #define _AERO_MOVEIT_INTERFACE_
 
 #define USING_LOOKAT 1
-#define USING_BASE   1
+#define USING_BASE   0
 #define USING_HAND   1
 #define USING_GRASP  1
 
@@ -40,6 +40,8 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <move_base_msgs/MoveBaseFeedback.h>
 #include <move_base_msgs/MoveBaseResult.h>
+#else
+#include <aero_std/AeroBaseCommander.hh>
 #endif
 
 namespace aero
@@ -65,8 +67,11 @@ namespace aero
       std::vector<std::string > controller_names;
       std::vector<double > time_sequence;
     };
-
+#if USING_BASE
     class AeroMoveitInterface
+#else
+    class AeroMoveitInterface : public aero::base_commander::AeroBaseCommander
+#endif
     {
     public: typedef std::shared_ptr<AeroMoveitInterface> Ptr;
 
@@ -92,6 +97,9 @@ namespace aero
 
       /// @brief set current real robot's angles to robot model's angles
     public: void setRobotStateToCurrentState();
+      /// @brief set current real robot's angles to robot model's angles
+    public: void setRobotStateToCurrentState(robot_state::RobotStatePtr &_robot_state);
+
       /// @brief set named angles such as "reset-pose" to robot model's angles
       /// @param[in] _move_group named target is declared with move group
       /// @param[in] _target target name, target list is in .srdf file in aero_moveit_config
@@ -142,7 +150,7 @@ namespace aero
       /// @param[in] _target target pose in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
       /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
-    public: void setLookAt(Vector3 _target, bool _map_coordinate=false, bool _tracking=false);
+    public: void setLookAt(const aero::Vector3 &_target, bool _map_coordinate=false, bool _tracking=false);
       /// @brief set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
       /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
@@ -152,7 +160,7 @@ namespace aero
     public: void setNeck(double _r,double _p, double _y, bool _to_node=false);
       /// @brief function to calculate look at
       /// @param[in] _obj target x,y,z in base_link coordinate
-    public: std::tuple<double, double, double> solveLookAt(Eigen::Vector3d _obj);
+    public: std::tuple<double, double, double> solveLookAt(const aero::Vector3 &_obj);
       /// @brief send neck values
       /// @param[in] _time_ms execution time
     public: void sendNeckAsync(int _time_ms=1000);
@@ -167,9 +175,12 @@ namespace aero
       /// @param[in] _y y value in map coordinate.
       /// @param[in] _z z value in map coordinate.
       /// @return Converted base value, valid as long as robot is in same position.
-    public: Vector3 volatileTransformToBase(double _x, double _y, double _z);
+    public: void sendNeckAsync_(int _time_ms, robot_state::RobotStatePtr &_robot_state);
+    public: void setLookAt_(double _x, double _y, double _z, robot_state::RobotStatePtr &_robot_state);
+    public: void setNeck_(double _r,double _p, double _y, robot_state::RobotStatePtr &_robot_state);
+    public: std::tuple<double, double, double> solveLookAt_(const aero::Vector3 &_obj,
+                                                            robot_state::RobotStatePtr &_robot_state);
 #endif
-
       /// @brief update the model's link poses based on angle values
     public: void updateLinkTransforms();
 
@@ -393,6 +404,8 @@ namespace aero
     public: bool checkMoveTo(geometry_msgs::Pose _pose);
       /// @brief protected function. due to move_base_pkg's bug, we use this
     protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
+
+    public: Vector3 volatileTransformToBase(double _x, double _y, double _z);
 #endif
 
       // @brief overwrite command speed on real robot
