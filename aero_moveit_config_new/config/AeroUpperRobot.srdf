@@ -38,12 +38,22 @@
     <group name="lifter">
         <chain base_link="lifter_base_link" tip_link="lifter_top_link" />
     </group>
-    <group name="rarm_waist_lifter">
-        <group name="rarm_with_waist" />
+    <group name="rarm_with_torso">
+        <group name="rarm" />
+        <group name="waist" />
         <group name="lifter" />
     </group>
-    <group name="larm_waist_lifter">
-        <group name="larm_with_waist" />
+    <group name="larm_with_torso">
+        <group name="larm" />
+        <group name="waist" />
+        <group name="lifter" />
+    </group>
+    <group name="rarm_with_lifter">
+        <group name="rarm" />
+        <group name="lifter" />
+    </group>
+    <group name="larm_with_lifter">
+        <group name="larm" />
         <group name="lifter" />
     </group>
     <group name="head">
@@ -88,12 +98,14 @@
         <group name="rarm" />
         <group name="larm" />
         <group name="waist" />
+        <group name="head" />
     </group>
     <group name="whole_body">
         <group name="rarm" />
         <group name="larm" />
         <group name="waist" />
         <group name="lifter" />
+        <group name="head" />
     </group>
     <!--group name="whole_body_with_base">
         <group name="rarm" />
@@ -121,6 +133,9 @@
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
+        <joint name="neck_p_joint" value="0" />
+        <joint name="neck_r_joint" value="0" />
+        <joint name="neck_y_joint" value="0" />
     </group_state>
     <group_state name="reset-manip-pose" group="upper_body">
         <joint name="l_elbow_joint" value="-2.3562" />
@@ -140,6 +155,9 @@
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
+        <joint name="neck_p_joint" value="0" />
+        <joint name="neck_r_joint" value="0" />
+        <joint name="neck_y_joint" value="0" />
     </group_state>
     <group_state name="move-safe" group="upper_body">
         <joint name="l_elbow_joint" value="-2.3562" />
@@ -159,6 +177,9 @@
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
+        <joint name="neck_p_joint" value="0" />
+        <joint name="neck_r_joint" value="0" />
+        <joint name="neck_y_joint" value="0" />
     </group_state>
     <group_state name="initial" group="upper_body">
         <joint name="l_elbow_joint" value="-2.3562" />
@@ -178,6 +199,9 @@
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
+        <joint name="neck_p_joint" value="0" />
+        <joint name="neck_r_joint" value="0" />
+        <joint name="neck_y_joint" value="0" />
     </group_state>
     <group_state name="reset-pose-rarm" group="rarm">
         <joint name="r_elbow_joint" value="-2.3562" />
