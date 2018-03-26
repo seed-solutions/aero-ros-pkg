@@ -230,7 +230,8 @@ void TrajectoryClient::send_angle_vector(const angle_vector &_av, const double _
 void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const ros::Time &_start)
 {
   if (_av_seq.size() != _tm_seq.size()) {
-    ROS_ERROR("er2"); //TODO
+    ROS_ERROR("angle_vector_sequence: angle_vector_sequence size %ld != time_sequence size %ld",
+              _av_seq.size(), _tm_seq.size()); //TODO
     return;
   }
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -238,16 +239,18 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
   goal.trajectory.joint_names = joint_list_;
   goal.trajectory.points.resize(_av_seq.size());
   int jsize = joint_list_.size();
+  double duration = 0;
   for(int i = 0; i < _av_seq.size(); i++) {
     if(jsize != _av_seq[i].size()) {
-      ROS_ERROR("er3");
+      ROS_ERROR("joint size %d != angle_vector size %d", jsize, _av_seq[i].size());
       return;
     }
     goal.trajectory.points[i].positions.resize(jsize);
     for(int j = 0; j < jsize; j++) {
       goal.trajectory.points[i].positions[j] = _av_seq[i][j];
     }
-    goal.trajectory.points[i].time_from_start = ros::Duration(_tm_seq[i]);
+    duration += _tm_seq[i];
+    goal.trajectory.points[i].time_from_start = ros::Duration(duration);
   }
   //this->sendGoal(goal);
   sending_goal_ = true;
@@ -447,6 +450,8 @@ void RobotInterface::send_angle_vector_sequence(const angle_vector_sequence &_av
           controller_av_seq.push_back(controller_av);
         }
       }
+      //ROS_INFO("av %ld (%ld), tm %ld", controller_av_seq.size(),
+      //controller_av_seq[0].size(), _tm_seq.size());
       it->second->send_angle_vector_sequence(controller_av_seq, _tm_seq, _start);
     }
   }
