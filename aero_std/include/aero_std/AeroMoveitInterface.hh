@@ -4,7 +4,7 @@
 #define USING_LOOKAT 1
 #define USING_BASE   1
 #define USING_HAND   1
-#define USING_GRASP  0
+#define USING_GRASP  1
 
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_model/robot_model.h>
@@ -314,11 +314,13 @@ namespace aero
 #endif
 
 #if USING_GRASP // TODO device code / grasp ...
-    public: bool solveIKSequence(aero::GraspRequest &_grasp);
-    public: std::string solveIKOneSequence(aero::arm _arm, geometry_msgs::Pose _pose, aero::ikrange _ik_range, std::vector<double> _av_ini, std::string _eef_link, std::vector<double> &_result);
+    public: bool solveIKSequence(const aero::GraspRequest &_grasp);
+    public: bool solveIKOneSequence(aero::arm _arm, const aero::Transform &_pose, aero::ikrange _ik_range,
+                                    const std::vector<double> &_av_initial, aero::eef _eef,
+                                    std::string &_result_range, aero::joint_angle_map &_result);
     public: bool sendSequence(std::vector<int> _msecs={5000, 5000});
-    public: bool sendPickIK(aero::GraspRequest &_grasp);
-    public: bool sendPlaceIK(aero::GraspRequest &_grasp, double _push_height=0.03);
+    public: bool sendPickIK(const aero::GraspRequest &_grasp);
+    public: bool sendPlaceIK(const aero::GraspRequest &_grasp, double _push_height=0.03);
 #endif
 
 #if USING_BASE /// TODO: new code(move_base)

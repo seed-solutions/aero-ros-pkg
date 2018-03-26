@@ -1129,21 +1129,21 @@ const robot_state::JointModelGroup* aero::interface::AeroMoveitInterface::getJoi
 //////////////////// TODO: rewrite grasp
 #if USING_GRASP // grasp
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_grasp)
+bool aero::interface::AeroMoveitInterface::solveIKSequence(const aero::GraspRequest &_grasp)
 {
   // save initial angles
   std::vector<double> av_ini;
   getRobotStateVariables(av_ini);
 
-  std::string eef;
-  eef = aero::eefLink(_grasp.arm, _grasp.eef);
+  std::string eef_link;
+  eef_link = aero::eefLink(_grasp.arm, _grasp.eef);
 
   aero::joint_angle_map result_mid;
   std::string result_mid_range;
-  aero::Transform grapsMid = _grasp.mid_pose;
+  aero::Transform graspMid = _grasp.mid_pose;
 
   if (solveIKOneSequence(_grasp.arm, graspMid, _grasp.mid_ik_range,
-                         av_ini, eef, result_mid_range, result_mid)) {
+                         av_ini, _grasp.eef, result_mid_range, result_mid)) {
     ROS_INFO("mid ik failed");
     kinematic_state->setVariablePositions(av_ini);
     return false;
@@ -1151,12 +1151,12 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
 
   aero::joint_angle_map result_end;
   std::string result_end_range;
-  aero::Transform grapsEnd = _grasp.end_pose;
+  aero::Transform graspEnd = _grasp.end_pose;
 
   std::vector<double> av_mid; // use av_mid as initial state for IK
   getRobotStateVariables(av_mid);
-  if (solveIKOneSequence(_grasp.arm, grapsEnd, _grasp.end_ik_range,
-                         av_mid, eef, result_end_range, result_end)) {
+  if (solveIKOneSequence(_grasp.arm, graspEnd, _grasp.end_ik_range,
+                         av_mid, _grasp.eef, result_end_range, result_end)) {
     ROS_INFO("end ik failed");
     kinematic_state->setVariablePositions(av_ini);
     return false;
@@ -1173,16 +1173,16 @@ bool aero::interface::AeroMoveitInterface::solveIKSequence(aero::GraspRequest &_
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::solveIKOneSequence
-(aero::arm _arm, aero::Transform &_pose,
- aero::ikrange _ik_range, const std::vector<double> &_av_initial, const std::string &_eef_link,
+bool aero::interface::AeroMoveitInterface::solveIKOneSequence(
+ aero::arm _arm, const aero::Transform &_pose, aero::ikrange _ik_range,
+ const std::vector<double> &_av_initial, aero::eef _eef,
  std::string &_result_range, aero::joint_angle_map &_result)
 {
   bool status;
 
   // ik with arm
-  kinematic_state->setVariablePositions(_av_ini);
-  status = setFromIK(_arm, aero::ikrange::arm, _pose, _eef_link);
+  kinematic_state->setVariablePositions(_av_initial);
+  status = setFromIK(_arm, aero::ikrange::arm, _pose, _eef);
   if (status) {
     getRobotStateVariables(_result);
     _result_range = aero::moveGroup(_arm, aero::ikrange::arm);
@@ -1191,8 +1191,8 @@ bool aero::interface::AeroMoveitInterface::solveIKOneSequence
   if (_ik_range == aero::ikrange::arm) return false;
 
   // ik with waist
-  kinematic_state->setVariablePositions(_av_ini);
-  status = setFromIK(_arm, aero::ikrange::waist, _pose, _eef_link);
+  kinematic_state->setVariablePositions(_av_initial);
+  status = setFromIK(_arm, aero::ikrange::waist, _pose, _eef);
   if (status) {
     getRobotStateVariables(_result);
     _result_range = aero::moveGroup(_arm, aero::ikrange::waist);
@@ -1201,8 +1201,8 @@ bool aero::interface::AeroMoveitInterface::solveIKOneSequence
   if (_ik_range == aero::ikrange::waist) return false;
 
   // ik with lifter
-  kinematic_state->setVariablePositions(_av_ini);
-  status = setFromIK(_arm, aero::ikrange::lifter, _pose, _eef_link);
+  kinematic_state->setVariablePositions(_av_initial);
+  status = setFromIK(_arm, aero::ikrange::lifter, _pose, _eef);
   if (status) {
     getRobotStateVariables(_result);
     _result_range = aero::moveGroup(_arm, aero::ikrange::lifter);
@@ -1228,32 +1228,33 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp)
+bool aero::interface::AeroMoveitInterface::sendPickIK(const aero::GraspRequest &_grasp)
 {
   // save initial angles
   aero::joint_angle_map av_ini;
   getRobotStateVariables(av_ini);
 
   aero::joint_angle_map av_mid_map, av_end_map;
-  aero::Transform trans_mid, trans_end;
-  // trans_end = _grasp.end_pose
-  // trans_mid = _grasp.end_pose
-  ROS_INFO("start solving IK");
+  aero::Transform trans_mid = _grasp.mid_pose;
+  aero::Transform trans_end = _grasp.end_pose;
 
+  ROS_INFO("start solving IK");
+  ROS_INFO_STREAM("end: " << trans_end);
   if (!setFromIK(_grasp.arm, _grasp.end_ik_range, trans_end, _grasp.eef)) {
     ROS_INFO("end ik failed");
     setRobotStateVariables(av_ini);
     return false;
   }
-  setLookAt(trans_end);
+  setLookAt(trans_end.translation());
   getRobotStateVariables(av_end_map);
 
+  ROS_INFO_STREAM("mid: " << trans_mid);
   if (!setFromIK(_grasp.arm, _grasp.mid_ik_range, trans_mid, _grasp.eef)) {
     ROS_INFO("mid ik failed");
     setRobotStateVariables(av_ini);
     return false;
   }
-  setLookAt(trans_mid);
+  setLookAt(trans_mid.translation());
   getRobotStateVariables(av_mid_map);
 
   ROS_INFO("start making trajectory");
@@ -1264,42 +1265,20 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
   int num = 5;
   trajectory.reserve(num+1);
   times.reserve(num+1);
-  trajectory.push_back(av_mid);
+  trajectory.push_back(av_mid_map);
   times.push_back(mid_time);
 
-  setRobotStateVariables(av_mid);
-  aero::Transform tmp, diff;
-  geometry_msgs::Pose tmp, diff;
-  tmp = _grasp.mid_pose;
-  diff.position.x = (_grasp.end_pose.position.x - _grasp.mid_pose.position.x) / num;
-  diff.position.y = (_grasp.end_pose.position.y - _grasp.mid_pose.position.y) / num;
-  diff.position.z = (_grasp.end_pose.position.z - _grasp.mid_pose.position.z) / num;
-  Eigen::Quaterniond qua_mid{_grasp.mid_pose.orientation.w,
-      _grasp.mid_pose.orientation.x ,_grasp.mid_pose.orientation.y ,_grasp.mid_pose.orientation.z};
-  Eigen::Quaterniond qua_end{_grasp.end_pose.orientation.w,
-      _grasp.end_pose.orientation.x ,_grasp.end_pose.orientation.y ,_grasp.end_pose.orientation.z};
+  setRobotStateVariables(av_mid_map);
 
   int last_solved_num = -1;
-  ROS_INFO("mid pose %f %f %f, %f %f %f %f",
-           _grasp.mid_pose.position.x ,_grasp.mid_pose.position.y ,_grasp.mid_pose.position.z
-           ,_grasp.mid_pose.orientation.w,_grasp.mid_pose.orientation.x ,_grasp.mid_pose.orientation.y ,_grasp.mid_pose.orientation.z);
 
   for (int i=0; i < num - 1; ++i) {
-    tmp.position.x += diff.position.x;
-    tmp.position.y += diff.position.y;
-    tmp.position.z += diff.position.z;
-    Eigen::Quaterniond qua_path = qua_mid.slerp( static_cast<double>(i+1)/num, qua_end);
-    tmp.orientation.w = qua_path.w();
-    tmp.orientation.x = qua_path.x();
-    tmp.orientation.y = qua_path.y();
-    tmp.orientation.z = qua_path.z();
-
-    ROS_INFO("%d th path pose %f %f %f, %f %f %f %f", i+1,
-             tmp.position.x ,tmp.position.y ,tmp.position.z
-             ,tmp.orientation.w,tmp.orientation.x ,tmp.orientation.y ,tmp.orientation.z);
-
+    aero::Transform tmp; // mid to end
+    aero::mid_coords((i+1)/(double)num, trans_mid, trans_end, tmp);
+    ROS_INFO_STREAM("tmp: " << i << ", trans: " << tmp);
     if (!setFromIK(_grasp.arm, _grasp.end_ik_range, tmp, _grasp.eef)) continue;
-    setLookAt(tmp);
+    ROS_INFO_STREAM("ik solved: " << i);
+    setLookAt(tmp.translation());
     aero::joint_angle_map av_inner;
     getRobotStateVariables(av_inner);
 
@@ -1308,32 +1287,24 @@ bool aero::interface::AeroMoveitInterface::sendPickIK(aero::GraspRequest &_grasp
     last_solved_num = i;
   }
 
-  if (!setFromIK(_grasp.arm, _grasp.end_ik_range, _grasp.end_pose, _grasp.eef)) {
-    ROS_INFO("end ik failed");
-    setRobotStateVariables(av_ini);
-    return false;
-  }
-  setLookAt(_grasp.end_pose);
-  getRobotStateVariables(av_end);//save end
-
-  trajectory.push_back(av_end);
+  trajectory.push_back(av_end_map);
   times.push_back((end_time / num) * (4 - last_solved_num));
-  ROS_INFO("end pose %f %f %f, %f %f %f %f",
-           _grasp.end_pose.position.x ,_grasp.end_pose.position.y ,_grasp.end_pose.position.z
-           ,_grasp.end_pose.orientation.w,_grasp.end_pose.orientation.x ,_grasp.end_pose.orientation.y ,_grasp.end_pose.orientation.z);
 
   ROS_INFO("trajectory: %d relay points", static_cast<int>(times.size()) - 2);
-
+  for(int i = 0; i < times.size(); i++) {
+    ROS_INFO_STREAM("tm " << i << ": " <<  times[i]);
+  }
 
   openHand(_grasp.arm);
 
-
-  return sendTrajectory(trajectory, times, _grasp.end_ik_range);;
+  return sendTrajectory(trajectory, times, _grasp.end_ik_range);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_grasp, double _push_height)
+bool aero::interface::AeroMoveitInterface::sendPlaceIK(const aero::GraspRequest &_grasp, double _push_height)
 {
+  return false;
+#if 0
   // save initial angles
   aero::joint_angle_map av_ini;
   getRobotStateVariables(av_ini);
@@ -1482,6 +1453,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(aero::GraspRequest &_gras
   }
 
   return true;
+#endif
 }
 #endif // grasp
 
