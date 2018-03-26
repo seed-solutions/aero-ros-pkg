@@ -11,8 +11,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, 
 
   ri.reset(new aero::AeroRobotInterface(_nh));
 
-  alc.reset(new aero::lookat_commander::AeroLookatCommander(_nh, this));
-
 #if 0
   look_at_publisher_rpy_ = _nh.advertise<geometry_msgs::Point>
     ("/look_at/rpy", 10);
@@ -98,6 +96,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, 
   ROS_INFO("----------------------------------------");
   ROS_INFO("  AERO MOVEIT INTERFACE is initialized");
   ROS_INFO("----------------------------------------");
+
+  //
+  alc.reset(new aero::lookat_commander::AeroLookatCommander(_nh, this));
 }
 
 //////////////////////////////////////////////////

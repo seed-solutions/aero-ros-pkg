@@ -3,8 +3,13 @@
 aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle &_nh,
                                                                  aero::interface::AeroMoveitInterface *_ami)
 {
+  tracking_mode_ = aero::tracking::disable;
+
   ami_.reset(_ami);
   kinematic_state_ = robot_state::RobotStatePtr(new robot_state::RobotState(ami_->kinematic_model));
+
+  event_spinner_.reset(new ros::AsyncSpinner(1, &eventqueue_));
+  sub_spinner_.reset(new ros::AsyncSpinner(1, &subqueue_));
 
   ros::TimerOptions tmopt(ros::Duration(0.1),
                           boost::bind(&aero::lookat_commander::AeroLookatCommander::timerCallback,
@@ -12,6 +17,8 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
                           &eventqueue_);
   _nh.createTimer(tmopt);
   //
+  event_spinner_->start();
+  //sub_spinner_.start(); // ?
 }
 
 bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos)
@@ -55,16 +62,29 @@ bool aero::lookat_commander::AeroLookatCommander::setNeckRPY(double _r, double _
 
 bool aero::lookat_commander::AeroLookatCommander::setLookAtTopic(const std::string &_topic)
 {
+  boost::mutex::scoped_lock lk(callback_mtx_);
+  tracking_mode_ = aero::tracking::topic;
+
   // TODO:
+  ros::SubscribeOptions sub_ops = ros::SubscribeOptions::create< geometry_msgs::Point >
+    ( _topic, 1,
+      boost::bind(&aero::lookat_commander::AeroLookatCommander::subCallback, this, _1),
+      ros::VoidPtr(), &subqueue_);
+  //sub_ = _nh.subscribe(sub_ops);
+
   return true;
 }
 
 std::tuple<double, double, double> aero::lookat_commander::AeroLookatCommander::getNeck()
 {
   return std::tuple<double, double, double>
-    (ami_->kinematic_state->getVariablePosition("neck_r_joint"),
-     ami_->kinematic_state->getVariablePosition("neck_p_joint"),
-     ami_->kinematic_state->getVariablePosition("neck_y_joint"));
+    (kinematic_state_->getVariablePosition("neck_r_joint"),
+     kinematic_state_->getVariablePosition("neck_p_joint"),
+     kinematic_state_->getVariablePosition("neck_y_joint"));
+}
+
+void aero::lookat_commander::AeroLookatCommander::subCallback(const geometry_msgs::Point::ConstPtr &_msg) {
+  //
 }
 
 void aero::lookat_commander::AeroLookatCommander::timerCallback(const ros::TimerEvent& ev)

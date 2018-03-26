@@ -27,7 +27,6 @@ namespace aero
 
     public: AeroLookatCommander(ros::NodeHandle &_nh,
                                 aero::interface::AeroMoveitInterface *_ami);
-
     public: bool setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos);
     public: bool setNeckRPY(double _r, double _p, double _y);
     public: bool setLookAtTopic(const std::string &_topic);
@@ -35,6 +34,8 @@ namespace aero
 
     protected: ros::CallbackQueue eventqueue_;
     protected: void timerCallback(const ros::TimerEvent& ev);
+    protected: ros::CallbackQueue subqueue_;
+    protected: void subCallback(const geometry_msgs::Point::ConstPtr &_msg);
 
     protected: aero::tracking tracking_mode_;
     protected: aero::Vector3 tracking_pos_;
@@ -42,6 +43,10 @@ namespace aero
     protected: robot_state::RobotStatePtr kinematic_state_;
     protected: boost::shared_ptr<aero::interface::AeroMoveitInterface > ami_;
     protected: ros::Time previous_callback_;
+    protected: ros::Subscriber sub_;
+      //
+    protected: boost::shared_ptr < ros::AsyncSpinner > event_spinner_;
+    protected: boost::shared_ptr < ros::AsyncSpinner > sub_spinner_;
     };
   }
 }

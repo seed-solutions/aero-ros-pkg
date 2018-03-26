@@ -23,7 +23,7 @@ namespace aero
 
   enum struct pose : int {reset, reset_manip, move, initial};
 
-  enum struct tracking : int {none, rpy, map, base, map_static, base_static, topic};
+  enum struct tracking : int {disable, rpy, map, base, map_static, base_static, topic};
   /// robot dependant
   enum struct joint : int {r_shoulder_p,
       r_shoulder_r,
