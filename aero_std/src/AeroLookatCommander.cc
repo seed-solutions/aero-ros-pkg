@@ -6,10 +6,11 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
   ami_.reset(_ami);
   kinematic_state_ = robot_state::RobotStatePtr(new robot_state::RobotState(ami_->kinematic_model));
 
-  ros::TimerOptions(ros::Duration(0.1),
-                    boost::bind(&aero::lookat_commander::AeroLookatCommander::timerCallback,
-                                this, _1),
-                    &eventqueue_);
+  ros::TimerOptions tmopt(ros::Duration(0.1),
+                          boost::bind(&aero::lookat_commander::AeroLookatCommander::timerCallback,
+                                      this, _1),
+                          &eventqueue_);
+  _nh.createTimer(tmopt);
   //
 }
 

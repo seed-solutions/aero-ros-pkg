@@ -1,7 +1,6 @@
 #ifndef _AERO_MOVEIT_INTERFACE_
 #define _AERO_MOVEIT_INTERFACE_
 
-#define USING_LOOKAT 1
 #define USING_BASE   0
 #define USING_HAND   1
 #define USING_GRASP  1
@@ -43,6 +42,8 @@
 #else
 #include <aero_std/AeroBaseCommander.hh>
 #endif
+
+#include <aero_std/AeroLookatCommander.hh>
 
 namespace aero
 {
@@ -138,7 +139,6 @@ namespace aero
       /// @return bool solvable or not
     protected: bool lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz);
 
-#if USING_LOOKAT
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
       /// @param[in] _x target x in base_link coordinate
       /// @param[in] _y target y in base_link coordinate
@@ -180,7 +180,6 @@ namespace aero
     public: void setNeck_(double _r,double _p, double _y, robot_state::RobotStatePtr &_robot_state);
     public: std::tuple<double, double, double> solveLookAt_(const aero::Vector3 &_obj,
                                                             robot_state::RobotStatePtr &_robot_state);
-#endif
       /// @brief update the model's link poses based on angle values
     public: void updateLinkTransforms();
 
@@ -441,7 +440,7 @@ namespace aero
     protected: ros::ServiceClient hand_grasp_client_;
 #endif
 
-#if USING_LOOKAT
+#if 0
     protected: ros::Publisher look_at_publisher_rpy_;
     protected: ros::Publisher look_at_publisher_base_;
     protected: ros::Publisher look_at_publisher_map_;
@@ -454,6 +453,7 @@ namespace aero
     protected: std::string lookat_topic_;
     protected: std::string previous_topic_;
 #endif
+    protected: boost::shared_ptr<aero::lookat_commander::AeroLookatCommander > alc;
 
 #if USING_BASE
     protected: ros::Publisher cmd_vel_publisher_;
@@ -470,6 +470,8 @@ namespace aero
     protected: boost::shared_ptr<aero::AeroRobotInterface > ri;
     protected: double send_trajectory_offset_;
     protected: ControllerCommand sent_command_;
+
+    protected: boost::mutex ri_mutex_;
     };
   }
 }

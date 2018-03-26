@@ -1,6 +1,20 @@
 #ifndef _AERO_LOOKAT_COMMANDER_
 #define _AERO_LOOKAT_COMMANDER_
 
+namespace aero
+{
+  namespace interface
+  {
+    class AeroMoveitInterface;
+  }
+}
+namespace aero
+{
+  namespace lookat_commander
+  {
+    class AeroLookatCommander;
+  }
+}
 #include <aero_std/AeroMoveitInterface.hh>
 
 namespace aero
@@ -9,6 +23,8 @@ namespace aero
   {
     class AeroLookatCommander
     {
+    public: typedef boost::shared_ptr<AeroLookatCommander > Ptr;
+
     public: AeroLookatCommander(ros::NodeHandle &_nh,
                                 aero::interface::AeroMoveitInterface *_ami);
 
@@ -23,7 +39,7 @@ namespace aero
     protected: aero::Vector3 tracking_pos_;
     protected: boost::mutex callback_mtx_;
     protected: robot_state::RobotStatePtr kinematic_state_;
-    protected: aero::interface::AeroMoveitInterface::Ptr ami_;
+    protected: boost::shared_ptr<aero::interface::AeroMoveitInterface > ami_;
     protected: ros::Time previous_callback_;
     };
   }

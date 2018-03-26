@@ -11,7 +11,9 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, 
 
   ri.reset(new aero::AeroRobotInterface(_nh));
 
-#if USING_LOOKAT
+  alc.reset(new aero::lookat_commander::AeroLookatCommander(_nh, this));
+
+#if 0
   look_at_publisher_rpy_ = _nh.advertise<geometry_msgs::Point>
     ("/look_at/rpy", 10);
 
@@ -128,7 +130,10 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 {
   // TODO for hand ???
   robot_interface::joint_angle_map map;
-  ri->getActualPositions(map);
+  {
+    boost::mutex::scoped_lock sl(ri_mutex_);
+    ri->getActualPositions(map);
+  }
   kinematic_state->setVariablePositions(map);
 
   updateLinkTransforms();
@@ -139,7 +144,10 @@ void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState(robot_sta
 {
   // TODO for hand ???
   robot_interface::joint_angle_map map;
-  ri->getActualPositions(map);
+  {
+    boost::mutex::scoped_lock sl(ri_mutex_);
+    ri->getActualPositions(map);
+  }
   _robot_state->setVariablePositions(map);
 
   _robot_state->updateLinkTransforms();
@@ -217,7 +225,6 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
   return found_ik;
 }
 
-#if USING_LOOKAT // lookat
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAt_(double _x, double _y, double _z,
                                                       robot_state::RobotStatePtr &_robot_state)
@@ -237,26 +244,30 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
     msg.x = _x;
     msg.y = _y;
     msg.z = _z;
-
+    aero::Vector3 pos(_x, _y, _z);
     if (_map_coordinate) {
       if (_tracking) {
-        previous_topic_ = "/look_at/target/map:"
-          + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
-        look_at_publisher_map_.publish(msg);
+        //previous_topic_ = "/look_at/target/map:"
+        //+ std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        //look_at_publisher_map_.publish(msg);
         // look_at_mode
+        alc->setTrackingMode(aero::tracking::map, pos);
       } else {
-        look_at_publisher_map_static_.publish(msg);
+        //look_at_publisher_map_static_.publish(msg);
         // look_at_mode
+        alc->setTrackingMode(aero::tracking::map_static, pos);
       }
     } else {
       if (_tracking) {
-        previous_topic_ = "/look_at/target:"
-          + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
-        look_at_publisher_base_.publish(msg);
+        //previous_topic_ = "/look_at/target:"
+        //+ std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+        //look_at_publisher_base_.publish(msg);
         // look_at_mode
+        alc->setTrackingMode(aero::tracking::base, pos);
       } else {
-        look_at_publisher_base_static_.publish(msg);
+        //look_at_publisher_base_static_.publish(msg);
         // look_at_mode
+        alc->setTrackingMode(aero::tracking::base_static, pos);
       }
     }
   } else {
@@ -284,8 +295,9 @@ void aero::interface::AeroMoveitInterface::setNeck(double _r,double _p, double _
       ROS_WARN("setNeck called in tracking mode! updating and sending model in node!");
       geometry_msgs::Point p;
       p.x = _r; p.y = _p; p.z = _y;
-      look_at_publisher_rpy_.publish(p);
+      //look_at_publisher_rpy_.publish(p);
       // look_at_mode
+      alc->setNeckRPY(_r, _p, _y);
       return;
     } else {
       ROS_WARN("setNeck called in tracking mode! are you sure of what you are doing?");
@@ -348,7 +360,8 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync_(int _time_ms,
   const std::vector<double > angles = {_robot_state->getVariablePosition("neck_r_joint"),
                                        _robot_state->getVariablePosition("neck_p_joint"),
                                        _robot_state->getVariablePosition("neck_y_joint")};
-  { // lock
+  {
+    boost::mutex::scoped_lock sl(ri_mutex_);
     ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
     //ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
     ri->head->sendAngles(jnames, angles, _time_ms * 0.001, start_time); // send only head
@@ -367,6 +380,7 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bool _record_topic)
 {
+#if 0
   if (!tracking_mode_flag_) {
     ROS_WARN("must call setTrackingMode to true first for setLookAtTopic");
     return;
@@ -423,16 +437,20 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     return;
   }
 
-  lookat_target_publisher_.publish(msg);
+  //lookat_target_publisher_.publish(msg);
   // look_at_mode_
   lookat_topic_ = _topic;
+  alc->setLookAtTopic(_topic); //// TODO
+#endif
 }
 
 //////////////////////////////////////////////////
 std::string aero::interface::AeroMoveitInterface::getLookAtTopic()
 {
-  return lookat_topic_;
+  //return lookat_topic_;
+  return "";
 }
+
 #if USING_BASE
 //////////////////////////////////////////////////
 aero::Vector3 aero::interface::AeroMoveitInterface::volatileTransformToBase(double _x, double _y, double _z) {
@@ -448,6 +466,7 @@ aero::Vector3 aero::interface::AeroMoveitInterface::volatileTransformToBase(doub
   return map2base_q.inverse() * (Eigen::Vector3d(_x, _y, _z) - map2base_p);
 }
 #endif
+
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
 {
@@ -462,7 +481,6 @@ void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
   }
   tracking_mode_flag_ = _yes;
 }
-#endif // lookat
 
 /////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::updateLinkTransforms()
@@ -672,7 +690,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(const std::stri
 void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(const std::vector<double> &_av,
                                                                  const std::vector<std::string> &_joint_names, int _time_ms)
 {
-  // TODO: should lock?
+  boost::mutex::scoped_lock sl(ri_mutex_);
   ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
   // fill sent_command
   sent_command_.send_type  = aero::interface::send_type::angles;
@@ -716,17 +734,19 @@ bool aero::interface::AeroMoveitInterface::sendTrajectory(const aero::trajectory
     ROS_INFO("  %d: %s", i, names[i].c_str());
   }
 #endif
-  ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
-  // TODO:: should lock?
-  // fill sent_command
-  sent_command_.send_type  = aero::interface::send_type::sequence;
-  sent_command_.start_time = start_time;
-  sent_command_.angle_vector_sequence = avs;
-  sent_command_.controller_names = names;
-  sent_command_.time_sequence = tms;
-  //
-  //ROS_INFO("angle_vector_sequence %d %d", avs.size(), tms.size());
-  ri->send_angle_vector_sequence(avs, tms, names, start_time);
+  {
+    boost::mutex::scoped_lock sl(ri_mutex_);
+    ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
+    // fill sent_command
+    sent_command_.send_type  = aero::interface::send_type::sequence;
+    sent_command_.start_time = start_time;
+    sent_command_.angle_vector_sequence = avs;
+    sent_command_.controller_names = names;
+    sent_command_.time_sequence = tms;
+    //
+    //ROS_INFO("angle_vector_sequence %d %d", avs.size(), tms.size());
+    ri->send_angle_vector_sequence(avs, tms, names, start_time);
+  }
   if(!_async) {
     waitInterpolation_(total_tm);
   }
@@ -761,9 +781,12 @@ bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int 
     std::vector<double> av;
     const std::vector<std::string> &names = jmg_lifter->getVariableNames();
     kinematic_state->copyJointGroupPositions("lifter", av);
-    ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_); // starting 0.05sec after now
-    ROS_DEBUG("sendLifter: send");
-    ri->sendAngles(names, av, _time_ms*0.001, start_time);
+    {
+      boost::mutex::scoped_lock sl(ri_mutex_);
+      ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_); // starting 0.05sec after now
+      ROS_DEBUG("sendLifter: send");
+      ri->sendAngles(names, av, _time_ms*0.001, start_time);
+    }
     if(!_async) {
       ri->wait_interpolation("lifter");
       ROS_DEBUG("sendLifter: wait end");
@@ -1612,6 +1635,7 @@ void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_factor)
   switch(sent_command_.send_type) {
   case aero::interface::send_type::angles:
     {
+      boost::mutex::scoped_lock sl(ri_mutex_);
       ros::Time start_time = ros::Time::now();
       sent_command_.duration = remain_time / _speed_factor;
       // sendAnglevectorAsync_
@@ -1631,6 +1655,7 @@ void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_factor)
     break;
   case aero::interface::send_type::sequence:
     {
+      boost::mutex::scoped_lock sl(ri_mutex_);
       ros::Time time_now = ros::Time::now();
       double spent_time = (time_now - sent_command_.start_time).toSec();
       int start_idx = -1;
