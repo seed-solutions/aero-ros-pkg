@@ -184,7 +184,7 @@ namespace aero
     return mg;
   }
 
-  inline void controllerGroup(std::vector<std::string > _names, aero::ikrange _range, bool _head)
+  inline void controllerGroup(std::vector<std::string > &_names, aero::ikrange _range, bool _head)
   {
     switch (_range) {
     case aero::ikrange::arm:
@@ -296,7 +296,15 @@ namespace aero
     _res = tr * q;
   }
 }
-
+static std::ostream& operator<<(std::ostream& os, const aero::Quaternion &qq)
+{
+  os << " #f("
+     << qq.w() << " "
+     << qq.x() << " "
+     << qq.y() << " "
+     << qq.z() << ")";
+  return os;
+}
 static std::ostream& operator<<(std::ostream& os, const aero::Transform &tr)
 {
   aero::Vector3 tt = tr.translation();
@@ -305,11 +313,7 @@ static std::ostream& operator<<(std::ostream& os, const aero::Transform &tr)
      << tt(0) << " "
      << tt(1) << " "
      << tt(2) << ")";
-  os << " #f("
-     << qq.w() << " "
-     << qq.x() << " "
-     << qq.y() << " "
-     << qq.z() << "))";
+  os << qq;
   return os;
 }
 #endif
