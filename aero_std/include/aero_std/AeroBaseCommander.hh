@@ -88,6 +88,18 @@ namespace aero
       /// @brief protected function. due to move_base_pkg's bug, we use this
       // protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 
+    public: virtual aero::Vector3 volatileTransformToBase(double _x, double _y, double _z) {
+      aero::Transform map2base;
+      getCurrentCoords(map2base);
+
+      aero::Vector3 map2base_p(map2base.translation());
+      aero::Quaternion map2base_q(map2base.linear());
+
+      // convert to map coordinates
+      return map2base_q.inverse() * (aero::Vector3(_x, _y, _z) - map2base_p);
+      // return map2base.inverse() * aero::Vector3(_x, _y, _z); ??
+    }
+
     protected: tf::TransformListener listener_;
 
     protected: std::string robot_base_frame;

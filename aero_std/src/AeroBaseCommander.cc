@@ -1,5 +1,6 @@
 
 #include <aero_std/AeroBaseCommander.hh>
+#include <tf_conversions/tf_eigen.h>
 
 aero::base_commander::AeroBaseCommander::AeroBaseCommander(ros::NodeHandle &_nh)
 {
@@ -29,22 +30,8 @@ bool aero::base_commander::AeroBaseCommander::getCurrentCoords(aero::Transform &
     //ros::Duration(1.0).sleep(); // not need
     return false;
   }
+  tf::transformTFToEigen(tr, _pose);
 
-  aero::Transform pose;
-#if 0
-  geometry_msgs::Pose msg;
-  auto pos = tr.getOrigin();
-  auto rot = tr.getRotation();
-
-  msg.position.x = pos.x();
-  msg.position.y = pos.y();
-  msg.position.z = pos.z();
-
-  msg.orientation.w = rot.w();
-  msg.orientation.x = rot.x();
-  msg.orientation.y = rot.y();
-  msg.orientation.z = rot.z();
-#endif
   return true;
 }
 
@@ -54,10 +41,8 @@ bool aero::base_commander::AeroBaseCommander::getLocationCoords(aero::Transform 
   aero_std::GetSpot gs;
   gs.request.name = _location;
   get_spot_.call(gs);
-#if 0
-  geometry_msgs::Pose pose = gs.response.pose;
-  return pose;
-#endif
+  tf::poseMsgToEigen(gs.response.pose, _pose);
+
   return true;
 }
 
@@ -69,8 +54,9 @@ bool aero::base_commander::AeroBaseCommander::goPos(double _x,double _y, double 
 
   aero::Quaternion qua(aero::AngleAxis(_rad, aero::Vector3::UnitZ()));
   aero::Transform a_pose = aero::Translation(_x, _y, 0.0) * qua;
-  // a_pose -> pose
+
   geometry_msgs::Pose pose;
+  tf::poseEigenToMsg(a_pose, pose);
 
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = "/base_link";
@@ -108,13 +94,9 @@ void aero::base_commander::AeroBaseCommander::moveTo(const std::string &_locatio
 //////////////////////////////////////////////////
 void aero::base_commander::AeroBaseCommander::moveTo(const aero::Transform &_coords, bool _async)
 {
-  aero::Vector3 pos = _coords.translation();
+  //aero::Vector3 pos = _coords.translation();
   geometry_msgs::Pose pose;
-  pose.position.x = pos.x();
-  pose.position.y = pos.y();
-  pose.position.z = pos.z();
-  pose.orientation.x = pose.orientation.y = pose.orientation.z = 0.0;
-  pose.orientation.w = 1.0;
+  tf::poseEigenToMsg(_coords, pose);
 
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = "/map";
@@ -184,7 +166,8 @@ double aero::base_commander::AeroBaseCommander::toDestination(const std::string 
   aero::Transform cur;
   getCurrentCoords(cur);
 
-  double dis = 0.0; //TODO distance loc, cur
+  aero::Vector3 v = loc.translation() - cur.translation();
+  double dis = v.norm();
   return dis;
 }
 
