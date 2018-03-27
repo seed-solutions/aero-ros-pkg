@@ -15,10 +15,17 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
                           boost::bind(&aero::lookat_commander::AeroLookatCommander::timerCallback,
                                       this, _1),
                           &eventqueue_);
-  _nh.createTimer(tmopt);
+  event_timer_ = _nh.createTimer(tmopt);
+
   //
   event_spinner_->start();
   //sub_spinner_.start(); // ?
+}
+
+void aero::lookat_commander::AeroLookatCommander::disableTrackingMode()
+{
+  boost::mutex::scoped_lock lk(callback_mtx_);
+  tracking_mode_ = aero::tracking::disable;
 }
 
 bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos)
@@ -48,7 +55,7 @@ bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking
     return false;
     break;
   }
-  ami_->sendNeckAsync_(2000, kinematic_state_);
+  ami_->sendNeckAsync_(200, kinematic_state_);
 
   return true;
 }
@@ -56,7 +63,7 @@ bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking
 bool aero::lookat_commander::AeroLookatCommander::setNeckRPY(double _r, double _p, double _y)
 {
   ami_->setNeck_(_r, _p, _y, kinematic_state_);
-  ami_->sendNeckAsync_(2000, kinematic_state_);
+  ami_->sendNeckAsync_(200, kinematic_state_);
   return true;
 }
 

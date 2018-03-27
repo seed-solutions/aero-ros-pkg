@@ -416,6 +416,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     // lookat_topic_ = msg.data;
     lookat_topic_ = _topic;
     previous_topic_ = "/look_at/manager_disabled";
+    alc->disableTrackingMode();
     return;
   } else if (_topic == "/look_at/manager_disabled") {
     ROS_WARN("note, /look_at/manager_disabled only valid from prev");
@@ -439,6 +440,7 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     previous_topic_ = "/look_at/manager_disabled";
     return;
   } else if (_topic == "/look_at/previous") {
+    ROS_INFO("got /look_at/previous of %s", previous_topic_.c_str());
     if (previous_topic_.find("/look_at/target") != std::string::npos) {
       auto pos = previous_topic_.find(":");
       std::string values = previous_topic_.substr(pos+1);
