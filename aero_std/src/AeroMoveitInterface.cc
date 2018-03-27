@@ -551,6 +551,15 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(aero::joint_an
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::getCurrentState(aero::joint_angle_map &_map)
+{
+  robot_interface::joint_angle_map map;
+  ri->getActualPositions(map);
+
+  stringMap2JointMap(map, _map);
+}
+
+//////////////////////////////////////////////////
 double aero::interface::AeroMoveitInterface::getJoint(aero::joint _joint)
 {
   std::map<aero::joint, std::string>::const_iterator it = aero::joint_map.find(_joint);
@@ -614,13 +623,21 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::getLifter(aero::joint_angle_map& _xz)
+void aero::interface::AeroMoveitInterface::getLifter(double &_x, double &_z)
 {
-  std::vector<double> tmp;
-  //kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
-  //_xz[aero::joint::lifter_x] = tmp[0];
-  //_xz[aero::joint::ilf_ter_z] = tmp[1];
-  ROS_ERROR_STREAM(";;;; not implemented yet ;;;;" << __PRETTY_FUNCTION__ );
+  const aero::Transform &top_trans  = kinematic_state->getGlobalLinkTransform("lifter_top_link");
+  const aero::Transform &base_trans = kinematic_state->getGlobalLinkTransform("lifter_base_link");
+
+  aero::Transform diff_trans = base_trans.inverse() * top_trans;
+
+  ROS_DEBUG_STREAM("getLifter: diff_trans: " << diff_trans);
+
+  aero::Vector3 pos = diff_trans.translation();
+
+  //_xz.resize(2);
+
+  _x = pos.x();
+  _z = 0.725 - pos.z(); // robot depend number, typeB_lifter
 }
 
 //////////////////////////////////////////////////

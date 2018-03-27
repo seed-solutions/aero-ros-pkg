@@ -205,6 +205,9 @@ namespace aero
     public: void getRobotStateVariables(aero::joint_angle_map &_map);
 
       ///
+    public: void getCurrentState(aero::joint_angle_map &_map);
+
+      ///
     public: double getJoint(aero::joint _joint);
 
     public: void setPoseVariables(const aero::pose &_pose);
@@ -218,7 +221,7 @@ namespace aero
       /// @return waist position
     public: Vector3 getWaistPosition();
       /// @brief get lifter relative position from top of the lifter in robot model
-    public: void getLifter(aero::joint_angle_map& _xz);
+    public: void getLifter(double &_x, double &_z);
 
       /// @brief get hand angle in robot model
       /// param[in] _arm which arm aero::arm::(rarm|larm)
