@@ -127,6 +127,19 @@ void aero::interface::AeroMoveitInterface::setRobotStateVariables(const aero::jo
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setJoint(aero::joint _joint, double _angle)
+{
+  std::map<std::string, double> map;
+  std::map<aero::joint, std::string>::const_iterator it = aero::joint_map.find(_joint);
+  if (it != aero::joint_map.end()) {
+    map[it->second] = _angle;
+    kinematic_state->setVariablePositions(map);
+  } else {
+    ROS_WARN("can not find in joint_map");
+  }
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setRobotStateToCurrentState()
 {
   // TODO for hand ???
@@ -538,6 +551,18 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(aero::joint_an
 }
 
 //////////////////////////////////////////////////
+double aero::interface::AeroMoveitInterface::getJoint(aero::joint _joint)
+{
+  std::map<aero::joint, std::string>::const_iterator it = aero::joint_map.find(_joint);
+  if (it != aero::joint_map.end()) {
+    return kinematic_state->getVariablePosition(it->second);
+  } else {
+    ROS_WARN("can not find in joint_map");
+  }
+  return 0.0;
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setPoseVariables(const aero::pose &_pose)
 {
   switch(_pose) {
@@ -592,9 +617,10 @@ Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
 void aero::interface::AeroMoveitInterface::getLifter(aero::joint_angle_map& _xz)
 {
   std::vector<double> tmp;
-  kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
-  _xz[aero::joint::lifter_x] = tmp[0];
-  _xz[aero::joint::lifter_z] = tmp[1];
+  //kinematic_state->copyJointGroupPositions(jmg_lifter, tmp);
+  //_xz[aero::joint::lifter_x] = tmp[0];
+  //_xz[aero::joint::ilf_ter_z] = tmp[1];
+  ROS_ERROR_STREAM(";;;; not implemented yet ;;;;" << __PRETTY_FUNCTION__ );
 }
 
 //////////////////////////////////////////////////

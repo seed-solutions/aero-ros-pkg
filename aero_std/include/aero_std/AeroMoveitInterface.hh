@@ -101,6 +101,9 @@ namespace aero
       /// @brief set current real robot's angles to robot model's angles
     public: void setRobotStateToCurrentState(robot_state::RobotStatePtr &_robot_state);
 
+      ///
+    public: void setJoint(aero::joint _joint, double _angle);
+
       /// @brief set named angles such as "reset-pose" to robot model's angles
       /// @param[in] _move_group named target is declared with move group
       /// @param[in] _target target name, target list is in .srdf file in aero_moveit_config
@@ -200,6 +203,9 @@ namespace aero
       /// @brief get joint angles from robot model, recommend
       /// @param[out] _map joint angles map
     public: void getRobotStateVariables(aero::joint_angle_map &_map);
+
+      ///
+    public: double getJoint(aero::joint _joint);
 
     public: void setPoseVariables(const aero::pose &_pose);
     public: void getPoseVariables(const aero::pose &_pose, aero::joint_angle_map &_map);
