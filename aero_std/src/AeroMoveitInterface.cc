@@ -917,19 +917,20 @@ void aero::interface::AeroMoveitInterface::setHandsFromJointStates_()
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power)
+bool aero::interface::AeroMoveitInterface::sendGrasp(aero::arm _arm, int _power, float _tm_sec)
 {
   aero_startup::HandControl srv;
   srv.request.command = aero_startup::HandControlRequest::COMMAND_GRASP;
   srv.request.power   = _power;
   srv.request.thre_warn = -0.9;
   srv.request.thre_fail = 0.2;
+  srv.request.time_sec = _tm_sec;
 
   return callHandSrv_(_arm, srv);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendGraspFast(aero::arm _arm, int _power, float _thre_fail)
+bool aero::interface::AeroMoveitInterface::sendGraspFast(aero::arm _arm, int _power, float _thre_fail, float _tm_sec)
 {
   aero_startup::HandControl srv;
   srv.request.command = aero_startup::HandControlRequest::COMMAND_GRASP_FAST;
@@ -937,22 +938,24 @@ bool aero::interface::AeroMoveitInterface::sendGraspFast(aero::arm _arm, int _po
   srv.request.thre_fail = _thre_fail;
   srv.request.larm_angle = getHand(aero::arm::larm) * 180.0 / M_PI;
   srv.request.rarm_angle = getHand(aero::arm::rarm) * 180.0 / M_PI;
+  srv.request.time_sec = _tm_sec;
 
   return callHandSrv_(_arm, srv);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm)
+bool aero::interface::AeroMoveitInterface::openHand(aero::arm _arm, float _tm_sec)
 {
   aero_startup::HandControl srv;
   srv.request.command = aero_startup::HandControlRequest::COMMAND_UNGRASP;
   srv.request.power   = 0;
+  srv.request.time_sec = _tm_sec;
 
   return callHandSrv_(_arm, srv);
 }
 
 //////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::sendHand(aero::arm _arm, double _rad)
+bool aero::interface::AeroMoveitInterface::sendHand(aero::arm _arm, double _rad, float _tm_sec)
 {
 
   if ( fabs(_rad) > 2.0) {
@@ -968,6 +971,7 @@ bool aero::interface::AeroMoveitInterface::sendHand(aero::arm _arm, double _rad)
   srv.request.thre_fail = 0.0;
   srv.request.larm_angle = _rad * 180.0 / M_PI;
   srv.request.rarm_angle = _rad * 180.0 / M_PI;
+  srv.request.time_sec = _tm_sec;
 
   return callHandSrv_(_arm, srv);
 }

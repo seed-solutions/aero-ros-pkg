@@ -337,19 +337,19 @@ namespace aero
       /// @brief send grasp command to real robot
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _power grasp power from 0\% to 100\%
-    public: bool sendGrasp(aero::arm _arm, int _power=100);
+    public: bool sendGrasp(aero::arm _arm, int _power=100, float _tm_sec = -1.0);
       /// @brief send grasp command to real robot (automatically opens when fail detected)
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _power grasp power from 0\% to 100\%
       /// @param[in] _power fail angle in radian from 0.0 to 0.9
-    public: bool sendGraspFast(aero::arm _arm, int _power=100, float _thre_fail=0.0);
+    public: bool sendGraspFast(aero::arm _arm, int _power=100, float _thre_fail=0.0, float _tm_sec = -1.0);
       /// @brief open real robot's hand
       /// @param[in] _arm aero::arm::(rarm|larm)
-    public: bool openHand(aero::arm _arm);
+    public: bool openHand(aero::arm _arm, float _tm_sec = -1.0);
       /// @brief send desired hand angle to real robot
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _rad desired angle in radian
-    public: bool sendHand(aero::arm _arm, double _rad);
+    public: bool sendHand(aero::arm _arm, double _rad, float _tm_sec = -1.0);
       /// @brief protected function calling HandControl service
       /// @param[in] _arm aero::arm::(rarm|larm)
       /// @param[in] _srv
