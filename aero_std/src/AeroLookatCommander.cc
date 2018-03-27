@@ -11,7 +11,7 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
   event_spinner_.reset(new ros::AsyncSpinner(1, &eventqueue_));
   sub_spinner_.reset(new ros::AsyncSpinner(1, &subqueue_));
 
-  ros::TimerOptions tmopt(ros::Duration(0.1),
+  ros::TimerOptions tmopt(ros::Duration(0.1), //
                           boost::bind(&aero::lookat_commander::AeroLookatCommander::timerCallback,
                                       this, _1),
                           &eventqueue_);

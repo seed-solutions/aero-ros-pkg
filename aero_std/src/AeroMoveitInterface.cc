@@ -679,17 +679,29 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorSync_(int _time_ms)
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async)
+void aero::interface::AeroMoveitInterface::sendModelAngles(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async)
 {
   sendAngleVectorAsync_( aero::moveGroup(_arm, _range), _time_ms);
   if (!_async) sendAngleVectorSync_(_time_ms);
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::sendAngleVector(int _time_ms, aero::ikrange _move_waist, bool _async)
+void aero::interface::AeroMoveitInterface::sendModelAngles(int _time_ms, aero::ikrange _move_waist, bool _async)
 {
   sendAngleVectorAsync_(_time_ms, _move_waist);
   if (!_async) sendAngleVectorSync_(_time_ms);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::sendAngleVector(const aero::joint_angle_map &_map, int _time_ms)
+{
+  std::vector<double> av_mg;
+  std::vector<std::string> j_names;
+  for(auto it : _map) {
+    av_mg.push_back(it.second);
+    j_names.push_back(joint2str(it.first));
+  }
+  sendAngleVectorAsync_(av_mg, j_names, _time_ms);
 }
 
 //////////////////////////////////////////////////
@@ -1752,4 +1764,62 @@ void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_factor)
     }
     break;
   }
+}
+
+////// for backward compatibility
+
+void aero::interface::AeroMoveitInterfaceDeprecated::sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async)
+{
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  sendModelAngles(_arm, _range, _time_ms, _async);
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::sendAngleVector(int _time_ms, aero::ikrange _move_waist, bool _async)
+{
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  sendModelAngles(_time_ms, _move_waist, _async);
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::getLifter(aero::joint_angle_map &_xz)
+{
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  double x, z;
+  getLifter(x, z);
+  _xz[aero::joint::lifter_x] = x;
+  _xz[aero::joint::lifter_z] = z;
+}
+//// BASE
+geometry_msgs::Pose aero::interface::AeroMoveitInterfaceDeprecated::getCurrentPose(std::string _map)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+geometry_msgs::Pose aero::interface::AeroMoveitInterfaceDeprecated::getLocationPose(std::string _location)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::goPosAsync(double _x, double _y, double _rad)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::moveToAsync(std::string _location)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::moveToAsync(Vector3 _point)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::moveToAsync(geometry_msgs::Pose _pose)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::faceTowardAsync(std::string _location)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::faceTowardAsync(geometry_msgs::Pose _pose)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::checkMoveTo(geometry_msgs::Pose _pose)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
 }

@@ -76,10 +76,10 @@ namespace aero
     public: double toDestination(const std::string &_location);
       /// @brief turn the robot toward location
       /// @param[in] _location see spot.yaml
-    public: void faceTowardAsync(const std::string &_location);
+    public: void faceToward(const std::string &_location);
       /// @brief turn the robot toward pose
       /// @param[in] target pose in map coordinate
-    public: void faceTowardAsync(const aero::Transform &_coords);
+    public: void faceToward(const aero::Transform &_coords);
 
       /// @brief check global cost map wether the robot can make plan to go to the position or not
       /// @param[in] _pose desired pose in map coordinate

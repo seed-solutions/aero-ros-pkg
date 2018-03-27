@@ -101,7 +101,9 @@ namespace aero
       /// @brief set current real robot's angles to robot model's angles
     public: void setRobotStateToCurrentState(robot_state::RobotStatePtr &_robot_state);
 
-      ///
+      /// @brief set an angle of a joint in robot model
+      /// @param[in] _joint aero::joint / identifier of joint
+      /// @param[in] _angle (angle [rad])
     public: void setJoint(aero::joint _joint, double _angle);
 
       /// @brief set named angles such as "reset-pose" to robot model's angles
@@ -204,13 +206,22 @@ namespace aero
       /// @param[out] _map joint angles map
     public: void getRobotStateVariables(aero::joint_angle_map &_map);
 
-      ///
+      /// @brief get current joint angles of actual robot
+      /// @param[out] _map joint angles of whole body
     public: void getCurrentState(aero::joint_angle_map &_map);
 
-      ///
+      /// @brief get angle of joint in robot model
+      /// @param[in] _joint aero::joint / identifier of joint
+      /// @return joint angle of _joint
     public: double getJoint(aero::joint _joint);
 
+      /// @brief set pre defined joint angles to robot model
+      /// @param[in] _pose ( aero::pose defined at IKSettings.hh )
     public: void setPoseVariables(const aero::pose &_pose);
+
+      /// @brief get pre defined joint angles
+      /// @param[in]  _pose ( aero::pose defined at IKSettings.hh )
+      /// @param[out] _map  joint angles
     public: void getPoseVariables(const aero::pose &_pose, aero::joint_angle_map &_map);
 
       /// @brief get named target "reset-pose", its basic pose of robot (deprecated)
@@ -220,7 +231,10 @@ namespace aero
       /// @brief get waist position in base_link coordinate in robot model
       /// @return waist position
     public: Vector3 getWaistPosition();
+
       /// @brief get lifter relative position from top of the lifter in robot model
+      /// @param[out] _x position of x direction
+      /// @param[out] _z position of z direction
     public: void getLifter(double &_x, double &_z);
 
       /// @brief get hand angle in robot model
@@ -259,12 +273,18 @@ namespace aero
       /// @param[in] _arm witch arm to use
       /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|upperbody|wholebody|arm_lifter)
       /// @param[in] _time_ms execution time, and wait this time
-    public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=true); // _av in kinematic_state is used
+    public: void sendModelAngles(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=true);
       /// @brief send joint angles in robot model to real robot
-      /// @attention use all joints on upper body
       /// @param[in] _time_ms execution time, and wait this time
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
-    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::wholebody, bool _aync=true); // all angles from kinematic_state is published
+    public: void sendModelAngles(int _time_ms, aero::ikrange _move_waist=aero::ikrange::wholebody, bool _aync=true);
+
+      /// @brief send joint angles to real robot
+      /// @attention return immediately (not wait finishing execution)
+      /// @param[in] _map joint angles sent to real robot
+      /// @param[in] _time_ms execution time
+      /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
+    public: void sendAngleVector(const aero::joint_angle_map &_map, int _time_ms);
 
       /// @brief send joints trajectory to real robot
       /// @attention trajectory type is std::vector<aero::joint_angle_map>
@@ -483,6 +503,45 @@ namespace aero
 
     protected: boost::mutex ri_mutex_;
     };
+
+    ////// for backward compatibility
+    class AeroMoveitInterfaceDeprecated : public AeroMoveitInterface
+    {
+    public: AeroMoveitInterfaceDeprecated(ros::NodeHandle &_nh,
+                                          const std::string &_rd="robot_description")
+      : AeroMoveitInterface(_nh, _rd)
+      {
+        ROS_WARN("This is deprecated class / AeroMoveitInterface");
+      }
+      //COMMON
+    public: using AeroMoveitInterface::sendAngleVector;
+    public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=true);
+    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::wholebody, bool _async=true);
+    public: using AeroMoveitInterface::getLifter;
+    public: void getLifter(aero::joint_angle_map &_xz);
+      // Grasp
+
+      //BASE
+    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
+    public: geometry_msgs::Pose getLocationPose(std::string _location);
+      //public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
+    public: void goPosAsync(double _x, double _y, double _rad);
+    public: void moveToAsync(std::string _location);
+    public: void moveToAsync(Vector3 _point);
+    public: void moveToAsync(geometry_msgs::Pose _pose);
+      //public: bool isMoving();
+      //public: bool at(std::string _location, double _thre=0.2);
+      //public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
+      //public: void stop();
+      //public: void go();
+      //public: float toDestination(std::string _location);
+    public: void faceTowardAsync(std::string _location);
+    public: void faceTowardAsync(geometry_msgs::Pose _pose);
+    public: using AeroBaseCommander::checkMoveTo;
+    public: bool checkMoveTo(geometry_msgs::Pose _pose);
+      //protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
+    };
+    typedef boost::shared_ptr<AeroMoveitInterfaceDeprecated > AeroMoveitInterfacePtr;
   }
 }
 #endif

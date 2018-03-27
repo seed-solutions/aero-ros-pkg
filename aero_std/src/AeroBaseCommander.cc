@@ -172,15 +172,15 @@ double aero::base_commander::AeroBaseCommander::toDestination(const std::string 
 }
 
 //////////////////////////////////////////////////
-void aero::base_commander::AeroBaseCommander::faceTowardAsync(const std::string &_location)
+void aero::base_commander::AeroBaseCommander::faceToward(const std::string &_location)
 {
   aero::Transform loc;
   getLocationCoords(loc, _location);
-  faceTowardAsync(loc);
+  faceToward(loc);
 }
 
 //////////////////////////////////////////////////
-void aero::base_commander::AeroBaseCommander::faceTowardAsync(const aero::Transform &_pose)
+void aero::base_commander::AeroBaseCommander::faceToward(const aero::Transform &_pose)
 {
 #if 0
   geometry_msgs::Pose cur, pose;
@@ -199,7 +199,7 @@ void aero::base_commander::AeroBaseCommander::faceTowardAsync(const aero::Transf
   Eigen::Quaterniond qua = Eigen::Quaterniond(Eigen::Matrix3d(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ())));
   tf::quaternionEigenToMsg(qua, pose.orientation);
 
-  moveToAsync(pose);
+  moveTo(pose);
 #endif
 }
 
