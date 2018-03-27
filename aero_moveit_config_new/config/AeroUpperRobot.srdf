@@ -15,8 +15,15 @@
     <group name="larm">
         <chain base_link="body_link" tip_link="l_hand_link" />
     </group>
+    <group name="both_arms">
+        <group name="larm" />
+        <group name="rarm" />
+    </group>
     <group name="waist">
         <chain base_link="waist_link" tip_link="body_link" />
+    </group>
+    <group name="lifter">
+        <chain base_link="lifter_base_link" tip_link="lifter_top_link" />
     </group>
     <group name="rarm_with_waist">
         <group name="rarm" />
@@ -26,17 +33,10 @@
         <group name="larm" />
         <group name="waist" />
     </group>
-    <group name="both_arms">
-        <group name="larm" />
-        <group name="rarm" />
-    </group>
     <group name="both_arms_with_waist">
         <group name="larm" />
         <group name="rarm" />
         <group name="waist" />
-    </group>
-    <group name="lifter">
-        <chain base_link="lifter_base_link" tip_link="lifter_top_link" />
     </group>
     <group name="rarm_with_torso">
         <group name="rarm" />
