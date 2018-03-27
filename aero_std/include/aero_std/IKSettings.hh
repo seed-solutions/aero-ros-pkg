@@ -17,7 +17,7 @@ namespace aero
 
   enum struct arm : int {rarm, larm, either, both_arms};
 
-  enum struct ikrange : int {arm, waist, torso, lifter};
+  enum struct ikrange : int {arm, upperbody, arm_lifter, wholebody};
 
   enum struct eef : int {hand, grasp, pick, index, thumb, none};
 
@@ -171,13 +171,13 @@ namespace aero
   {
     std::string mg( arm2string_(_arm) );
     switch(_range) {
-    case aero::ikrange::waist:
+    case aero::ikrange::upperbody:
       mg = mg + "_with_waist";
       break;
-    case aero::ikrange::torso:
+    case aero::ikrange::wholebody:
       mg = mg + "_with_torso";
       break;
-    case aero::ikrange::lifter:
+    case aero::ikrange::arm_lifter:
       mg = mg + "_with_lifter";
       break;
     default:
@@ -193,17 +193,17 @@ namespace aero
       _names.push_back("rarm");
       _names.push_back("larm");
       break;
-    case aero::ikrange::waist:
+    case aero::ikrange::upperbody:
       _names.push_back("rarm");
       _names.push_back("larm");
       _names.push_back("waist");
       break;
-    case aero::ikrange::lifter:
+    case aero::ikrange::arm_lifter:
       _names.push_back("rarm");
       _names.push_back("larm");
       _names.push_back("lifter");
       break;
-    case aero::ikrange::torso:
+    case aero::ikrange::wholebody:
       _names.push_back("rarm");
       _names.push_back("larm");
       _names.push_back("waist");

@@ -12,9 +12,9 @@ namespace aero
     arm(aero::arm::rarm),
     eef(aero::eef::hand),
     mid_pose(aero::Transform::Identity()),
-    mid_ik_range(aero::ikrange::torso),
+    mid_ik_range(aero::ikrange::wholebody),
     end_pose(aero::Transform::Identity()),
-    end_ik_range(aero::ikrange::torso) {
+    end_ik_range(aero::ikrange::wholebody) {
   }
 
   public: aero::arm arm;

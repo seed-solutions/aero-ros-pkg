@@ -655,7 +655,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(int _time_ms, a
   j_names = jmg_both_arms->getVariableNames();
   kinematic_state->copyJointGroupPositions("both_arms", av_mg);
 
-  if (_move_waist == aero::ikrange::waist || _move_waist == aero::ikrange::torso) {
+  if (_move_waist == aero::ikrange::upperbody || _move_waist == aero::ikrange::wholebody) {
     std::vector<double> extra_av_mg;
     kinematic_state->copyJointGroupPositions("waist", extra_av_mg);
     const std::vector<std::string> &extra_j_names = jmg_waist->getVariableNames();
@@ -663,7 +663,7 @@ void aero::interface::AeroMoveitInterface::sendAngleVectorAsync_(int _time_ms, a
     std::copy(extra_av_mg.begin(),   extra_av_mg.end(),   std::back_inserter(av_mg));
     std::copy(extra_j_names.begin(), extra_j_names.end(), std::back_inserter(j_names));
   }
-  if (_move_waist == aero::ikrange::lifter || _move_waist == aero::ikrange::torso) {
+  if (_move_waist == aero::ikrange::arm_lifter || _move_waist == aero::ikrange::wholebody) {
     std::vector<double> extra_av_mg;
     kinematic_state->copyJointGroupPositions("lifter", extra_av_mg);
     const std::vector<std::string> &extra_j_names = jmg_lifter->getVariableNames();
@@ -1312,20 +1312,20 @@ bool aero::interface::AeroMoveitInterface::solveIKOneSequence(
 
   // ik with waist
   kinematic_state->setVariablePositions(_av_initial);
-  status = setFromIK(_arm, aero::ikrange::waist, _pose, _eef);
+  status = setFromIK(_arm, aero::ikrange::upperbody, _pose, _eef);
   if (status) {
     getRobotStateVariables(_result);
-    _result_range = aero::moveGroup(_arm, aero::ikrange::waist);
+    _result_range = aero::moveGroup(_arm, aero::ikrange::upperbody);
     return true;
   }
-  if (_ik_range == aero::ikrange::waist) return false;
+  if (_ik_range == aero::ikrange::upperbody) return false;
 
-  // ik with lifter
+  // ik with waist and lifter
   kinematic_state->setVariablePositions(_av_initial);
-  status = setFromIK(_arm, aero::ikrange::lifter, _pose, _eef);
+  status = setFromIK(_arm, aero::ikrange::wholebody, _pose, _eef);
   if (status) {
     getRobotStateVariables(_result);
-    _result_range = aero::moveGroup(_arm, aero::ikrange::lifter);
+    _result_range = aero::moveGroup(_arm, aero::ikrange::wholebody);
     return true;
   }
 
@@ -1342,7 +1342,7 @@ bool aero::interface::AeroMoveitInterface::sendSequence(std::vector<int> _msecs)
     ROS_ERROR("no motion plan found");
     return false;
   }
-  sendTrajectory(trajectory_, _msecs, aero::ikrange::torso, false);
+  sendTrajectory(trajectory_, _msecs, aero::ikrange::wholebody, false);
 
   return true;
 }
@@ -1499,7 +1499,7 @@ bool aero::interface::AeroMoveitInterface::sendPlaceIK(const aero::GraspRequest 
   double lif_x_end;
   double lif_z_end;
   if (range == aero::ikrange::lifter) {
-    range = aero::ikrange::torso;
+    range = aero::ikrange::wholebody;
     lif_x_mid = av_mid[aero::joint::lifter_x];
     lif_z_mid = av_end[aero::joint::lifter_z];
     lif_x_end = av_mid[aero::joint::lifter_x];

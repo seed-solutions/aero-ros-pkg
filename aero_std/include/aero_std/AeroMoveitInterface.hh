@@ -117,7 +117,7 @@ namespace aero
                            const std::string &_eef_link="", int _attempts=10);
       /// @brief solve IK and set result to robot model's angles
       /// @param[in] _arm aero::arm::rarm or aero::arm::larm
-      /// @param[in] _range aero::ikrange::(arm|torso|lifter) is to describe joints used in IK
+      /// @param[in] _range aero::ikrange::(arm|upperbody|wholebody|arm_lifter) is to describe joints used in IK
       /// @param[in] _pos IK target position
       /// @param[in] _qua IK target quaternion
       /// @param[in] _eef_link this link gets closer to _pose. you can use aero::eef::(hand|grasp|pick)
@@ -248,14 +248,14 @@ namespace aero
       /// @attention joints using are determined by args. for example when sendAnglevector(aero::arm::rarm, aero:ikrange::lifter, 3000) is called,
       /// upperbody without left arm will move
       /// @param[in] _arm witch arm to use
-      /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|waist|torso|lifter)
+      /// @param[in] _range use arm only , with torso, or with lifter aero::ikrange::(arm|upperbody|wholebody|arm_lifter)
       /// @param[in] _time_ms execution time, and wait this time
     public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=true); // _av in kinematic_state is used
       /// @brief send joint angles in robot model to real robot
       /// @attention use all joints on upper body
       /// @param[in] _time_ms execution time, and wait this time
       /// @param[in] _move_waist if it's aero::ikrange::lifter, the lifter will move
-    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::torso, bool _aync=true); // all angles from kinematic_state is published
+    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::wholebody, bool _aync=true); // all angles from kinematic_state is published
 
       /// @brief send joints trajectory to real robot
       /// @attention trajectory type is std::vector<aero::joint_angle_map>
@@ -264,13 +264,13 @@ namespace aero
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
       /// @return when times.size is not equal to trajectory.size, return false
     public: bool sendTrajectory(const aero::trajectory &_trajectory, const std::vector<int> &_times,
-                                aero::ikrange _move_lifter=aero::ikrange::torso, bool _async=true);
+                                aero::ikrange _move_lifter=aero::ikrange::wholebody, bool _async=true);
       /// @brief send joints trajectory to real robot
       /// @param[in] _trajectory joints trajectory will be executed
       /// @param[in] _time_ms split this time to trajectory size and execute trajectory on each splitted times
       /// @param[in] _move_lifter if it's aero::ikrange::lifter, the lifter will move
     public: bool sendTrajectory(const aero::trajectory &_trajectory, int _time_ms,
-                                aero::ikrange _move_lifter=aero::ikrange::torso, bool _async=true);
+                                aero::ikrange _move_lifter=aero::ikrange::wholebody, bool _async=true);
 
       /// @brief protected function. the base function of sendAngleVectorAsync
     protected: void sendAngleVectorSync_(int _time_ms);
