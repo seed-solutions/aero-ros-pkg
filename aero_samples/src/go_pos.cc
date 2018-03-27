@@ -15,7 +15,7 @@ int main(int argc, char **argv)
   ROS_INFO("reseting robot pose");
   //robot->sendResetManipPose();
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   // go 0.5 meters forward

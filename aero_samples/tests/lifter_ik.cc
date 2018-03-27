@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   aero::interface::AeroMoveitInterface::Ptr controller(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
   controller->setPoseVariables(aero::pose::reset_manip);
-  controller->sendAngleVector(3000);
+  controller->sendModelAngles(3000);
   controller->sendLifter(0.0, 0.0);
   sleep(3);
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
   ROS_INFO("reseting robot pose");
   controller->setPoseVariables(aero::pose::reset_manip);
-  controller->sendAngleVector(3000);
+  controller->sendModelAngles(3000);
   controller->sendLifter(0.0, 0.0);
   sleep(3);
   ROS_INFO("demo node finished");

@@ -13,7 +13,7 @@ int main(int argc, char **argv)
   aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
 
@@ -26,12 +26,12 @@ int main(int argc, char **argv)
 
   // send first angles with 5 seconds
   robot->setRobotStateVariables(angles);
-  robot->sendAngleVector(5000);
+  robot->sendModelAngles(5000);
   sleep(3);
 
   // overwrite angles before reaching goal
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   ROS_INFO("demo node finished");

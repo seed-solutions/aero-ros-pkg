@@ -14,7 +14,7 @@ int main(int argc, char **argv)
   aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   // set real robot's joint angles to the robot model in interface 
@@ -29,13 +29,13 @@ int main(int argc, char **argv)
 
   ROS_INFO("moveing left elbow");
   robot->setRobotStateVariables(joint_angles);
-  robot->sendAngleVector(2000);// send to robot
+  robot->sendModelAngles(2000);// send to robot
   sleep(1);
 
 
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
   ROS_INFO("demo node finished");
   ros::shutdown();

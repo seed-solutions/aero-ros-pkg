@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   aero::interface::AeroMoveitInterface::Ptr controller(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
   controller->setPoseVariables(aero::pose::reset_manip);
-  controller->sendAngleVector(3000);
+  controller->sendModelAngles(3000);
   sleep(3);
 
 
@@ -49,14 +49,14 @@ int main(int argc, char **argv)
     // take time for first send
     joint_angles.at(j->first) = bounds.min_position_;
     controller->setRobotStateVariables(joint_angles);
-    controller->sendAngleVector(5000);
+    controller->sendModelAngles(5000);
     usleep(500 * 1000);
     warnDiff(controller, j->first, joint_angles.at(j->first)); // get result
     joint_angles.at(j->first) += resolution;
     // for rest, send fast
     while (joint_angles.at(j->first) < bounds.max_position_) {
       controller->setRobotStateVariables(joint_angles);
-      controller->sendAngleVector(100);
+      controller->sendModelAngles(100);
       usleep(500 * 1000);
       warnDiff(controller, j->first, joint_angles.at(j->first)); // get result
       joint_angles.at(j->first) += resolution;
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
   ROS_INFO("reseting robot pose");
   controller->setPoseVariables(aero::pose::reset_manip);
-  controller->sendAngleVector(3000);
+  controller->sendModelAngles(3000);
   sleep(3);
   ROS_INFO("demo node finished");
   ros::shutdown();

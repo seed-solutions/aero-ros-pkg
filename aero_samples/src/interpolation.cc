@@ -14,7 +14,7 @@ int main(int argc, char **argv)
   ROS_INFO("reseting robot pose");
   //robot->sendResetManipPose();
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   // preparation
@@ -32,18 +32,18 @@ int main(int argc, char **argv)
   //robot->setInterpolation(aero::interpolation::i_linear); // TODO: not implemented yet
   sleep(1);
   robot->setRobotStateVariables(angles);
-  robot->sendAngleVector(5000);
+  robot->sendModelAngles(5000);
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
 
   // --- sigmoid ---
   ROS_INFO("type sigmoid");
   //robot->setInterpolation(aero::interpolation::i_sigmoid); // TODO: not implemented yet
   sleep(1);
   robot->setRobotStateVariables(angles);
-  robot->sendAngleVector(5000);
+  robot->sendModelAngles(5000);
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   //robot->setInterpolation(aero::interpolation::i_constant); // TODO: not implemented yet

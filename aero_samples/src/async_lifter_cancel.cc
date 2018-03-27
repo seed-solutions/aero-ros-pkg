@@ -11,10 +11,10 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterfaceDeprecated(nh));
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   // prepare

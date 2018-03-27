@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   // reset robot pose
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   // trackingMode enables asynchronous control of neck joints
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   joints2[aero::joint::waist_p] = 0.524;
   robot_mutex.lock();
   robot->setRobotStateVariables(joints2);
-  robot->sendAngleVector(5000);
+  robot->sendModelAngles(5000);
   robot_mutex.unlock();
   sleep(5);
   head_thread.join();
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
   // finish
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   ROS_INFO("demo node finished");

@@ -13,13 +13,13 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterfaceDeprecated(nh));
 
   // reset robot pose
   ROS_INFO("reseting robot pose");
   //robot->sendResetManipPose();
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   // create target to look at
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   aero::joint_angle_map joints2;
   joints2[aero::joint::waist_p] = 0.524;
   robot->setRobotStateVariables(joints2);
-  robot->sendAngleVector(5000);
+  robot->sendModelAngles(5000);
   sleep(1);
 
   // set background tracking to false
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
   ROS_INFO("reseting robot pose");
   //robot->sendResetManipPose();
   robot->setPoseVariables(aero::pose::reset_manip);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(3);
 
   ROS_INFO("demo node finished");
