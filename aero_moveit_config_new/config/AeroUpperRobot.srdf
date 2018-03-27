@@ -118,18 +118,20 @@
     <group_state name="reset-pose" group="upper_body">
         <joint name="l_elbow_joint" value="-2.3562" />
         <joint name="l_shoulder_p_joint" value="-0.2443" />
-        <joint name="l_shoulder_r_joint" value="0" />
-        <joint name="l_shoulder_y_joint" value="0" />
+        <joint name="l_shoulder_r_joint" value="0.02" />
+        <joint name="l_shoulder_y_joint" value="0.3" />
         <joint name="l_wrist_p_joint" value="0" />
         <joint name="l_wrist_r_joint" value="0" />
         <joint name="l_wrist_y_joint" value="0" />
+        <joint name="l_hand_y_joint" value="0" />
         <joint name="r_elbow_joint" value="-2.3562" />
         <joint name="r_shoulder_p_joint" value="-0.2443" />
-        <joint name="r_shoulder_r_joint" value="0" />
-        <joint name="r_shoulder_y_joint" value="0" />
+        <joint name="r_shoulder_r_joint" value="-0.02" />
+        <joint name="r_shoulder_y_joint" value="-0.3" />
         <joint name="r_wrist_p_joint" value="0" />
         <joint name="r_wrist_r_joint" value="0" />
         <joint name="r_wrist_y_joint" value="0" />
+        <joint name="r_hand_y_joint" value="0" />
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
@@ -137,21 +139,47 @@
         <joint name="neck_r_joint" value="0" />
         <joint name="neck_y_joint" value="0" />
     </group_state>
-    <group_state name="reset-manip-pose" group="upper_body">
+    <!--group_state name="manip-pose" group="upper_body">
         <joint name="l_elbow_joint" value="-2.3562" />
         <joint name="l_shoulder_p_joint" value="-0.2443" />
-        <joint name="l_shoulder_r_joint" value="0" />
-        <joint name="l_shoulder_y_joint" value="0" />
+        <joint name="l_shoulder_r_joint" value="0.0" />
+        <joint name="l_shoulder_y_joint" value="0.0" />
         <joint name="l_wrist_p_joint" value="0" />
         <joint name="l_wrist_r_joint" value="0" />
         <joint name="l_wrist_y_joint" value="0" />
+        <joint name="l_hand_y_joint" value="0" />
         <joint name="r_elbow_joint" value="-2.3562" />
         <joint name="r_shoulder_p_joint" value="-0.2443" />
-        <joint name="r_shoulder_r_joint" value="0" />
-        <joint name="r_shoulder_y_joint" value="0" />
+        <joint name="r_shoulder_r_joint" value="-0.0" />
+        <joint name="r_shoulder_y_joint" value="-0.0" />
         <joint name="r_wrist_p_joint" value="0" />
         <joint name="r_wrist_r_joint" value="0" />
         <joint name="r_wrist_y_joint" value="0" />
+        <joint name="r_hand_y_joint" value="0" />
+        <joint name="waist_p_joint" value="0" />
+        <joint name="waist_r_joint" value="0" />
+        <joint name="waist_y_joint" value="0" />
+        <joint name="neck_p_joint" value="0" />
+        <joint name="neck_r_joint" value="0" />
+        <joint name="neck_y_joint" value="0" />
+    </group_state-->
+    <group_state name="reset-manip-pose" group="upper_body">
+        <joint name="l_elbow_joint" value="-2.3562" />
+        <joint name="l_shoulder_p_joint" value="-0.2443" />
+        <joint name="l_shoulder_r_joint" value="0.02" />
+        <joint name="l_shoulder_y_joint" value="0.3" />
+        <joint name="l_wrist_p_joint" value="0" />
+        <joint name="l_wrist_r_joint" value="0" />
+        <joint name="l_wrist_y_joint" value="0" />
+        <joint name="l_hand_y_joint" value="0" />
+        <joint name="r_elbow_joint" value="-2.3562" />
+        <joint name="r_shoulder_p_joint" value="-0.2443" />
+        <joint name="r_shoulder_r_joint" value="-0.02" />
+        <joint name="r_shoulder_y_joint" value="-0.3" />
+        <joint name="r_wrist_p_joint" value="0" />
+        <joint name="r_wrist_r_joint" value="0" />
+        <joint name="r_wrist_y_joint" value="0" />
+        <joint name="r_hand_y_joint" value="0" />
         <joint name="waist_p_joint" value="0" />
         <joint name="waist_r_joint" value="0" />
         <joint name="waist_y_joint" value="0" />
