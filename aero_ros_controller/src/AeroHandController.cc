@@ -104,6 +104,7 @@ public:
       ROS_DEBUG("call pos: %d, script: %d, power %d",
                 g_srv.request.position, g_srv.request.script, g_srv.request.power);
       g_client_.call(g_srv);
+      executing_flg_left_ = false;
     }
     {
       aero_startup::GraspControl g_srv;
@@ -113,6 +114,7 @@ public:
       ROS_DEBUG("call pos: %d, script: %d, power %d",
                 g_srv.request.position, g_srv.request.script, g_srv.request.power);
       g_client_.call(g_srv);
+      executing_flg_right_ = false;
     }
     ROS_INFO("Initialized Handcontroller");
   }

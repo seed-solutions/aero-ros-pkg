@@ -149,7 +149,16 @@ public:
     controller_upper_->set_max_single_current(_sendnum, _power);
     mutex_upper_.unlock();
   }
-
+  void stopUpper() {
+    mutex_upper_.lock();
+    upper_send_enable_ = false;
+    mutex_upper_.unlock();
+  }
+  void startUpper() {
+    mutex_upper_.lock();
+    upper_send_enable_ = true;
+    mutex_upper_.unlock();
+  }
   double getPeriod() { return ((double)CONTROL_PERIOD_US_) / (1000 * 1000); }
   double getOverWrapScale() { return OVERWRAP_SCALE_; }
 
@@ -193,6 +202,7 @@ protected:
   boost::shared_ptr<AeroLowerController > controller_lower_;
 
   bool initialized_flag_;
+  bool upper_send_enable_;
 
   int   CONTROL_PERIOD_US_;
   float OVERWRAP_SCALE_;

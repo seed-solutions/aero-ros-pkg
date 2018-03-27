@@ -186,6 +186,9 @@ bool AeroRobotHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)//
   //registerInterface(&vj_interface_);
   //registerInterface(&ej_interface_);
 
+  upper_send_enable_ = true;
+  // lower_send_enable_ = true;
+
   return true;
 }
 
@@ -203,7 +206,9 @@ void AeroRobotHW::readPos(const ros::Time& time, const ros::Duration& period, bo
     controller_lower_->update_position();
 #else
     std::thread t1([&](){
-        controller_upper_->update_position();
+        if(upper_send_enable_) {
+          controller_upper_->update_position();
+        }
       });
     std::thread t2([&](){
         controller_lower_->update_position();

@@ -34,6 +34,8 @@ class AeroGrasp
 
  public: bool GraspControlCallback(aero_startup::GraspControl::Request&  _req,
                                    aero_startup::GraspControl::Response& _res) {
+   // hw_->stopUpper(); // not needed
+
    ROS_WARN("AeroGrasp: Grasp pos: %d, script %d, power: %d",
             _req.position, _req.script, _req.power);
 
@@ -48,6 +50,7 @@ class AeroGrasp
    // return if cancel script
    if (_req.script == aero_startup::GraspControlRequest::SCRIPT_CANCEL) {
      ROS_WARN("AeroGrasp: End Grasp");
+     // hw_->startUpper(); // not needed
      return true;
    }
 
@@ -63,7 +66,8 @@ class AeroGrasp
    _res.angles[0] = upper_angles[13];
    _res.angles[1] = upper_angles[27];
 #endif
-  return true;
+   // hw_->startUpper(); // not needed
+   return true;
  }
 
   /// @param node handle
