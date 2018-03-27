@@ -92,7 +92,29 @@ public:
                                    &AeroHandControl::HandControl, this);
 
     g_client_ = nh.serviceClient<aero_startup::GraspControl>(
-      "/aero_controller/grasp_control");
+      "/aero_ros_controller/grasp_control");
+
+    g_client_.waitForExistence();
+
+    {
+      aero_startup::GraspControl g_srv;
+      g_srv.request.position = POSITION_Left;
+      g_srv.request.script = GraspControlRequest::SCRIPT_CANCEL;
+      g_srv.request.power = (100 << 8) + 30;
+      ROS_DEBUG("call pos: %d, script: %d, power %d",
+                g_srv.request.position, g_srv.request.script, g_srv.request.power);
+      g_client_.call(g_srv);
+    }
+    {
+      aero_startup::GraspControl g_srv;
+      g_srv.request.position = POSITION_Right;
+      g_srv.request.script = GraspControlRequest::SCRIPT_CANCEL;
+      g_srv.request.power = (100 << 8) + 30;
+      ROS_DEBUG("call pos: %d, script: %d, power %d",
+                g_srv.request.position, g_srv.request.script, g_srv.request.power);
+      g_client_.call(g_srv);
+    }
+    ROS_INFO("Initialized Handcontroller");
   }
 
   bool HandControl(aero_startup::HandControl::Request &req,
@@ -317,14 +339,15 @@ public:
     //
     ros::Time start = ros::Time::now() + ros::Duration(0.04);
     ROS_DEBUG("OpenHand: sendAngles");
-    hi->sendAngles(map, 0.5, start);
-    ROS_DEBUG("OpanHand: wait_interpolation");
-    hi->wait_interpolation();
+    hi->sendAngles(map, 1.0, start);
     //
     g_srv.request.power = (100 << 8) + 30;
     ROS_DEBUG("call pos: %d, script: %d, power %d",
               g_srv.request.position, g_srv.request.script, g_srv.request.power);
     g_client_.call(g_srv);
+    //
+    ROS_DEBUG("OpanHand: wait_interpolation");
+    hi->wait_interpolation();
   }
 
   void GraspAngle (int hand, float larm_angle, float rarm_angle, float time=0.5)
@@ -361,7 +384,7 @@ public:
         ROS_DEBUG("call pos: %d, script: %d, power %d",
                   g_srv.request.position, g_srv.request.script, g_srv.request.power);
         g_client_.call(g_srv);
-        executing_flg_right_ = 0;
+        executing_flg_right_ = false;
       }
       R_GRASP ();
       break;
