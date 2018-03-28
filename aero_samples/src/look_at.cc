@@ -18,11 +18,13 @@ int main(int argc, char **argv)
 
   // preparation
   aero::joint_angle_map joints_rh, joints_lh;
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->setJoint(aero::joint::r_elbow, -1.745);
   robot->getRobotStateVariables(joints_rh);
-  joints_lh = joints_rh;
 
-  joints_rh[aero::joint::r_elbow] = -1.745;
-  joints_lh[aero::joint::l_elbow] = -1.745;
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->setJoint(aero::joint::l_elbow, -1.745);
+  robot->getRobotStateVariables(joints_lh);
 
   // how to use setLookAt
   // in this code, aero looks at his hand
@@ -33,25 +35,28 @@ int main(int argc, char **argv)
   aero::Vector3 obj_rh = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);// second, prepare target position
   robot->setLookAt(obj_rh);// third, set lookAt target to robot model
   robot->sendModelAngles(1000);// finally, send robot model's joints values to real robot. neck angles are sended with body angles
-  sleep(3);
+  robot->waitInterpolation();
 
   // looks at left hand
   ROS_INFO("look at left hand");
   robot->setRobotStateVariables(joints_lh);
   robot->setLookAt(robot->getEEFPosition(aero::arm::larm, aero::eef::pick));
   robot->sendModelAngles(1000);
-  sleep(3);
+  robot->waitInterpolation();
 
   // reset neck angles
   robot->resetLookAt();// this time, neck doesn't move
   robot->sendModelAngles(1000);// neck angles sended to real robot with body angles
+  robot->waitInterpolation();
   //robot->sendResetManipPose(); when sendResetManipPose is called, neck angles are alse sended to real robot
 
   ROS_INFO("reseting pose");
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->sendModelAngles(3000);
-  sleep(3);
+  robot->waitInterpolation();
+
   ROS_INFO("demo node finished");
   ros::shutdown();
+
   return 0;
 }
