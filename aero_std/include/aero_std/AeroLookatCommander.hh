@@ -42,7 +42,7 @@ namespace aero
     protected: aero::Vector3 tracking_pos_;
     protected: boost::mutex callback_mtx_;
     protected: robot_state::RobotStatePtr kinematic_state_;
-    protected: boost::shared_ptr<aero::interface::AeroMoveitInterface > ami_;
+
     protected: ros::Time previous_callback_;
     protected: ros::Subscriber sub_;
       //
@@ -50,6 +50,8 @@ namespace aero
     protected: boost::shared_ptr < ros::AsyncSpinner > sub_spinner_;
 
     protected: ros::Timer event_timer_;
+
+    protected: aero::interface::AeroMoveitInterface *ami_;
     };
   }
 }

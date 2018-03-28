@@ -11,29 +11,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, 
 
   ri.reset(new aero::AeroRobotInterface(_nh));
 
-#if 0
-  look_at_publisher_rpy_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/rpy", 10);
-
-  look_at_publisher_base_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/target", 10);
-
-  look_at_publisher_map_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/target/map", 10);
-
-  look_at_publisher_base_static_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/target/static", 10);
-
-  look_at_publisher_map_static_ = _nh.advertise<geometry_msgs::Point>
-    ("/look_at/target/static/map", 10);
-
-  lookat_target_publisher_ = _nh.advertise<std_msgs::String>
-    ("/look_at/set_target_topic", 10);
-
-  get_saved_neck_positions_ = _nh.serviceClient<aero_startup::AeroSendJoints>
-    ("/look_at/get_model_update");
-#endif
-
 #if USING_BASE
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
@@ -240,63 +217,65 @@ bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std:
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt_(double _x, double _y, double _z,
+void aero::interface::AeroMoveitInterface::setLookAt_(const aero::Vector3 &_pos,
                                                       robot_state::RobotStatePtr &_robot_state)
 {
-  auto neck = solveLookAt_(aero::Vector3(_x, _y, _z), _robot_state);
+  auto neck = solveLookAt_(_pos, _robot_state);
   setNeck_(0.0, std::get<1>(neck), std::get<2>(neck), _robot_state);
 }
+
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking, bool _record_topic)
+void aero::interface::AeroMoveitInterface::setLookAt(const aero::Vector3 &_pos, bool _map_coordinate, bool _tracking, bool _record_topic)
 {
   ROS_INFO("setTrackingMode is %d in setLookAt, looking for %f %f %f in %s",
-           static_cast<int>(tracking_mode_flag_), _x, _y, _z,
+           static_cast<int>(tracking_mode_flag_), _pos.x(), _pos.y(), _pos.z(),
            (_map_coordinate ? "map" : "base"));
 
   if (tracking_mode_flag_) {
-    geometry_msgs::Point msg;
-    msg.x = _x;
-    msg.y = _y;
-    msg.z = _z;
-    aero::Vector3 pos(_x, _y, _z);
+    //geometry_msgs::Point msg;
+    //msg.x = _x;
+    //msg.y = _y;
+    //msg.z = _z;
     if (_map_coordinate) {
       if (_tracking) {
         if (_record_topic) {
           previous_topic_ = "/look_at/target/map:"
-            + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+            + std::to_string(_pos.x()) + "," + std::to_string(_pos.y()) + "," + std::to_string(_pos.z());
         }
         //look_at_publisher_map_.publish(msg);
         // look_at_mode
-        alc->setTrackingMode(aero::tracking::map, pos);
+        alc->setTrackingMode(aero::tracking::map, _pos);
       } else {
         //look_at_publisher_map_static_.publish(msg);
         // look_at_mode
-        alc->setTrackingMode(aero::tracking::map_static, pos);
+        alc->setTrackingMode(aero::tracking::map_static, _pos);
       }
     } else {
       if (_tracking) {
         if (_record_topic) {
           previous_topic_ = "/look_at/target:"
-            + std::to_string(_x) + "," + std::to_string(_y) + "," + std::to_string(_z);
+            + std::to_string(_pos.x()) + "," + std::to_string(_pos.y()) + "," + std::to_string(_pos.z());
         }
         //look_at_publisher_base_.publish(msg);
         // look_at_mode
-        alc->setTrackingMode(aero::tracking::base, pos);
+        alc->setTrackingMode(aero::tracking::base, _pos);
       } else {
         //look_at_publisher_base_static_.publish(msg);
         // look_at_mode
-        alc->setTrackingMode(aero::tracking::base_static, pos);
+        alc->setTrackingMode(aero::tracking::base_static, _pos);
       }
     }
   } else {
-    setLookAt_(_x, _y, _z, kinematic_state);
+    setLookAt_(_pos, kinematic_state);
   }
 }
 
 //////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::setLookAt(const aero::Vector3 &_target, bool _map_coordinate, bool _tracking, bool _record_topic)
+void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, double _z, bool _map_coordinate, bool _tracking, bool _record_topic)
 {
-  setLookAt(_target.x(), _target.y(), _target.z(), _map_coordinate, _tracking, _record_topic);
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Vector3 pos(_x, _y, _z);
+  setLookAt(pos, _map_coordinate, _tracking, _record_topic);
 }
 
 //////////////////////////////////////////////////
@@ -337,13 +316,13 @@ void aero::interface::AeroMoveitInterface::setNeck_(double _r,double _p, double 
 }
 
 //////////////////////////////////////////////////
-std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt(const aero::Vector3 &obj)
+std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt(const aero::Vector3 &_pos)
 {
-  return solveLookAt_(obj, kinematic_state);
+  return solveLookAt_(_pos, kinematic_state);
 }
 
 //////////////////////////////////////////////////
-std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt_(const aero::Vector3 &obj,
+std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLookAt_(const aero::Vector3 &_pos,
                                                                                       robot_state::RobotStatePtr &_robot_state)
 {
   double neck2eye = 0.2;
@@ -357,7 +336,7 @@ std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLo
   aero::Matrix3 base2body_mat = _robot_state->getGlobalLinkTransform(body_link).rotation();
   aero::Quaternion base2body_q(base2body_mat);
 
-  aero::Vector3 pos_obj_rel = base2body_q.inverse() * (obj - base2body_p) - Eigen::Vector3d(0.0, 0.0, body2neck);
+  aero::Vector3 pos_obj_rel = base2body_q.inverse() * (_pos - base2body_p) - aero::Vector3(0.0, 0.0, body2neck);
 
   double yaw = atan2(pos_obj_rel.y(), pos_obj_rel.x());
   double dis_obj = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
@@ -372,7 +351,8 @@ std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLo
 
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::sendNeckAsync_(int _time_ms,
-                                                          robot_state::RobotStatePtr &_robot_state)
+                                                          robot_state::RobotStatePtr &_robot_state,
+                                                          double _delay)
 {
   const std::vector<std::string > jnames = {"neck_r_joint", "neck_p_joint", "neck_y_joint"};
   const std::vector<double > angles = {_robot_state->getVariablePosition("neck_r_joint"),
@@ -380,7 +360,7 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync_(int _time_ms,
                                        _robot_state->getVariablePosition("neck_y_joint")};
   {
     boost::mutex::scoped_lock sl(ri_mutex_);
-    ros::Time start_time = ros::Time::now() + ros::Duration(send_trajectory_offset_);
+    ros::Time start_time = ros::Time::now() + ros::Duration(_delay);
     //ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
     ri->head->sendAngles(jnames, angles, _time_ms * 0.001, start_time); // send only head
   }
@@ -392,7 +372,7 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync(int _time_ms)
   if (tracking_mode_flag_) {
     ROS_WARN("sendNeckAsync called in tracking mode! are you sure of what you are doing?");
   }
-  sendNeckAsync_(_time_ms, kinematic_state);
+  sendNeckAsync_(_time_ms, kinematic_state, send_trajectory_offset_);
 }
 
 //////////////////////////////////////////////////
@@ -450,9 +430,9 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
       // msg.x = std::stof(values.substr(0, posx));
       // msg.y = std::stof(values.substr(posx + 1, posy - posx -1));
       // msg.z = std::stof(values.substr(posy + 1));
-      Eigen::Vector3d targ(std::stof(values.substr(0, posx)),
-                           std::stof(values.substr(posx + 1, posy - posx -1)),
-                           std::stof(values.substr(posy + 1)));
+      aero::Vector3 targ(std::stof(values.substr(0, posx)),
+                         std::stof(values.substr(posx + 1, posy - posx -1)),
+                         std::stof(values.substr(posy + 1)));
       if (previous_topic_.find("map") != std::string::npos)
         // look_at_publisher_map_.publish(msg);
         alc->setTrackingMode(aero::tracking::map, targ);
@@ -616,11 +596,11 @@ void aero::interface::AeroMoveitInterface::getResetManipPose(aero::joint_angle_m
 }
 
 //////////////////////////////////////////////////
-Eigen::Vector3d aero::interface::AeroMoveitInterface::getWaistPosition()
+aero::Vector3 aero::interface::AeroMoveitInterface::getWaistPosition()
 {
   updateLinkTransforms();
   std::string link = "waist_link";
-  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
+  aero::Vector3 vec = kinematic_state->getGlobalLinkTransform(link).translation();
   return vec;
 }
 
@@ -652,22 +632,31 @@ double aero::interface::AeroMoveitInterface::getHand(aero::arm _arm)
 }
 
 /////////////////////////////////////////////////
-Eigen::Vector3d aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
+aero::Vector3 aero::interface::AeroMoveitInterface::getEEFPosition(aero::arm _arm, aero::eef _eef)
 {
-  updateLinkTransforms();
-  std::string link = aero::eefLink(_arm, _eef);
-  Eigen::Vector3d vec = kinematic_state->getGlobalLinkTransform(link).translation();
-  return vec;
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  getEndEffectorCoords(_arm, _eef, coords);
+  aero::Vector3 pos(coords.translation());
+  return pos;
 }
 
 /////////////////////////////////////////////////
-Eigen::Quaterniond aero::interface::AeroMoveitInterface::getEEFOrientation(aero::arm _arm, aero::eef _eef)
+aero::Quaternion aero::interface::AeroMoveitInterface::getEEFOrientation(aero::arm _arm, aero::eef _eef)
+{
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  getEndEffectorCoords(_arm, _eef, coords);
+  aero::Quaternion qq(coords.linear());
+  return qq;
+}
+
+/////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::getEndEffectorCoords(aero::arm _arm, aero::eef _eef, aero::Transform &_coords)
 {
   updateLinkTransforms();
-  std::string link = aero::eefLink(_arm, _eef);
-  Eigen::Matrix3d mat = kinematic_state->getGlobalLinkTransform(link).rotation();
-  Eigen::Quaterniond vec(mat);
-  return vec;
+  const std::string &link = aero::eefLink(_arm, _eef);
+  _coords = kinematic_state->getGlobalLinkTransform(link);
 }
 
 //////////////////////////////////////////////////
@@ -1790,40 +1779,199 @@ void aero::interface::AeroMoveitInterfaceDeprecated::getLifter(aero::joint_angle
   _xz[aero::joint::lifter_x] = x;
   _xz[aero::joint::lifter_z] = z;
 }
+//
+bool aero::interface::AeroMoveitInterfaceDeprecated::setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link, int _attempts)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+//
+bool aero::interface::AeroMoveitInterfaceDeprecated::setFromIK(std::string _move_group, Vector3 _pos, Quaternion _qua, std::string _eef_link, int _attempts)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::setFromIK(aero::arm _arm, aero::ikrange _range, Vector3 _pos, Quaternion _qua, std::string _eef_link, int _attempts)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::setFromIK(aero::arm _arm, aero::ikrange _range, Vector3 _pos, Quaternion _qua, aero::eef _eef, int _attempts)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+//
+void aero::interface::AeroMoveitInterfaceDeprecated::getResetManipPose(aero::joint_angle_map &_map)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::sendResetManipPose(int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+//
+void aero::interface::AeroMoveitInterfaceDeprecated::sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+void aero::interface::AeroMoveitInterfaceDeprecated::sendAngleVectorAsync(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+// sendAngleVectorSequence
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+//
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifter(double _x, double _z, int _time_ms, bool _local, bool _async)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifter(int _x, int _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterLocal(double _x, double _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterLocal(int _x, int _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterAsync(double _x, double _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterAsync(int _x, int _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterLocalAsync(double _x, double _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterLocalAsync(int _x, int _z, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+//
+bool aero::interface::AeroMoveitInterfaceDeprecated::cancelLifter()
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+//???
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms)
+{
+  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+}
+
 //// BASE
 geometry_msgs::Pose aero::interface::AeroMoveitInterfaceDeprecated::getCurrentPose(std::string _map)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  bool ret = getCurrentCoords(coords, _map);
+  geometry_msgs::Pose p;
+  tf::poseEigenToMsg(coords, p);
+  return p;
 }
+
 geometry_msgs::Pose aero::interface::AeroMoveitInterfaceDeprecated::getLocationPose(std::string _location)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  bool ret = getLocationCoords(coords, _location);
+  geometry_msgs::Pose p;
+  tf::poseEigenToMsg(coords, p);
+  return p;
 }
+
 void aero::interface::AeroMoveitInterfaceDeprecated::goPosAsync(double _x, double _y, double _rad)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  goPos(_x, _y, _rad, 20000,//default
+        true);
 }
+
 void aero::interface::AeroMoveitInterfaceDeprecated::moveToAsync(std::string _location)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  moveTo(_location, true);
 }
+
 void aero::interface::AeroMoveitInterfaceDeprecated::moveToAsync(Vector3 _point)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords = aero::Translation(_point) * aero::Quaternion::Identity();
+  moveTo(coords, true);
 }
+
 void aero::interface::AeroMoveitInterfaceDeprecated::moveToAsync(geometry_msgs::Pose _pose)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  tf::poseMsgToEigen(_pose, coords);
+  moveTo(coords, true);
 }
+
+bool aero::interface::AeroMoveitInterfaceDeprecated::at(std::string _location, double _thre)
+{
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  return isAt(_location, _thre);
+}
+
+bool aero::interface::AeroMoveitInterfaceDeprecated::at(geometry_msgs::Pose _pose, double _thre)
+{
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  tf::poseMsgToEigen(_pose, coords);
+  return isAt(coords, _thre);
+}
+
 void aero::interface::AeroMoveitInterfaceDeprecated::faceTowardAsync(std::string _location)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  faceToward(_location);
 }
+
 void aero::interface::AeroMoveitInterfaceDeprecated::faceTowardAsync(geometry_msgs::Pose _pose)
 {
-  ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  tf::poseMsgToEigen(_pose, coords);
+  faceToward(coords);
 }
 bool aero::interface::AeroMoveitInterfaceDeprecated::checkMoveTo(geometry_msgs::Pose _pose)
 {
   ROS_FATAL_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
+  aero::Transform coords;
+  tf::poseMsgToEigen(_pose, coords);
+  return checkMoveTo(coords);
 }

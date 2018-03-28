@@ -285,3 +285,16 @@ bool aero::base_commander::AeroBaseCommander::goPosTurnOnly_(double _rad, int _t
   return false;
 }
 #endif
+
+aero::Vector3 aero::base_commander::AeroBaseCommander::volatileTransformToBase(const aero::Vector3 &_pos)
+{
+  aero::Transform map2base;
+  getCurrentCoords(map2base);
+
+  aero::Vector3 map2base_p(map2base.translation());
+  aero::Quaternion map2base_q(map2base.linear());
+
+  // convert to map coordinates
+  return map2base_q.inverse() * (_pos - map2base_p);
+  // return map2base.inverse() * aero::Vector3(_x, _y, _z); ??
+}

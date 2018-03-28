@@ -17,7 +17,7 @@ namespace aero
 
   enum struct arm : int {rarm, larm, either, both_arms};
 
-  enum struct ikrange : int {arm, upperbody, arm_lifter, wholebody};
+  enum struct ikrange : int {arm, upperbody, arm_lifter, wholebody}; // torso -> upperbody, lifter -> wholebody
 
   enum struct eef : int {hand, grasp, pick, index, thumb, none};
 

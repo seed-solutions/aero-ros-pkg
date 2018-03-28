@@ -153,11 +153,11 @@ namespace aero
       /// @param[in] _record_topic True for referencing as previous.
     public: void setLookAt(double _x, double _y, double _z, bool _map_coordinate=false, bool _tracking=false, bool _record_topic=true);
       /// @brief robot model's neck looks at target, the angle values are sent to real robot when sendAngleVector is called
-      /// @param[in] _target target pose in base_link coordinate
+      /// @param[in] _pos target position in base_link coordinate
       /// @param[in] _map_coordinate True if map coordinate. Only valid in tracking mode.
       /// @param[in] _tracking True for tracking (setTrackingMode to true is not sufficient, see setTrackingMode for why).
       /// @param[in] _record_topic True for referencing as previous.
-    public: void setLookAt(const aero::Vector3 &_target, bool _map_coordinate=false, bool _tracking=false, bool _record_topic=true);
+    public: void setLookAt(const aero::Vector3 &_pos, bool _map_coordinate=false, bool _tracking=false, bool _record_topic=true);
       /// @brief set zero to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
     public: void resetLookAt();
       /// @brief set directly values to robot model's neck angles, the angle values are sent to real robot when sendAngleVector is called
@@ -182,8 +182,8 @@ namespace aero
       /// @param[in] _y y value in map coordinate.
       /// @param[in] _z z value in map coordinate.
       /// @return Converted base value, valid as long as robot is in same position.
-    public: void sendNeckAsync_(int _time_ms, robot_state::RobotStatePtr &_robot_state);
-    public: void setLookAt_(double _x, double _y, double _z, robot_state::RobotStatePtr &_robot_state);
+    public: void sendNeckAsync_(int _time_ms, robot_state::RobotStatePtr &_robot_state, double _delay);
+    public: void setLookAt_(const aero::Vector3 &_pos, robot_state::RobotStatePtr &_robot_state);
     public: void setNeck_(double _r,double _p, double _y, robot_state::RobotStatePtr &_robot_state);
     public: std::tuple<double, double, double> solveLookAt_(const aero::Vector3 &_obj,
                                                             robot_state::RobotStatePtr &_robot_state);
@@ -252,6 +252,11 @@ namespace aero
       /// @param[in] _eef aero::eef::(hand|grasp|pick|index|thumb)
       /// @return eef's quaternion in base_link coordinate
     public: Quaternion getEEFOrientation(aero::arm _arm, aero::eef _eef);
+      /// @brief get coordinate of end effector
+      /// @param[in]  _arm arm which eef is fixed to
+      /// @param[in]  _eef aero::eef::(hand|grasp|pick|index|thumb)
+      /// @param[out] _coords end effector's coordinate
+    public: void getEndEffectorCoords(aero::arm _arm, aero::eef _eef, aero::Transform &_coords);
 
       /// @brief get joint model group
       /// @param[in] _move_group move group name
@@ -471,16 +476,6 @@ namespace aero
     protected: ros::ServiceClient hand_grasp_client_;
 #endif
 
-#if 0
-    protected: ros::Publisher look_at_publisher_rpy_;
-    protected: ros::Publisher look_at_publisher_base_;
-    protected: ros::Publisher look_at_publisher_map_;
-    protected: ros::Publisher look_at_publisher_base_static_;
-    protected: ros::Publisher look_at_publisher_map_static_;
-    protected: ros::Publisher lookat_target_publisher_;
-
-    protected: ros::ServiceClient get_saved_neck_positions_;
-#endif
     protected: std::string lookat_topic_;
     protected: std::string previous_topic_;
     protected: boost::shared_ptr<aero::lookat_commander::AeroLookatCommander > alc;
@@ -516,9 +511,49 @@ namespace aero
       //COMMON
     public: using AeroMoveitInterface::sendAngleVector;
     public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=true);
-    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::wholebody, bool _async=true);
+    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody, bool _async=true);
+
     public: using AeroMoveitInterface::getLifter;
     public: void getLifter(aero::joint_angle_map &_xz);
+
+    public: using AeroMoveitInterface::setFromIK;
+    public: bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
+    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
+    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts=10);
+
+    public: bool setFromIK(std::string _move_group, Vector3 _pos, Quaternion _qua, std::string _eef_link="", int _attempts=10);
+    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, Vector3 _pos, Quaternion _qua, std::string _eef_link="", int _attempts=10);
+    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, Vector3 _pos, Quaternion _qua, aero::eef _eef, int _attempts=10);
+
+    public: void getResetManipPose(aero::joint_angle_map &_map);
+
+    public: void sendResetManipPose(int _time_ms=3000);
+
+    public: void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms);
+    public: void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody);
+    public: void sendAngleVectorAsync(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody);
+
+// sendAngleVectorSequence
+    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::upperbody);
+    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::upperbody);
+
+    public: bool sendLifter(double _x, double _z, int _time_ms=5000, bool _local=false, bool _async=false); // m
+    public: bool sendLifter(int _x, int _z, int _time_ms=5000);
+
+    public: bool sendLifterLocal(double _x, double _z, int _time_ms=5000);
+    public: bool sendLifterLocal(int _x, int _z, int _time_ms=5000);
+    public: bool sendLifterAsync(double _x, double _z, int _time_ms=5000);
+    public: bool sendLifterAsync(int _x, int _z, int _time_ms=5000);
+    public: bool sendLifterLocalAsync(double _x, double _z, int _time_ms=5000);
+    public: bool sendLifterLocalAsync(int _x, int _z, int _time_ms=5000);
+
+    public: bool cancelLifter();
+
+      //???
+    public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+    public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
+    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
+    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
       // Grasp
 
       //BASE
@@ -530,8 +565,8 @@ namespace aero
     public: void moveToAsync(Vector3 _point);
     public: void moveToAsync(geometry_msgs::Pose _pose);
       //public: bool isMoving();
-      //public: bool at(std::string _location, double _thre=0.2);
-      //public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
+    public: bool at(std::string _location, double _thre=0.2);
+    public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
       //public: void stop();
       //public: void go();
       //public: float toDestination(std::string _location);
