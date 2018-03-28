@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   lifter_srv = nh.serviceClient<aero_startup::AeroTorsoController>("/aero_torso_controller");
 
   // init robot interface
-  aero::interface::AeroMoveitInterface::Ptr controller(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr controller(new aero::interface::AeroMoveitInterfaceDeprecated(nh));
   ROS_INFO("reseting robot pose");
   controller->setPoseVariables(aero::pose::reset_manip);
   controller->sendModelAngles(3000);

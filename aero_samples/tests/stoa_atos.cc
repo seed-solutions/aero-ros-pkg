@@ -1,6 +1,6 @@
 #include <aero_std/AeroMoveitInterface.hh>
 
-void warnDiff(aero::interface::AeroMoveitInterface::Ptr controller,
+void warnDiff(aero::interface::AeroMoveitInterfacePtr controller,
               aero::joint joint, double send_val)
 {
   // get current angles
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterface::Ptr controller(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterfacePtr controller(new aero::interface::AeroMoveitInterfaceDeprecated(nh));
   ROS_INFO("reseting robot pose");
   controller->setPoseVariables(aero::pose::reset_manip);
   controller->sendModelAngles(3000);
