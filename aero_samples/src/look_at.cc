@@ -8,14 +8,13 @@ int main(int argc, char **argv)
   // init ros
   ros::init(argc, argv, "look_at_sample_node");
   ros::NodeHandle nh;
-  
+
   // init robot interface
   aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->sendModelAngles(3000);
-  sleep(3);
-
+  robot->waitInterpolation();
 
   // preparation
   aero::joint_angle_map joints_rh, joints_lh;
@@ -25,16 +24,13 @@ int main(int argc, char **argv)
   joints_rh[aero::joint::r_elbow] = -1.745;
   joints_lh[aero::joint::l_elbow] = -1.745;
 
-
-
   // how to use setLookAt
-  //
   // in this code, aero looks at his hand
 
   // looks at right hand
   ROS_INFO("look at right hand");
   robot->setRobotStateVariables(joints_rh);// first, set robot model's joints except head's joints
-  Eigen::Vector3d obj_rh = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);// second, prepare target position
+  aero::Vector3 obj_rh = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);// second, prepare target position
   robot->setLookAt(obj_rh);// third, set lookAt target to robot model
   robot->sendModelAngles(1000);// finally, send robot model's joints values to real robot. neck angles are sended with body angles
   sleep(3);

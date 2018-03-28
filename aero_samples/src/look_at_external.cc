@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   // init ros
   ros::init(argc, argv, "look_at_external_sample_node");
   ros::NodeHandle nh;
-  
+
   // init robot interface
   aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterfaceDeprecated(nh));
 
@@ -20,19 +20,18 @@ int main(int argc, char **argv)
   //robot->sendResetManipPose();
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->sendModelAngles(3000);
-  sleep(3);
+  robot->waitInterpolation();
 
   // create target to look at
-  Eigen::Vector3d obj0 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
-
-
+  aero::Transform obj0;
+  robot->getEndEffectorCoords(aero::arm::rarm, aero::eef::pick, obj0);
 
   // main example starts here
 
   // set positioned look at on background
   robot->setTrackingMode(true);
   // set position to track: map_coordinate=false, tracking=true
-  robot->setLookAt(obj0, false, true);
+  robot->setLookAt(obj0.translation(), false, true);
 
   // change robot pose (lookAt should be updated in background)
   ROS_INFO("moving torso"); // send to different pose
