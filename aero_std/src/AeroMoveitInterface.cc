@@ -414,8 +414,9 @@ void aero::interface::AeroMoveitInterface::setLookAtTopic(std::string _topic, bo
     // lookat_target_publisher_.publish(msg);
     //
     // lookat_topic_ = msg.data;
-    auto neck = alc->getNeck();
-    setNeck(std::get<0>(neck), std::get<1>(neck), std::get<2>(neck), true);
+    double r, p, y;
+    alc->getNeckRPY(r, p, y);
+    setNeck(r, p, y, true);
     lookat_topic_ = _topic;
     previous_topic_ = "/look_at/manager_disabled";
     return;
