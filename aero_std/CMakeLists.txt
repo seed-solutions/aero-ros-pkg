@@ -81,6 +81,7 @@ add_definitions(-std=c++11)
 
 add_library(aero_moveit_interface
   src/AeroMoveitInterface.cc
+  src/AeroMoveitInterfaceDeprecated.cc
   src/AeroBaseCommander.cc
   src/AeroLookatCommander.cc
 )

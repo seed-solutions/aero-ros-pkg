@@ -205,6 +205,12 @@ namespace aero
       /// @brief get joint angles from robot model, recommend
       /// @param[out] _map joint angles map
     public: void getRobotStateVariables(aero::joint_angle_map &_map);
+      /// @brief get joint angles from robot model, recommend
+      /// @param[out] _map joint angles map
+    public: void getRobotStateVariables(std::map<std::string, double> &_map, const std::string &_group);
+      /// @brief get joint angles from robot model, recommend
+      /// @param[out] _map joint angles map
+    public: void getRobotStateVariables(aero::joint_angle_map &_map, const std::string &_group);
 
       /// @brief get current joint angles of actual robot
       /// @param[out] _map joint angles of whole body
@@ -223,10 +229,6 @@ namespace aero
       /// @param[in]  _pose ( aero::pose defined at IKSettings.hh )
       /// @param[out] _map  joint angles
     public: void getPoseVariables(const aero::pose &_pose, aero::joint_angle_map &_map);
-
-      /// @brief get named target "reset-pose", its basic pose of robot (deprecated)
-      /// @param[out] _map joint angles map
-    public: void getResetManipPose(aero::joint_angle_map &_map);
 
       /// @brief get waist position in base_link coordinate in robot model
       /// @return waist position
@@ -498,87 +500,12 @@ namespace aero
 
     protected: boost::mutex ri_mutex_;
     };
-
-    ////// for backward compatibility
-    class AeroMoveitInterfaceDeprecated : public AeroMoveitInterface
-    {
-    public: AeroMoveitInterfaceDeprecated(ros::NodeHandle &_nh,
-                                          const std::string &_rd="robot_description")
-      : AeroMoveitInterface(_nh, _rd)
-      {
-        ROS_WARN("This is deprecated class / AeroMoveitInterface");
-      }
-      //COMMON
-    public: using AeroMoveitInterface::sendAngleVector;
-    public: void sendAngleVector(aero::arm _arm, aero::ikrange _range, int _time_ms, bool _async=true);
-    public: void sendAngleVector(int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody, bool _async=true);
-
-    public: using AeroMoveitInterface::getLifter;
-    public: void getLifter(aero::joint_angle_map &_xz);
-
-    public: using AeroMoveitInterface::setFromIK;
-    public: bool setFromIK(std::string _move_group, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
-    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, std::string _eef_link="", int _attempts=10);
-    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, geometry_msgs::Pose _pose, aero::eef _eef, int _attempts=10);
-
-    public: bool setFromIK(std::string _move_group, Vector3 _pos, Quaternion _qua, std::string _eef_link="", int _attempts=10);
-    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, Vector3 _pos, Quaternion _qua, std::string _eef_link="", int _attempts=10);
-    public: bool setFromIK(aero::arm _arm, aero::ikrange _range, Vector3 _pos, Quaternion _qua, aero::eef _eef, int _attempts=10);
-
-    public: void getResetManipPose(aero::joint_angle_map &_map);
-
-    public: void sendResetManipPose(int _time_ms=3000);
-
-    public: void sendAngleVectorAsync(aero::arm _arm, aero::ikrange _range, int _time_ms);
-    public: void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody);
-    public: void sendAngleVectorAsync(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody);
-
-// sendAngleVectorSequence
-    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::upperbody);
-    public: bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::upperbody);
-
-    public: bool sendLifter(double _x, double _z, int _time_ms=5000, bool _local=false, bool _async=false); // m
-    public: bool sendLifter(int _x, int _z, int _time_ms=5000);
-
-    public: bool sendLifterLocal(double _x, double _z, int _time_ms=5000);
-    public: bool sendLifterLocal(int _x, int _z, int _time_ms=5000);
-    public: bool sendLifterAsync(double _x, double _z, int _time_ms=5000);
-    public: bool sendLifterAsync(int _x, int _z, int _time_ms=5000);
-    public: bool sendLifterLocalAsync(double _x, double _z, int _time_ms=5000);
-    public: bool sendLifterLocalAsync(int _x, int _z, int _time_ms=5000);
-
-    public: bool cancelLifter();
-
-      //???
-    public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
-    public: bool sendLifterTrajectory(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
-    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, std::vector<int> _times);
-    public: bool sendLifterTrajectoryAsync(std::vector<std::pair<double, double>>& _trajectory, int _time_ms);
-      // Grasp
-
-      //BASE
-    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
-    public: geometry_msgs::Pose getLocationPose(std::string _location);
-      //public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
-    public: void goPosAsync(double _x, double _y, double _rad);
-    public: void moveToAsync(std::string _location);
-    public: void moveToAsync(Vector3 _point);
-    public: void moveToAsync(geometry_msgs::Pose _pose);
-      //public: bool isMoving();
-    public: bool at(std::string _location, double _thre=0.2);
-    public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
-      //public: void stop();
-      //public: void go();
-      //public: float toDestination(std::string _location);
-    public: void faceTowardAsync(std::string _location);
-    public: void faceTowardAsync(geometry_msgs::Pose _pose);
-    public: using AeroBaseCommander::checkMoveTo;
-    public: bool checkMoveTo(geometry_msgs::Pose _pose);
-      //protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
-    };
-    typedef boost::shared_ptr<AeroMoveitInterfaceDeprecated > AeroMoveitInterfacePtr;
   }
 }
+
+//// Deprecated
+#include <aero_std/AeroMoveitInterfaceDeprecated.hh>
+
 #endif
 
 #if 0
