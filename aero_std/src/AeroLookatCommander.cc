@@ -4,6 +4,8 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
                                                                  aero::interface::AeroMoveitInterface *_ami)
 {
   tracking_mode_ = aero::tracking::disable;
+  tracking_tf_  = "";
+  tracking_pos_ = aero::Vector3(0, 0, 0);
 
   ami_ = _ami;
 
@@ -31,6 +33,7 @@ void aero::lookat_commander::AeroLookatCommander::disableTrackingMode()
 {
   boost::mutex::scoped_lock lk(callback_mtx_);
   tracking_mode_ = aero::tracking::disable;
+  // wait neck ...
 }
 
 bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos)
@@ -98,6 +101,26 @@ bool aero::lookat_commander::AeroLookatCommander::setLookAtTopic(const std::stri
   return true;
 }
 
+bool aero::lookat_commander::AeroLookatCommander::setLookAtTf(const std::string &_tf, bool _once)
+{
+  boost::mutex::scoped_lock lk(callback_mtx_);
+
+  tracking_tf_ = _tf;
+
+  {
+    aero::Transform trans_in_base;
+    ros::Time tm(0);
+    ami_->listenTf(trans_in_base, "/base_link", tracking_tf_, tm);
+    sendNeckOnce_(trans_in_base.translation());
+  }
+
+  if (!_once) {
+    tracking_mode_ = aero::tracking::tf;
+  }
+
+  return true;
+}
+
 void aero::lookat_commander::AeroLookatCommander::subCallback(const geometry_msgs::Point::ConstPtr &_msg) {
   //
 }
@@ -117,6 +140,14 @@ void aero::lookat_commander::AeroLookatCommander::timerCallback(const ros::Timer
   case aero::tracking::base:
     {
       sendNeckOnce_(tracking_pos_);
+    }
+    break;
+  case aero::tracking::tf:
+    {
+      aero::Transform trans_in_base;
+      ros::Time tm(0);
+      ami_->listenTf(trans_in_base, "/base_link", tracking_tf_, tm);
+      sendNeckOnce_(trans_in_base.translation());
     }
     break;
   default:

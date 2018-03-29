@@ -88,6 +88,10 @@ namespace aero
       /// @brief protected function. due to move_base_pkg's bug, we use this
       // protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
 
+    public: bool listenTf(aero::Transform &_pose,
+                          const std::string &_from_frame, const std::string &_to_frame,
+                          const ros::Time &_stamp);
+
     public: virtual aero::Vector3 volatileTransformToBase(const aero::Vector3 &_pos);
     public: virtual aero::Vector3 volatileTransformToBase(double _x, double _y, double _z) {
       ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
@@ -97,7 +101,7 @@ namespace aero
 
     protected: tf::TransformListener listener_;
 
-    protected: std::string robot_base_frame;
+    protected: std::string robot_base_frame_;
 
     protected: ros::Publisher cmd_vel_publisher_;
     protected: ros::ServiceClient get_spot_;

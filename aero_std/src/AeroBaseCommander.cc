@@ -2,7 +2,7 @@
 #include <aero_std/AeroBaseCommander.hh>
 #include <tf_conversions/tf_eigen.h>
 
-aero::base_commander::AeroBaseCommander::AeroBaseCommander(ros::NodeHandle &_nh)
+aero::base_commander::AeroBaseCommander::AeroBaseCommander(ros::NodeHandle &_nh) : robot_base_frame_("/base_link")
 {
   cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
     ("/cmd_vel", 1000);
@@ -18,12 +18,33 @@ aero::base_commander::AeroBaseCommander::AeroBaseCommander(ros::NodeHandle &_nh)
     ("/move_base", true);
 }
 
+//////////////////////////////////////////////////
+bool aero::base_commander::AeroBaseCommander::listenTf(aero::Transform &_pose,
+                                                       const std::string &_from_frame,
+                                                       const std::string &_to_frame,
+                                                       const ros::Time &_stamp) {
+  tf::StampedTransform tr;
+  try {
+    listener_.waitForTransform(_from_frame, _to_frame, _stamp, ros::Duration(5.0));
+    listener_.lookupTransform (_from_frame, _to_frame, _stamp, tr);
+  }
+  catch (tf::TransformException ex){
+    ROS_ERROR("%s",ex.what());
+    //ros::Duration(1.0).sleep(); // not need
+    return false;
+  }
+  tf::transformTFToEigen(tr, _pose);
+
+  return true;
+}
+
+//////////////////////////////////////////////////
 bool aero::base_commander::AeroBaseCommander::getCurrentCoords(aero::Transform &_pose, const std::string &_origin_frame)
 {
   tf::StampedTransform tr;
   try {
-    listener_.waitForTransform(_origin_frame, robot_base_frame, ros::Time(0), ros::Duration(5.0));
-    listener_.lookupTransform (_origin_frame, robot_base_frame, ros::Time(0), tr);
+    listener_.waitForTransform(_origin_frame, robot_base_frame_, ros::Time(0), ros::Duration(5.0));
+    listener_.lookupTransform (_origin_frame, robot_base_frame_, ros::Time(0), tr);
   }
   catch (tf::TransformException ex){
     ROS_ERROR("%s",ex.what());

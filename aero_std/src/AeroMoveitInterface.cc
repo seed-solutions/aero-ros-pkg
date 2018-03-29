@@ -283,6 +283,12 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
 }
 
 //////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAtTf(const std::string &_tf, bool _tracking)
+{
+  alc->setLookAtTf(_tf, !_tracking);
+}
+
+//////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::resetLookAt()
 {
   setNeck(0.0, 0.0, 0.0);
@@ -517,7 +523,7 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<std::
 {
   if (!jmg_whole_body) {
     ROS_ERROR("jointModelGroup whole_body does not exists");
-    return false;
+    return;
   }
   _map.clear();
   const std::vector<std::string> &names = jmg_whole_body->getVariableNames();

@@ -174,6 +174,7 @@ namespace aero
       /// @brief Set lookAt with external lookAt manager.
       /// @param[in] _topic Name of topic lookAt manager should subscribe.
     public: void setLookAtTopic(std::string _topic, bool _record_topic=false);
+    public: void setLookAtTf(const std::string &_tf, bool _tracking=true);
       /// @brief Return last set topic for lookAt manager.
       /// @return Last set topic name.
     public: std::string getLookAtTopic();
