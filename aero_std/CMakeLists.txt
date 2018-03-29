@@ -16,8 +16,12 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   moveit_core moveit_ros_planning moveit_ros_planning_interface
   aero_startup
+  aero_ros_controller
   visualization_msgs
   message_generation
+  tf_conversions
+  eigen_conversions
+  control_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -55,8 +59,9 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES aero_moveit_interface object_features spot_list
  CATKIN_DEPENDS
- geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs
- moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs
+ geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs move_base_msgs
+ moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs aero_ros_controller
+ tf_conversions eigen_conversions
 )
 
 include_directories(
@@ -76,9 +81,24 @@ add_definitions(-std=c++11)
 
 add_library(aero_moveit_interface
   src/AeroMoveitInterface.cc
+  src/AeroMoveitInterfaceDeprecated.cc
+  src/AeroBaseCommander.cc
+  src/AeroLookatCommander.cc
 )
 target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
 add_dependencies(aero_moveit_interface ${PROJECT_NAME}_gencpp)
+
+add_library(aero_base_commander
+  src/AeroBaseCommander.cc
+)
+target_link_libraries(aero_base_commander ${catkin_LIBRARIES})
+add_dependencies(aero_base_commander ${PROJECT_NAME}_gencpp)
+
+#add_library(aero_lookat_commander
+#  src/AeroLookatCommander.cc
+#)
+#target_link_libraries(aero_lookat_commander ${catkin_LIBRARIES})
+#add_dependencies(aero_lookat_commander ${PROJECT_NAME}_gencpp)
 
 add_library(spot_list src/spot_list.cc)
 target_link_libraries(spot_list ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
@@ -97,3 +117,10 @@ add_library(object_features
   src/ObjectFeatures.cc
 )
 target_link_libraries(object_features ${catkin_LIBRARIES} aero_moveit_interface)
+
+###
+#add_library(robot_interface src/RobotInterface.cc)
+#target_link_libraries(robot_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+##add_executable(aero_moveit_test src/AeroMoveitTest.cc)
+##target_link_libraries(aero_moveit_test ${catkin_LIBRARIES} ${Boost_LIBRARIES} )

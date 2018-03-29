@@ -1,8 +1,0 @@
-<launch>
-  <param name="aero_description" command="cat $(find aero_description)/models/aero.urdf"/>
-  <node name="aero_state_publisher" pkg="robot_state_publisher" type="state_publisher">
-    <remap from="robot_description" to="aero_description"/>
-    <remap from="joint_states" to="aero_joint_states"/>
-  </node>
-  <node name="aero_joint_state_publisher" pkg="aero_startup" type="aero_joint_state_publisher"/>
-</launch>

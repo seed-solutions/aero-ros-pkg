@@ -9,7 +9,7 @@ namespace aero
     return T2();
   };
 
-  template<typename T> GraspRequest Grasp(T _grasp) {
+  template<typename T> GraspRequest Grasp(T &_grasp) {
     return GraspRequest();
   };
 }

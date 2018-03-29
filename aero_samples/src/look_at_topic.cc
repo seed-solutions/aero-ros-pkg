@@ -14,19 +14,20 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   
   // init robot interface
-  aero::interface::AeroMoveitInterfacePtr robot(new aero::interface::AeroMoveitInterface(nh));
+  aero::interface::AeroMoveitInterface::Ptr robot(new aero::interface::AeroMoveitInterface(nh));
 
   // create poses to look at
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendModelAngles(3000);
+  sleep(3);
   Eigen::Vector3d obj0 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
 
   ROS_INFO("moving arm"); // send to different pose
   aero::joint_angle_map joints;
   joints[aero::joint::r_elbow] = -1.745;
   robot->setRobotStateVariables(joints);
-  robot->sendAngleVector(3000);
+  robot->sendModelAngles(3000);
   sleep(1);
   Eigen::Vector3d obj1 = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);
 
@@ -54,8 +55,9 @@ int main(int argc, char **argv)
 
   // reset robot pose
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendModelAngles(3000);
+  sleep(3);
 
   // set positioned look at on background
   robot->setTrackingMode(true);
@@ -67,7 +69,7 @@ int main(int argc, char **argv)
   aero::joint_angle_map joints2;
   joints2[aero::joint::waist_p] = 0.524;
   robot->setRobotStateVariables(joints2);
-  robot->sendAngleVector(10000);
+  robot->sendModelAngles(10000);
   sleep(1);
 
   // set background tracking to false
@@ -76,8 +78,9 @@ int main(int argc, char **argv)
 
   // finish
   ROS_INFO("reseting robot pose");
-  robot->sendResetManipPose();
-  sleep(1);
+  robot->setPoseVariables(aero::pose::reset_manip);
+  robot->sendModelAngles(3000);
+  sleep(3);
 
   streamer.join();
 

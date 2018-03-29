@@ -80,9 +80,9 @@ else
 
     ./scripts/make_controller.sh $dir
 
-    printf "\nwriting files to aero_startup/aero_controller_manager ...\n"
-
-    ./scripts/make_joint_state_publisher.sh $dir
+    ## not used
+    ## printf "\nwriting files to aero_startup/aero_controller_manager ...\n"
+    ## ./scripts/make_joint_state_publisher.sh $dir
 
     printf "\nmaking Angle2Stroke.hh ... \n"
 

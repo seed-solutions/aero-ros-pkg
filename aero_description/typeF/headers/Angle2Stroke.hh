@@ -67,8 +67,8 @@ namespace aero
       meta = scale * waist.one;
       meta = scale * rad2Deg * waist_y_joint;
 
-      meta = scale * LegTable(rad2Deg * (knee_joint - hip_joint));
-      meta = scale * LegTable(rad2Deg * hip_joint);
+      meta = scale * LegTable(  rad2Deg * ankle_joint);
+      meta = scale * LegTable(- rad2Deg * knee_joint);
     };
 
   }

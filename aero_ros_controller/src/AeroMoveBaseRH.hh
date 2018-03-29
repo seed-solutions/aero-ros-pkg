@@ -9,18 +9,20 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <std_msgs/Bool.h>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <actionlib/server/simple_action_server.h>
-#include <move_base_msgs/MoveBaseAction.h>
-#include <move_base_msgs/MoveBaseFeedback.h>
-#include <move_base_msgs/MoveBaseResult.h>
+#include <ros/callback_queue.h>
+#include <ros/subscribe_options.h>
+
+//#include <actionlib/server/simple_action_server.h>
+//#include <move_base_msgs/MoveBaseAction.h>
+//#include <move_base_msgs/MoveBaseFeedback.h>
+//#include <move_base_msgs/MoveBaseResult.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
+#include <tf/transform_broadcaster.h>
 
-#include "AeroBaseController.hh" // class AeroBaseConfig
+#include "aero_move_base/AeroBaseController.hh" // class AeroBaseConfig
+#include "aero_robot_hardware.h"
 
 namespace aero
 {
@@ -77,30 +79,19 @@ struct states
 /// is sample of implementation.
 class AeroMoveBase
 {
- public: explicit AeroMoveBase(const ros::NodeHandle& _nh);
+ public: explicit AeroMoveBase(const ros::NodeHandle& _nh,
+                               aero_robot_hardware::AeroRobotHW *_in_hw);
 
  public: ~AeroMoveBase();
-
-  /// @brief ABSTRACT function, initialize wheel properties.
-  ///
-  /// This function depends on hardware construction and
-  /// MUST be implemented in description directory.
- private: void Init();
-
-  /// @brief ABSTRACT function,
-  /// convert velocity to wheel velocity (v0, ... vn)
-  ///
-  /// This function depends on hardware construction and
-  /// MUST be implemented in description directory.
- private: void VelocityToWheel(
-     const geometry_msgs::TwistConstPtr& _cmd_vel,
-     std::vector<double>& _wheel_vel);
 
  private: void CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel);
 
  private: void SafetyCheckCallback(const ros::TimerEvent& _event);
 
  private: void CalculateOdometry(const ros::TimerEvent& _event);
+
+  /// @param node handle
+ private: ros::NodeHandle nh_;
 
   /// @param names of wheel joints
  private: std::vector<std::string> wheel_names_;
@@ -111,20 +102,11 @@ class AeroMoveBase
   /// @param rate for move base action
  private: double ros_rate_;
 
-  /// @param node handle
- private: ros::NodeHandle nh_;
-
-  /// @param wheel control publisher
- private: ros::Publisher wheel_pub_;
-
-  /// @param current wheel velocities
- private: std::vector<double> cur_vel_;
-
-  /// @param wheel control msg
- private: trajectory_msgs::JointTrajectory wheel_cmd_;
-
   /// @param subscriber for `cmd_vel`
  private: ros::Subscriber cmd_vel_sub_;
+ private: ros::CallbackQueue base_queue_;
+ private: ros::AsyncSpinner base_spinner_;
+ private: ros::SubscribeOptions base_ops_;
 
   /// @param current (x, y, theta) (vx, vy, vtheta)
  private: double vx_, vy_, vth_, x_, y_, th_;
@@ -145,11 +127,7 @@ class AeroMoveBase
  private: double odom_rate_;
 
   /// @param servo status
- private: std_msgs::Bool servo_;
-
-  /// @param servo control publisher
- private: ros::Publisher servo_pub_;
-
+ private: bool servo_;
 
   /// @param timer for safety check
  private: ros::Timer safe_timer_;
@@ -164,6 +142,10 @@ class AeroMoveBase
  private: ros::Time time_stamp_;
 
  private: AeroBaseConfig base_config_;
+
+  ///
+ private: aero_robot_hardware::AeroRobotHW *hw_;
+
 };
 
 typedef std::shared_ptr<AeroMoveBase> AeroMoveBasePtr;

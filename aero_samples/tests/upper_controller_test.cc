@@ -9,7 +9,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "controller_test");
   ros::NodeHandle nh;
 
-  aero::interface::AeroMoveitInterfacePtr robot
+  aero::interface::AeroMoveitInterface::Ptr robot
     (new aero::interface::AeroMoveitInterface(nh));
   sleep(1);
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   av[aero::joint::r_shoulder_p] = -89.0 * M_PI / 180;
   av[aero::joint::r_shoulder_r] = -45.0 * M_PI / 180;
   av[aero::joint::r_elbow] = -15.0 * M_PI / 180;
-  robot->sendAngleVector(av, 5000);
+  robot->sendModelAngles(av, 5000);
 
   robot->sendResetManipPose();
   robot->speak("Complete test 2.", 5.0);
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
   sleep(4);
 
   robot_mutex.lock();
-  robot->sendAngleVectorAsync(av, 5000);
+  robot->sendModelAnglesAsync(av, 5000);
   robot_mutex.unlock();
   sleep(5);
   head_thread.join();
@@ -76,21 +76,21 @@ int main(int argc, char **argv)
 
   robot->speakAsync("Starting test 4. Interfere control.");
 
-  robot->sendAngleVectorAsync(av, 5000);
+  robot->sendModelAnglesAsync(av, 5000);
   sleep(2);
 
   // note: sendResetManipPose calls sendJoints, which cannot interrupt
   aero::joint_angle_map av0;
   robot->getResetManipPose(av0);
   robot->setRobotStateVariables(av0);
-  robot->sendAngleVector(5000);
+  robot->sendModelAngles(5000);
   robot->speak("Complete test 4.", 5.0);
 
   // test 5
 
   robot->speakAsync("Starting test 5. Stop control.");
 
-  robot->sendAngleVectorAsync(av, 5000);
+  robot->sendModelAnglesAsync(av, 5000);
   usleep(2500 * 1000);
 
   av[aero::joint::r_shoulder_p] = std::numeric_limits<float>::quiet_NaN();
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   av[aero::joint::r_elbow] = std::numeric_limits<float>::quiet_NaN();
 
   robot->speakAsync("Holding pose for 5 seconds.");
-  robot->sendAngleVector(av, 5000);
+  robot->sendModelAngles(av, 5000);
 
   robot->sendResetManipPose();
   robot->speak("Complete test 5.", 5.0);

@@ -1,8 +1,0 @@
-float64 x
-float64 z
-string coordinate
----
-string status
-float64 x
-float64 z
-float64 time_sec
