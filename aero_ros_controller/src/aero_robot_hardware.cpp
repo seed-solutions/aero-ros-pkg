@@ -69,7 +69,7 @@ bool AeroRobotHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)//
     robot_hw_nh.getParam("overwarp_scale", scl);
     OVERWRAP_SCALE_    = scl;     //
   }  else {
-    OVERWRAP_SCALE_    = 2.8;     //
+    OVERWRAP_SCALE_    = 1.4;     //
   }
 
   // create controllersd
@@ -347,6 +347,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
   std::vector<int16_t> lower_strokes(snt_strokes.begin() + AERO_DOF_UPPER, snt_strokes.end());
 
   uint16_t time_csec = static_cast<uint16_t>((OVERWRAP_SCALE_ * CONTROL_PERIOD_US_)/(1000*10));
+
   mutex_lower_.lock();
   mutex_upper_.lock();
   {
