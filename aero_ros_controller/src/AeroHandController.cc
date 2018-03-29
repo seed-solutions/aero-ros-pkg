@@ -306,17 +306,18 @@ public:
       R_OPEN();
     }
     //
+    ros::Time start = ros::Time::now() + ros::Duration(0.002);
+    ROS_DEBUG("OpenHand: sendAngles");
+    hi->sendAngles(map, _time, start);
+    //
     g_srv.request.power = (100 << 8) + 30;
     ROS_DEBUG("call pos: %d, script: %d, power %d",
               g_srv.request.position, g_srv.request.script, g_srv.request.power);
     g_client_.call(g_srv);
-    //
-    ros::Time start = ros::Time::now() + ros::Duration(0.04);
-    ROS_DEBUG("OpenHand: sendAngles");
-    hi->sendAngles(map, _time, start);
-    //
-    ROS_DEBUG("OpanHand: wait_interpolation");
-    hi->wait_interpolation();
+
+    // not wait ....
+    //ROS_DEBUG("OpanHand: wait_interpolation");
+    //hi->wait_interpolation();
   }
 
   void GraspAngle (int hand, float larm_angle, float rarm_angle, float time=0.5)
@@ -363,6 +364,7 @@ public:
     hi->sendAngles(map, time, start);
     ROS_DEBUG("GraspAngle: wait_interpolation");
     hi->wait_interpolation();
+    usleep(50*1000); // sleep 50ms for waiting to finish position command
   }
 
 private:
