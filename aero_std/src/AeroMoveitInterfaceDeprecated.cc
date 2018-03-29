@@ -108,11 +108,6 @@ bool aero::interface::AeroMoveitInterfaceDeprecated::sendTrajectoryAsync(aero::t
   sendTrajectory(_trajectory, _time_ms, _move_lifter, true);
 }
 //
-bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifter(double _x, double _z, int _time_ms, bool _local, bool _async)
-{
-  ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
-  sendLifter(_x, _z, _time_ms, false, false); // local=false, async=false
-}
 bool aero::interface::AeroMoveitInterfaceDeprecated::sendLifter(int _x, int _z, int _time_ms)
 {
   ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");

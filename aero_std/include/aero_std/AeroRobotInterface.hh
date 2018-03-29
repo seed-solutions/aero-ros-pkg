@@ -86,6 +86,7 @@ public:
       }
     }
   }
+
 public:
   robot_interface::TrajectoryClient::Ptr larm; // 8
   robot_interface::TrajectoryClient::Ptr rarm; // 8
