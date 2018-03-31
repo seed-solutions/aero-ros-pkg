@@ -64,13 +64,17 @@ bool AeroRobotHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)//
   } else {
     CONTROL_PERIOD_US_ = 50*1000; // 50ms
   }
-  if (robot_hw_nh.hasParam("overwarp_scale")) {
+  if (robot_hw_nh.hasParam("overlap_scale")) {
     double scl;
-    robot_hw_nh.getParam("overwarp_scale", scl);
-    OVERWRAP_SCALE_    = scl;     //
+    robot_hw_nh.getParam("overlap_scale", scl);
+    OVERLAP_SCALE_    = scl;     //
   }  else {
-    OVERWRAP_SCALE_    = 1.4;     //
+    OVERLAP_SCALE_    = 2.8;     //
   }
+
+  ROS_INFO("upper_port: %s", port_upper.c_str());
+  ROS_INFO("lower_port: %s", port_lower.c_str());
+  ROS_INFO("cycle: %f [ms], overlap_scale %f", CONTROL_PERIOD_US_*0.001, OVERLAP_SCALE_);
 
   // create controllersd
   controller_upper_.reset(new AeroUpperController(port_upper));
@@ -346,7 +350,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
   std::vector<int16_t> upper_strokes(snt_strokes.begin(), snt_strokes.begin() + AERO_DOF_UPPER);
   std::vector<int16_t> lower_strokes(snt_strokes.begin() + AERO_DOF_UPPER, snt_strokes.end());
 
-  uint16_t time_csec = static_cast<uint16_t>((OVERWRAP_SCALE_ * CONTROL_PERIOD_US_)/(1000*10));
+  uint16_t time_csec = static_cast<uint16_t>((OVERLAP_SCALE_ * CONTROL_PERIOD_US_)/(1000*10));
 
   mutex_lower_.lock();
   mutex_upper_.lock();

@@ -4,7 +4,8 @@
         output="screen" >
     <param name="port_lower" value="/dev/aero_lower" />
     <param name="port_upper" value="/dev/aero_upper" />
-    <param name="controller_rate" value="14" />
+    <param name="controller_rate" value="15" />
+    <param name="overlap_scale" value="2.0" />
   </node>
 
   <!-- load from yaml -->
