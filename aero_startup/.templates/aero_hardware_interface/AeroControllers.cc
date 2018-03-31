@@ -159,9 +159,10 @@ void AeroLowerController::set_wheel_velocity(
   seed_.send_command(CMD_MOVE_SPD, _time, dat);
 
   // MoveAbs returns current stroke
-  // std::vector<uint8_t> dummy;
-  // dummy.resize(RAW_DATA_LENGTH);
-  // seed_.read(dummy);
+  // MOVE_SPD also returns data, it is different behavior from Aero Command List ???
+  std::vector<uint8_t> dummy;
+  dummy.resize(RAW_DATA_LENGTH);
+  seed_.read(dummy);
 }
 
 //////////////////////////////////////////////////

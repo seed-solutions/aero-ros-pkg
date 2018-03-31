@@ -82,7 +82,12 @@ void SEED485Controller::read(std::vector<uint8_t>& _read_data)
                   _read_data.begin() + size);
       } else {
         std::cerr << "Proto: ERROR: data length, size : " << size << ", size_read " << size_read << std::endl;
-        flush();
+        //flush();
+#if ((BOOST_VERSION / 100 % 1000) > 50)
+        ::tcflush(ser_.lowest_layer().native_handle(), TCIOFLUSH);
+#else  // 12.04
+        ::tcflush(ser_.lowest_layer().native(), TCIOFLUSH);
+#endif
         break;
       }
       size += size_read;
@@ -164,6 +169,13 @@ void SEED485Controller::send_command(
 //////////////////////////////////////////////////
 void SEED485Controller::AERO_Snd_Script(uint16_t sendnum,uint8_t scriptnum)
 {
+  if (verbose_) {
+    struct timeval m_t;
+    gettimeofday(&m_t, NULL);
+    std::cerr << "[" << m_t.tv_sec << "." << m_t.tv_usec*1000
+              <<"] / hand script: " << sendnum
+              << ", " << (int)scriptnum << std::endl;
+  }
   std::vector<uint8_t> dat(8);
   dat[0] = 0xfd;  // header
   dat[1] = 0xdf;  // header
@@ -326,7 +338,7 @@ void AeroControllerProto::update_position()
     stroke_cur_vector_.assign(stroke_ref_vector_.begin(),
                               stroke_ref_vector_.end());
   } else {
-    seed_.flush();
+    //seed_.flush();
     get_command(CMD_GET_POS, stroke_cur_vector_);
   }
 }
@@ -373,7 +385,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
   bvalue[1] = 0x00;
 
   if (header != 0xdffd) {
-    // seed_.flush();
+    seed_.flush();
     std::cerr << "Proto: ERROR: invalid header" << std::endl;
     return;
   }
@@ -450,7 +462,7 @@ void AeroControllerProto::set_position(
   // for seed
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
   stroke_to_raw_(_stroke_vector, dat);
-  seed_.flush();
+  //seed_.flush();
   seed_.send_command(CMD_MOVE_ABS_POS_RET, _time, dat);
 
   // for ROS
@@ -481,7 +493,7 @@ void AeroControllerProto::set_position_no_wait(
   // for seed
   std::vector<uint8_t> dat(RAW_DATA_LENGTH);
   stroke_to_raw_(_stroke_vector, dat);
-  seed_.flush();
+  //seed_.flush();
   seed_.send_command(CMD_MOVE_ABS_POS, _time, dat);
 
   // for ROS
@@ -500,6 +512,13 @@ void AeroControllerProto::set_position_no_wait(
 void AeroControllerProto::set_max_single_current(int8_t _num, int16_t _dat)
 {
   boost::mutex::scoped_lock lock(ctrl_mtx_);
+  if (verbose_) {
+    struct timeval m_t;
+    gettimeofday(&m_t, NULL);
+    std::cerr << "[" << m_t.tv_sec << "." << m_t.tv_usec*1000
+              << "] / max cur: " << (int)_num
+              << ", " << _dat << std::endl;
+  }
   seed_.send_command(CMD_MOTOR_CUR, _num, _dat);
 }
 

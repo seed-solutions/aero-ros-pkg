@@ -399,6 +399,7 @@ void AeroRobotHW::writeWheel(const std::vector< std::string> &_names, const std:
   }
   uint16_t time_csec = static_cast<uint16_t>(_tm_sec * 100.0);
   controller_lower_->set_wheel_velocity(wheel_vector, time_csec);
+
   mutex_lower_.unlock();
 }
 
