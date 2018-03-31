@@ -64,7 +64,7 @@ int main(int argc, char** argv)
   }
 
 #if 1 /// add base
-  aero::navigation::AeroMoveBase base_node(robot_nh, &hw);
+  aero::navigation::AeroMoveBase base_node(nh, &hw);
 #endif
 
 #if 1 /// add grasp
