@@ -29,8 +29,12 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.183" />
-      <origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
-      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/>
+      <!-- original version -->
+      <!--origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
+      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/-->
+      <!-- just fixed for gazebo / aim to increase z axis inertia-->
+      <origin xyz="0 0.014 -0.02" rpy="0 -0 0"/>
+      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.0014" />
     </inertial>
   </link>
   <gazebo reference="${prefix}_hand_yaw_link">
@@ -46,9 +50,7 @@
     <limit lower="-2.0" upper="2.0" effort="100" velocity="2.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <gazebo reference="${prefix}_hand_yaw_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="${prefix}_hand_y_joint" />
 
   </xacro:macro>
 </robot>
