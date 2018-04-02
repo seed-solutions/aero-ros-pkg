@@ -8,7 +8,7 @@
 
 ```
 sudo apt-get install ros-indigo-desktop-full
-sudo apt-get install ros-indigo-pr2-controller-msgs ros-indigo-move-base-msgs
+sudo apt-get install ros-indigo-pr2-controllers-msgs ros-indigo-move-base-msgs
 sudo apt-get install ros-indigo-map-server ros-indigo-amcl ros-indigo-move-base ros-indigo-eband-local-planner
 sudo apt-get install ros-indigo-moveit
 sudo apt-get install ros-indigo-moveit-ros-planning-interface ros-indigo-moveit-ros-planning ros-indigo-moveit-core ros-indigo-moveit-ros-perception ros-indigo-moveit-ros-warehouse ros-indigo-moveit-kinematics
