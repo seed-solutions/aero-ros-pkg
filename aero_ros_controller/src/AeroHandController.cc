@@ -4,44 +4,7 @@
 
 #include <aero_ros_controller/RobotInterface.hh>
 
-/// robot dependant constant // for fcsc hand
-#define POSITION_Right 12
-#define POSITION_Left  27
-
-const std::vector<std::string > rhand_joints = { "r_indexbase_joint", "r_thumb_joint" };
-const std::vector<std::string > lhand_joints = { "l_indexbase_joint", "l_thumb_joint" };
-
-const std::string l_grasp_check_joint = "l_thumb_joint";
-const std::string r_grasp_check_joint = "r_thumb_joint";
-const std::string l_grasp_fast_check_joint = "l_indexbase_joint";
-const std::string r_grasp_fast_check_joint = "l_indexbase_joint";
-
-#define L_GRASP_CHECK_bad(g_srv, req)  (g_srv.response.angles[0] > - req.thre_warn)
-#define L_GRASP_CHECK_fail(g_srv, req) (g_srv.response.angles[0] < - req.thre_fail)
-#define R_GRASP_CHECK_bad(g_srv, req)  (g_srv.response.angles[1] <   req.thre_warn)
-#define R_GRASP_CHECK_fail(g_srv, req) (g_srv.response.angles[1] >   req.thre_fail)
-
-#define L_GRASP_FAST_CHECK(g_srv, req) (g_srv.response.angles[0] >   req.thre_fail)
-#define R_GRASP_FAST_CHECK(g_srv, req) (g_srv.response.angles[1] < - req.thre_fail)
-
-#define L_OPEN() {                                   \
-    map["l_thumb_joint"] = -15.0 * M_PI / 180.0;     \
-    map["l_indexbase_joint"] = 55.0 * M_PI / 180.0; \
-  }
-#define R_OPEN() {                                   \
-    map["r_thumb_joint"] =  15.0 * M_PI / 180.0;     \
-    map["r_indexbase_joint"] =  -55.0 * M_PI / 180.0; \
-  }
-
-#define L_GRASP() {                                             \
-    map["l_indexbase_joint"]  = -larm_angle * M_PI / 180;       \
-    map["l_thumb_joint"]      =  larm_angle * M_PI / 180/ 4.0;  \
-  }
-#define R_GRASP() {                                             \
-    map["r_indexbase_joint"]  = -rarm_angle * M_PI / 180;       \
-    map["r_thumb_joint"]      =  rarm_angle * M_PI / 180 / 4.0; \
-  }
-/// end dependant
+#include "aero_extra_controllers/AeroHandController.hh" // at aero_startup
 
 static inline bool getPosition(const robot_interface::joint_angle_map &_act_map,
                                const std::string &_name, double &_pos) {
@@ -343,17 +306,18 @@ public:
       R_OPEN();
     }
     //
+    ros::Time start = ros::Time::now() + ros::Duration(0.002);
+    ROS_DEBUG("OpenHand: sendAngles");
+    hi->sendAngles(map, _time, start);
+    //
     g_srv.request.power = (100 << 8) + 30;
     ROS_DEBUG("call pos: %d, script: %d, power %d",
               g_srv.request.position, g_srv.request.script, g_srv.request.power);
     g_client_.call(g_srv);
-    //
-    ros::Time start = ros::Time::now() + ros::Duration(0.04);
-    ROS_DEBUG("OpenHand: sendAngles");
-    hi->sendAngles(map, _time, start);
-    //
-    ROS_DEBUG("OpanHand: wait_interpolation");
-    hi->wait_interpolation();
+
+    // not wait ....
+    //ROS_DEBUG("OpanHand: wait_interpolation");
+    //hi->wait_interpolation();
   }
 
   void GraspAngle (int hand, float larm_angle, float rarm_angle, float time=0.5)
@@ -400,6 +364,7 @@ public:
     hi->sendAngles(map, time, start);
     ROS_DEBUG("GraspAngle: wait_interpolation");
     hi->wait_interpolation();
+    usleep(50*1000); // sleep 50ms for waiting to finish position command
   }
 
 private:

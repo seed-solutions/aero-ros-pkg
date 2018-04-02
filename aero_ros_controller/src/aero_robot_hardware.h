@@ -160,7 +160,7 @@ public:
     mutex_upper_.unlock();
   }
   double getPeriod() { return ((double)CONTROL_PERIOD_US_) / (1000 * 1000); }
-  double getOverWrapScale() { return OVERWRAP_SCALE_; }
+  double getOverLapScale() { return OVERLAP_SCALE_; }
 
 protected:
   // Methods used to control a joint.
@@ -205,7 +205,7 @@ protected:
   bool upper_send_enable_;
 
   int   CONTROL_PERIOD_US_;
-  float OVERWRAP_SCALE_;
+  float OVERLAP_SCALE_;
   int   BASE_COMMAND_PERIOD_MS_;
 
   std::mutex mutex_lower_;

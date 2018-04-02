@@ -30,6 +30,7 @@ namespace aero
     public: void disableTrackingMode();
     public: bool setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos);
     public: bool setLookAtTopic(const std::string &_topic);
+    public: bool setLookAtTf(const std::string &_tf, bool _once);
     public: bool setNeckRPY(double _r, double _p, double _y);
     public: void getNeckRPY(double &_r, double &_p, double &_y);
     protected: void sendNeckOnce_(const aero::Vector3 &_pos);
@@ -41,6 +42,7 @@ namespace aero
 
     protected: aero::tracking tracking_mode_;
     protected: aero::Vector3 tracking_pos_;
+    protected: std::string tracking_tf_;
     protected: double roll_max_vel_;
     protected: double pitch_max_vel_;
     protected: double yaw_max_vel_;

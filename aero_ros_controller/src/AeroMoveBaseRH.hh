@@ -143,6 +143,7 @@ class AeroMoveBase
 
  private: AeroBaseConfig base_config_;
 
+ private: boost::mutex base_mtx_;
   ///
  private: aero_robot_hardware::AeroRobotHW *hw_;
 

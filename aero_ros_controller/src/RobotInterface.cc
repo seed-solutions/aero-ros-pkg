@@ -242,7 +242,7 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
   double duration = 0;
   for(int i = 0; i < _av_seq.size(); i++) {
     if(jsize != _av_seq[i].size()) {
-      ROS_ERROR("joint size %d != angle_vector size %d", jsize, _av_seq[i].size());
+      ROS_ERROR("joint size %d != angle_vector size %ld", jsize, _av_seq[i].size());
       return;
     }
     goal.trajectory.points[i].positions.resize(jsize);

@@ -38,11 +38,10 @@ namespace aero
     public: DEP void sendAngleVectorAsync(int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody);
     public: DEP void sendAngleVectorAsync(aero::joint_angle_map _av_map, int _time_ms, aero::ikrange _move_waist=aero::ikrange::upperbody);
 
-// sendAngleVectorSequence
     public: DEP bool sendTrajectoryAsync(aero::trajectory _trajectory, std::vector<int> _times, aero::ikrange _move_lifter=aero::ikrange::upperbody);
     public: DEP bool sendTrajectoryAsync(aero::trajectory _trajectory, int _time_ms, aero::ikrange _move_lifter=aero::ikrange::upperbody);
 
-    public: DEP bool sendLifter(double _x, double _z, int _time_ms=5000, bool _local=false, bool _async=false); // m
+    public: using AeroMoveitInterface::sendLifter;
     public: DEP bool sendLifter(int _x, int _z, int _time_ms=5000);
 
     public: DEP bool sendLifterLocal(double _x, double _z, int _time_ms=5000);

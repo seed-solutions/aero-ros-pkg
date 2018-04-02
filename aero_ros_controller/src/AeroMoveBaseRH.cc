@@ -28,11 +28,19 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh,
   last_time_ = current_time_;
 
   base_ops_ = ros::SubscribeOptions::create<geometry_msgs::Twist >
-    ( "cmd_vel", 10,
+    ( "cmd_vel", 2,
       boost::bind(&AeroMoveBase::CmdVelCallback, this, _1),
       ros::VoidPtr(), &base_queue_);
 
   cmd_vel_sub_ = nh_.subscribe(base_ops_);
+
+  // for safety check
+  ros::TimerOptions tmopt(ros::Duration(safe_rate_),
+                          boost::bind(&AeroMoveBase::SafetyCheckCallback,
+                                      this, _1),
+                          &base_queue_);
+  safe_timer_ = _nh.createTimer(tmopt);
+
   base_spinner_.start();
 
   // for odometory
@@ -40,11 +48,6 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh,
 
   odom_timer_ = nh_.createTimer(ros::Duration(odom_rate_),
                                 &AeroMoveBase::CalculateOdometry, this);
-
-  // for safety check
-  safe_timer_ =
-      nh_.createTimer(ros::Duration(safe_rate_),
-                      &AeroMoveBase::SafetyCheckCallback, this);
 }
 
 //////////////////////////////////////////////////
@@ -57,25 +60,30 @@ AeroMoveBase::~AeroMoveBase()
 /// @brief control with cmd_vel
 void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 {
-  vx_  = _cmd_vel->linear.x;
-  vy_  = _cmd_vel->linear.y;
-  vth_ = _cmd_vel->angular.z;
+  if (base_mtx_.try_lock()) {
+    vx_  = _cmd_vel->linear.x;
+    vy_  = _cmd_vel->linear.y;
+    vth_ = _cmd_vel->angular.z;
 
-  //check servo state
-  if ( !servo_ ) {
-    servo_ = true;
-    hw_->startWheelServo();
+    //check servo state
+    if ( !servo_ ) {
+      servo_ = true;
+      hw_->startWheelServo();
+    }
+
+    std::vector<int16_t> int_vel(num_of_wheels_);
+
+    // convert velocity to wheel
+    base_config_.VelocityToWheel(vx_, vy_, vth_, int_vel);
+
+    hw_->writeWheel(wheel_names_, int_vel, ros_rate_);
+
+    //update time_stamp_
+    time_stamp_ = ros::Time::now();
+
+    usleep(30*1000); // 30ms
+    base_mtx_.unlock();
   }
-
-  std::vector<int16_t> int_vel(num_of_wheels_);
-
-  // convert velocity to wheel
-  base_config_.VelocityToWheel(vx_, vy_, vth_, int_vel);
-
-  hw_->writeWheel(wheel_names_, int_vel, ros_rate_);
-
-  //update time_stamp_
-  time_stamp_ = ros::Time::now();
 }
 
 //////////////////////////////////////////////////
@@ -83,8 +91,10 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 ///  for more than `safe_duration_` [s]
 void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
 {
+  boost::mutex::scoped_lock lk(base_mtx_);
   if((ros::Time::now() - time_stamp_).toSec() >= safe_duration_ && servo_) {
     std::vector<int16_t> int_vel(num_of_wheels_);
+    ROS_DEBUG("Base: safety stop");
     for (size_t i = 0; i < num_of_wheels_; i++) {
       int_vel[i] = 0;
     }

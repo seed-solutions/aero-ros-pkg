@@ -4,6 +4,8 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
                                                                  aero::interface::AeroMoveitInterface *_ami)
 {
   tracking_mode_ = aero::tracking::disable;
+  tracking_tf_  = "";
+  tracking_pos_ = aero::Vector3(0, 0, 0);
 
   ami_ = _ami;
 
@@ -29,8 +31,10 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
 
 void aero::lookat_commander::AeroLookatCommander::disableTrackingMode()
 {
+  ROS_DEBUG("LookAt: disableTrackingMode");
   boost::mutex::scoped_lock lk(callback_mtx_);
   tracking_mode_ = aero::tracking::disable;
+  // wait neck ...
 }
 
 bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking _mode, const aero::Vector3 &_pos)
@@ -45,12 +49,16 @@ bool aero::lookat_commander::AeroLookatCommander::setTrackingMode(aero::tracking
       aero::Vector3 pos_in_base;
       pos_in_base = ami_->volatileTransformToBase(_pos.x(), _pos.y(), _pos.z());
       tracking_pos_ = _pos;
+      ROS_DEBUG("LookAt: setTrackingMode: volatile: %f %f %f (%f %f %f on map)",
+                pos_in_base.x(), pos_in_base.y(), pos_in_base.z(),
+                tracking_pos_.x(), tracking_pos_.y(), tracking_pos_.z());
       sendNeckOnce_(pos_in_base);
     }
     break;
   case aero::tracking::base:
   case aero::tracking::base_static:
     tracking_pos_ = _pos;
+    ROS_DEBUG("LookAt: setTrackingMode: %f %f %f", _pos.x(), _pos.y(), _pos.z());
     sendNeckOnce_(tracking_pos_);
     break;
   default:
@@ -65,13 +73,15 @@ bool aero::lookat_commander::AeroLookatCommander::setNeckRPY(double _r, double _
 {
   double prev_r, prev_p, prev_y;
   getNeckRPY(prev_r, prev_p, prev_y);
+  ROS_DEBUG("LookAt: current neck (%f %f %f)", prev_r, prev_p, prev_y);
 
   ami_->setNeck_(_r, _p, _y, kinematic_state_);
 
   double time = std::max(std::max(std::abs(prev_y - _y) / yaw_max_vel_,
                                   std::abs(prev_p - _p) / pitch_max_vel_),
                          0.1);
-  ROS_WARN("send neck %f", 1000*time);
+  ROS_DEBUG("LookAt: sendNeckRPY (%f %f %f) / %f ms",
+            _r, _p, _y, 1000*time);
   ami_->sendNeckAsync_(1000*time, kinematic_state_, 0.002);
   return true;
 }
@@ -85,6 +95,7 @@ void aero::lookat_commander::AeroLookatCommander::getNeckRPY(double &_r, double 
 
 bool aero::lookat_commander::AeroLookatCommander::setLookAtTopic(const std::string &_topic)
 {
+  ROS_ERROR("LookAt: setLookAtTopic (not implemented yet)");
   boost::mutex::scoped_lock lk(callback_mtx_);
   tracking_mode_ = aero::tracking::topic;
 
@@ -94,6 +105,27 @@ bool aero::lookat_commander::AeroLookatCommander::setLookAtTopic(const std::stri
       boost::bind(&aero::lookat_commander::AeroLookatCommander::subCallback, this, _1),
       ros::VoidPtr(), &subqueue_);
   //sub_ = _nh.subscribe(sub_ops);
+
+  return true;
+}
+
+bool aero::lookat_commander::AeroLookatCommander::setLookAtTf(const std::string &_tf, bool _once)
+{
+  boost::mutex::scoped_lock lk(callback_mtx_);
+
+  tracking_tf_ = _tf;
+
+  {
+    aero::Transform trans_in_base;
+    ros::Time tm(0);
+    ami_->listenTf(trans_in_base, "/base_link", tracking_tf_, tm);
+    ROS_DEBUG_STREAM("LookAt: set tf: " << tracking_tf_ << " / " << trans_in_base);
+    sendNeckOnce_(trans_in_base.translation());
+  }
+
+  if (!_once) {
+    tracking_mode_ = aero::tracking::tf;
+  }
 
   return true;
 }
@@ -111,12 +143,24 @@ void aero::lookat_commander::AeroLookatCommander::timerCallback(const ros::Timer
     {
       aero::Vector3 pos_in_base;
       pos_in_base = ami_->volatileTransformToBase(tracking_pos_);
+      ROS_DEBUG("LookAt: volatile: %f %f %f (%f %f %f on map)",
+                pos_in_base.x(), pos_in_base.y(), pos_in_base.z(),
+                tracking_pos_.x(), tracking_pos_.y(), tracking_pos_.z());
       sendNeckOnce_(pos_in_base);
     }
     break;
   case aero::tracking::base:
     {
       sendNeckOnce_(tracking_pos_);
+    }
+    break;
+  case aero::tracking::tf:
+    {
+      aero::Transform trans_in_base;
+      ros::Time tm(0);
+      ami_->listenTf(trans_in_base, "/base_link", tracking_tf_, tm);
+      ROS_DEBUG_STREAM("LookAt: tf: " << tracking_tf_ << " / " << trans_in_base);
+      sendNeckOnce_(trans_in_base.translation());
     }
     break;
   default:
@@ -130,16 +174,20 @@ void aero::lookat_commander::AeroLookatCommander::sendNeckOnce_(const aero::Vect
   ami_->setRobotStateToCurrentState(kinematic_state_);
   double prev_r, prev_p, prev_y;
   getNeckRPY(prev_r, prev_p, prev_y);
+  ROS_DEBUG("LookAt: current neck (%f %f %f)",
+            prev_r, prev_p, prev_y);
 
   ami_->setLookAt_(_pos, kinematic_state_);
 
   double r, p, y;
   getNeckRPY(r, p, y);
+  ROS_DEBUG("LookAt: target neck (%f %f %f)", r, p, y);
 
   double time = std::max(std::max(std::abs(prev_y - y) / yaw_max_vel_,
                                   std::abs(prev_p - p) / pitch_max_vel_),
                          0.1);
-  ROS_WARN("send neck %f", 1000*time);
+  ROS_DEBUG("LookAt: sendNeck (%f %f %f) / %f ms",
+            _pos.x(), _pos.y(), _pos.z(), 1000*time);
 
   ami_->sendNeckAsync_(1000 * time, kinematic_state_, 0.002);
 }

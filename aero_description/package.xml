@@ -11,8 +11,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>hrpsys_ros_bridge</build_depend>
-  <run_depend>hrpsys_ros_bridge</run_depend>
+  <build_depend>xacro</build_depend>
+  <run_depend>xacro</run_depend>
 
   <export/>
 </package>

@@ -195,6 +195,10 @@ bool aero::interface::AeroMoveitInterface::setLifter(double _x, double _z, bool 
 bool aero::interface::AeroMoveitInterface::lifter_ik_(double _x, double _z, std::vector<double>& _ans_xz)
 {
   ROS_DEBUG("lifter ik %f %f", _x, _z);
+  if (!jmg_lifter) {
+    ROS_ERROR("jointModelGroup lifter does not exists");
+    return false;
+  }
   aero::Transform initial_trans = aero::Translation(0, 0, 0.725) * aero::Quaternion::Identity(); // typeB_lifter
   aero::Transform diff_trans = aero::Translation(_x, 0, _z) * aero::Quaternion::Identity();
   aero::Transform base2top = initial_trans * diff_trans;
@@ -276,6 +280,12 @@ void aero::interface::AeroMoveitInterface::setLookAt(double _x, double _y, doubl
   ROS_WARN_STREAM( __PRETTY_FUNCTION__ << " : this method is deprecated");
   aero::Vector3 pos(_x, _y, _z);
   setLookAt(pos, _map_coordinate, _tracking, _record_topic);
+}
+
+//////////////////////////////////////////////////
+void aero::interface::AeroMoveitInterface::setLookAtTf(const std::string &_tf, bool _tracking)
+{
+  alc->setLookAtTf(_tf, !_tracking);
 }
 
 //////////////////////////////////////////////////
@@ -362,6 +372,7 @@ void aero::interface::AeroMoveitInterface::sendNeckAsync_(int _time_ms,
     boost::mutex::scoped_lock sl(ri_mutex_);
     ros::Time start_time = ros::Time::now() + ros::Duration(_delay);
     //ri->sendAngles(jnames, angles, _time_ms * 0.001, start_time);
+    // TODO: access robot dependant code
     ri->head->sendAngles(jnames, angles, _time_ms * 0.001, start_time); // send only head
   }
 }
@@ -510,6 +521,10 @@ void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::vector<do
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::getRobotStateVariables(std::map<std::string, double> &_map)
 {
+  if (!jmg_whole_body) {
+    ROS_ERROR("jointModelGroup whole_body does not exists");
+    return;
+  }
   _map.clear();
   const std::vector<std::string> &names = jmg_whole_body->getVariableNames();
 
