@@ -18,7 +18,7 @@
   <rosparam command="load"
             file="$(find aero_description)/robots/controller_settings.yaml" />
 
-  <include file="$(find aero_moveit_config_new)/launch/planning_context.launch">
+  <include file="$(find aero_moveit_config)/launch/planning_context.launch">
     <arg name="load_robot_description" value="true"/>
   </include>
 

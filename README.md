@@ -6,34 +6,38 @@
 
 ### Install ROS
 
+[Install ROS kinetic] ( http://wiki.ros.org/kinetic/Installation/Ubuntu ) Recommended
+
+or
+
+[Install ROS indigo] ( http://wiki.ros.org/indigo/Installation/Ubuntu )
+
 ```
-sudo apt-get install ros-indigo-desktop-full
-sudo apt-get install ros-indigo-pr2-controller-msgs ros-indigo-move-base-msgs
-sudo apt-get install ros-indigo-map-server ros-indigo-amcl ros-indigo-move-base ros-indigo-eband-local-planner
-sudo apt-get install ros-indigo-moveit
-sudo apt-get install ros-indigo-moveit-ros-planning-interface ros-indigo-moveit-ros-planning ros-indigo-moveit-core ros-indigo-moveit-ros-perception ros-indigo-moveit-ros-warehouse ros-indigo-moveit-kinematics
+sudo apt-get install ros-${ROS_DISTRO}-desktop-full
 ```
 
 ### Setup catkin workspace
 
 ```
 sudo apt-get install python-wstool python-catkin-tools
-mkdir -p ~/ros/indigo
-cd ~/ros/indigo
+mkdir -p ~/ros/${ROS_DISTRO}
+cd ~/ros/${ROS_DISTRO}
 wstool init src
 catkin init
 catkin build
-source ~/ros/indigo/devel/setup.bash
+source ~/ros/${ROS_DISTRO}/devel/setup.bash
 ```
 
 ## Install
 
-### Clone repository
+### Clone repository and Setup ROS binary packages
 
 ```
-cd ~/ros/indigo/src
+cd ~/ros/${ROS_DISTRO}/src
 wstool set aero-ros-pkg https://github.com/seed-solutions/aero-ros-pkg.git --git
 wstool up aero-ros-pkg
+cd ~/ros/${ROS_DISTRO}
+rosdep install -y -r --from-paths src --ignore-src
 ```
 
 ### Build packge
@@ -78,7 +82,7 @@ roslaunch aero_startup aero_bringup.launch
 rosrun rviz rviz
 ```
 
-then add RobotModel, change Robot Description to `aero_description`.
+then add RobotModel
 
 
 ## Samples
@@ -97,31 +101,24 @@ rosrun aero_samples minimum_sample_node
 
 ### Control from Command Line
 
-#### Move Joint
+#### Move Torso
 
 ```
-rostopic pub /aero_controller/command trajectory_msgs/JointTrajectory "header:
+rostopic pub /lifter_controller/command trajectory_msgs/JointTrajectory "header:
   seq: 0
   stamp:
     secs: 0
     nsecs: 0
   frame_id: ''
 joint_names:
-- 'r_wrist_y_joint'
+- 'ankle_joint'
+- 'knee_joint'
 points:
-- positions: [0.5]
-  velocities: [0]
-  accelerations: [0]
-  effort: [0]
-  time_from_start: {secs: 1, nsecs: 0}"
-```
-
-#### Move Torso
-
-```
-rosservice call /aero_torso_controller  "x: 0.0
-z: -200.0
-coordinate: 'world:2000'"
+- positions: [0.5, -0.5]
+  velocities: [0, 0]
+  accelerations: [0, 0]
+  effort: [0, 0]
+  time_from_start: {secs: 3, nsecs: 0}"
 ```
 
 ### Writing Codes
