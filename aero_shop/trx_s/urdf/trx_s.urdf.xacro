@@ -22,12 +22,20 @@
         <mesh filename="package://aero_description/meshes/trx_s/RARM_LINK7_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 0" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+    <xacro:unless value="${disable_mesh}">
+    <collision>
+      <origin rpy="${reflect * 0.7} 0 0" xyz="0 0 -0.093"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/trx_s/RARM_LINK7_mesh.dae" scale="1 1 1" />
+        <box size="0.036 0.070 0.030" />
       </geometry>
-    </collision> </xacro:unless>
+    </collision>
+    <collision>
+      <origin rpy="${reflect * -0.10} 0 0" xyz="0 ${reflect * -0.007} -0.055"/>
+      <geometry>
+        <box size="0.036 0.050 0.070" />
+      </geometry>
+    </collision>
+    </xacro:unless>
     <inertial>
       <mass value="0.183" />
       <origin xyz="0 0 -0.0875" rpy="0 -0 0"/>
@@ -44,18 +52,18 @@
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 ${0.013 * reflect} 0.115" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <origin xyz="0 ${reflect * 0.013494 } -0.021422" rpy="${reflect * -0.85} 0 0"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK1_mesh.dae" scale="1 1 1" />
+        <box size="0.041 0.061 0.016" />  <!-- 0.85 -->
       </geometry>
     </collision> </xacro:unless>
     <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+      <mass value="0.1" />
+      <origin xyz="0 ${reflect * 0.014} -0.021" rpy="0 0 0"/>
+      <inertia ixx="0.001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0" />
     </inertial>
   </link>
-  <xacro:gazebo_link_reference link_name="${prefix}_indexthumb_link" />
+  <xacro:gazebo_link_reference link_name="${prefix}_indexbase_link" />
 
   <link name="${prefix}_indexmid_link">
     <xacro:unless value="${disable_mesh}"> <visual>
@@ -65,15 +73,15 @@
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 ${-0.015754 * reflect} 0.149615" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <origin xyz="0 ${reflect * 0.014} -0.008" rpy="${reflect * -0.3} 0 0"/> <!-- 0.3 -->
       <geometry>
-        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK2_mesh.dae" scale="1 1 1" />
+        <box size="0.034 0.030 0.016" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+      <mass value="0.1" />
+      <origin xyz="0 ${reflect * 0.014} -0.008" rpy="0 0 0"/>
+      <inertia ixx="0.001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0" />
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="${prefix}_indexmid_link" />
@@ -86,15 +94,15 @@
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 ${-0.03747 * reflect} 0.162972" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+      <origin xyz="0 ${reflect * 0.013} 0.004" rpy="0 0 0"/> <!-- 0.0 -->
       <geometry>
-        <mesh filename="package://aero_description/meshes/trx_s/RARM_INDEX_LINK3_mesh.dae" scale="1 1 1" />
+        <box size="0.040 0.028 0.016" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+      <mass value="0.1" />
+      <origin xyz="0 ${reflect * 0.02} 0" rpy="0 0 0"/>
+      <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0" />
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="${prefix}_indexend_link" />
@@ -106,16 +114,24 @@
         <mesh filename="package://aero_description/meshes/trx_s/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 ${-0.022355 * reflect} 0.079645" rpy="0 -0 ${(1.0 - reflect) * M_PI / 2.0}"/>
+    <xacro:unless value="${disable_mesh}">
+    <collision>
+      <origin rpy="0.63 0 0" xyz="0.0 ${reflect * 0.019645} -0.010355"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/trx_s/RARM_THUMB_LINK_mesh.dae" scale="1 1 1" />
+        <box size="0.012 0.008 0.050"/>
       </geometry>
-    </collision> </xacro:unless>
+    </collision>
+    <collision>
+      <origin rpy="0.1 0 0" xyz="0.0 ${reflect * 0.035645} -0.050355"/>
+      <geometry>
+        <box size="0.012 0.008 0.050"/>
+      </geometry>
+    </collision>
+    </xacro:unless>
     <inertial>
-      <mass value="0" />
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+      <mass value="0.1" />
+      <origin xyz="0 ${reflect * 0.05} -0.06" rpy="0 0 0"/>
+      <inertia ixx="0.001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0" />
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="${prefix}_thumb_link" />
@@ -128,7 +144,7 @@
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <xacro:gazebo_transmission joint_name="${prefix}_indexbase_joint" />
+  <xacro:gazebo_joint_reference joint_name="${prefix}_indexbase_joint" />
   <joint name="${prefix}_indexmid_joint" type="revolute">
     <parent link="${prefix}_indexbase_link"/>
     <child  link="${prefix}_indexmid_link"/>
@@ -137,7 +153,7 @@
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <xacro:gazebo_transmission joint_name="${prefix}_indexmid_joint" />
+  <xacro:gazebo_joint_reference joint_name="${prefix}_indexmid_joint" />
   <joint name="${prefix}_indexend_joint" type="revolute">
     <parent link="${prefix}_indexmid_link"/>
     <child  link="${prefix}_indexend_link"/>
@@ -146,7 +162,7 @@
     <limit lower="-3.14159" upper="3.14159" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <xacro:gazebo_transmission joint_name="${prefix}_indexend_joint" />
+  <xacro:gazebo_joint_reference joint_name="${prefix}_indexend_joint" />
   <joint name="${prefix}_thumb_joint" type="revolute">
     <parent link="${prefix}_hand_link"/>
     <child  link="${prefix}_thumb_link"/>

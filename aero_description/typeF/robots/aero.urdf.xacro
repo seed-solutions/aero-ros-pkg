@@ -17,4 +17,6 @@
  <xacro:aero-upper/>
  <xacro:aero-wheels base_link="base_link"/>
 
+ <xacro:gazebo_trajectory_controller />
+ <xacro:gazebo_base_controller base_frame="base_link" />
 </robot>

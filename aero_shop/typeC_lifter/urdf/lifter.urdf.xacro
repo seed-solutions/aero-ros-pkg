@@ -16,6 +16,7 @@
        xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+  <xacro:include filename="$(find aero_description)/common_urdf/gazebo.xacro" />
 
   <xacro:macro name="lifter" params="base_link">
 
@@ -38,10 +39,7 @@
         <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
       </inertial>
     </link>
-    <gazebo reference="${base_link}">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
+    <xacro:gazebo_link_reference link_name="${base_link}" />
 
     <link name="leg_shank_link">
       <visual>
@@ -51,7 +49,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
           <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_bone.dae" scale="1 1 1" />
         </geometry>
@@ -62,10 +60,7 @@
         <inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
       </inertial>
     </link>
-    <gazebo reference="leg_shank_link">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
+    <xacro:gazebo_link_reference link_name="leg_shank_link" />
 
     <link name="leg_knee_link">
       <visual>
@@ -75,7 +70,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
           <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_knee.dae" scale="1 1 1" />
         </geometry>
@@ -86,10 +81,7 @@
         <inertia ixx="0.0408818" ixy="-9.39301e-06" ixz="-0.000750165" iyy="0.0403969" iyz="-0.000120419" izz="0.00260982"/>
       </inertial>
     </link>
-    <gazebo reference="leg_knee_link">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
+    <xacro:gazebo_link_reference link_name="leg_knee_link" />
 
     <link name="leg_thigh_link">
       <visual>
@@ -99,7 +91,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_bone.dae" scale="1 1 1" />
         </geometry>
@@ -110,10 +102,7 @@
         <inertia ixx="0.0161595" ixy="-9.27234e-05" ixz="0.00262839" iyy="0.0166415" iyz="-0.00017447" izz="0.00477281"/>
       </inertial>
     </link>
-    <gazebo reference="leg_thigh_link">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
+    <xacro:gazebo_link_reference link_name="leg_thigh_link" />
 
     <link name="leg_base_link">
       <visual>
@@ -123,7 +112,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <origin xyz="0 0 0.05" rpy="3.1415920 0 0"/>
         <geometry>
           <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_base.dae" scale="1 1 1" />
         </geometry>
@@ -134,10 +123,7 @@
         <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
       </inertial>
     </link>
-    <gazebo reference="leg_base_link">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
+    <xacro:gazebo_link_reference link_name="leg_base_link" />
 
     <link name="lifter_top_link">
       <visual>
@@ -158,10 +144,7 @@
         <inertia ixx="0.0658136" ixy="-0.000159462" ixz="0.010103" iyy="0.0504268" iyz="0.000173435" izz="0.0889772"/>
       </inertial>
     </link>
-    <gazebo reference="lifter_top_link">
-      <mu1>0.9</mu1>
-      <mu2>0.9</mu2>
-    </gazebo>
+    <xacro:gazebo_link_reference link_name="lifter_top_link" />
 
     <joint name="lifter_top_connector" type="fixed">
       <parent link="leg_base_link"/>
@@ -182,33 +165,19 @@
       <child  link="leg_thigh_link"/>
       <origin xyz="0 0 0.12" rpy="0 0 0"/>
       <axis xyz="0 -1 0"/>
-      <limit effort="100" lower="-1.5707" upper="0" velocity="0.5"/>
+      <limit effort="1000" lower="-1.5707" upper="0" velocity="0.5"/>
     </joint>
-    <transmission type="pr2_mechanism_model/SimpleTransmission" name="knee_joint_trans" >
-      <actuator name="knee_joint_motor" />
-      <joint name="knee_joint" />
-      <mechanicalReduction>1</mechanicalReduction>
-    </transmission>
-    <gazebo reference="knee_joint">
-      <implicitSpringDamper>0.4</implicitSpringDamper>
-    </gazebo>
+    <xacro:gazebo_transmission joint_name="knee_joint" />
 
     <joint name="ankle_joint" type="revolute">
       <parent link="${base_link}"/>
       <child  link="leg_shank_link"/>
       <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
-      <limit lower="0" upper="1.5707" effort="100" velocity="0.5" />
+      <limit effort="1000" lower="0" upper="1.5707" velocity="0.5" />
       <dynamics damping="0.2" friction="0" />
     </joint>
-    <transmission type="pr2_mechanism_model/SimpleTransmission" name="ankle_joint_trans" >
-      <actuator name="ankle_joint_motor" />
-      <joint name="ankle_joint" />
-      <mechanicalReduction>1</mechanicalReduction>
-    </transmission>
-    <gazebo reference="ankle_joint">
-      <implicitSpringDamper>0.4</implicitSpringDamper>
-    </gazebo>
+    <xacro:gazebo_transmission joint_name="ankle_joint" />
 
 <!--- mimic joints -->
 <!-- requried -->
@@ -228,6 +197,11 @@
         </geometry>
         <origin xyz="0 0 0.25" rpy="0 0 0"/>
       </visual>
+      <inertial> <!-- for gazebo visualization -->
+        <mass value="0.4"/>
+        <origin rpy="0 0 0" xyz="-0.04 0.0 0.14"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+      </inertial>
     </link>
     <link name="leg_thigh_link_dummy">
       <visual>
@@ -236,6 +210,11 @@
         </geometry>
         <origin xyz="0 0 0.25" rpy="0 0 0"/>
       </visual>
+      <inertial> <!-- for gazebo visualization -->
+        <mass value="0.4"/>
+        <origin rpy="0 0 0" xyz="-0.04 0.0 0.14"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+      </inertial>
     </link>
 
     <joint name="ankle_joint_dummy" type="continuous">
