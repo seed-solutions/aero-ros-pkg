@@ -66,7 +66,7 @@ function delete_dependencies_from() {
 }
 
 # delete controllers in launch
-delete_controllers_from $launch_file
+# delete_controllers_from $launch_file
 
 # delete controllers and dependencies in CMakeLists.txt
 delete_controllers_from $cmake_file
