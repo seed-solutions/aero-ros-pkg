@@ -10,9 +10,9 @@
   <xacro:include filename="$(find aero_description)/common_urdf/gazebo.xacro" />
 
   <property name="M_PI" value="3.1415926535897931" />
-  <!-- ============================   fcsc_hand   ============================ -->
 
   <xacro:macro name="fcsc_hand" params="prefix:=r reflect:=1 disable_mesh:=false">
+  <!-- ============================   fcsc_hand   ============================ -->
     <!-- prefix is "r" or "l" -->
     <!-- reflect=1 is rightside, reflect=-1 is leftside -->
 
