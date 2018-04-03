@@ -8,12 +8,11 @@
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
   <property name="M_PI" value="3.1415926535897931" />
-  <!-- ============================   hand_yaw   ============================ -->
 
   <xacro:macro name="hand_yaw" params="prefix:=r reflect:=1 hand_link disable_mesh:=false">
+  <!-- ============================   hand_yaw   ============================ -->
     <!-- prefix is "r" or "l" -->
     <!-- reflect=1 is rightside, reflect=-1 is leftside -->
-
   <link name="${prefix}_hand_yaw_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0.0 0 0" rpy="0 ${M_PI / 2.0} ${reflect * M_PI / 2.0}"/>
