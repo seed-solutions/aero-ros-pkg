@@ -17,6 +17,48 @@
  <xacro:aero-upper/>
  <xacro:aero-wheels base_link="base_link"/>
 
+ <xacro:gazebo_laser_sensor link_name="wheels_base_laser_link" frame_name="wheels_base_laser_link" />
  <xacro:gazebo_trajectory_controller />
  <xacro:gazebo_base_controller base_frame="base_link" />
+
+ <gazebo>
+   <plugin name="mimic_updater" filename="libmimic_plugin.so">
+     <!-- lifter -->
+     <mimic joint="knee_joint"  offset="0.0" multiplier="-1.0"
+            P="1000" I="0.0" D="1" i_max="0" i_min="0"
+            command_max="200" command_min="-200"> knee_joint_dummy</mimic>
+     <mimic joint="ankle_joint"  offset="0.0" multiplier="1.0"
+            P="1000" I="0.0" D="1" i_max="0" i_min="0"
+            command_max="200" command_min="-200"> ankle_joint_dummy</mimic>
+     <mimic joint="knee_joint"  offset="0.0" multiplier="-1.0"
+            P="3000" I="0.0" D="3" i_max="0" i_min="0"
+            command_max="1000" command_min="-1000"> knee_joint_mimic</mimic>
+     <mimic joint="ankle_joint"  offset="0.0" multiplier="-1.0"
+            P="3000" I="0.0" D="3" i_max="0" i_min="0"
+            command_max="1000" command_min="-1000"> ankle_joint_mimic</mimic>
+
+     <!-- lhand -->
+     <mimic joint="l_thumb_joint"  offset="0.0" multiplier="-1.0"
+            P="30" I="0.0" D="0.03" i_max="0" i_min="0"
+            command_max="50" command_min="-50"> l_indexbase_joint </mimic>
+     <mimic joint="l_thumb_joint"  offset="-0.2" multiplier="-0.3"
+            P="30" I="0.0" D="0.03" i_max="0" i_min="0"
+            command_max="50" command_min="-50"> l_indexmid_joint </mimic>
+     <mimic joint="l_thumb_joint"  offset="-0.2" multiplier="-0.3"
+            P="30" I="0.0" D="0.03" i_max="0" i_min="0"
+            command_max="50" command_min="-50"> l_indexend_joint </mimic>
+
+     <!-- rhand -->
+     <mimic joint="r_thumb_joint"  offset="0.0" multiplier="-1.0"
+            P="30" I="0.0" D="0.03" i_max="0" i_min="0"
+            command_max="50" command_min="-50"> r_indexbase_joint </mimic>
+     <mimic joint="r_thumb_joint"  offset="0.2" multiplier="-0.3"
+            P="30" I="0.0" D="0.03" i_max="0" i_min="0"
+            command_max="50" command_min="-50"> r_indexmid_joint </mimic>
+     <mimic joint="r_thumb_joint"  offset="0.2" multiplier="-0.3"
+            P="30" I="0.0" D="0.03" i_max="0" i_min="0"
+            command_max="50" command_min="-50"> r_indexend_joint </mimic>
+   </plugin>
+ </gazebo>
+
 </robot>
