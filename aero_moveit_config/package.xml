@@ -1,15 +1,15 @@
 <package>
 
   <name>aero_moveit_config</name>
-  <version>0.2.0</version>
+  <version>2.0.0</version>
   <description>
      An automatically generated package with all the configuration and launch files for using the AeroUpperRobot with the MoveIt Motion Planning Framework
      , with some fixes.
   </description>
   <author email="assistant@moveit.ros.org">MoveIt Setup Assistant</author>
-  <author email="hori@jsk.imi.i.u-tokyo.ac.jp">Shintaro Hori</author>
+  <author email="youhei@jsk.imi.i.u-tokyo.ac.jp">Yohei Kakiuchi</author>
   <maintainer email="assistant@moveit.ros.org">MoveIt Setup Assistant</maintainer>
-  <maintainer email="hori@jsk.imi.i.u-tokyo.ac.jp">Shintaro Hori</maintainer>
+  <maintainer email="youhei@jsk.imi.i.u-tokyo.ac.jp">Yohei Kakiuchi</maintainer>
 
   <license>BSD</license>
 

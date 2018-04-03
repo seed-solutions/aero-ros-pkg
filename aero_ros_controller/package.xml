@@ -9,8 +9,8 @@
   <license>BSD</license>
 
   <url type="website">http://ros.org/wiki/</url>
-  <url type="bugtracker">https://github.com/xxx/issues</url>
-  <url type="repository">https://github.com/xxx </url>
+  <url type="bugtracker">https://github.com/seed-solutions/aero-ros-pkg/issues </url>
+  <url type="repository">https://github.com/aero_moveit_config </url>
 
   <author>Yohei Kakiuchi</author>
 
