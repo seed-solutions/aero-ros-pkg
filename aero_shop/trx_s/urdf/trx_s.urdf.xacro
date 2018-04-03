@@ -9,9 +9,9 @@
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
   <xacro:include filename="$(find aero_description)/common_urdf/gazebo.xacro" />
   <property name="M_PI" value="3.1415926535897931" />
-  <!-- ============================   trx_s   ============================ -->
 
   <xacro:macro name="trx_s" params="prefix:=r reflect:=1 disable_mesh:=false">
+  <!-- ============================   Hand(trx_s)   ============================ -->
     <!-- prefix is "r" or "l" -->
     <!-- reflect=1 is rightside, reflect=-1 is leftside -->
 
@@ -116,13 +116,13 @@
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}">
     <collision>
-      <origin rpy="0.63 0 0" xyz="0.0 ${reflect * 0.019645} -0.010355"/>
+      <origin rpy="${reflect * 0.63} 0 0" xyz="0.0 ${reflect * 0.019645} -0.010355"/>
       <geometry>
         <box size="0.012 0.008 0.050"/>
       </geometry>
     </collision>
     <collision>
-      <origin rpy="0.1 0 0" xyz="0.0 ${reflect * 0.035645} -0.050355"/>
+      <origin rpy="${reflect * 0.1} 0 0" xyz="0.0 ${reflect * 0.035645} -0.050355"/>
       <geometry>
         <box size="0.012 0.008 0.050"/>
       </geometry>

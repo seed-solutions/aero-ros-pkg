@@ -19,7 +19,7 @@
   <xacro:include filename="$(find aero_description)/common_urdf/gazebo.xacro" />
 
   <xacro:macro name="lifter" params="base_link">
-
+  <!-- ============================   aero(typeB_lifter)   ============================ -->
     <link name="${base_link}">
       <visual>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
