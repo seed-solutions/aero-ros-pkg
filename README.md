@@ -28,6 +28,13 @@ catkin build
 source ~/ros/${ROS_DISTRO}/devel/setup.bash
 ```
 
+### source setup.bash in ~/.bashrc
+
+Please add the following line to ~/.bashrc
+```
+source ~/ros/indigo/devel/setup.bash
+```
+
 ## Install
 
 ### Clone repository and Setup ROS binary packages
