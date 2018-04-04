@@ -11,6 +11,7 @@ public:
 
 public:
   AeroRobotInterface(ros::NodeHandle &_nh) : robot_interface::RobotInterface(_nh) {
+#if 0
     // rarm
     rarm.reset(new robot_interface::TrajectoryClient(_nh,
                                     "rarm_controller/follow_joint_trajectory",
@@ -56,6 +57,22 @@ public:
                                     { "neck_y_joint", "neck_p_joint", "neck_r_joint"}
                                     ));
     this->add_controller("head",   head);
+#endif
+    //
+    configureFromParam("robot_interface_controllers");
+#define ADD_CONTROLLER(limb)                    \
+    {                                           \
+      auto it = controllers_.find(#limb);       \
+      if (it != controllers_.end()) {           \
+        this-> limb = it->second;               \
+      }                                         \
+    }
+
+    ADD_CONTROLLER(larm);
+    ADD_CONTROLLER(rarm);
+    ADD_CONTROLLER(head);
+    ADD_CONTROLLER(waist);
+    ADD_CONTROLLER(lifter);
 
     // group settings
     controller_group_["both_arms"]  = {"rarm", "larm"};
