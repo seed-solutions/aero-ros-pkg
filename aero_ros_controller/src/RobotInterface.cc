@@ -477,15 +477,20 @@ bool RobotInterface::add_controller (const std::string &_key,
                                      const std::vector< std::string> &_jnames,
                                      bool _update_joint_list)
 {
-  boost::mutex::scoped_lock lock(states_mtx_);
-  boost::shared_ptr<TrajectoryClient > p(new TrajectoryClient(local_nh_, _action_name, _state_name, _jnames));
-  if (!p->isServerConnected()) {
-    return false;
+  boost::shared_ptr<TrajectoryClient > p;
+  {
+    boost::mutex::scoped_lock lock(states_mtx_);
+    p.reset(new TrajectoryClient(local_nh_, _action_name, _state_name, _jnames));
+
+    if (!p->isServerConnected()) {
+      return false;
+    }
+
+    if(_update_joint_list) {
+      std::copy( _jnames.begin(), _jnames.end(), std::back_inserter(joint_list_) );
+    }
+    p->setName(_key);
   }
-  if(_update_joint_list) {
-    std::copy( _jnames.begin(), _jnames.end(), std::back_inserter(joint_list_) );
-  }
-  p->setName(_key);
   return this->add_controller(_key, p);
 }
 
@@ -552,6 +557,34 @@ bool RobotInterface::wait_interpolation_(const std::string &_name, double _tm)
     }
   }
   return ret;
+}
+
+bool RobotInterface::configureFromParam(const std::string &_param)
+{
+  if (local_nh_.hasParam(_param)) {
+    std::vector<std::string > lst;
+    local_nh_.getParam(_param, lst);
+    for(int i = 0; i < lst.size(); i++) {
+      ROS_DEBUG("controller: %s", lst[i].c_str());
+      std::string p = lst[i] + "_controller/joints";
+      if(local_nh_.hasParam(p)) {
+        std::vector<std::string > jt;
+        local_nh_.getParam(p, jt);
+        for(int j = 0; j < jt.size(); j++) {
+          ROS_DEBUG("  j_%d: %s", j, jt[j].c_str());
+        }
+        if (jt.size() > 0) {
+          add_controller(lst[i],
+                         lst[i] + "_controller/follow_joint_trajectory",
+                         lst[i] + "_controller/state",
+                         jt);
+        }
+      }
+    }
+  } else {
+    ROS_WARN("there is no param: %s%s",
+             local_nh_.getNamespace().c_str(), _param.c_str());
+  }
 }
 
 //// callback
