@@ -30,7 +30,7 @@
     <inertial>
       <mass value="1.257" />
       <origin xyz="0 0 0.0" rpy="0 -0 0"/>
-      <inertia ixx="0.0034" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.0017"/>
+      <inertia ixx="0.034" ixy="0" ixz="0" iyy="0.034" iyz="0" izz="0.018"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="${base_link}" />
@@ -51,14 +51,14 @@
     <inertial>
       <mass value="1.257" />
       <origin xyz="0 0 0.042" rpy="0 -0 0"/>
-      <inertia ixx="0.0034" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.0017"/>
+      <inertia ixx="0.034" ixy="0" ixz="0" iyy="0.034" iyz="0" izz="0.018"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="hip_sphere_link" />
 
   <link name="hip_center">
     <inertial>
-      <mass value="0.01" />
+      <mass value="0.1" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
     </inertial>
@@ -147,7 +147,7 @@
       <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/-->
       <!-- fix for gazebo -->
       <origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
-      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.003"/>
+      <inertia ixx="0.00214" ixy="0" ixz="0" iyy="0.00217" iyz="0" izz="0.003"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="l_upperarm_link" />
@@ -171,7 +171,7 @@
       <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/-->
       <!-- fix for gazebo -->
       <origin xyz="-0.03 0 -0.0546" rpy="0 -0 0"/>
-      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.004"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.0035"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="l_elbow_link" />
@@ -192,7 +192,7 @@
     <inertial>
       <mass value="0.132" />
       <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
-      <inertia ixx="0.000276" ixy="0" ixz="0" iyy="0.000286" iyz="0" izz="0.004"/>
+      <inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="l_forearm_link" />
@@ -223,7 +223,7 @@
       <mass value="0.341" />
       <origin xyz="0 0 0.0595" rpy="0 -0 0"/>
       <!--inertia ixx="1.64186e-35" ixy="0" ixz="0" iyy="1.64186e-35" iyz="0" izz="0"/-->
-      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.001"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.002"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="neck_link" />
@@ -242,9 +242,9 @@
       </geometry>
     </collision> </xacro:unless>
     <inertial>
-      <mass value="0.01" />
+      <mass value="0.1" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+      <inertia ixx="0.0005" ixy="0" ixz="0" iyy="0.0005" iyz="0" izz="0.0005"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="head_base_link" />
@@ -264,7 +264,7 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.974" />
-      <origin xyz="0 0 0.150" rpy="0 -0 0"/>
+      <origin xyz="0.01 0 0.070" rpy="0 -0 0"/>
       <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.005"/>
     </inertial>
   </link>
@@ -331,7 +331,7 @@
       <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/-->
       <!-- fix for gazebo -->
       <origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
-      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.003"/>
+      <inertia ixx="0.00214" ixy="0" ixz="0" iyy="0.00217" iyz="0" izz="0.003"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="r_upperarm_link" />
@@ -355,7 +355,7 @@
       <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/-->
       <!-- fix for gazebo -->
       <origin xyz="-0.03 0 -0.0546" rpy="0 -0 0"/>
-      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.004"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.0035"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="r_elbow_link" />
@@ -376,7 +376,7 @@
     <inertial>
       <mass value="0.132" />
       <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
-      <inertia ixx="0.000276" ixy="0" ixz="0" iyy="0.000286" iyz="0" izz="0.004"/>
+      <inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="r_forearm_link" />
@@ -396,7 +396,7 @@
     <origin xyz="0 0 0.010" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <!-- from -120 to 120 degrees-->
-    <limit lower="-2.0" upper="2.0" effort="100" velocity="0.5" />
+    <limit lower="-2.0" upper="2.0" effort="500" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="waist_y_joint" />
@@ -407,7 +407,7 @@
     <origin xyz="0 0 0.1355" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <!-- from -5 to 30 degrees-->
-    <limit lower="-0.0872" upper="0.5235" effort="100" velocity="0.3" />
+    <limit lower="-0.0872" upper="0.5235" effort="2000" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="waist_p_joint" />
@@ -418,7 +418,7 @@
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <!-- from -1 to 1 degrees-->
-    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.3" />
+    <limit lower="-0.017" upper="0.017" effort="2000" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="waist_r_joint" />

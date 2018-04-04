@@ -30,12 +30,13 @@
      <mimic joint="ankle_joint"  offset="0.0" multiplier="1.0"
             P="1000" I="0.0" D="1" i_max="0" i_min="0"
             command_max="200" command_min="-200"> ankle_joint_dummy</mimic>
+
      <mimic joint="knee_joint"  offset="0.0" multiplier="-1.0"
-            P="3000" I="0.0" D="3" i_max="0" i_min="0"
-            command_max="1000" command_min="-1000"> knee_joint_mimic</mimic>
+            P="4000" I="0.1" D="80" i_max="500" i_min="-500"
+            command_max="2000" command_min="-2000"> knee_joint_mimic</mimic>
      <mimic joint="ankle_joint"  offset="0.0" multiplier="-1.0"
-            P="3000" I="0.0" D="3" i_max="0" i_min="0"
-            command_max="1000" command_min="-1000"> ankle_joint_mimic</mimic>
+            P="4000" I="0.1" D="80" i_max="500" i_min="-500"
+            command_max="2000" command_min="-2000"> ankle_joint_mimic</mimic>
 
      <!-- lhand -->
      <mimic joint="l_thumb_joint"  offset="0.0" multiplier="-1.0"
