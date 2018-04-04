@@ -47,7 +47,7 @@ using namespace aero_startup;
 
 class AeroHandControl {
 public:
-  AeroHandControl (ros::NodeHandle &nh) : executing_flg_left_(true), executing_flg_right_(true)
+  AeroHandControl (ros::NodeHandle &nh) : executing_flg_left_(true), executing_flg_right_(true), exist_grasp_server_(false)
   {
     hi.reset(new AeroHandInterface(nh));
 
@@ -57,7 +57,11 @@ public:
     g_client_ = nh.serviceClient<aero_startup::GraspControl>(
       "/aero_ros_controller/grasp_control");
 
-    g_client_.waitForExistence();
+    if ( g_client_.waitForExistence(ros::Duration(3.0)) ) {
+      exist_grasp_server_ = true;
+    } else {
+      ROS_WARN("GraspServer not found");
+    }
 
     {
       aero_startup::GraspControl g_srv;
@@ -66,7 +70,9 @@ public:
       g_srv.request.power = (100 << 8) + 30;
       ROS_DEBUG("call pos: %d, script: %d, power %d",
                 g_srv.request.position, g_srv.request.script, g_srv.request.power);
-      g_client_.call(g_srv);
+      if (exist_grasp_server_) {
+        g_client_.call(g_srv);
+      }
       executing_flg_left_ = false;
     }
     {
@@ -76,7 +82,9 @@ public:
       g_srv.request.power = (100 << 8) + 30;
       ROS_DEBUG("call pos: %d, script: %d, power %d",
                 g_srv.request.position, g_srv.request.script, g_srv.request.power);
-      g_client_.call(g_srv);
+      if (exist_grasp_server_) {
+        g_client_.call(g_srv);
+      }
       executing_flg_right_ = false;
     }
     ROS_INFO("Initialized Handcontroller");
@@ -132,7 +140,9 @@ public:
         }
         ROS_DEBUG("call pos: %d, script: %d, power %d",
                   g_srv.request.position, g_srv.request.script, g_srv.request.power);
-        g_client_.call(g_srv);
+        if (exist_grasp_server_) {
+          g_client_.call(g_srv);
+        }
 
         {
           robot_interface::joint_angle_map act_map;
@@ -250,7 +260,9 @@ public:
         }
         ROS_DEBUG("call pos: %d, script: %d, power %d",
                   g_srv.request.position, g_srv.request.script, g_srv.request.power);
-        g_client_.call(g_srv);
+        if (exist_grasp_server_) {
+          g_client_.call(g_srv);
+        }
 
         {
           robot_interface::joint_angle_map act_map;
@@ -313,7 +325,9 @@ public:
     g_srv.request.power = (100 << 8) + 30;
     ROS_DEBUG("call pos: %d, script: %d, power %d",
               g_srv.request.position, g_srv.request.script, g_srv.request.power);
-    g_client_.call(g_srv);
+    if (exist_grasp_server_) {
+      g_client_.call(g_srv);
+    }
 
     // not wait ....
     //ROS_DEBUG("OpanHand: wait_interpolation");
@@ -339,7 +353,9 @@ public:
         g_srv.request.power = (100 << 8) + 30;
         ROS_DEBUG("call pos: %d, script: %d, power %d",
                   g_srv.request.position, g_srv.request.script, g_srv.request.power);
-        g_client_.call(g_srv);
+        if (exist_grasp_server_) {
+          g_client_.call(g_srv);
+        }
         executing_flg_left_ = false;
       }
       L_GRASP ();
@@ -353,7 +369,9 @@ public:
         g_srv.request.power = (100 << 8) + 30;
         ROS_DEBUG("call pos: %d, script: %d, power %d",
                   g_srv.request.position, g_srv.request.script, g_srv.request.power);
-        g_client_.call(g_srv);
+        if (exist_grasp_server_) {
+          g_client_.call(g_srv);
+        }
         executing_flg_right_ = false;
       }
       R_GRASP ();
@@ -370,6 +388,7 @@ public:
 private:
   bool executing_flg_left_;
   bool executing_flg_right_;
+  bool exist_grasp_server_;
 
   ros::ServiceClient g_client_;
   ros::ServiceServer service_;
