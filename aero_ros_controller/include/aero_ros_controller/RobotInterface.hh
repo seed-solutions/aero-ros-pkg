@@ -240,6 +240,7 @@ public:
   bool updateJointList();
   bool updateJointList(std::vector < std::string > &_controller_names_list);
 
+  bool configureFromParam(const std::string &_param);
 private:
   //// callback
   void JointStateCallback_(const sensor_msgs::JointState::ConstPtr& _msg);
