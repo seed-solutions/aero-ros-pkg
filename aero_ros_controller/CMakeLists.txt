@@ -85,10 +85,6 @@ install(TARGETS ${PROJECT_NAME}
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 #)
 
-####
-add_executable(aero_interface_test src/AeroInterfaceTest.cc)
-target_link_libraries(aero_interface_test ${catkin_LIBRARIES} ${Boost_LIBRARIES} robot_interface )
-
 if (CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
   find_package(rostest REQUIRED)
