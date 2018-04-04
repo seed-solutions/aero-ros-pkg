@@ -50,7 +50,7 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:macro name="gazebo_laser_sensor" params="link_name frame_name topic_name:=lider_scan" >
+  <xacro:macro name="gazebo_laser_sensor" params="link_name frame_name topic_name:=scan" >
     <!-- hokuyo -->
     <gazebo reference="${frame_name}">
       <sensor type="ray" name="head_hokuyo_sensor">
@@ -93,13 +93,43 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:macro name="camera" >
+  <xacro:macro name="gazebo_depth_camera"
+               params="link_name frame_name camera_name:=camera" >
+    <gazebo>
+      <plugin name="${link_name}_controller" filename="libgazebo_ros_openni_kinect.so">
+        <baseline>0.14</baseline>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>10.0</updateRate>
+        <cameraName>${camera_name}</cameraName>
+        <imageTopicName>/${camera_name}/image_raw</imageTopicName>
+        <cameraInfoTopicName>/${camera_name}/camera_info</cameraInfoTopicName>
+        <depthImageTopicName>/${camera_name}/depth/image_raw</depthImageTopicName>
+        <depthImageInfoTopicName>/${camera_name}/depth/camera_info</depthImageInfoTopicName>
+        <pointCloudTopicName>/${camera_name}/depth/points</pointCloudTopicName>
+        <frameName>${frame_name}</frameName>
+        <pointCloudCutoff>0.2</pointCloudCutoff>
+        <distortionK1>0.000000</distortionK1>
+        <distortionK2>0.000000</distortionK2>
+        <distortionK3>0.000000</distortionK3>
+        <distortionT1>0.000000</distortionT1>
+        <distortionT2>0.000000</distortionT2>
+        <CxPrime>0</CxPrime>
+        <Cx>0</Cx>
+        <Cy>0</Cy>
+        <focalLength>0</focalLength>
+        <hackBaseline>0</hackBaseline>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_camera"
+               params="link_name frame_name topic_name:=camera" >
     <!-- camera -->
-    <!--gazebo reference="camera_link">
+    <gazebo reference="${link_name}">
       <sensor type="camera" name="camera1">
-        <update_rate>30.0</update_rate>
+        <update_rate>15.0</update_rate>
         <camera name="head">
-          <horizontal_fov>1.3962634</horizontal_fov>
+          <horizontal_fov>1.7</horizontal_fov> <!-- -->
           <image>
             <width>800</width>
             <height>800</height>
@@ -111,9 +141,9 @@
           </clip>
           <noise>
             <type>gaussian</type>
-                 Noise is sampled independently per pixel on each frame.
+                 <!--Noise is sampled independently per pixel on each frame.
                  That pixel's noise value is added to each of its color
-                 channels, which at that point lie in the range [0,1].
+                 channels, which at that point lie in the range [0,1]. -->
             <mean>0.0</mean>
             <stddev>0.007</stddev>
           </noise>
@@ -121,13 +151,13 @@
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
-          <cameraName>rrbot/camera1</cameraName>
+          <cameraName>${camera_name}</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>camera_link_optical</frameName>
-               setting hackBaseline to anything but 0.0 will cause a misalignment
+          <frameName>${frame_name}</frameName>
+               <!--setting hackBaseline to anything but 0.0 will cause a misalignment
                between the gazebo sensor image and the frame it is supposed to
-               be attached to
+               be attached to-->
           <hackBaseline>0.0</hackBaseline>
           <distortionK1>0.0</distortionK1>
           <distortionK2>0.0</distortionK2>
@@ -140,7 +170,7 @@
           <focalLength>0.0</focalLength>
         </plugin>
       </sensor>
-    </gazebo-->
+    </gazebo>
   </xacro:macro>
 
 </robot>
