@@ -1,0 +1,54 @@
+<launch>
+  <!-- this launch provides almost the same robot API in gazebo world
+       as aero_startup/aero_bringup.launch -->
+  <!-- these are the arguments you can pass this launch file, for example PAUSED:=true -->
+  <arg name="GUI"      default="true"/>
+  <arg name="HEADLESS" default="false"/>
+  <arg name="PAUSED"   default="false"/>
+  <arg name="WORLD_FILE" default="$(find aero_gazebo)/world/aero_shelf.world"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="debug" default="false"/>
+
+  <env name="GAZEBO_MODEL_PATH" value="$(find aero_gazebo)/gazebo_models" />
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch" >
+    <arg name="world_name" value="$(arg WORLD_FILE)"/>
+    <arg name="gui"    value="$(arg GUI)" />
+    <arg name="paused" value="$(arg PAUSED)"/>
+    <arg name="headless" value="$(arg HEADLESS)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="debug"  value="$(arg debug)" />
+  </include>
+
+  <!-- Load the URDF into the ROS Parameter Server -->
+  <!-- param name=\"robot_description_gazebo\"
+         command=\"$(find xacro)/xacro - -inorder '$(find aero_description)/robots/aero.urdf.xacro'\" /-->
+  <param name="robot_description_gazebo"
+         textfile="$(find aero_description)/robots/aero.urdf" />
+
+  <include file="$(find aero_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+
+  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+        respawn="false" output="screen"
+        args="-urdf -model aero -param robot_description_gazebo -Y 3.141592653589793"/>
+
+  <rosparam file="$(find aero_description)/robots/gazebo_controller_settings.yaml"
+            command="load" />
+
+  <!-- load the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+        respawn="false" output="screen" ns="/"
+        args="joint_state_controller head_controller waist_controller
+              lifter_controller larm_controller rarm_controller
+              lhand_controller rhand_controller" />
+
+  <node name="aero_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <node name="aero_hand_controller"
+        pkg="aero_ros_controller" type="aero_hand_controller_node"
+        output="screen" />
+</launch>
