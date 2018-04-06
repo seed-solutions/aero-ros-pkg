@@ -43,3 +43,5 @@ rhand_controller:
   type: position_controllers/JointTrajectoryController
   joints:
     - r_thumb_joint
+
+robot_interface_controllers: ['larm', 'rarm', 'head', 'waist', 'lifter']
