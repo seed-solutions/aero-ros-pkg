@@ -46,6 +46,8 @@ wstool up aero-ros-pkg
 cd ~/ros/${ROS_DISTRO}
 rosdep install -y -r --from-paths src --ignore-src
 ```
+You may need ``sudo rosdep init`` and ``rosdep update`` before
+``rosdep install``. Please follow the terminal message.
 
 ### Build packge
 
