@@ -17,7 +17,24 @@
  <xacro:aero-upper/>
  <xacro:aero-wheels base_link="base_link"/>
 
- <xacro:gazebo_laser_sensor link_name="wheels_base_laser_link" frame_name="wheels_base_laser_link" />
+ <!-- camera -->
+ <link name="camera_frame" />
+ <link name="camera_optical_frame" />
+ <joint name="camera_setting" type="fixed" >
+   <parent link="head_link" />
+   <child  link="camera_frame" />
+   <origin xyz="0 0.035 0.09" rpy="0 0.15 0" />
+ </joint>
+ <joint name="camera_optical" type="fixed" >
+   <parent link="camera_frame" />
+   <child  link="camera_optical_frame" />
+   <origin xyz="0 0 0" rpy="-1.570796326795 0 -1.570796326795" />
+ </joint>
+ <xacro:gazebo_camera link_name="camera_frame"
+                      frame_name="camera_optical_frame" />
+
+ <xacro:gazebo_laser_sensor link_name="wheels_base_laser_link"
+                            frame_name="wheels_base_laser_link" />
  <xacro:gazebo_trajectory_controller />
  <xacro:gazebo_base_controller base_frame="base_link" />
 
