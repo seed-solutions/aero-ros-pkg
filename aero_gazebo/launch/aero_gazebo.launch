@@ -51,4 +51,9 @@
   <node name="aero_hand_controller"
         pkg="aero_ros_controller" type="aero_hand_controller_node"
         output="screen" />
+
+  <include file="$(find aero_startup)/aero_move_base/launch/static_map_navigation.launch">
+    <arg name="map_file" value="$(find aero_gazebo)/map/map.yaml" />
+  </include>
+
 </launch>
