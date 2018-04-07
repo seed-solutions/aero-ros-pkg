@@ -130,6 +130,18 @@ points:
   time_from_start: {secs: 3, nsecs: 0}"
 ```
 
+#### Move hands
+~~~
+## Open
+rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.HAND_RIGHT'), command: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.COMMAND_UNGRASP'), power: 0, time_sec: 0}"
+
+## Grasp
+rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.HAND_RIGHT'), command: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.COMMAND_GRASP'), power: 0, time_sec: 1.0}"
+
+## Angle
+rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.HAND_RIGHT'), command: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.COMMAND_GRASP_ANGLE'), power: 0, time_sec: 1.0, larm_angle: 0.5, rarm_angle: 0.5}"
+~~~
+
 ### Writing Codes
 
 see `aero_samples` and `aero_std` documentation
