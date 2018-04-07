@@ -1,7 +1,6 @@
 #ifndef _AERO_MOVEIT_INTERFACE_
 #define _AERO_MOVEIT_INTERFACE_
 
-#define USING_BASE   0
 #define USING_HAND   1
 #define USING_GRASP  1
 
@@ -33,15 +32,7 @@
 
 #include <mutex>
 
-#if USING_BASE
-/// TODO: new code(move_base)
-#include <actionlib/client/simple_action_client.h>
-#include <move_base_msgs/MoveBaseAction.h>
-#include <move_base_msgs/MoveBaseFeedback.h>
-#include <move_base_msgs/MoveBaseResult.h>
-#else
 #include <aero_std/AeroBaseCommander.hh>
-#endif
 
 #include <aero_std/AeroLookatCommander.hh>
 
@@ -68,11 +59,8 @@ namespace aero
       std::vector<std::string > controller_names;
       std::vector<double > time_sequence;
     };
-#if USING_BASE
-    class AeroMoveitInterface
-#else
+
     class AeroMoveitInterface : public aero::base_commander::AeroBaseCommander
-#endif
     {
     public: typedef std::shared_ptr<AeroMoveitInterface> Ptr;
 
@@ -374,78 +362,6 @@ namespace aero
     public: bool sendPlaceIK(const aero::GraspRequest &_grasp, double _push_height=0.03);
 #endif
 
-#if USING_BASE /// TODO: new code(move_base)
-      // ------------------------------------------------------------
-      // move_base functions
-      // ------------------------------------------------------------
-      /// @brief get current robot's pose in world
-      /// @param[in] _map map name
-      /// @return current pose from _map to base_link
-    public: geometry_msgs::Pose getCurrentPose(std::string _map="/map");
-      /// @brief get named location's pose
-      /// @param[in] _location see spot.yaml
-      /// @return pose from map to location
-    public: geometry_msgs::Pose getLocationPose(std::string _location);
-      /// @brief move wheel to relative position
-      /// @param[in] _x relative x in meters
-      /// @param[in] _y relative y in meters
-      /// @param[in] _timeout_ms timeout
-      /// @return if lifter can't reach the desired position before timeout, return false
-    public: bool goPos(double _x, double _y, double _rad, int _timeout_ms=20000);
-      /// @brief move wheel to relative position
-      /// @attention this function returns sonn after called. you can get the information by calling isMoving
-      /// @param[in] _x relative x in meters
-      /// @param[in] _y relative y in meters
-    public: void goPosAsync(double _x, double _y, double _rad);
-      /// @brief move wheel to named location
-      /// @attention this function returns sonn after called. you can get the information by calling isMoving
-      /// @param[in] _location see spot.yaml
-    public: void moveToAsync(std::string _location);
-      /// @brief move wheel to desired position
-      /// @attention this function returns sonn after called. you can get the information by calling isMoving
-      /// @param[in] _point desired position in map coordinate
-    public: void moveToAsync(Vector3 _point);
-      /// @brief move wheel to desired pose
-      /// @attention this function returns sonn after called. you can get the information by calling isMoving
-      /// @param[in] _pose desired pose in map coordinate
-    public: void moveToAsync(geometry_msgs::Pose _pose);
-      /// @brief check asynchronous wheel function is on process or not
-      /// @return when wheel is moving, return true
-    public: bool isMoving();
-      /// @brief check robot is at location or not
-      /// @param[in] _location see spot.yaml
-      /// @param[in] _thre threshold
-      /// @return if base_link is inside thresold in map coordinate, return true
-    public: bool at(std::string _location, double _thre=0.2);
-      /// @brief check robot is at _pose or not
-      /// @param[in] _pose desired pose
-      /// @param[in] _thre threshold
-      /// @return if base_link is inside thresold in map coordinate, return true
-    public: bool at(geometry_msgs::Pose _pose, double _thre=0.2);
-      /// @brief stop asynchronous wheel functions
-    public: void stop();
-      /// @brief re-execure stopped functions
-    public: void go();
-      /// @brief get the distance to location
-      /// @param[in] _location see spot.yaml
-      /// @return distance from base_link to location in meters
-    public: float toDestination(std::string _location);
-      /// @brief turn the robot toward location
-      /// @param[in] _location see spot.yaml
-    public: void faceTowardAsync(std::string _location);
-      /// @brief turn the robot toward pose
-      /// @param[in] target pose in map coordinate
-    public: void faceTowardAsync(geometry_msgs::Pose _pose);
-      /// @brief check global cost map wether the robot can make plan to go to the position or not
-      /// @param[in] _pose desired pose in map coordinate
-      /// @return if wheel moving plan to the pose can be made, return true
-    public: bool checkMoveTo(geometry_msgs::Pose _pose);
-      /// @brief protected function. due to move_base_pkg's bug, we use this
-    protected: bool goPosTurnOnly_(double _rad, int _timeout_ms=20000);
-
-    public: Vector3 volatileTransformToBase(double _x, double _y, double _z);
-#endif
-
       // @brief overwrite command speed on real robot
       // @param[in] _speed_factor < 1.0 for slow down, > 1.0 for speed up
     public: void overwriteSpeed(float _speed_factor);
@@ -483,15 +399,6 @@ namespace aero
     protected: std::string previous_topic_;
     protected: boost::shared_ptr<aero::lookat_commander::AeroLookatCommander > alc;
 
-#if USING_BASE
-    protected: ros::Publisher cmd_vel_publisher_;
-    protected: ros::ServiceClient get_spot_;
-    protected: ros::ServiceClient check_move_to_;
-    protected: actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac_;
-
-    protected: tf::TransformListener listener_;
-    protected: geometry_msgs::Pose pose_using_;
-#endif
     protected: bool tracking_mode_flag_;
     protected: aero::trajectory trajectory_;
 
