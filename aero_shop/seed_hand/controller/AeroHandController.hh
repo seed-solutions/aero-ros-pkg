@@ -1,4 +1,4 @@
-/// robot dependant constant // for fcsc hand
+/// robot dependant constant // for seed_hand
 #define POSITION_Right 12
 #define POSITION_Left  27
 
@@ -20,10 +20,10 @@ const std::string r_grasp_fast_check_joint = "l_indexbase_joint";
 
 #define L_OPEN() {                                   \
     map["l_thumb_joint"] = -15.0 * M_PI / 180.0;     \
-    map["l_indexbase_joint"] = 55.0 * M_PI / 180.0; \
+    map["l_indexbase_joint"] = 55.0 * M_PI / 180.0;  \
   }
-#define R_OPEN() {                                   \
-    map["r_thumb_joint"] =  15.0 * M_PI / 180.0;     \
+#define R_OPEN() {                                    \
+    map["r_thumb_joint"] =  15.0 * M_PI / 180.0;      \
     map["r_indexbase_joint"] =  -55.0 * M_PI / 180.0; \
   }
 
