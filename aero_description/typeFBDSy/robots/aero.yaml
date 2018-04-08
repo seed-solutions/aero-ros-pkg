@@ -6,6 +6,7 @@ rarm:
   - r_wrist_y_joint    : rarm-wrist-y
   - r_wrist_p_joint    : rarm-wrist-p
   - r_wrist_r_joint    : rarm-wrist-r
+  - r_hand_y_joint     : rarm-hand-y
 larm:
   - l_shoulder_p_joint : larm-shoulder-p
   - l_shoulder_r_joint : larm-shoulder-r
@@ -14,6 +15,7 @@ larm:
   - l_wrist_y_joint    : larm-wrist-y
   - l_wrist_p_joint    : larm-wrist-p
   - l_wrist_r_joint    : larm-wrist-r
+  - l_hand_y_joint     : larm-hand-y
 torso:
   - waist_y_joint : torso-waist-y
   - waist_p_joint : torso-waist-p
@@ -50,6 +52,6 @@ larm-end-coords:
 angle-vector:
   reset-pose : [0.0, 0.0, 0.0, 0.0, 0.0,
                 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
                 ]
