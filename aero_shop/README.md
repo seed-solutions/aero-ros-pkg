@@ -3,6 +3,16 @@
 aero_shop is the parts model database of seednoid.
 You can choose parts and setup your own seednoid!
 
+## Parts List
+
+- hand_yaw [joint] add yaw joint between hand and tip of arm
+- seed_hand [hand] two DOF hand
+- trx_s [hand] signle DOF hand
+- typeB_lifter [lifter] lifting upper body
+- typeC_lifter [lifter] lifting upper body
+- typeD_wheel [mobile base]
+- typeE_wheel [mobile base]
+- typeF_upperbody [upper body], 2 arms, 1 head, waist
 
 ## [Advanced] Create New Parts
 
