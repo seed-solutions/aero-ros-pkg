@@ -264,6 +264,29 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
                  );
 }
 
+bool TrajectoryClient::interpolatingp()
+{
+  actionlib::SimpleClientGoalState state = this->getState();
+  ROS_INFO("interpolatingp %s", state.toString().c_str());
+  return (state == actionlib::SimpleClientGoalState::StateEnum::ACTIVE);
+}
+
+void TrajectoryClient::stop_motion(double _stop_time)
+{
+  joint_angle_map av;
+  getReferencePositions(av);
+
+  sendAngles(av, _stop_time, ros::Time(0));
+}
+
+void TrajectoryClient::cancel_angle_vector (bool _wait)
+{
+  this->cancelAllGoals();
+  if (_wait) {
+    wait_interpolation(); // ??
+  }
+}
+
 //// callback
 void TrajectoryClient::StateCallback_(const control_msgs::JointTrajectoryControllerState::ConstPtr & _msg)
 {
@@ -527,7 +550,7 @@ bool RobotInterface::wait_interpolation(double _tm)
 
 bool RobotInterface::wait_interpolation(const std::string &_name, double _tm)
 {
-  std::vector <std::string > names;
+  std::vector<std::string > names;
   group2names_(_name, names);
   if(names.size() == 0) {
     wait_interpolation_(_name, _tm);
@@ -536,7 +559,7 @@ bool RobotInterface::wait_interpolation(const std::string &_name, double _tm)
   }
 }
 
-bool RobotInterface::wait_interpolation(const std::vector < std::string> &_names, double _tm)
+bool RobotInterface::wait_interpolation(const std::vector<std::string > &_names, double _tm)
 {
   bool ret = true;
   for(auto it = _names.begin(); it != _names.end(); it++) {
@@ -557,6 +580,97 @@ bool RobotInterface::wait_interpolation_(const std::string &_name, double _tm)
     }
   }
   return ret;
+}
+
+bool RobotInterface::interpolatingp ()
+{
+  bool ret = false;
+  for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+    if ( (it->second)->interpolatingp() ) {
+      ret = true;
+      break;
+    }
+  }
+  return ret;
+}
+bool RobotInterface::interpolatingp (const std::string &_name)
+{
+  std::vector<std::string > names;
+  group2names_(_name, names);
+  if(names.size() == 0) {
+    names.push_back(_name);
+  }
+  return interpolatingp(names);
+}
+bool RobotInterface::interpolatingp (const std::vector<std::string > &_names)
+{
+  bool ret = false;
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if(cit != controllers_.end()) {
+      if ( (cit->second)->interpolatingp() ) {
+        ret = true;
+        break;
+      }
+    }
+  }
+  return ret;
+}
+
+void RobotInterface::stop_motion(double _stop_time)
+{
+  for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+    (it->second)->stop_motion(_stop_time);
+  }
+}
+void RobotInterface::stop_motion(const std::string &_name, double _stop_time)
+{
+  std::vector<std::string > names;
+  group2names_(_name, names);
+  if(names.size() == 0) {
+    names.push_back(_name);
+  }
+  stop_motion(names, _stop_time);
+}
+void RobotInterface::stop_motion(const std::vector<std::string > &_names, double _stop_time)
+{
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if( cit != controllers_.end() ) {
+      (cit->second)->stop_motion(_stop_time);
+    }
+  }
+}
+
+void RobotInterface::cancel_angle_vector (bool _wait)
+{
+  for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+    (it->second)->cancel_angle_vector(false);
+  }
+  if (_wait) {
+    wait_interpolation();
+  }
+}
+void RobotInterface::cancel_angle_vector (const std::string &_name, bool _wait)
+{
+  std::vector<std::string > names;
+  group2names_(_name, names);
+  if(names.size() == 0) {
+    names.push_back(_name);
+  }
+  cancel_angle_vector(names, _wait);
+}
+void RobotInterface::cancel_angle_vector (const std::vector<std::string > &_names, bool _wait)
+{
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if( cit != controllers_.end() ) {
+      (cit->second)->cancel_angle_vector(_wait);
+    }
+  }
+  if (_wait) {
+    wait_interpolation();
+  }
 }
 
 bool RobotInterface::configureFromParam(const std::string &_param)

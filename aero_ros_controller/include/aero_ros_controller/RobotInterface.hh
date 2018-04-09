@@ -92,11 +92,9 @@ public:
 
   virtual bool wait_interpolation(double _tm = 0.0) = 0;
 
-#if 0
   virtual bool interpolatingp() = 0;
   virtual void stop_motion(double _stop_time = 0.0) = 0;
-  virtual void cancel_angle_vector (const std::string &_name, bool _wait) = 0;
-#endif
+  virtual void cancel_angle_vector (bool _wait) = 0;
 
   virtual void getReferencePositions( joint_angle_map &_map) = 0;
   virtual void getActualPositions   ( joint_angle_map &_map) = 0;
@@ -151,6 +149,9 @@ public:
 
   using TrajectoryBase::send_angle_vector_sequence;
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const ros::Time &_start);
+  virtual bool interpolatingp();
+  virtual void stop_motion(double _stop_time = 0.0);
+  virtual void cancel_angle_vector (bool _wait);
 
 public:
   void doneCb(const actionlib::SimpleClientGoalState& state,
@@ -218,13 +219,20 @@ public:
   virtual bool wait_interpolation(const std::string &_name, double _tm = 0.0);
   virtual bool wait_interpolation(const std::vector < std::string> &_names, double _tm = 0.0);
 
-#if 0
+  using TrajectoryBase::interpolatingp;
   bool interpolatingp ();
   bool interpolatingp (const std::string &_name);
+  bool interpolatingp (const std::vector< std::string> &_names);
 
+  using TrajectoryBase::stop_motion;
   void stop_motion(double _stop_time = 0.0);
+  void stop_motion(const std::string &_name, double _stop_time = 0.0);
+  void stop_motion(const std::vector< std::string> &_names, double _stop_time = 0.0);
+
+  using TrajectoryBase::cancel_angle_vector;
+  void cancel_angle_vector (bool _wait);
   void cancel_angle_vector (const std::string &_name, bool _wait);
-#endif
+  void cancel_angle_vector (const std::vector< std::string> &_names, bool _wait);
 
   bool add_controller (const std::string &_key,
                        const std::string &_action_name,
