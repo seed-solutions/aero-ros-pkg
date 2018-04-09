@@ -217,6 +217,9 @@ void TrajectoryClient::send_angle_vector(const angle_vector &_av, const double _
   //goal.trajectory.points[0].accelerations.resize();
   //goal.trajectory.points[0].effort.resize();
   goal.trajectory.points[0].time_from_start = ros::Duration(_tm);
+  goal.path_tolerance.resize(0);
+  goal.goal_tolerance.resize(0);
+  goal.goal_time_tolerance = ros::Duration(120);
   //this->sendGoal(goal);
   sending_goal_ = true;
   this->sendGoal(goal,
@@ -254,6 +257,9 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
     duration += _tm_seq[i];
     goal.trajectory.points[i].time_from_start = ros::Duration(duration);
   }
+  goal.path_tolerance.resize(0);
+  goal.goal_tolerance.resize(0);
+  goal.goal_time_tolerance = ros::Duration(120);
   //this->sendGoal(goal);
   sending_goal_ = true;
   this->sendGoal(goal,
@@ -269,7 +275,7 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
 bool TrajectoryClient::interpolatingp()
 {
   actionlib::SimpleClientGoalState state = this->getState();
-  ROS_INFO("interpolatingp %s", state.toString().c_str());
+  ROS_DEBUG("interpolatingp %s", state.toString().c_str());
   return (state == actionlib::SimpleClientGoalState::StateEnum::ACTIVE);
 }
 
