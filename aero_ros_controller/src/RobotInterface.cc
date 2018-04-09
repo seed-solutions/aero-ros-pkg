@@ -543,13 +543,27 @@ bool RobotInterface::add_controller(const std::string &_key,
 bool RobotInterface::wait_interpolation(double _tm)
 {
   bool ret = true;
+  bool with_limit = (_tm != 0.0);
+  ros::Time tm_limit = ros::Time::now() + ros::Duration(_tm);
+  double remain_tm = _tm;
+
   for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
     ROS_DEBUG("wait (%s), state = %s ", (it->first).c_str(),
               (it->second)->getState().toString().c_str());
-    if( !((it->second)->wait_interpolation(_tm)) ) {
+    if( !((it->second)->wait_interpolation(remain_tm)) ) {
       ret = false;
+      break;
+    }
+    if (with_limit) {
+      double diff = (tm_limit - ros::Time::now()).toSec();
+      if (diff  < 0 ) {
+        ret = false;
+        break;
+      }
+      remain_tm = diff;
     }
   }
+
   return ret;
 }
 
@@ -558,30 +572,32 @@ bool RobotInterface::wait_interpolation(const std::string &_name, double _tm)
   std::vector<std::string > names;
   group2names_(_name, names);
   if(names.size() == 0) {
-    wait_interpolation_(_name, _tm);
-  } else {
-    wait_interpolation(names, _tm);
+    names.push_back(_name);
   }
+  return wait_interpolation(names, _tm);
 }
 
 bool RobotInterface::wait_interpolation(const std::vector<std::string > &_names, double _tm)
 {
   bool ret = true;
-  for(auto it = _names.begin(); it != _names.end(); it++) {
-    if(wait_interpolation_(*it, _tm)) {
-      ret = false;
-    }
-  }
-  return ret;
-}
+  bool with_limit = (_tm != 0.0);
+  ros::Time tm_limit = ros::Time::now() + ros::Duration(_tm);
+  double remain_tm = _tm;
 
-bool RobotInterface::wait_interpolation_(const std::string &_name, double _tm)
-{
-  bool ret = true;
-  auto cit = controllers_.find(_name);
-  if(cit != controllers_.end()) {
-    if( !((cit->second)->wait_interpolation(_tm)) ) {
-      ret = false;
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if(cit != controllers_.end()) {
+      if( !((cit->second)->wait_interpolation(remain_tm)) ) {
+        ret = false;
+        break;
+      }
+    }
+    if (with_limit) {
+      double diff = (tm_limit - ros::Time::now()).toSec();
+      if (diff  < 0 ) {
+        break;
+      }
+      remain_tm = diff;
     }
   }
   return ret;
