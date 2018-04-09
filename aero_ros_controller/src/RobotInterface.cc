@@ -518,13 +518,8 @@ bool RobotInterface::add_controller (const std::string &_key,
     if (!p->isServerConnected()) {
       return false;
     }
-
-    if(_update_joint_list) {
-      std::copy( _jnames.begin(), _jnames.end(), std::back_inserter(joint_list_) );
-    }
-    p->setName(_key);
   }
-  return this->add_controller(_key, p);
+  return this->add_controller(_key, p, _update_joint_list);
 }
 
 bool RobotInterface::add_controller(const std::string &_key,
@@ -681,6 +676,13 @@ void RobotInterface::cancel_angle_vector (const std::vector<std::string > &_name
   if (_wait) {
     wait_interpolation();
   }
+}
+
+bool RobotInterface::add_group(const std::string &_name, const std::vector<std::string > &_names)
+{
+  // TODO: check existance of _names
+  controller_group_[_name] = _names;
+  return true;
 }
 
 bool RobotInterface::configureFromParam(const std::string &_param)
