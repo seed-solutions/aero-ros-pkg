@@ -93,8 +93,8 @@ public:
   virtual bool wait_interpolation(double _tm = 0.0) = 0;
 
   virtual bool interpolatingp() = 0;
-  virtual void stop_motion(double _stop_time = 0.0) = 0;
-  virtual void cancel_angle_vector (bool _wait) = 0;
+  virtual void stop_motion(double _stop_time = 0.05) = 0;
+  virtual void cancel_angle_vector (bool _wait = false) = 0;
 
   virtual void getReferencePositions( joint_angle_map &_map) = 0;
   virtual void getActualPositions   ( joint_angle_map &_map) = 0;
@@ -149,9 +149,10 @@ public:
 
   using TrajectoryBase::send_angle_vector_sequence;
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const ros::Time &_start);
+
   virtual bool interpolatingp();
-  virtual void stop_motion(double _stop_time = 0.0);
-  virtual void cancel_angle_vector (bool _wait);
+  virtual void stop_motion(double _stop_time = 0.05);
+  virtual void cancel_angle_vector (bool _wait = false);
 
 public:
   void doneCb(const actionlib::SimpleClientGoalState& state,
@@ -201,6 +202,7 @@ public:
 
   using TrajectoryBase::send_angle_vector;
   virtual void send_angle_vector(const angle_vector &_av, const double _tm, const std::string &_name);
+  virtual void send_angle_vector(const angle_vector &_av, const double _tm, const std::vector<std::string > &_names);
   virtual void send_angle_vector(const angle_vector &_av, const double _tm, const ros::Time &_start);
 
   using TrajectoryBase::send_angle_vector_sequence;
@@ -224,14 +226,14 @@ public:
   bool interpolatingp (const std::vector<std::string > &_names);
 
   using TrajectoryBase::stop_motion;
-  void stop_motion(double _stop_time = 0.0);
-  void stop_motion(const std::string &_name, double _stop_time = 0.0);
-  void stop_motion(const std::vector< std::string> &_names, double _stop_time = 0.0);
+  void stop_motion(double _stop_time = 0.05);
+  void stop_motion(const std::string &_name, double _stop_time = 0.05);
+  void stop_motion(const std::vector<std::string > &_names, double _stop_time = 0.05);
 
   using TrajectoryBase::cancel_angle_vector;
-  void cancel_angle_vector (bool _wait);
-  void cancel_angle_vector (const std::string &_name, bool _wait);
-  void cancel_angle_vector (const std::vector< std::string> &_names, bool _wait);
+  void cancel_angle_vector (bool _wait = false);
+  void cancel_angle_vector (const std::string &_name, bool _wait = false);
+  void cancel_angle_vector (const std::vector<std::string > &_names, bool _wait = false);
 
   bool add_controller (const std::string &_key,
                        const std::string &_action_name,
