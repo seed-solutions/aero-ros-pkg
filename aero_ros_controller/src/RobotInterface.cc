@@ -172,9 +172,11 @@ TrajectoryClient::TrajectoryClient(ros::NodeHandle &_nh,
 
 TrajectoryClient::~TrajectoryClient()
 {
-  boost::mutex::scoped_lock lock(state_mtx_);
-  state_sub_.shutdown();
   state_spinner_->stop();
+  {
+    boost::mutex::scoped_lock lock(state_mtx_);
+    state_sub_.shutdown();
+  }
   //ROS_WARN("~ %s", name_.c_str());
 }
 
@@ -322,9 +324,11 @@ RobotInterface::RobotInterface(ros::NodeHandle &_nh) : local_nh_(_nh), updated_j
 
 RobotInterface::~RobotInterface()
 {
-  boost::mutex::scoped_lock lock(states_mtx_);
-  joint_states_sub_.shutdown();
   joint_states_spinner_->stop();
+  {
+    boost::mutex::scoped_lock lock(states_mtx_);
+    joint_states_sub_.shutdown();
+  }
   //ROS_WARN("~ RobotInterface ptr: %lX", (void *)this);
 }
 
