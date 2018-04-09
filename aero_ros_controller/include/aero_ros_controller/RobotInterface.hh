@@ -59,8 +59,8 @@ typedef std::map< int, double > index_angle_map;
 class TrajectoryBase
 {
 public:
-  TrajectoryBase() {}
-  TrajectoryBase(const std::vector< std::string > &_joint_list) : joint_list_(_joint_list), start_offset_(0.02)
+  TrajectoryBase() : start_offset_(0.02) { }
+  TrajectoryBase(const std::vector<std::string > &_joint_list) : joint_list_(_joint_list), start_offset_(0.02)
   { }
 
   ~TrajectoryBase() {};
