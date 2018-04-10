@@ -52,15 +52,15 @@ namespace robot_interface
 
 typedef std::vector<double > angle_vector;
 typedef std::vector<double > time_vector;
-typedef std::vector< std::vector<double > > angle_vector_sequence;
-typedef std::map< std::string, double > joint_angle_map;
-typedef std::map< int, double > index_angle_map;
+typedef std::vector<std::vector<double > > angle_vector_sequence;
+typedef std::map<std::string, double > joint_angle_map;
+typedef std::map<int, double > index_angle_map;
 
 class TrajectoryBase
 {
 public:
-  TrajectoryBase() {}
-  TrajectoryBase(const std::vector< std::string > &_joint_list) : joint_list_(_joint_list), start_offset_(0.02)
+  TrajectoryBase() : start_offset_(0.02) { }
+  TrajectoryBase(const std::vector<std::string > &_joint_list) : joint_list_(_joint_list), start_offset_(0.02)
   { }
 
   ~TrajectoryBase() {};
@@ -70,15 +70,15 @@ public:
 #endif
   virtual bool convertToAngleVector(const joint_angle_map &_jmap,
                                     angle_vector &_av);
-  virtual bool convertToAngleVector(const std::vector < std::string> &_names,
-                                    const std::vector< double >      &_positions,
+  virtual bool convertToAngleVector(const std::vector<std::string > &_names,
+                                    const std::vector<double >      &_positions,
                                     angle_vector &_av);
   virtual bool convertToMap(const angle_vector &_av, joint_angle_map &_jmap);
 
   virtual bool sendAngles(const joint_angle_map &_jmap,
                           const double _tm, const ros::Time &_start);
-  virtual bool sendAngles(const std::vector < std::string> &_names,
-                          const std::vector< double>       &_positions,
+  virtual bool sendAngles(const std::vector<std::string > &_names,
+                          const std::vector<double >      &_positions,
                           const double _tm, const ros::Time &_start);
 
   virtual void send_angle_vector(const angle_vector &_av, const double _tm);
@@ -92,11 +92,9 @@ public:
 
   virtual bool wait_interpolation(double _tm = 0.0) = 0;
 
-#if 0
   virtual bool interpolatingp() = 0;
-  virtual void stop_motion(double _stop_time = 0.0) = 0;
-  virtual void cancel_angle_vector (const std::string &_name, bool _wait) = 0;
-#endif
+  virtual void stop_motion(double _stop_time = 0.05) = 0;
+  virtual void cancel_angle_vector (bool _wait = false) = 0;
 
   virtual void getReferencePositions( joint_angle_map &_map) = 0;
   virtual void getActualPositions   ( joint_angle_map &_map) = 0;
@@ -112,7 +110,7 @@ public:
   }
 
 protected:
-  std::vector< std::string > joint_list_;
+  std::vector<std::string > joint_list_;
   std::string name_;
   double start_offset_;
 };
@@ -151,6 +149,10 @@ public:
 
   using TrajectoryBase::send_angle_vector_sequence;
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const ros::Time &_start);
+
+  virtual bool interpolatingp();
+  virtual void stop_motion(double _stop_time = 0.05);
+  virtual void cancel_angle_vector (bool _wait = false);
 
 public:
   void doneCb(const actionlib::SimpleClientGoalState& state,
@@ -194,57 +196,66 @@ public:
 
   virtual bool sendAngles(const joint_angle_map &_jmap,
                           const double _tm, const ros::Time &_start);
-  virtual bool sendAngles(const std::vector < std::string> &_names,
-                          const std::vector< double>       &_positions,
+  virtual bool sendAngles(const std::vector<std::string > &_names,
+                          const std::vector<double >      &_positions,
                           const double _tm, const ros::Time &_start);
 
   using TrajectoryBase::send_angle_vector;
   virtual void send_angle_vector(const angle_vector &_av, const double _tm, const std::string &_name);
-  virtual void send_angle_vector(const angle_vector &_av, const double _tm, const std::vector< std::string> &_names);
+  virtual void send_angle_vector(const angle_vector &_av, const double _tm, const std::vector<std::string > &_names);
   virtual void send_angle_vector(const angle_vector &_av, const double _tm, const ros::Time &_start);
 
   using TrajectoryBase::send_angle_vector_sequence;
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq,
                                           const std::string &_name, const ros::Time &_start);
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq,
-                                          const std::vector< std::string> &_names, const ros::Time &_start);
+                                          const std::vector<std::string > &_names, const ros::Time &_start);
   virtual void send_angle_vector_sequence(const angle_vector_sequence &_av_seq, const time_vector &_tm_seq, const ros::Time &_start);
 
-  virtual void getReferencePositions( std::map < std::string, double> &_map);
-  virtual void getActualPositions   ( std::map < std::string, double> &_map);
+  virtual void getReferencePositions( std::map<std::string, double > &_map);
+  virtual void getActualPositions   ( std::map<std::string, double > &_map);
 
   using TrajectoryBase::wait_interpolation;
   virtual bool wait_interpolation(double _tm = 0.0);
   virtual bool wait_interpolation(const std::string &_name, double _tm = 0.0);
-  virtual bool wait_interpolation(const std::vector < std::string> &_names, double _tm = 0.0);
+  virtual bool wait_interpolation(const std::vector<std::string > &_names, double _tm = 0.0);
 
-#if 0
+  using TrajectoryBase::interpolatingp;
   bool interpolatingp ();
   bool interpolatingp (const std::string &_name);
+  bool interpolatingp (const std::vector<std::string > &_names);
 
-  void stop_motion(double _stop_time = 0.0);
-  void cancel_angle_vector (const std::string &_name, bool _wait);
-#endif
+  using TrajectoryBase::stop_motion;
+  void stop_motion(double _stop_time = 0.05);
+  void stop_motion(const std::string &_name, double _stop_time = 0.05);
+  void stop_motion(const std::vector<std::string > &_names, double _stop_time = 0.05);
+
+  using TrajectoryBase::cancel_angle_vector;
+  void cancel_angle_vector (bool _wait = false);
+  void cancel_angle_vector (const std::string &_name, bool _wait = false);
+  void cancel_angle_vector (const std::vector<std::string > &_names, bool _wait = false);
 
   bool add_controller (const std::string &_key,
                        const std::string &_action_name,
                        const std::string &_state_name,
-                       const std::vector< std::string> &_jnames,
+                       const std::vector<std::string > &_jnames,
                        bool _update_joint_list = true);
   bool add_controller (const std::string &_key,
                        const TrajectoryClient::Ptr &_p,
                        bool _update_joint_list = true);
 
-  bool defineJointList(std::vector < std::string > &_jl);
+  bool defineJointList(std::vector<std::string > &_jl);
 
   bool updateJointList();
-  bool updateJointList(std::vector < std::string > &_controller_names_list);
+  bool updateJointList(std::vector<std::string > &_controller_names_list);
 
   bool configureFromParam(const std::string &_param);
+
+  bool add_group(const std::string &_name, const std::vector<std::string > &_names);
 private:
   //// callback
   void JointStateCallback_(const sensor_msgs::JointState::ConstPtr& _msg);
-  void group2names_ (const std::string &_group, std::vector <std::string> &_names)
+  void group2names_ (const std::string &_group, std::vector<std::string > &_names)
   {
     _names.resize(0);
     auto it = controller_group_.find(_group);
@@ -261,15 +272,15 @@ protected:
   ros::Subscriber joint_states_sub_;
 
   ros::Time current_stamp_;
-  std::map < std::string, double> current_positions_;
-  std::map < std::string, double> current_velocities_;
-  std::map < std::string, double> current_effort_;
+  std::map<std::string, double > current_positions_;
+  std::map<std::string, double > current_velocities_;
+  std::map<std::string, double > current_effort_;
 
   boost::mutex states_mtx_;
   ros::CallbackQueue joint_states_queue_;
-  boost::shared_ptr < ros::AsyncSpinner > joint_states_spinner_;
+  boost::shared_ptr <ros::AsyncSpinner > joint_states_spinner_;
 
-  std::map< std::string, std::vector<std::string > > controller_group_;
+  std::map<std::string, std::vector<std::string > > controller_group_;
   bool updated_joint_state_;
 };
 
