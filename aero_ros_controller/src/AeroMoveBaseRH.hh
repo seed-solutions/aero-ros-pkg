@@ -141,6 +141,8 @@ class AeroMoveBase
   /// @param time stamp of the latest recieved cmd_vel msg
  private: ros::Time time_stamp_;
 
+ private: geometry_msgs::Twist prev_cmd_;
+
  private: AeroBaseConfig base_config_;
 
  private: boost::mutex base_mtx_;

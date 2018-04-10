@@ -46,6 +46,8 @@ wstool up aero-ros-pkg
 cd ~/ros/${ROS_DISTRO}
 rosdep install -y -r --from-paths src --ignore-src
 ```
+You may need ``sudo rosdep init`` and ``rosdep update`` before
+``rosdep install``. Please follow the terminal message.
 
 ### Build packge
 
@@ -127,6 +129,18 @@ points:
   effort: [0, 0]
   time_from_start: {secs: 3, nsecs: 0}"
 ```
+
+#### Move hands
+~~~
+## Open
+rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.HAND_RIGHT'), command: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.COMMAND_UNGRASP'), power: 0, time_sec: 0}"
+
+## Grasp
+rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.HAND_RIGHT'), command: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.COMMAND_GRASP'), power: 0, time_sec: 1.0}"
+
+## Angle
+rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.HAND_RIGHT'), command: $(python -c 'import aero_startup.srv; print aero_startup.srv.HandControlRequest.COMMAND_GRASP_ANGLE'), power: 0, time_sec: 1.0, larm_angle: 0.5, rarm_angle: 0.5}"
+~~~
 
 ### Writing Codes
 

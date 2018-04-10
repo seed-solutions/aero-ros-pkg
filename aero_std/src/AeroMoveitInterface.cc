@@ -1,27 +1,11 @@
 #include "aero_std/AeroMoveitInterface.hh"
 
 //////////////////////////////////////////////////
-#if USING_BASE
-aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, const std::string &_rd)
-#else
 aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, const std::string &_rd) : aero::base_commander::AeroBaseCommander(_nh)
-#endif
 {
   ROS_INFO("start creating robot_interface");
 
   ri.reset(new aero::AeroRobotInterface(_nh));
-
-#if USING_BASE
-  cmd_vel_publisher_ = _nh.advertise<geometry_msgs::Twist>
-    ("/cmd_vel", 1000);
-  get_spot_ = _nh.serviceClient<aero_std::GetSpot>
-    ("/get_spot");
-  check_move_to_ = _nh.serviceClient<nav_msgs::GetPlan>
-    ("/make_plan");
-  // action client
-  ac_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>
-    ("/move_base", true);
-#endif
 
   // service clients
 #if USING_HAND
@@ -470,22 +454,6 @@ std::string aero::interface::AeroMoveitInterface::getLookAtTopic()
   return "";
 }
 
-#if USING_BASE
-//////////////////////////////////////////////////
-aero::Vector3 aero::interface::AeroMoveitInterface::volatileTransformToBase(double _x, double _y, double _z) {
-  geometry_msgs::Pose map2base = getCurrentPose();
-  Eigen::Vector3d map2base_p(map2base.position.x,
-                             map2base.position.y,
-                             map2base.position.z);
-  Eigen::Quaterniond map2base_q(map2base.orientation.w,
-                                map2base.orientation.x,
-                                map2base.orientation.y,
-                                map2base.orientation.z);
-  // convert to map coordinates
-  return map2base_q.inverse() * (Eigen::Vector3d(_x, _y, _z) - map2base_p);
-}
-#endif
-
 //////////////////////////////////////////////////
 void aero::interface::AeroMoveitInterface::setTrackingMode(bool _yes)
 {
@@ -898,6 +866,7 @@ bool aero::interface::AeroMoveitInterface::waitInterpolation(int _timeout_ms) {
 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::waitInterpolation_(int _timeout_ms) {
+  // TODO: thread safe wait interpolation
   if (tracking_mode_flag_) {
     return ri->wait_interpolation("without_head", _timeout_ms*1.1/1000.0 );
   } else {
@@ -1005,299 +974,6 @@ bool aero::interface::AeroMoveitInterface::callHandSrv_(const aero::arm &_arm, a
   return false;
 }
 #endif // hand
-
-#if USING_BASE // base
-//////////////////////////////////////////////////
-// geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose
-//  (Transform &_tr, const std::string &_origin = "map", const std::string _&base = "base_link", _wait_tm = 5.0
-geometry_msgs::Pose aero::interface::AeroMoveitInterface::getCurrentPose(std::string _map)
-{
-  tf::StampedTransform tr;
-  try{
-    listener_.waitForTransform(_map, "/base_link", ros::Time(0), ros::Duration(5.0));
-    listener_.lookupTransform(_map, "/base_link", ros::Time(0), tr);
-  }
-  catch (tf::TransformException ex){
-    ROS_ERROR("%s",ex.what());
-    ros::Duration(1.0).sleep(); // not need
-    return geometry_msgs::Pose();
-  }
-
-  geometry_msgs::Pose msg;
-  auto pos = tr.getOrigin();
-  auto rot = tr.getRotation();
-
-  msg.position.x = pos.x();
-  msg.position.y = pos.y();
-  msg.position.z = pos.z();
-
-  msg.orientation.w = rot.w();
-  msg.orientation.x = rot.x();
-  msg.orientation.y = rot.y();
-  msg.orientation.z = rot.z();
-
-  return msg;
-}
-
-//////////////////////////////////////////////////
-//bool aero::interface::AeroMoveitInterface::getSpotPose(Transform &_tr, const std::string &_location)
-geometry_msgs::Pose aero::interface::AeroMoveitInterface::getLocationPose(std::string _location)
-{
-  aero_std::GetSpot gs;
-  gs.request.name = _location;
-  get_spot_.call(gs);
-  geometry_msgs::Pose pose = gs.response.pose;
-  return pose;
-}
-
-// void aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad, int _timeout_ms, bool async)
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::goPos(double _x,double _y, double _rad, int _timeout_ms)
-{
-  // if turn only, move without path planning
-  // if (_x == 0.0 && _y == 0.0) return goPosTurnOnly_(_rad, _timeout_ms);
-
-  goPosAsync(_x, _y, _rad);
-
-  bool finished_before_timeout = ac_->waitForResult(ros::Duration(_timeout_ms * 0.001));
-
-  if (!finished_before_timeout) {
-    ROS_WARN("go pos action didn't finish before timeout %d ms", _timeout_ms);
-    return false;
-  }
-
-  return true;
-}
-
-// void aero::interface::AeroMoveitInterface::moveTo(Transform tr, bool _async)
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::moveToAsync(std::string _location)
-{
-  geometry_msgs::Pose pos = getLocationPose(_location);
-  bool exists = true;
-  if (!exists) {
-    ROS_ERROR("location(%s) is not found", _location.c_str());
-    return;
-  } else {
-    moveToAsync(pos);
-  }
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::moveToAsync(Eigen::Vector3d _point)
-{
-  geometry_msgs::Pose pose;
-  pose.position.x = _point.x();
-  pose.position.y = _point.y();
-  pose.position.z = _point.z();
-
-  moveToAsync(pose);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::moveToAsync(geometry_msgs::Pose _pose)
-{
-  move_base_msgs::MoveBaseGoal goal;
-  goal.target_pose.header.frame_id = "/map";
-  goal.target_pose.header.stamp = ros::Time::now();
-  goal.target_pose.pose = _pose;
-  pose_using_ = _pose;
-
-  ROS_INFO("Sending goal");
-  ac_->sendGoal(goal);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::goPosAsync(double _x, double _y, double _rad)
-{
-  Eigen::Quaterniond qua(Eigen::Matrix3d(Eigen::AngleAxisd(_rad, Eigen::Vector3d::UnitZ())));
-
-  geometry_msgs::Pose pose;
-  pose.position.x = _x;
-  pose.position.y = _y;
-  pose.position.z = 0.0;
-  tf::quaternionEigenToMsg(qua, pose.orientation);
-
-  move_base_msgs::MoveBaseGoal goal;
-  goal.target_pose.header.frame_id = "/base_link";
-  goal.target_pose.header.stamp = ros::Time::now();
-  goal.target_pose.pose = pose;
-  pose_using_ = pose;
-
-  ROS_INFO("Sending goal");
-  ac_->sendGoal(goal);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::isMoving()
-{
-  auto state = ac_->getState();
-  bool finished = state.isDone();
-  return !finished;// moving != finished
-}
-
-// bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thre)
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::at(std::string _location, double _thre)
-{
-  geometry_msgs::Pose res = getCurrentPose();
-
-  geometry_msgs::Point pos = res.position;
-
-  geometry_msgs::Pose loc = getLocationPose(_location);
-
-  double diff = pow(pos.x - loc.position.x, 2.0) + pow(pos.y - loc.position.y, 2.0) + pow(pos.z - loc.position.z, 2.0);
-  if (diff > pow(_thre, 2.0)) return false;
-  else return true;
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::at(geometry_msgs::Pose _pose, double _thre)
-{
-  geometry_msgs::Pose res = getCurrentPose();
-
-  geometry_msgs::Point pos = res.position;
-
-  geometry_msgs::Pose loc = _pose;
-
-  double diff = pow(pos.x - loc.position.x, 2.0) + pow(pos.y - loc.position.y, 2.0) + pow(pos.z - loc.position.z, 2.0);
-  if (diff > pow(_thre, 2.0)) return false;
-  else return true;
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::stop()
-{
-  ac_->cancelGoal();
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::go()
-{
-  moveToAsync(pose_using_);
-}
-
-
-//////////////////////////////////////////////////
-// distanceToDestination
-float aero::interface::AeroMoveitInterface::toDestination(std::string _location)
-{
-  geometry_msgs::Point loc = getLocationPose(_location).position;
-  geometry_msgs::Point cur = getCurrentPose().position;
-
-  float dis = std::sqrt(pow(loc.x - cur.x, 2.0) + pow(loc.y - cur.y, 2.0) + pow(loc.z - cur.z, 2.0));
-  return dis;
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::faceTowardAsync(std::string _location)
-{
-  auto loc = getLocationPose(_location);
-  faceTowardAsync(loc);
-}
-
-//////////////////////////////////////////////////
-void aero::interface::AeroMoveitInterface::faceTowardAsync(geometry_msgs::Pose _pose)
-{
-  geometry_msgs::Pose cur, pose;
-  cur = getCurrentPose();
-  pose.position = cur.position;
-
-
-  double yaw = std::atan2(cur.position.y - _pose.position.y, cur.position.x -  _pose.position.x) + M_PI;
-
-  while (yaw > M_PI) {
-    yaw -= 2.0 * M_PI;
-  }
-  while (yaw < -M_PI) {
-    yaw += 2.0 * M_PI;
-  }
-  Eigen::Quaterniond qua = Eigen::Quaterniond(Eigen::Matrix3d(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ())));
-  tf::quaternionEigenToMsg(qua, pose.orientation);
-
-  moveToAsync(pose);
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::checkMoveTo(geometry_msgs::Pose _pose) {
-  // whether snoid can move to _pose or cannot
-
-  nav_msgs::GetPlan srv;
-  geometry_msgs::PoseStamped cur,pose;
-  geometry_msgs::Pose result;
-  ros::Time now = ros::Time::now();
-  double tolerance = 0.02;
-  cur.header.stamp = now;
-  cur.pose = getCurrentPose();
-  pose.header.stamp = now;
-  pose.pose = _pose;
-
-  srv.request.start = cur;
-  srv.request.goal = pose;
-  srv.request.tolerance = tolerance;
-
-  check_move_to_.call(srv);
-  ROS_INFO("current pose %f %f %f", cur.pose.position.x, cur.pose.position.y, cur.pose.position.z);
-  ROS_INFO("target pose %f %f %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
-  if (srv.response.plan.poses.size() == 0) {
-    ROS_INFO("this path failed");
-    return false;
-  }
-
-  result = srv.response.plan.poses.back().pose;
-  double distance = std::sqrt(std::pow(result.position.x - _pose.position.x, 2.0) + std::pow(result.position.y - _pose.position.y, 2.0));
-  if (distance > tolerance) {
-    ROS_INFO("this path failed");
-    return false;
-  }
-  ROS_INFO("plan found");
-  return true;
-}
-
-//////////////////////////////////////////////////
-bool aero::interface::AeroMoveitInterface::goPosTurnOnly_(double _rad, int _timeout_ms)
-{
-  double tolerance = 5.0 * M_PI / 180.0;
-  double vel = 0.5; // absolute rotate velocity
-  int hz = 30;// cmd_vel is sent with this frewquency
-  geometry_msgs::Pose initial_pose = getCurrentPose();
-  double z_ref = 2.0 * acos(initial_pose.orientation.w) + _rad;
-
-  geometry_msgs::Twist cmd;
-  cmd.linear.x = 0.0;
-  cmd.linear.y = 0.0;
-  cmd.linear.z = 0.0;
-  cmd.angular.x = 0.0;
-  cmd.angular.y = 0.0;
-  if (_rad > 0.0) cmd.angular.z = -vel;
-  else cmd.angular.z = vel;
-
-  ros::Time now = ros::Time::now();
-  ros::Duration limit = ros::Duration(_timeout_ms * 0.001);
-  ros::Rate r(hz);
-  while (ros::ok()) {
-    if (ros::Time::now() - now > limit) break;
-    geometry_msgs::Pose cur = getCurrentPose();
-    double z_now = 2.0 * acos(cur.orientation.w);
-    double z_diff = z_ref - z_now;
-    // -M_PI < z_diff < M_PI
-    while (z_diff > M_PI) z_diff -= M_PI * 2.0;
-    while (z_diff < -M_PI) z_diff += M_PI * 2.0;
-
-    if (std::abs(z_diff) < tolerance) return true;// finish if diff is lower than tolerance
-
-    // send cmd_vel
-    if (z_diff > 0.0) cmd.angular.z = vel;
-    else cmd.angular.z = -vel;
-    cmd_vel_publisher_.publish(cmd);
-
-    r.sleep();
-  }
-
-  ROS_WARN("goPos turn only didn't finish before timeout %d ms", _timeout_ms);
-  return false;
-}
-#endif // base
 
 /////////////////////////////////////////////////
 const robot_state::JointModelGroup* aero::interface::AeroMoveitInterface::getJointModelGroup(const std::string &_move_group)
@@ -1677,13 +1353,13 @@ void aero::interface::AeroMoveitInterface::overwriteSpeed(float _speed_factor)
     remain_time = sent_command_.duration;
     break;
   default:
-    ROS_WARN("no sent command");
+    ROS_WARN("overwriteSpeed was called, but no sent command");
     return;
     break;
   }
 
   if( remain_time <= 0 ) {
-    ROS_WARN("sent finished");
+    ROS_WARN("overwriteSpeed was called, but previous trajectory finished");
     return;
   }
 
