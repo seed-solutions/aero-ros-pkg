@@ -80,4 +80,4 @@ rhand_controller:
   gains:
     r_thumb_joint:     {p: 25.0, i: 0.003, d: 0.02}
 
-robot_interface_controllers: ['larm', 'rarm', 'head', 'waist', 'lifter']
+robot_interface_controllers: ['rarm', 'larm', 'waist', 'lifter', 'head']

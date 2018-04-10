@@ -33,7 +33,7 @@
       <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.000102"/-->
       <!-- just fixed for gazebo / aim to increase z axis inertia-->
       <origin xyz="0 0.014 -0.02" rpy="0 -0 0"/>
-      <inertia ixx="0.000601" ixy="0" ixz="0" iyy="0.00055" iyz="0" izz="0.0014" />
+      <inertia ixx="0.003" ixy="0" ixz="0" iyy="0.003" iyz="0" izz="0.005" />
     </inertial>
   </link>
   <gazebo reference="${prefix}_hand_yaw_link">

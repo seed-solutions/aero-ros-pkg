@@ -25,7 +25,6 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
-      - r_hand_y_joint
   - name: larm_controller
     type: FollowJointTrajectory
     action_ns: follow_joint_trajectory
@@ -38,7 +37,6 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
-      - l_hand_y_joint
   - name: torso_controller
     type: FollowJointTrajectory
     action_ns: follow_joint_trajectory

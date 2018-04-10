@@ -17,11 +17,11 @@
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
   <xacro:include filename="$(find aero_description)/urdf/typeC_lifter/lifter.urdf.xacro" />
-  <xacro:include filename="$(find aero_description)/urdf/typeD_wheel/wheels.urdf.xacro" />
+  <xacro:include filename="$(find aero_description)/urdf/typeE_wheel/wheels.urdf.xacro" />
 
   <xacro:macro name="aero-wheels" params="base_link" >
 
-    <xacro:wheels base_link="${base_link}" disable_mesh="${disable_mesh}"/>
+    <xacro:wheels base_link="${base_link}" />
 
     <joint name="wheel_lifter_connector" type="fixed">
       <parent  link="wheels_top_link"/>

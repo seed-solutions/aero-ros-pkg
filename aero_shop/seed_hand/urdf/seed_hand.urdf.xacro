@@ -23,12 +23,20 @@
         <mesh filename="package://aero_description/meshes/seed_hand/RARM_LINK7_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
-    <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 0" rpy="${M_PI} -0 ${reflect * M_PI / 2.0}"/>
+    <xacro:unless value="${disable_mesh}">
+    <collision>
+      <origin xyz="0 0 -0.025" rpy="${M_PI} -0 ${reflect * M_PI / 2.0}"/>
       <geometry>
-        <mesh filename="package://aero_description/meshes/seed_hand/RARM_LINK7_mesh.dae" scale="1 1 1" />
+        <box size="0.060 0.030 0.050" />
       </geometry>
-    </collision> </xacro:unless>
+    </collision>
+    <collision>
+      <origin xyz="0 0 -0.063" rpy="${M_PI} 0.9 ${reflect * M_PI / 2.0}"/>
+      <geometry>
+        <box size="0.020 0.030 0.075" />
+      </geometry>
+    </collision>
+    </xacro:unless>
     <inertial>
       <mass value="0.183" />
       <origin xyz="0 0 -0.0875" rpy="0 -0 0"/> <!-- TODO: check -->
