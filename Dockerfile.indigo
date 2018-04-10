@@ -1,45 +1,50 @@
-FROM osrf/ros:indigo-desktop-full
+FROM ros:indigo-robot
 SHELL ["bash", "-c"]
+
+ENV MY_DISTRO indigo
+ENV WORKSPACE /catkin_ws
 
 # prepare catkin and all euslisp packages
 RUN apt-get -q -qq update && apt-get -q -qq install -y \
-    ros-indigo-catkin \
-    ros-indigo-ros \
-    ros-indigo-desktop-full \
-    ros-indigo-pr2-controllers-msgs \
-    ros-indigo-move-base-msgs \
-    ros-indigo-moveit-full \
+    ros-${MY_DISTRO}-catkin \
+    python-wstools python-catkin-tools \
     bc
-RUN easy_install pip \
-    && pip install -U pip setuptools \
-    && pip install catkin_pkg catkin_tools
 
 # create catkin workspace
-RUN mkdir -p /catkin_ws/src/aero-ros-pkg-prerelease
-WORKDIR /catkin_ws
-RUN wstool init /catkin_ws/src
-COPY . /catkin_ws/src/aero-ros-pkg-prerelease/
+RUN mkdir -p ${WORKSPACE}/src/aero-ros-pkg
+WORKDIR ${WORKSPACE}
+RUN wstool init ${WORKSPACE}/src
+COPY . ${WORKSPACE}/src/aero-ros-pkg/
 
 # catkin build
-WORKDIR /catkin_ws
-RUN source /opt/ros/indigo/setup.bash \
+WORKDIR ${WORKSPACE}
+RUN source /opt/ros/${MY_DISTRO}/setup.bash \
     && rosdep install -q -y -r --from-paths src --ignore-src \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/
 
-RUN source /opt/ros/indigo/setup.bash \
+RUN source /opt/ros/${MY_DISTRO}/setup.bash \
     && catkin config --init
-RUN source /opt/ros/indigo/setup.bash \
+RUN source /opt/ros/${MY_DISTRO}/setup.bash \
     && catkin build aero_description
 
-WORKDIR /catkin_ws/src/aero-ros-pkg-prerelease/aero_description
-RUN source /catkin_ws/devel/setup.bash \
+WORKDIR ${WORKSPACE}/src/aero-ros-pkg/aero_description
+RUN source ${WORKSPACE}/devel/setup.bash \
     && ./setup.sh typeF
 
-WORKDIR /catkin_ws
-RUN source /catkin_ws/devel/setup.bash \
+WORKDIR ${WORKSPACE}
+## build check
+RUN source ${WORKSPACE}/devel/setup.bash \
     && catkin build aero_std
-RUN source /catkin_ws/devel/setup.bash \
-    && catkin run_tests aero_std
-RUN source /catkin_ws/devel/setup.bash \
+RUN source ${WORKSPACE}/devel/setup.bash \
     && catkin build aero_samples
+RUN source ${WORKSPACE}/devel/setup.bash \
+    && catkin build aero_gazebo
+
+## test
+RUN source ${WORKSPACE}/devel/setup.bash \
+    && catkin run_tests --no-deps aero_ros_controller \
+    && catkin_test_results ${WORKSPACE}/build/aero_ros_controller
+RUN source ${WORKSPACE}/devel/setup.bash \
+    && catkin run_tests --no-deps aero_std \
+    && catkin_test_results ${WORKSPACE}/build/aero_std
