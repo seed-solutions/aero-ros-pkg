@@ -46,3 +46,10 @@ install(TARGETS mimic_plugin LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATIO
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 #install(DIRECTORY worlds
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+if (CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  find_package(rostest REQUIRED)
+
+  add_rostest(test/test_initial.test)
+endif() ## CATKIN_ENABLE_TESTING
