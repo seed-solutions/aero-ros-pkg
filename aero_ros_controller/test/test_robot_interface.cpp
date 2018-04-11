@@ -222,12 +222,14 @@ TEST_F(RobotInterfaceTest, testWait)
   CHECK_RUN_TIME(ari->wait_interpolation("larm"), 0.0, 100.0);
   CHECK_RUN_TIME(ari->wait_interpolation("upper_body"), 0.0, 100.0);
   EXPECT_FALSE(ari->interpolatingp());
+  CHECK_RUN_TIME(ari->interpolatingp(), 0.0, 100.0);
 
   // send whole joints
   ari->send_angle_vector(a_av, 4.0);
   //EXPECT_TRUE(ari->interpolatingp());
   EXPECT_FALSE(ari->wait_interpolation(0.001));
   EXPECT_TRUE(ari->interpolatingp());
+  CHECK_RUN_TIME(ari->interpolatingp(), 0.0, 100.0);
   CHECK_RUN_TIME(ari->wait_interpolation(), 4000.0, 150.0);
   CHECK_RUN_TIME(ari->wait_interpolation(), 0.0, 100.0);
   {
