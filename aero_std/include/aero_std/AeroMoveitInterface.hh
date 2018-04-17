@@ -323,6 +323,9 @@ namespace aero
       /// @brief prototype for waitInterpolation
     protected: bool waitInterpolation_(int _timeout_ms=0);
 
+      /// @brief stop motion
+    public: bool stopMotion();
+
 #if USING_HAND // TODO devide code
       /// @brief set the value to robot model's hand angle
       /// @param[in] _arm aero::arm::(rarm|larm)

@@ -850,12 +850,21 @@ bool aero::interface::AeroMoveitInterface::sendLifter(double _x, double _z, int 
 //////////////////////////////////////////////////
 bool aero::interface::AeroMoveitInterface::cancelLifter()
 {
-  // send cancel joints
-  // why not use AeroSendJoints? -> to safe exit trajectory
-  // but actually, cancel joints is not supported with AeroSendJoints
-
-  // TODO: .....
+  ri->lifter->cancel_angle_vector(true);
   return true;
+}
+
+//////////////////////////////////////////////////
+bool aero::interface::AeroMoveitInterface::stopMotion()
+{
+  if (!tracking_mode_flag_) {
+    ri->stop_motion(0.05);
+    return waitInterpolation_(0.1);
+  } else {
+    const std::vector<std::string > names = {"larm", "rarm", "waist", "lifter"};
+    ri->stop_motion(names, 0.05);
+    return waitInterpolation_(0.1);
+  }
 }
 
 //////////////////////////////////////////////////
