@@ -6,11 +6,11 @@
 
 ### Install ROS
 
-[Install ROS kinetic] ( http://wiki.ros.org/kinetic/Installation/Ubuntu ) Recommended
+[Install ROS kinetic]( http://wiki.ros.org/kinetic/Installation/Ubuntu ) [Recommended]
 
 or
 
-[Install ROS indigo] ( http://wiki.ros.org/indigo/Installation/Ubuntu )
+[Install ROS indigo]( http://wiki.ros.org/indigo/Installation/Ubuntu )
 
 ```
 sudo apt-get install ros-${ROS_DISTRO}-desktop-full
@@ -92,6 +92,10 @@ rosrun rviz rviz
 ```
 
 then add RobotModel
+
+## Simulation
+
+See [aero_gazebo](https://github.com/seed-solutions/aero-ros-pkg/blob/master/aero_gazebo/README.md)
 
 
 ## Samples
