@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="puppy_fence">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://puppy_fence/meshes/fence.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="simple_collision">
+        <geometry>
+          <mesh>
+            <uri>model://puppy_fence/meshes/fence.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

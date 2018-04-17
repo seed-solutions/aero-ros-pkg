@@ -556,11 +556,11 @@ bool RobotInterface::wait_interpolation(double _tm)
     }
     if (with_limit) {
       double diff = (tm_limit - ros::Time::now()).toSec();
-      if (diff  < 0 ) {
-        ret = false;
-        break;
+      if (diff  <= 0.0 ) {
+        remain_tm = 0.000001; // very short time
+      } else {
+        remain_tm = diff;
       }
-      remain_tm = diff;
     }
   }
 
@@ -594,10 +594,11 @@ bool RobotInterface::wait_interpolation(const std::vector<std::string > &_names,
     }
     if (with_limit) {
       double diff = (tm_limit - ros::Time::now()).toSec();
-      if (diff  < 0 ) {
-        break;
+      if (diff  <= 0.0 ) {
+        remain_tm = 0.000001; // very short time
+      } else {
+        remain_tm = diff;
       }
-      remain_tm = diff;
     }
   }
   return ret;
@@ -611,6 +612,9 @@ bool RobotInterface::interpolatingp ()
       ret = true;
       break;
     }
+  }
+  if (!ret) {
+    return !wait_interpolation(0.00001);
   }
   return ret;
 }
@@ -634,6 +638,9 @@ bool RobotInterface::interpolatingp (const std::vector<std::string > &_names)
         break;
       }
     }
+  }
+  if (!ret) {
+    return !wait_interpolation(_names, 0.00001);
   }
   return ret;
 }

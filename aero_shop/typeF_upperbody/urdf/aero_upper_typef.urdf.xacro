@@ -8,12 +8,12 @@
 
 
   <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+  <xacro:include filename="$(find aero_description)/common_urdf/gazebo.xacro" />
 
   <xacro:property name="wrist_sensor_offset" value="0.0"/>
-  <!-- ============================   aero_upper   ============================ -->
 
   <xacro:macro name="aero_upper" params="base_link disable_mesh:=false r_hand_link:=r_hand_link l_hand_link:=l_hand_link">
-    
+  <!-- ============================   aero(typeF_upper)   ============================ -->
   <link name="${base_link}">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -30,13 +30,11 @@
     <inertial>
       <mass value="1.257" />
       <origin xyz="0 0 0.0" rpy="0 -0 0"/>
-      <inertia ixx="0.0034" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.0017"/>
+      <inertia ixx="0.034" ixy="0" ixz="0" iyy="0.034" iyz="0" izz="0.018"/>
     </inertial>
   </link>
-  <gazebo reference="${base_link}">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="${base_link}" />
+
   <link name="hip_sphere_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -53,24 +51,20 @@
     <inertial>
       <mass value="1.257" />
       <origin xyz="0 0 0.042" rpy="0 -0 0"/>
-      <inertia ixx="0.0034" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.0017"/>
+      <inertia ixx="0.034" ixy="0" ixz="0" iyy="0.034" iyz="0" izz="0.018"/>
     </inertial>
   </link>
-  <gazebo reference="hip_sphere_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="hip_sphere_link" />
+
   <link name="hip_center">
     <inertial>
-      <mass value="0.01" />
+      <mass value="0.1" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
       <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
     </inertial>
   </link>
-  <gazebo reference="hip_center">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="hip_center" />
+
   <link name="body_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -90,10 +84,8 @@
       <inertia ixx="0.13" ixy="0" ixz="0" iyy="0.12" iyz="0" izz="0.114"/>
     </inertial>
   </link>
-  <gazebo reference="body_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="body_link" />
+
   <link name="l_shoulder_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="-0.174532925 -0 0"/>
@@ -113,10 +105,8 @@
       <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/>
     </inertial>
   </link>
-  <gazebo reference="l_shoulder_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="l_shoulder_link" />
+
   <link name="l_shoulder_center">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -136,10 +126,8 @@
       <inertia ixx="0.000841" ixy="0" ixz="0" iyy="0.000835" iyz="0" izz="0.000304"/>
     </inertial>
   </link>
-  <gazebo reference="l_shoulder_center">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="l_shoulder_center" />
+
   <link name="l_upperarm_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -155,14 +143,15 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.574" />
+      <!--origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
+      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/-->
+      <!-- fix for gazebo -->
       <origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
-      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/>
+      <inertia ixx="0.00214" ixy="0" ixz="0" iyy="0.00217" iyz="0" izz="0.003"/>
     </inertial>
   </link>
-  <gazebo reference="l_upperarm_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="l_upperarm_link" />
+
   <link name="l_elbow_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
@@ -178,23 +167,24 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.711" />
-      <origin xyz="0.0047 0 -0.0546" rpy="0 -0 0"/>
-      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/>
+      <!--origin xyz="0.0047 0 -0.0546" rpy="0 -0 0"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/-->
+      <!-- fix for gazebo -->
+      <origin xyz="-0.03 0 -0.0546" rpy="0 -0 0"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.0035"/>
     </inertial>
   </link>
-  <gazebo reference="l_elbow_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="l_elbow_link" />
+
   <link name="l_forearm_link">
     <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 -1.5707963267948966"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 -1.5707963267948966"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -202,24 +192,20 @@
     <inertial>
       <mass value="0.132" />
       <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
-      <inertia ixx="0.000276" ixy="0" ixz="0" iyy="0.000286" iyz="0" izz="0.0001"/>
+      <inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/>
     </inertial>
   </link>
-  <gazebo reference="l_forearm_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="l_forearm_link" />
+
   <link name="l_wrist_center">
     <inertial>
-      <mass value="0.01" />
+      <mass value="0.05" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
-  <gazebo reference="l_wrist_center">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="l_wrist_center" />
+
   <link name="neck_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -236,13 +222,12 @@
     <inertial>
       <mass value="0.341" />
       <origin xyz="0 0 0.0595" rpy="0 -0 0"/>
-      <inertia ixx="1.64186e-35" ixy="0" ixz="0" iyy="1.64186e-35" iyz="0" izz="0"/>
+      <!--inertia ixx="1.64186e-35" ixy="0" ixz="0" iyy="1.64186e-35" iyz="0" izz="0"/-->
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.002"/>
     </inertial>
   </link>
-  <gazebo reference="neck_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="neck_link" />
+
   <link name="head_base_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -257,15 +242,13 @@
       </geometry>
     </collision> </xacro:unless>
     <inertial>
-      <mass value="0.01" />
+      <mass value="0.1" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+      <inertia ixx="0.0005" ixy="0" ixz="0" iyy="0.0005" iyz="0" izz="0.0005"/>
     </inertial>
   </link>
-  <gazebo reference="head_base_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="head_base_link" />
+
   <link name="head_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -281,14 +264,12 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.974" />
-      <origin xyz="0 0 0.038" rpy="0 -0 0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+      <origin xyz="0.01 0 0.070" rpy="0 -0 0"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.005"/>
     </inertial>
   </link>
-  <gazebo reference="head_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="head_link" />
+
   <link name="r_shoulder_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0.174532925 -0 0"/>
@@ -297,7 +278,7 @@
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <origin xyz="0 0 0" rpy="0.174532925 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK1_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -308,10 +289,8 @@
       <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/>
     </inertial>
   </link>
-  <gazebo reference="r_shoulder_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="r_shoulder_link" />
+
   <link name="r_shoulder_center">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -331,10 +310,8 @@
       <inertia ixx="0.000841" ixy="0" ixz="0" iyy="0.000835" iyz="0" izz="0.000305"/>
     </inertial>
   </link>
-  <gazebo reference="r_shoulder_center">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="r_shoulder_center" />
+
   <link name="r_upperarm_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="0 0 0" rpy="0 -0 0"/>
@@ -350,14 +327,15 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.574" />
+      <!--origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
+      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/-->
+      <!-- fix for gazebo -->
       <origin xyz="0.005 0 -0.0654" rpy="0 -0 0"/>
-      <inertia ixx="0.00114" ixy="0" ixz="0" iyy="0.00117" iyz="0" izz="0.000269"/>
+      <inertia ixx="0.00214" ixy="0" ixz="0" iyy="0.00217" iyz="0" izz="0.003"/>
     </inertial>
   </link>
-  <gazebo reference="r_upperarm_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="r_upperarm_link" />
+
   <link name="r_elbow_link">
     <xacro:unless value="${disable_mesh}"> <visual>
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
@@ -366,30 +344,31 @@
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="-0.035 0 -0.070" rpy="0 -0 0"/>
+      <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK4_mesh.dae" scale="1 1 1" />
       </geometry>
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.711" />
-      <origin xyz="0.0047 0 -0.0546" rpy="0 -0 0"/>
-      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/>
+      <!--origin xyz="0.0047 0 -0.0546" rpy="0 -0 0"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.000273"/-->
+      <!-- fix for gazebo -->
+      <origin xyz="-0.03 0 -0.0546" rpy="0 -0 0"/>
+      <inertia ixx="0.00178" ixy="0" ixz="0" iyy="0.00179" iyz="0" izz="0.0035"/>
     </inertial>
   </link>
-  <gazebo reference="r_elbow_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="r_elbow_link" />
+
   <link name="r_forearm_link">
     <xacro:unless value="${disable_mesh}"> <visual>
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 1.5707963267948966"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
     </visual> </xacro:unless>
     <xacro:unless value="${disable_mesh}"> <collision>
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 1.5707963267948966"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK5_mesh.dae" scale="1 1 1" />
       </geometry>
@@ -397,25 +376,19 @@
     <inertial>
       <mass value="0.132" />
       <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
-      <inertia ixx="0.000276" ixy="0" ixz="0" iyy="0.000286" iyz="0" izz="0.0001"/>
+      <inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/>
     </inertial>
   </link>
-  <gazebo reference="r_forearm_link">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
+  <xacro:gazebo_link_reference link_name="r_forearm_link" />
+
   <link name="r_wrist_center">
     <inertial>
-      <mass value="0.01" />
+      <mass value="0.05" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
-  <gazebo reference="r_wrist_center">
-    <mu1>0.9</mu1>
-    <mu2>0.9</mu2>
-  </gazebo>
-
+  <xacro:gazebo_link_reference link_name="r_wrist_center" />
 
   <joint name="waist_y_joint" type="revolute">
     <parent link="${base_link}"/>
@@ -423,51 +396,33 @@
     <origin xyz="0 0 0.010" rpy="0 -0 0 "/>
     <axis   xyz="0 0 1"/>
     <!-- from -120 to 120 degrees-->
-    <limit lower="-2.0" upper="2.0" effort="100" velocity="0.5" />
+    <limit lower="-2.0" upper="2.0" effort="500" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_y_joint_trans" >
-    <actuator name="waist_y_joint_motor" />
-    <joint name="waist_y_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="waist_y_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="waist_y_joint" />
+
   <joint name="waist_p_joint" type="revolute">
     <parent link="hip_sphere_link"/>
     <child  link="hip_center"/>
     <origin xyz="0 0 0.1355" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
     <!-- from -5 to 30 degrees-->
-    <limit lower="-0.0872" upper="0.5235" effort="100" velocity="0.3" />
+    <limit lower="-0.0872" upper="0.5235" effort="2000" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_p_joint_trans" >
-    <actuator name="waist_p_joint_motor" />
-    <joint name="waist_p_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="waist_p_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="waist_p_joint" />
+
   <joint name="waist_r_joint" type="revolute">
     <parent link="hip_center"/>
     <child  link="body_link"/>
     <origin xyz="0 0 0" rpy="0 -0 0 "/>
     <axis   xyz="1 0 0"/>
     <!-- from -1 to 1 degrees-->
-    <limit lower="-0.017" upper="0.017" effort="100" velocity="0.3" />
+    <limit lower="-0.017" upper="0.017" effort="2000" velocity="0.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="waist_r_joint_trans" >
-    <actuator name="waist_r_joint_motor" />
-    <joint name="waist_r_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="waist_r_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="waist_r_joint" />
+
   <joint name="l_shoulder_p_joint" type="revolute">
     <parent link="body_link"/>
     <child  link="l_shoulder_link"/>
@@ -477,14 +432,8 @@
     <limit lower="-1.535" upper="0.261" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_p_joint_trans" >
-    <actuator name="l_shoulder_p_joint_motor" />
-    <joint name="l_shoulder_p_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_shoulder_p_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_shoulder_p_joint" />
+
   <joint name="l_shoulder_r_joint" type="revolute">
     <parent link="l_shoulder_link"/>
     <child  link="l_shoulder_center"/>
@@ -494,14 +443,8 @@
     <limit lower="0" upper="1.5707" effort="100" velocity="0.6" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_r_joint_trans" >
-    <actuator name="l_shoulder_r_joint_motor" />
-    <joint name="l_shoulder_r_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_shoulder_r_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_shoulder_r_joint" />
+
   <joint name="l_shoulder_y_joint" type="revolute">
     <parent link="l_shoulder_center"/>
     <child  link="l_upperarm_link"/>
@@ -511,14 +454,8 @@
     <limit lower="-1.5707" upper="0.785398" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_shoulder_y_joint_trans" >
-    <actuator name="l_shoulder_y_joint_motor" />
-    <joint name="l_shoulder_y_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_shoulder_y_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_shoulder_y_joint" />
+
   <joint name="l_elbow_joint" type="revolute">
     <parent link="l_upperarm_link"/>
     <child  link="l_elbow_link"/>
@@ -528,14 +465,8 @@
     <limit lower="-2.44246" upper="0" effort="100" velocity="1.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_elbow_joint_trans" >
-    <actuator name="l_elbow_joint_motor" />
-    <joint name="l_elbow_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_elbow_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_elbow_joint" />
+
   <joint name="l_wrist_y_joint" type="revolute">
     <parent link="l_elbow_link"/>
     <child  link="l_forearm_link"/>
@@ -545,14 +476,8 @@
     <limit lower="-1.5707" upper="1.5707" effort="100" velocity="1.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_y_joint_trans" >
-    <actuator name="l_wrist_y_joint_motor" />
-    <joint name="l_wrist_y_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_wrist_y_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_wrist_y_joint" />
+
   <joint name="l_wrist_p_joint" type="revolute">
     <parent link="l_forearm_link"/>
     <child  link="l_wrist_center"/>
@@ -562,14 +487,8 @@
     <limit lower="-0.15" upper="0.15" effort="100" velocity="1.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_p_joint_trans" >
-    <actuator name="l_wrist_p_joint_motor" />
-    <joint name="l_wrist_p_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_wrist_p_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_wrist_p_joint" />
+
   <joint name="l_wrist_r_joint" type="revolute">
     <parent link="l_wrist_center"/>
     <child  link="${l_hand_link}"/>
@@ -579,14 +498,7 @@
     <limit lower="-1.309" upper="0.698132" effort="100" velocity="1.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="l_wrist_r_joint_trans" >
-    <actuator name="l_wrist_r_joint_motor" />
-    <joint name="l_wrist_r_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="l_wrist_r_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="l_wrist_r_joint" />
 
   <joint name="neck_y_joint" type="revolute">
     <parent link="body_link"/>
@@ -596,14 +508,8 @@
     <limit lower="-2.1" upper="2.1" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_y_joint_trans" >
-    <actuator name="neck_y_joint_motor" />
-    <joint name="neck_y_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="neck_y_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="neck_y_joint" />
+
   <joint name="neck_p_joint" type="revolute">
     <parent link="neck_link"/>
     <child  link="head_base_link"/>
@@ -612,14 +518,8 @@
     <limit lower="0" upper="0.610864" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_p_joint_trans" >
-    <actuator name="neck_p_joint_motor" />
-    <joint name="neck_p_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="neck_p_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="neck_p_joint" />
+
   <joint name="neck_r_joint" type="revolute">
     <parent link="head_base_link"/>
     <child  link="head_link"/>
@@ -628,14 +528,8 @@
     <limit lower="-0.122173" upper="0.122173" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="neck_r_joint_trans" >
-    <actuator name="neck_r_joint_motor" />
-    <joint name="neck_r_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="neck_r_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="neck_r_joint" />
+
   <joint name="r_shoulder_p_joint" type="revolute">
     <parent link="body_link"/>
     <child  link="r_shoulder_link"/>
@@ -645,14 +539,8 @@
     <limit lower="-1.535" upper="0.261" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_p_joint_trans" >
-    <actuator name="r_shoulder_p_joint_motor" />
-    <joint name="r_shoulder_p_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_shoulder_p_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_shoulder_p_joint" />
+
   <joint name="r_shoulder_r_joint" type="revolute">
     <parent link="r_shoulder_link"/>
     <child  link="r_shoulder_center"/>
@@ -662,14 +550,8 @@
     <limit lower="-1.5707" upper="0" effort="100" velocity="0.6" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_r_joint_trans" >
-    <actuator name="r_shoulder_r_joint_motor" />
-    <joint name="r_shoulder_r_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_shoulder_r_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_shoulder_r_joint" />
+
   <joint name="r_shoulder_y_joint" type="revolute">
     <parent link="r_shoulder_center"/>
     <child  link="r_upperarm_link"/>
@@ -679,14 +561,8 @@
     <limit lower="-0.785398" upper="1.5707" effort="100" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_shoulder_y_joint_trans" >
-    <actuator name="r_shoulder_y_joint_motor" />
-    <joint name="r_shoulder_y_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_shoulder_y_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_shoulder_y_joint" />
+
   <joint name="r_elbow_joint" type="revolute">
     <parent link="r_upperarm_link"/>
     <child  link="r_elbow_link"/>
@@ -696,14 +572,8 @@
     <limit lower="-2.44246" upper="0" effort="100" velocity="1.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_elbow_joint_trans" >
-    <actuator name="r_elbow_joint_motor" />
-    <joint name="r_elbow_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_elbow_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_elbow_joint" />
+
   <joint name="r_wrist_y_joint" type="revolute">
     <parent link="r_elbow_link"/>
     <child  link="r_forearm_link"/>
@@ -713,14 +583,8 @@
     <limit lower="-1.5707" upper="1.5707" effort="100" velocity="1.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_y_joint_trans" >
-    <actuator name="r_wrist_y_joint_motor" />
-    <joint name="r_wrist_y_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_wrist_y_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_wrist_y_joint" />
+
   <joint name="r_wrist_p_joint" type="revolute">
     <parent link="r_forearm_link"/>
     <child  link="r_wrist_center"/>
@@ -730,14 +594,8 @@
     <limit lower="-0.15" upper="0.15" effort="100" velocity="1.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_p_joint_trans" >
-    <actuator name="r_wrist_p_joint_motor" />
-    <joint name="r_wrist_p_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_wrist_p_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_wrist_p_joint" />
+
   <joint name="r_wrist_r_joint" type="revolute">
     <parent link="r_wrist_center"/>
     <child  link="${r_hand_link}"/>
@@ -747,13 +605,6 @@
     <limit lower="-0.698132" upper="1.309" effort="100" velocity="1.3" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <transmission type="pr2_mechanism_model/SimpleTransmission" name="r_wrist_r_joint_trans" >
-    <actuator name="r_wrist_r_joint_motor" />
-    <joint name="r_wrist_r_joint" />
-    <mechanicalReduction>1</mechanicalReduction>
-  </transmission>
-  <gazebo reference="r_wrist_r_joint">
-    <implicitSpringDamper>0.4</implicitSpringDamper>
-  </gazebo>
+  <xacro:gazebo_transmission joint_name="r_wrist_r_joint" />
   </xacro:macro>
 </robot>

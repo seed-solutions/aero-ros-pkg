@@ -1,0 +1,222 @@
+<?xml version="1.0"?>
+
+<!-- XML namespaces -->
+<robot xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:gazebo="http://playerstage.sourceforge.net/gazebo/xmlschema/#gz"
+       xmlns:model="http://playerstage.sourceforge.net/gazebo/xmlschema/#model"
+       xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:body="http://playerstage.sourceforge.net/gazebo/xmlschema/#body"
+       xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
+       xmlns:joint="http://playerstage.sourceforge.net/gazebo/xmlschema/#joint"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:rendering="http://playerstage.sourceforge.net/gazebo/xmlschema/#rendering"
+       xmlns:renderable="http://playerstage.sourceforge.net/gazebo/xmlschema/#renderable"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find aero_description)/urdf/common.xacro" />
+  <xacro:include filename="$(find aero_description)/common_urdf/gazebo.xacro" />
+
+  <xacro:property name="wheel_radius" value="0.075"/>
+
+  <xacro:macro name="wheels" params="base_link disable_mesh:=false">
+  <!-- ============================   aero(typeE_wheels)   ============================ -->
+
+  <link name="${base_link}"/>
+
+    <link name="wheel_base_link">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_base.dae" scale="1 1 1" />
+          </geometry>
+      </visual> </xacro:unless>
+      <xacro:unless value="${disable_mesh}"> <collision>
+        <!--origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_base.dae" scale="1 1 1" />
+        </geometry-->
+        <origin xyz="0.018 0.0 0.0375" rpy="0 -0 0"/>
+        <geometry>
+          <box size="0.72 0.52 0.149" />
+        </geometry>
+      </collision> </xacro:unless>
+      <inertial>
+        <mass value="70" />
+        <origin xyz="0 0 0.04" rpy="0 -0 0.0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheel_base_link" />
+
+    <link name="wheels_top_link">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0 -0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_top.dae" scale="1 1 1" />
+        </geometry>
+      </visual> </xacro:unless>
+      <!-- no collision geometry -->
+      <inertial>
+        <mass value="1" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheels_top_link" />
+
+    <link name="wheels_front_left_mecanum">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_mecanum.dae" scale="1 1 1" />
+        </geometry>
+      </visual> </xacro:unless>
+      <xacro:unless value="${disable_mesh}"> <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <!--cylinder length="0.046" radius="0.076" /-->
+          <box size="0.152 0.152 0.046" />
+        </geometry>
+      </collision> </xacro:unless>
+      <inertial>
+        <mass value="1" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheels_front_left_mecanum" />
+
+    <link name="wheels_front_right_mecanum">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_mecanum.dae" scale="1 1 1" />
+        </geometry>
+      </visual> </xacro:unless>
+      <xacro:unless value="${disable_mesh}"> <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <!--cylinder length="0.046" radius="0.076" /-->
+          <box size="0.152 0.152 0.046" />
+        </geometry>
+      </collision> </xacro:unless>
+      <inertial>
+        <mass value="1" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheels_front_left_mecanum" />
+
+    <link name="wheels_rear_left_mecanum">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_mecanum.dae" scale="1 1 1" />
+        </geometry>
+      </visual> </xacro:unless>
+      <xacro:unless value="${disable_mesh}"> <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <!--cylinder length="0.046" radius="0.076" /-->
+          <box size="0.152 0.152 0.046" />
+        </geometry>
+      </collision> </xacro:unless>
+      <inertial>
+        <mass value="1" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheels_rear_left_mecanum" />
+
+    <link name="wheels_rear_right_mecanum">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_mecanum.dae" scale="1 1 1" />
+        </geometry>
+      </visual> </xacro:unless>
+      <xacro:unless value="${disable_mesh}"> <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <!--cylinder length="0.046" radius="0.076" /-->
+          <box size="0.152 0.152 0.046" />
+        </geometry>
+      </collision> </xacro:unless>
+      <inertial>
+        <mass value="1" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheels_rear_right_mecanum" />
+
+    <link name="wheels_base_laser_link">
+      <xacro:unless value="${disable_mesh}"> <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://aero_description/meshes/typeE_wheel/wheels_urg.dae" scale="1 1 1" />
+        </geometry>
+      </visual> </xacro:unless>
+      <xacro:unless value="${disable_mesh}"> <collision>
+        <origin xyz="0.0 0.0 -0.0124" rpy="0 -0 0"/>
+        <geometry>
+          <box size="0.08 0.1 0.07" />
+        </geometry>
+      </collision> </xacro:unless>
+      <inertial>
+        <mass value="0.2" />
+        <origin xyz="0 0 0" rpy="0 -0 0"/>
+        <inertia ixx="0.0528" ixy="0" ixz="0" iyy="0.0202" iyz="0" izz="0.0235"/>
+      </inertial>
+    </link>
+    <xacro:gazebo_link_reference link_name="wheels_base_laser_link" />
+
+    <joint name="base_link_to_wheel_base_link_connector" type="fixed">
+      <parent link="${base_link}"/>
+      <child link="wheel_base_link"/>
+      <origin xyz="0.0 0.0 ${wheel_radius}" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="wheels_body_to_top_connector" type="fixed">
+      <parent  link="wheel_base_link"/>
+      <child link="wheels_top_link"/>
+      <origin xyz="0.0 0.0 0.115" rpy="0 0 0 "/>
+    </joint>
+
+    <joint name="wheels_body_to_front_left_mecanum_connector" type="fixed">
+      <parent  link="wheel_base_link"/>
+      <child link="wheels_front_left_mecanum"/>
+      <origin xyz="0.2265 0.19485 0" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="wheels_body_to_front_right_mecanum_connector" type="fixed">
+      <parent  link="wheel_base_link"/>
+      <child link="wheels_front_right_mecanum"/>
+      <origin xyz="0.2265 -0.19485 0" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="wheels_body_to_rear_left_mecanum_connector" type="fixed">
+      <parent  link="wheel_base_link"/>
+      <child link="wheels_rear_left_mecanum"/>
+      <origin xyz="-0.2265 0.19485 0" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="wheels_body_to_rear_right_mecanum_connector" type="fixed">
+      <parent  link="wheel_base_link"/>
+      <child link="wheels_rear_right_mecanum"/>
+      <origin xyz="-0.2265 -0.19485 0" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="wheels_body_to_base_laser_connector" type="fixed">
+      <parent  link="wheel_base_link"/>
+      <child link="wheels_base_laser_link"/>
+      <origin xyz="0.29 0 0.1324" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>
