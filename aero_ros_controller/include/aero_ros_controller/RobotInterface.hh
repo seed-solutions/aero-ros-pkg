@@ -59,8 +59,8 @@ typedef std::map<int, double > index_angle_map;
 class TrajectoryBase
 {
 public:
-  TrajectoryBase() : start_offset_(0.02) { }
-  TrajectoryBase(const std::vector<std::string > &_joint_list) : joint_list_(_joint_list), start_offset_(0.02)
+  TrajectoryBase() : start_offset_(0.02), goal_time_tolerance_(0) { }
+  TrajectoryBase(const std::vector<std::string > &_joint_list) : joint_list_(_joint_list), start_offset_(0.02), goal_time_tolerance_(0)
   { }
 
   ~TrajectoryBase() {};
@@ -113,6 +113,7 @@ protected:
   std::vector<std::string > joint_list_;
   std::string name_;
   double start_offset_;
+  double goal_time_tolerance_;
 };
 
 class TrajectoryClient : public actionlib::SimpleActionClient < control_msgs::FollowJointTrajectoryAction >, public TrajectoryBase

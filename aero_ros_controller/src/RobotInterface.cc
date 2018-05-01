@@ -219,7 +219,7 @@ void TrajectoryClient::send_angle_vector(const angle_vector &_av, const double _
   goal.trajectory.points[0].time_from_start = ros::Duration(_tm);
   goal.path_tolerance.resize(0);
   goal.goal_tolerance.resize(0);
-  goal.goal_time_tolerance = ros::Duration(120);
+  goal.goal_time_tolerance = ros::Duration(goal_time_tolerance_);
   //this->sendGoal(goal);
   sending_goal_ = true;
   this->sendGoal(goal,
@@ -259,7 +259,7 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
   }
   goal.path_tolerance.resize(0);
   goal.goal_tolerance.resize(0);
-  goal.goal_time_tolerance = ros::Duration(120);
+  goal.goal_time_tolerance = ros::Duration(goal_time_tolerance_);
   //this->sendGoal(goal);
   sending_goal_ = true;
   this->sendGoal(goal,
