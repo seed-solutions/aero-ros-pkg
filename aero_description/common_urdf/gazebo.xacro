@@ -18,10 +18,14 @@
     <transmission name="${joint_name}_trans">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${joint_name}">
-        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <!-- dupricated in kinetic -->
+        <!--hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface-->
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
       </joint>
       <actuator name="${joint_name}_motor">
-        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <!-- dupricated in kinetic -->
+        <!--hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface-->
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
