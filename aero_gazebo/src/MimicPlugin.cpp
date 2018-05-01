@@ -11,7 +11,7 @@ void gazebo::mimicplugin::MimicPlugin::Load(physics::ModelPtr _parent, sdf::Elem
   model = _parent;
   world = _parent->GetWorld();
 
-  //std::cerr << "mimic plugin" << std::endl;
+  std::cerr << "Loading mimic plugin" << std::endl;
   if (_sdf->HasElement("mimic")) {
     //std::cerr << "has mimic" << std::endl;
     //std::cerr << _sdf->ToString("aa") << std::endl;
@@ -21,7 +21,7 @@ void gazebo::mimicplugin::MimicPlugin::Load(physics::ModelPtr _parent, sdf::Elem
       //std::cerr << "in while" << std::endl;
       //std::cerr << el->ToString("bb") << std::endl;
       std::string target_name = el->Get<std::string> ();
-      //std::cerr << "name: " << name << std::endl;
+      //std::cerr << "name: " << target_name << std::endl;
       std::string source_name;
       double offset = 0;
       double multiplier = 1.0;
@@ -29,41 +29,103 @@ void gazebo::mimicplugin::MimicPlugin::Load(physics::ModelPtr _parent, sdf::Elem
       sdf::ParamPtr p_jn = el->GetAttribute("joint");
       if (!!p_jn) {
         p_jn->Get(source_name);
-        //std::cerr << "mimic: " << jname;
+      } else if ( el->HasElement("joint") ) {
+        sdf::ElementPtr pt = el->GetElement("joint");
+        if (!!pt) {
+          source_name = pt->Get<std::string > ();
+        }
+      }
+
+      if (source_name.size() > 0) {
+        //std::cerr << "mimic: " << source_name << std::endl;
         sdf::ParamPtr p_off = el->GetAttribute("offset");
         if (!!p_off) {  p_off->Get(offset); }
+        else if ( el->HasElement("offset") ) {
+          sdf::ElementPtr pt = el->GetElement("offset");
+          if (!!pt) {
+            offset = pt->Get<double > ();
+          }
+        }
         //
         sdf::ParamPtr p_mlt = el->GetAttribute("multiplier");
         if (!!p_mlt) {  p_mlt->Get(multiplier); }
+        else if ( el->HasElement("multiplier") ) {
+          sdf::ElementPtr pt = el->GetElement("multiplier");
+          if (!!pt) {
+            multiplier = pt->Get<double > ();
+          }
+        }
         // create mimic
         gazebo::mimicplugin::PidParams param;
         {
           sdf::ParamPtr attr = el->GetAttribute("P");
           if (!!attr) {  attr->Get(param.p); }
+          else if ( el->HasElement("P") ) {
+            sdf::ElementPtr pt = el->GetElement("P");
+            if (!!pt) {
+              param.p = pt->Get<double > ();
+            }
+          }
         }
         {
           sdf::ParamPtr attr = el->GetAttribute("I");
           if (!!attr) {  attr->Get(param.i); }
+          else if ( el->HasElement("I") ) {
+            sdf::ElementPtr pt = el->GetElement("I");
+            if (!!pt) {
+              param.i = pt->Get<double > ();
+            }
+          }
         }
         {
           sdf::ParamPtr attr = el->GetAttribute("D");
           if (!!attr) {  attr->Get(param.d); }
+          else if ( el->HasElement("D") ) {
+            sdf::ElementPtr pt = el->GetElement("D");
+            if (!!pt) {
+              param.d = pt->Get<double > ();
+            }
+          }
         }
         {
           sdf::ParamPtr attr = el->GetAttribute("i_max");
           if (!!attr) {  attr->Get(param.i_max); }
+          else if ( el->HasElement("i_max") ) {
+            sdf::ElementPtr pt = el->GetElement("i_max");
+            if (!!pt) {
+              param.i_max = pt->Get<double > ();
+            }
+          }
         }
         {
           sdf::ParamPtr attr = el->GetAttribute("i_min");
           if (!!attr) {  attr->Get(param.i_min); }
+          else if ( el->HasElement("i_min") ) {
+            sdf::ElementPtr pt = el->GetElement("i_min");
+            if (!!pt) {
+              param.i_min = pt->Get<double > ();
+            }
+          }
         }
         {
           sdf::ParamPtr attr = el->GetAttribute("command_max");
           if (!!attr) {  attr->Get(param.cmd_max); }
+          else if ( el->HasElement("command_max") ) {
+            sdf::ElementPtr pt = el->GetElement("command_max");
+            if (!!pt) {
+              param.cmd_max = pt->Get<double > ();
+            }
+          }
         }
         {
           sdf::ParamPtr attr = el->GetAttribute("command_min");
           if (!!attr) {  attr->Get(param.cmd_min); }
+          else if ( el->HasElement("command_min") ) {
+            sdf::ElementPtr pt = el->GetElement("command_min");
+            if (!!pt) {
+              param.cmd_min = pt->Get<double > ();
+            }
+          }
         }
         registerMimic(source_name, target_name, offset, multiplier, param);
       } else {
