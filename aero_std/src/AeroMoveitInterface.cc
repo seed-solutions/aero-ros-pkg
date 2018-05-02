@@ -305,7 +305,7 @@ void aero::interface::AeroMoveitInterface::setNeck_(double _r,double _p, double 
   _robot_state->setVariablePosition("neck_r_joint", _r);
   _robot_state->setVariablePosition("neck_p_joint", _p);
   _robot_state->setVariablePosition("neck_y_joint", _y);
-
+  // ROS_DEBUG("setNeck_: %f %f %f", _r, _p, _y);
   _robot_state->enforceBounds( kinematic_model->getJointModelGroup("head"));
 }
 
@@ -324,7 +324,26 @@ std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLo
 
   // get base position in robot coords
   _robot_state->updateLinkTransforms();
+#if 0
+  {
+    double jt0 = _robot_state->getVariablePosition("ankle_joint");
+    double jt1 = _robot_state->getVariablePosition("knee_joint");
+    double jt2 = _robot_state->getVariablePosition("ankle_joint_mimic");
+    double jt3 = _robot_state->getVariablePosition("knee_joint_mimic");
+    ROS_INFO("lifter: %f %f %f %f", jt0, jt1, jt2, jt3);
 
+    aero::Transform tr = _robot_state->getGlobalLinkTransform("waist_link");
+    ROS_INFO_STREAM("lifter_cds(waist): " << tr);
+
+    double wt0 = _robot_state->getVariablePosition("waist_r_joint");
+    double wt1 = _robot_state->getVariablePosition("waist_p_joint");
+    double wt2 = _robot_state->getVariablePosition("waist_y_joint");
+    ROS_INFO("waist: %f %f %f", wt0, wt1, wt2);
+
+    aero::Transform tr2 = _robot_state->getGlobalLinkTransform("body_link");
+    ROS_INFO_STREAM("lifter_cds(body): " << tr2);
+  }
+#endif
   std::string body_link = "body_link";
   aero::Vector3 base2body_p = _robot_state->getGlobalLinkTransform(body_link).translation();
   aero::Matrix3 base2body_mat = _robot_state->getGlobalLinkTransform(body_link).rotation();
@@ -339,6 +358,8 @@ std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLo
   double theta = acos(neck2eye / dis_obj);
   double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
   double pitch = 1.5708 + pitch_obj - theta;
+
+  //ROS_INFO("solveLookAt: (%f %f %f) => (%f %f) ", _pos.x(), _pos.y(), _pos.z(), pitch, yaw);
 
   return std::tuple<double, double, double>(0.0, pitch, yaw);
 }
