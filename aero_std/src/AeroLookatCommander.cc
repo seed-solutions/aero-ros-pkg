@@ -10,6 +10,7 @@ aero::lookat_commander::AeroLookatCommander::AeroLookatCommander(ros::NodeHandle
   ami_ = _ami;
 
   kinematic_state_ = robot_state::RobotStatePtr(new robot_state::RobotState(ami_->kinematic_model));
+  kinematic_state_->setToDefaultValues();// set all joints to 0.0
 
   roll_max_vel_  = ami_->kinematic_model->getVariableBounds("neck_r_joint").max_velocity_;
   pitch_max_vel_ = ami_->kinematic_model->getVariableBounds("neck_p_joint").max_velocity_;
