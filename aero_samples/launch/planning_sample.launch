@@ -1,0 +1,7 @@
+<launch>
+  <rosparam command="load" file="$(find aero_moveit_config)/config/ompl_planning.yaml"/>
+  <node name="planning_sample_node" pkg="aero_samples" type="planning_sample_node" respawn="false" output="screen">
+    <rosparam command="load" file="$(find aero_moveit_config)/config/kinematics.yaml"/>
+  </node>
+  <node pkg="aero_samples" type="container_model_publisher.py" output="screen" name="container_model_publisher"/>
+</launch>
