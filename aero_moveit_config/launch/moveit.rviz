@@ -648,7 +648,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: /odom_combined
+    Fixed Frame: /odom
   Name: root
   Tools:
     - Class: rviz/Interact
@@ -667,7 +667,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.01
       Pitch: 0.509797
-      Target Frame: /virtual_lifter_x_link
+      Target Frame: /base_link
       Value: XYOrbit (rviz)
       Yaw: 5.65995
     Saved: ~

@@ -8,6 +8,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_larm_controller
     joints:
       - l_shoulder_p_joint
@@ -17,6 +18,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
   - name: fake_both_arms_controller
     joints:
       - l_shoulder_p_joint
@@ -26,6 +28,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
       - r_shoulder_p_joint
       - r_shoulder_r_joint
       - r_shoulder_y_joint
@@ -33,6 +36,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_waist_controller
     joints:
       - waist_y_joint
@@ -54,6 +58,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_larm_with_waist_controller
     joints:
       - waist_y_joint
@@ -66,6 +71,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
   - name: fake_both_arms_with_waist_controller
     joints:
       - waist_y_joint
@@ -78,6 +84,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
       - r_shoulder_p_joint
       - r_shoulder_r_joint
       - r_shoulder_y_joint
@@ -85,6 +92,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_rarm_with_torso_controller
     joints:
       - ankle_joint
@@ -99,6 +107,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_larm_with_torso_controller
     joints:
       - ankle_joint
@@ -113,6 +122,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
   - name: fake_rarm_with_lifter_controller
     joints:
       - ankle_joint
@@ -124,6 +134,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_larm_with_lifter_controller
     joints:
       - ankle_joint
@@ -135,6 +146,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
   - name: fake_head_controller
     joints:
       - neck_y_joint
@@ -151,17 +163,17 @@ controller_list:
       - neck_r_joint
   - name: fake_rhand_controller
     joints:
-      - r_wrist_r_joint
+      - r_hand_y_joint
       - r_indexbase_joint
-      - r_indexmid_joint
       - r_indexend_joint
+      - r_indexmid_joint
       - r_thumb_joint
   - name: fake_lhand_controller
     joints:
-      - l_wrist_r_joint
+      - l_hand_y_joint
       - l_indexbase_joint
-      - l_indexmid_joint
       - l_indexend_joint
+      - l_indexmid_joint
       - l_thumb_joint
   - name: fake_torso_controller
     joints:
@@ -182,6 +194,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
       - neck_y_joint
       - neck_p_joint
       - neck_r_joint
@@ -192,6 +205,7 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
   - name: fake_whole_body_controller
     joints:
       - ankle_joint
@@ -206,6 +220,7 @@ controller_list:
       - l_wrist_y_joint
       - l_wrist_p_joint
       - l_wrist_r_joint
+      - l_hand_y_joint
       - neck_y_joint
       - neck_p_joint
       - neck_r_joint
@@ -216,3 +231,4 @@ controller_list:
       - r_wrist_y_joint
       - r_wrist_p_joint
       - r_wrist_r_joint
+      - r_hand_y_joint
