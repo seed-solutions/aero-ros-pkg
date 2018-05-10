@@ -150,6 +150,7 @@ TrajectoryClient::TrajectoryClient(ros::NodeHandle &_nh,
   ros::Duration timeout(10);
   if(!this->waitForServer(timeout)) {
     ROS_ERROR("timeout for waiting %s%s", _nh.getNamespace().c_str(), _act_name.c_str());
+    return;
   }
   if (true) { // USE spinner
     state_spinner_.reset(new ros::AsyncSpinner(1, &state_queue_));
@@ -172,10 +173,12 @@ TrajectoryClient::TrajectoryClient(ros::NodeHandle &_nh,
 
 TrajectoryClient::~TrajectoryClient()
 {
-  state_spinner_->stop();
-  {
-    boost::mutex::scoped_lock lock(state_mtx_);
-    state_sub_.shutdown();
+  if(!!state_spinner_) {
+    state_spinner_->stop();
+    {
+      boost::mutex::scoped_lock lock(state_mtx_);
+      state_sub_.shutdown();
+    }
   }
   //ROS_WARN("~ %s", name_.c_str());
 }
