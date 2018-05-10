@@ -10,7 +10,8 @@
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit_msgs/PlanningScene.h>
 #include <geometric_shapes/shape_operations.h>
-
+#include <moveit/robot_state/conversions.h>
+#include <moveit/collision_detection/collision_tools.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -50,6 +51,8 @@ namespace aero
     /// @param[in] _resource mesh file name
     public: void processCollisionMesh(const std::string _id, const std::string _parent, const aero::Transform _pose, const std::string _resource);
 
+    public: void processAttachedCollisionMesh(const std::string _link_name, const std::string _parent, const aero::Transform _pose, const std::string _resource, const std::vector<std::string> _touch_links);
+
     /// @brief create goal state for request (note, model will be updated)
     /// @param[in] _robot robot interface with kinematic model
     /// @param[in] _group_name name of group to do manipulation
@@ -67,6 +70,9 @@ namespace aero
     /// @return whether successful or not
     public: bool solve
     (planning_interface::MotionPlanRequest& _req, planning_interface::MotionPlanResponse& _res);
+
+    public: bool solveEEFCollisionEnabled
+    (planning_interface::MotionPlanRequest& _req, planning_interface::MotionPlanResponse& _res, int _times);
 
     /// @brief create end effector pose constraint
     /// @param[in] _eef_link end effector to constrain
@@ -87,6 +93,10 @@ namespace aero
     public: planning_interface::PlannerManagerPtr planner_manager;
 
     private: ros::Publisher display_publisher_;
+
+    private: ros::Publisher contact_publisher_;
+
+    private: moveit::core::RobotStatePtr rs_tmp_;
     };
   }
 }

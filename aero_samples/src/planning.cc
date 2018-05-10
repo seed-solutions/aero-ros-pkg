@@ -15,6 +15,7 @@ int main(int argc, char **argv)
   ROS_INFO("reseting robot pose");
   robot->setPoseVariables(aero::pose::reset_manip);
   robot->setLifter(0, -0.38);
+  robot->setHand(aero::arm::rarm, 0.9);
   robot->sendModelAngles(3000);
   robot->waitInterpolation();
 
@@ -41,8 +42,10 @@ int main(int argc, char **argv)
   req.planner_id = "RRTstarkConfigDefault";
   req.allowed_planning_time = 1.0;
 
-  if (!planning->solve(req, res))
-    return 0;
+  // if (!planning->solve(req, res))
+  //   return 0;
+
+  planning->solveEEFCollisionEnabled(req, res, 1);
 
   // visualization
 

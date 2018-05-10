@@ -26,6 +26,9 @@ aero::interface::AeroMotionPlanningInterface::AeroMotionPlanningInterface
 
   display_publisher_ =
     _nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+
+  contact_publisher_ =
+    _nh.advertise<visualization_msgs::MarkerArray>("/moveit/collision/contacts", 1, true);
 }
 
 aero::interface::AeroMotionPlanningInterface::~AeroMotionPlanningInterface() {
@@ -86,6 +89,33 @@ void aero::interface::AeroMotionPlanningInterface::processCollisionMesh
   planning_scene->processCollisionObjectMsg(object);
 }
 
+void aero::interface::AeroMotionPlanningInterface::processAttachedCollisionMesh
+(std::string _link_name, std::string _parent, aero::Transform _pose, std::string _resource, std::vector<std::string> _touch_links) {
+  moveit_msgs::AttachedCollisionObject at_object;
+  moveit_msgs::CollisionObject object;
+  object.header.frame_id = _parent;
+  object.id = _link_name;
+  geometry_msgs::Pose p;
+  p.position.x = _pose.translation().x();
+  p.position.y = _pose.translation().y();
+  p.position.z = _pose.translation().z();
+  aero::Quaternion q(_pose.linear());
+  p.orientation.x = q.x();
+  p.orientation.y = q.y();
+  p.orientation.z = q.z();
+  p.orientation.w = q.w();
+  shapes::ShapeMsg mesh_msg;
+  shapes::Mesh* mesh = shapes::createMeshFromResource(_resource);
+  shapes::constructMsgFromShape(mesh, mesh_msg);
+  object.meshes.push_back(boost::get<shape_msgs::Mesh>(mesh_msg));
+  object.mesh_poses.push_back(p);
+  object.operation = object.ADD;
+  at_object.link_name = _link_name;
+  at_object.object = object;
+  at_object.touch_links = _touch_links;
+  planning_scene->processAttachedCollisionObjectMsg(at_object);
+}
+
 moveit_msgs::Constraints
 aero::interface::AeroMotionPlanningInterface::constructGoalConstraintsFromIK
 (aero::interface::AeroMoveitInterface::Ptr _robot, std::string _group_name, aero::Transform _goal, std::string _eef_link, double _tolerance1, double _tolerance2) {
@@ -95,6 +125,8 @@ aero::interface::AeroMotionPlanningInterface::constructGoalConstraintsFromIK
   } else {
     ROS_INFO("End I.K. is solvable.");
   }
+
+  rs_tmp_.reset(new moveit::core::RobotState(*_robot->kinematic_state));
 
   return
     kinematic_constraints::constructGoalConstraints(*_robot->kinematic_state, _robot->getJointModelGroup(_group_name), _tolerance1, _tolerance2);
@@ -118,6 +150,67 @@ bool aero::interface::AeroMotionPlanningInterface::solve
   }
 
   return true;
+}
+
+bool aero::interface::AeroMotionPlanningInterface::solveEEFCollisionEnabled
+(planning_interface::MotionPlanRequest& _req, planning_interface::MotionPlanResponse& _res, int _times) {
+  planning_interface::PlanningContextPtr context =
+    planner_manager->getPlanningContext(planning_scene, _req, _res.error_code_);
+  if (_res.error_code_.val == _res.error_code_.SUCCESS) {
+    ROS_INFO("Context set successfully");
+  } else {
+    ROS_ERROR("Failed to set context");
+    return false;
+  }
+
+  int count = 0;
+  bool solved = false;
+
+  collision_detection::CollisionRequest creq;
+  creq.contacts = true;
+  creq.max_contacts = 100;
+  creq.max_contacts_per_pair = 5;
+  collision_detection::CollisionResult cres;
+  while (count < _times) {
+    ROS_INFO("trial %d", count);
+    ++count;
+    context->solve(_res);
+    if (_res.error_code_.val != _res.error_code_.SUCCESS) {
+      ROS_ERROR("Could not compute plan successfully");
+      continue;
+    }
+    bool collision_found = false;
+    moveit_msgs::MotionPlanResponse res;
+    _res.getMessage(res);
+    for (int i = 0; i < res.trajectory.joint_trajectory.points.size(); ++i) {
+      moveit::core::jointTrajPointToRobotState
+        (res.trajectory.joint_trajectory, i, *rs_tmp_);
+      planning_scene->checkCollision(creq, cres, *rs_tmp_);
+      if (cres.collision) {
+        ROS_WARN("collision at %d / %d", i, static_cast<int>(res.trajectory.joint_trajectory.points.size()));
+        collision_found = true;
+        break;
+      }
+    }
+    if (!collision_found) {
+      solved = true;
+      break;
+    }
+  }
+
+  if (!solved && cres.contact_count > 0) {
+    std_msgs::ColorRGBA color;
+    color.r = 1.0;
+    color.g = 0.0;
+    color.b = 1.0;
+    color.a = 0.5;
+    visualization_msgs::MarkerArray markers;
+    collision_detection::getCollisionMarkersFromContacts
+      (markers, "base_link", cres.contacts, color, ros::Duration(3.0), 0.05);
+    contact_publisher_.publish(markers);
+  }
+
+  return solved;
 }
 
 moveit_msgs::Constraints
