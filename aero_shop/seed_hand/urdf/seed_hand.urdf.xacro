@@ -139,8 +139,8 @@
     <limit lower="-3.14159" upper="3.14159" effort="25" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <!--xacro:gazebo_transmission joint_name="${prefix}_indexmid_joint" /-->
-  <xacro:gazebo_joint_reference joint_name="${prefix}_indexmid_joint" />
+  <xacro:gazebo_transmission joint_name="${prefix}_indexmid_joint" />
+  <!--xacro:gazebo_joint_reference joint_name="${prefix}_indexmid_joint" /-->
 
   <joint name="${prefix}_indexend_joint" type="revolute">
     <parent link="${prefix}_indexbase_link"/>
@@ -150,8 +150,8 @@
     <limit lower="-3.14159" upper="3.14159" effort="25" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
-  <!--xacro:gazebo_transmission joint_name="${prefix}_indexend_joint" /-->
-  <xacro:gazebo_joint_reference joint_name="${prefix}_indexend_joint" />
+  <xacro:gazebo_transmission joint_name="${prefix}_indexend_joint" />
+  <!--xacro:gazebo_joint_reference joint_name="${prefix}_indexend_joint" /-->
 
   <joint name="${prefix}_thumb_joint" type="revolute">
     <parent link="${prefix}_hand_link"/>
