@@ -140,6 +140,12 @@
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 2.8415926535897931 0" xyz="0.015 0 -0.13"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/elbow_pad.dae" scale="1 1 1"/>
+      </geometry>
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.574" />
@@ -163,6 +169,12 @@
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/LARM_LINK4_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 3.1415926535897931" xyz="-0.010 0 -0.035"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/elbow_pad.dae" scale="1 1 1"/>
       </geometry>
     </collision> </xacro:unless>
     <inertial>
@@ -324,6 +336,12 @@
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK3_mesh.dae" scale="1 1 1" />
       </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 2.8415926535897931 0" xyz="0.015 0 -0.13"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/elbow_pad.dae" scale="1 1 1"/>
+      </geometry>
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.574" />
@@ -347,6 +365,12 @@
       <origin xyz="-0.035 0 -0.035" rpy="0 -0 0"/>
       <geometry>
         <mesh filename="package://aero_description/meshes/typeF_upperbody/RARM_LINK4_mesh.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 3.1415926535897931" xyz="-0.010 0 -0.035"/>
+      <geometry>
+        <mesh filename="package://aero_description/meshes/typeF_upperbody/elbow_pad.dae" scale="1 1 1"/>
       </geometry>
     </collision> </xacro:unless>
     <inertial>
