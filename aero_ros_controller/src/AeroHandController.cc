@@ -27,14 +27,23 @@ public: AeroHandInterface(ros::NodeHandle &_nh) : RobotInterface(_nh)
                             "rhand_controller/state",
                              rhand_joints
                              ));
-    this->add_controller("rhand", rhand);
+    ros::Duration timeout(0.001);
+    if(rhand->waitForServer(timeout)) {
+      this->add_controller("rhand", rhand);
+    } else {
+      rhand.reset();
+    }
 
     lhand.reset(new robot_interface::TrajectoryClient(_nh,
                             "lhand_controller/follow_joint_trajectory",
                             "lhand_controller/state",
                              lhand_joints
                              ));
-    this->add_controller("lhand", lhand);
+    if(lhand->waitForServer(timeout)) {
+      this->add_controller("lhand", lhand);
+    } else {
+      lhand.reset();
+    }
 
     controller_group_["both_hands"]  = {"rhand", "lhand"};
   }
@@ -148,8 +157,12 @@ public:
           robot_interface::joint_angle_map act_map;
           hi->getActualPositions(act_map);
           double pos0, pos1;
-          if (!getPosition(act_map, l_grasp_check_joint, pos0)) return false;
-          if (!getPosition(act_map, r_grasp_check_joint, pos1)) return false;
+          if (!!hi->lhand) {
+            if (!getPosition(act_map, l_grasp_check_joint, pos0)) return false;
+          }
+          if (!!hi->rhand) {
+            if (!getPosition(act_map, r_grasp_check_joint, pos1)) return false;
+          }
 
           if(g_srv.response.angles.size() < 2) {
             g_srv.response.angles.resize(2);
@@ -268,8 +281,12 @@ public:
           robot_interface::joint_angle_map act_map;
           hi->getActualPositions(act_map);
           double pos0, pos1;
-          if (!getPosition(act_map, l_grasp_check_joint, pos0)) return false;
-          if (!getPosition(act_map, r_grasp_check_joint, pos1)) return false;
+          if (!!hi->lhand) {
+            if (!getPosition(act_map, l_grasp_check_joint, pos0)) return false;
+          }
+          if (!!hi->rhand) {
+            if (!getPosition(act_map, r_grasp_check_joint, pos1)) return false;
+          }
 
           if(g_srv.response.angles.size() < 2) {
             g_srv.response.angles.resize(2);
