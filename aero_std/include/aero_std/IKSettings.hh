@@ -324,7 +324,7 @@ static std::ostream& operator<<(std::ostream& os, const aero::Transform &tr)
      << tt(0) << " "
      << tt(1) << " "
      << tt(2) << ")";
-  os << qq;
+  os << qq << ")";
   return os;
 }
 #endif

@@ -149,7 +149,7 @@ bool aero::interface::AeroMoveitInterface::setFromIK(const std::string &_move_gr
     return false;
   }
 
-  bool found_ik;
+  bool found_ik = false;
   if (_eef_link == "") {
     found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _attempts, 0.1);
   } else {
