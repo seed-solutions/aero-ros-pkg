@@ -37,6 +37,16 @@ namespace aero
     /// @param[in] robot interface with kinematic model
     public: void setCurrentState(aero::interface::AeroMoveitInterface::Ptr _robot);
 
+    /// @brief transform aero::Transform to transform in move_group eef (aero::eef::hand)
+    /// @param[in] _robot robot interface with kinematic model
+    /// @param[in] _group_name name of move_group
+    /// @param[in] _arm arm of transform
+    /// @param[in] _eef end effector link of transform
+    /// @param[in] _mat aero::Transform to transform
+    /// @return transformed aero::Transform
+    public: aero::Transform getTransformInMoveGroupEEF
+    (aero::interface::AeroMoveitInterface::Ptr _robot, const std::string _group_name, const aero::arm _arm, const aero::eef _eef, const aero::Transform _mat);
+
     /// @brief add box to scene for collision
     /// @param[in] _id name the box
     /// @param[in] _parent where the box should be attached to e.g. map, base_link
@@ -51,36 +61,59 @@ namespace aero
     /// @param[in] _resource mesh file name
     public: void processCollisionMesh(const std::string _id, const std::string _parent, const aero::Transform _pose, const std::string _resource);
 
-    public: void processAttachedCollisionMesh(const std::string _link_name, const std::string _parent, const aero::Transform _pose, const std::string _resource, const std::vector<std::string> _touch_links);
+    // public: void processAttachedCollisionMesh(const std::string _link_name, const std::string _parent, const aero::Transform _pose, const std::string _resource, const std::vector<std::string> _touch_links);
 
-    /// @brief create goal state for request (note, model will be updated)
+    /// @brief create goal state for request from current robot joint state
     /// @param[in] _robot robot interface with kinematic model
-    /// @param[in] _group_name name of group to do manipulation
+    /// @param[in] _group_name name of move_group
+    /// @param[in] _tolerance1 pose tolerance
+    /// @param[in] _tolerance2 angle tolerance
+    /// @return constraints to push in request      
+    public: moveit_msgs::Constraints constructGoalConstraints
+    (aero::interface::AeroMoveitInterface::Ptr _robot, std::string _group_name, const double _tolerance1=0.03, const double _tolerance2=0.03);
+
+    /// @brief create goal state for request from pose
+    /// @param[in] _origin name of group to do manipulation
     /// @param[in] _goal goal pose of goal state
-    /// @param[in] _eef_link name of link referred to for goal state
+    /// @param[in] _arm arm to solve (note, goal state always refers to aero::eef::hand)
     /// @param[in] _tolerance1 pose tolerance
     /// @param[in] _tolerance2 angle tolerance
     /// @return constraints to push in request
-    public: moveit_msgs::Constraints constructGoalConstraintsFromIK
-    (aero::interface::AeroMoveitInterface::Ptr _robot, const std::string _group_name, const aero::Transform _goal, const std::string _eef_link, const double _tolerance1=0.03, const double _tolerance2=0.03);
+    public: moveit_msgs::Constraints constructGoalConstraints
+    (const std::string _origin, const aero::Transform _goal, const aero::arm _arm, const double _tolerance1=0.03, const double _tolerance2=0.03);
 
     /// @brief solve the motion plan
     /// @param[in] _req motion plan settings
     /// @param[in] _res solved trajectory and status
     /// @return whether successful or not
-    public: bool solve
+    public: bool plan
     (planning_interface::MotionPlanRequest& _req, planning_interface::MotionPlanResponse& _res);
 
-    public: bool solveEEFCollisionEnabled
-    (planning_interface::MotionPlanRequest& _req, planning_interface::MotionPlanResponse& _res, int _times);
+    /// @brief send the motion plan
+    /// @param[in] _robot robot interface with kinematic model
+    /// @param[in] _res solved trajectory and status
+    /// @param[in] _duration time to finish whole trajectory in milliseconds
+    /// @param[in] _ikrange this should match the range used for solving motion plan
+    /// @param[in] _async false to wait interpolation
+    /// @return succeed or not
+    public: bool execute(aero::interface::AeroMoveitInterface::Ptr _robot, const planning_interface::MotionPlanResponse _res, const int _duration, const aero::ikrange _ikrange, const bool _async=true);
+
+    /// @brief check collision for fast-computed approximate paths
+    /// @param[in] _robot robot interface with kinematic model
+    /// @param[in] _res solved trajectory and status
+    /// @return whether there was collision or not (visual /moveit/collision/contacts)
+    public: bool checkCollision(const aero::interface::AeroMoveitInterface::Ptr _robot, const planning_interface::MotionPlanResponse _res);
 
     /// @brief create end effector pose constraint
-    /// @param[in] _eef_link end effector to constrain
+    /// @param[in] _arm arm to constrain (note, constraint always refers to aero::eef::hand)
     /// @param[in] _parent quaternion coordinate
     /// @param[in] _q constrain quaternion value
     /// @return constraint instance
-    public: moveit_msgs::Constraints constructPathConstraintsFromQuaternion
-    (const std::string _eef_link, const std::string _parent, const aero::Quaternion _q);
+    public: moveit_msgs::Constraints constructPathConstraints
+    (const aero::arm _arm, const std::string _parent, const aero::Quaternion _q);
+
+    /// @brief publish objects added to scene
+    public: void displayScene();
 
     /// @brief display trajectory to rviz
     /// @param[in] _res MotionPlanResponse with solved trajectory
@@ -92,11 +125,13 @@ namespace aero
 
     public: planning_interface::PlannerManagerPtr planner_manager;
 
+    public: moveit_msgs::PlanningScene scene_msg;
+
     private: ros::Publisher display_publisher_;
 
-    private: ros::Publisher contact_publisher_;
+    private: ros::Publisher scene_publisher_;
 
-    private: moveit::core::RobotStatePtr rs_tmp_;
+    private: ros::Publisher contact_publisher_;
     };
   }
 }
