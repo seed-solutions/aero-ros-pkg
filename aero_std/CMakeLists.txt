@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   tf
   cmake_modules
-  moveit_core moveit_ros_planning moveit_ros_planning_interface
+  moveit_core moveit_msgs moveit_ros_planning moveit_ros_planning_interface
   aero_startup
   aero_ros_controller
   visualization_msgs
@@ -60,7 +60,7 @@ catkin_package(
  LIBRARIES aero_moveit_interface object_features spot_list
  CATKIN_DEPENDS
  geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs move_base_msgs
- moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs aero_ros_controller
+ moveit_core moveit_msgs moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs aero_ros_controller
  tf_conversions eigen_conversions
 )
 
