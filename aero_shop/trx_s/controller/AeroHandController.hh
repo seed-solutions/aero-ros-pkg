@@ -26,9 +26,9 @@ const std::string r_grasp_fast_check_joint = "r_thumb_joint";
   }
 
 #define L_GRASP() {                                             \
-    map["l_thumb_joint"]      =  larm_angle * M_PI / 180/ 4.0;  \
+    map["l_thumb_joint"]      =  larm_angle * M_PI / 180.0;  \
   }
 #define R_GRASP() {                                             \
-    map["r_thumb_joint"]      =  rarm_angle * M_PI / 180 / 4.0; \
+    map["r_thumb_joint"]      =  rarm_angle * M_PI / 180.0; \
   }
 /// end dependant
