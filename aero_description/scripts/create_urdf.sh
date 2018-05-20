@@ -87,8 +87,26 @@ do
     # check if parts has meshes directory
     if [ -e ${parts_path}/meshes ]
     then
-        mkdir ${aero_description_path}/meshes/${parts_dir}
-        cp -r ${parts_path}/meshes/* ${aero_description_path}/meshes/${parts_dir}
+        if [ -e ${parts_path}/meshes/meshes.txt ]
+        then
+            # handle referenced mesh directory
+            while read meshdir
+            do
+                meshshop_dir=$(echo $meshdir | cut -d/ -f1)
+                meshparts_dir=$(echo $meshdir | cut -d/ -f2)
+                if [[ $meshshop_dir == "aero_shop" ]]
+                then
+                    meshparts_path="$(rospack find aero_description)/../aero_shop/${meshparts_dir}"
+                else
+                    meshparts_path=$(rospack find ${meshshop_dir})/${meshparts_dir}
+                fi
+                mkdir ${aero_description_path}/meshes/${meshparts_dir}
+                cp -r ${meshparts_path}/meshes/* ${aero_description_path}/meshes/${meshparts_dir}
+            done < ${parts_path}/meshes/meshes.txt
+        else
+            mkdir ${aero_description_path}/meshes/${parts_dir}
+            cp -r ${parts_path}/meshes/* ${aero_description_path}/meshes/${parts_dir}
+        fi
     fi
 
 done < $robot_file
