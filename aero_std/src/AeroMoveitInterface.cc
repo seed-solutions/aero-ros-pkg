@@ -632,7 +632,7 @@ void aero::interface::AeroMoveitInterface::getLifter(double &_x, double &_z)
   //_xz.resize(2);
 
   _x = pos.x();
-  _z = 0.725 - pos.z(); // robot depend number, typeB_lifter
+  _z = pos.z() - 0.725; // robot depend number, typeB_lifter
 }
 
 //////////////////////////////////////////////////
