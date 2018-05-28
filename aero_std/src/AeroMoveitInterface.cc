@@ -155,7 +155,26 @@ bool aero::interface::AeroMoveitInterface::setFromIK(const std::string &_move_gr
   } else {
     found_ik = kinematic_state->setFromIK(jmg_tmp, _pose, _eef_link, _attempts, 0.1);
   }
-  //if (found_ik) getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
+
+#if 0
+  if (true) {
+    // getMoveGroup(_move_group).setJointValueTarget(*kinematic_state);
+    kinematic_state->updateLinkTransforms();
+    std::string lk = _eef_link;
+    if (lk.empty()) {
+      if ( _move_group[0] == 'r' ) {
+        lk = eefLink(aero::arm::rarm, aero::eef::hand);
+      } else {
+        lk = eefLink(aero::arm::larm, aero::eef::hand);
+      }
+    }
+    aero::Transform diff  = kinematic_state->getGlobalLinkTransform(lk).inverse() * _pose;
+
+    ROS_INFO_STREAM("setFromIK " << _move_group << ", " << _eef_link << ", " << _pose);
+    ROS_INFO("%d ==> pos/rot = %f / %f", found_ik, diff.translation().norm(), aero::AngleAxis(diff.linear()).angle());
+  }
+#endif
+
   return found_ik;
 }
 
