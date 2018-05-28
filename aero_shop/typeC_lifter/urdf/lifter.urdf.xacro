@@ -157,12 +157,13 @@
       <origin xyz="0 0 0.055" rpy="0 0 0"/>
     </joint>
 
-    <joint name="knee_joint_mimic" type="continuous">
+    <joint name="knee_joint_mimic" type="revolute">
       <parent link="leg_thigh_link"/>
       <child link="leg_base_link"/>
       <origin xyz="0 0 0.25" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
       <mimic joint="knee_joint" multiplier="-1" offset="0"/>
+      <limit effort="10000" upper="1.5707" lower="0" velocity="1.5"/> <!-- just invert of knee_joint -->
     </joint>
 
     <joint name="knee_joint" type="revolute"> <!-- rename "knee_joint_thigh_dummy" -->
@@ -179,19 +180,20 @@
       <child  link="leg_shank_link"/>
       <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
-      <limit effort="4000" lower="0" upper="1.5707" velocity="1.5" />
+      <limit effort="10000" lower="0" upper="1.5707" velocity="1.5" />
       <dynamics damping="0.2" friction="0" />
     </joint>
     <xacro:gazebo_transmission joint_name="ankle_joint" />
 
 <!--- mimic joints -->
 <!-- requried -->
-    <joint name="ankle_joint_mimic" type="continuous">
+    <joint name="ankle_joint_mimic" type="revolute">
       <parent link="leg_shank_link"/>
       <child  link="leg_knee_link"/>
       <origin xyz="0 0 0.25" rpy="0 0 0"/>
       <axis   xyz="0 -1 0"/>
       <mimic joint="ankle_joint" multiplier="-1" offset="0" />
+      <limit effort="10000" upper="0" lower="-1.5707" velocity="1.5" /> <!-- just invert of ankle_joint -->
     </joint>
 
 <!-- redundant -->
