@@ -49,34 +49,36 @@
    <plugin name="mimic_updater" filename="libmimic_plugin.so">
      <!-- lifter -->
      <mimic joint="knee_joint"  offset="0.0" multiplier="-1.0"
-            P="4000" I="0.1" D="80" i_max="500" i_min="-500"
-            command_max="2000" command_min="-2000">
+            P="300" I="0" D="0" i_max="5" i_min="-5"
+            command_max="100" command_min="-100" velocity="true">
        knee_joint_mimic
        <joint> knee_joint </joint>
        <offset> 0.0 </offset>
        <multiplier> -1.0 </multiplier>
-       <P> 4000 </P>
-       <I> 0.1 </I>
-       <D> 80 </D>
-       <i_max>  500 </i_max>
-       <i_min> -500 </i_min>
-       <command_max>  2000 </command_max>
-       <command_min> -2000 </command_min>
+       <P> 300 </P>
+       <I> 0 </I>
+       <D> 0 </D>
+       <i_max>  5 </i_max>
+       <i_min> -5 </i_min>
+       <command_max>  100 </command_max>
+       <command_min> -100 </command_min>
+       <velocity> true </velocity>
      </mimic>
      <mimic joint="ankle_joint"  offset="0.0" multiplier="-1.0"
-            P="4000" I="0.1" D="80" i_max="500" i_min="-500"
-            command_max="2000" command_min="-2000">
+            P="300" I="0" D="0" i_max="5" i_min="-5"
+            command_max="100" command_min="-100" velocity="true">
        ankle_joint_mimic
        <joint> ankle_joint </joint>
        <offset> 0.0 </offset>
        <multiplier> -1.0 </multiplier>
-       <P> 4000 </P>
-       <I> 0.1 </I>
-       <D> 80 </D>
-       <i_max>  500 </i_max>
-       <i_min> -500 </i_min>
-       <command_max>  2000 </command_max>
-       <command_min> -2000 </command_min>
+       <P> 300 </P>
+       <I> 0 </I>
+       <D> 0 </D>
+       <i_max>  5 </i_max>
+       <i_min> -5 </i_min>
+       <command_max>  100 </command_max>
+       <command_min> -100 </command_min>
+       <velocity> true </velocity>
      </mimic>
      <!-- lifter(dummy) -->
      <mimic joint="knee_joint"  offset="0.0" multiplier="-1.0"
