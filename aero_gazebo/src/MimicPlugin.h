@@ -32,10 +32,11 @@ namespace gazebo
       double i_min;
       double cmd_max;
       double cmd_min;
-      PidParams () : p(100), i(0), d(0.1), i_max(0), i_min(0), cmd_max(1000), cmd_min(-1000) { }
+      bool velocity;
+      PidParams () : p(100), i(0), d(0.1), i_max(0), i_min(0), cmd_max(1000), cmd_min(-1000), velocity (false) { }
       PidParams (double _p, double _i, double _d,
-                 double _imax, double _imin, double _cmax, double _cmin) :
-        p(_p), i(_i), d(_d), i_max(_imax), i_min(_imin), cmd_max(_cmax), cmd_min(_cmin)
+                 double _imax, double _imin, double _cmax, double _cmin, bool _vel = false) :
+        p(_p), i(_i), d(_d), i_max(_imax), i_min(_imin), cmd_max(_cmax), cmd_min(_cmin), velocity(_vel)
       { }
     };
 
@@ -53,6 +54,10 @@ namespace gazebo
 
       void setPID(const PidParams &p)
       {
+        velocity = p.velocity;
+        if (velocity) {
+          std::cerr << "use velocity feedback" << std::endl;
+        }
         setPID(p.p, p.i, p.d, p.i_max, p.i_min, p.cmd_max, p.cmd_min);
       }
       void setPID(double _p, double _i, double _d,
@@ -80,8 +85,11 @@ namespace gazebo
                   << ", err: " << t_current - t_desired
                   << ", r= " << result;
 #endif
-        // target_joint->SetVelocity(0, j_velocity); // velocity feedback
-        target_joint->SetForce(0, result);
+        if (velocity) {
+          target_joint->SetVelocity(0, result); // velocity feedback
+        } else {
+          target_joint->SetForce(0, result);
+        }
       }
     private:
       gazebo::physics::JointPtr source_joint;
@@ -89,6 +97,7 @@ namespace gazebo
       double offset;
       double multiplier;
       gazebo::common::PID pid;
+      bool velocity;
     };
 
     class MimicPlugin : public ModelPlugin
