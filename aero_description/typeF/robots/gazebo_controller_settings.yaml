@@ -4,27 +4,30 @@ joint_state_controller:
   publish_rate: 50
 # Joint Trajectory Controllers -------------------------------
 head_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - neck_y_joint
     - neck_p_joint
     - neck_r_joint
   gains:
-    neck_y_joint: {p: 200.0, i: 0.003, d: 0.4}
-    neck_p_joint: {p: 200.0, i: 0.003, d: 0.4}
-    neck_r_joint: {p: 200.0, i: 0.003, d: 0.4}
+    neck_y_joint: {p: 40.0, i: 0.0, d: 0.0}
+    neck_p_joint: {p: 40.0, i: 0.0, d: 0.0}
+    neck_r_joint: {p: 40.0, i: 0.0, d: 0.0}
 waist_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - waist_y_joint
     - waist_p_joint
     - waist_r_joint
   gains:
-    waist_y_joint: {p: 1000.0, i: 0.003, d: 60.0}
-    waist_p_joint: {p: 4000.0, i: 0.003, d: 60.0}
-    waist_r_joint: {p: 4000.0, i: 0.003, d: 60.0}
+    waist_y_joint: {p: 100.0, i: 0.0, d: 0.0}
+    waist_p_joint: {p: 200.0, i: 0.0, d: 0.0}
+    waist_r_joint: {p: 200.0, i: 0.0, d: 0.0}
 rarm_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - r_shoulder_p_joint
     - r_shoulder_r_joint
@@ -34,15 +37,16 @@ rarm_controller:
     - r_wrist_p_joint
     - r_wrist_r_joint
   gains:
-    r_shoulder_p_joint: {p:  800.0, i: 0.03, d: 6.0}
-    r_shoulder_r_joint: {p:  800.0, i: 0.03, d: 6.0}
-    r_shoulder_y_joint: {p:  400.0, i: 0.03, d: 3.0}
-    r_elbow_joint:      {p: 1200.0, i: 0.03, d: 6.0}
-    r_wrist_y_joint:    {p:  200.0, i: 0.03, d: 0.5}
-    r_wrist_p_joint:    {p:  200.0, i: 0.03, d: 0.5}
-    r_wrist_r_joint:    {p:  200.0, i: 0.03, d: 0.6}
+    r_shoulder_p_joint: {p:  200.0, i: 0.0, d: 0.0}
+    r_shoulder_r_joint: {p:  200.0, i: 0.0, d: 0.0}
+    r_shoulder_y_joint: {p:  100.0, i: 0.0, d: 0.0}
+    r_elbow_joint:      {p:  100.0, i: 0.0, d: 0.0}
+    r_wrist_y_joint:    {p:  100.0, i: 0.0, d: 0.0}
+    r_wrist_p_joint:    {p:  100.0, i: 0.0, d: 0.0}
+    r_wrist_r_joint:    {p:  100.0, i: 0.0, d: 0.0}
 larm_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - l_shoulder_p_joint
     - l_shoulder_r_joint
@@ -52,32 +56,35 @@ larm_controller:
     - l_wrist_p_joint
     - l_wrist_r_joint
   gains:
-    l_shoulder_p_joint: {p:  800.0, i: 0.003, d: 6.0}
-    l_shoulder_r_joint: {p:  800.0, i: 0.003, d: 6.0}
-    l_shoulder_y_joint: {p:  400.0, i: 0.003, d: 3.0}
-    l_elbow_joint:      {p: 1200.0, i: 0.003, d: 6.0}
-    l_wrist_y_joint:    {p:  200.0, i: 0.003, d: 0.5}
-    l_wrist_p_joint:    {p:  200.0, i: 0.003, d: 0.5}
-    l_wrist_r_joint:    {p:  200.0, i: 0.003, d: 0.5}
+    l_shoulder_p_joint: {p:  200.0, i: 0.0, d: 0.0}
+    l_shoulder_r_joint: {p:  200.0, i: 0.0, d: 0.0}
+    l_shoulder_y_joint: {p:  100.0, i: 0.0, d: 0.0}
+    l_elbow_joint:      {p:  100.0, i: 0.0, d: 0.0}
+    l_wrist_y_joint:    {p:  100.0, i: 0.0, d: 0.0}
+    l_wrist_p_joint:    {p:  100.0, i: 0.0, d: 0.0}
+    l_wrist_r_joint:    {p:  100.0, i: 0.0, d: 0.0}
 lifter_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - knee_joint
     - ankle_joint
   gains:
-    knee_joint:  {p: 4000.0, i: 2.0, d: 20.0}
-    ankle_joint: {p: 4000.0, i: 2.0, d: 20.0}
+    knee_joint:  {p: 300.0, i: 0.0, d: 0.0}
+    ankle_joint: {p: 300.0, i: 0.0, d: 0.0}
 lhand_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - l_thumb_joint
   gains:
-    l_thumb_joint:     {p: 25.0, i: 0.003, d: 0.02}
+    l_thumb_joint:     {p: 25.0, i: 0.0, d: 0.0}
 rhand_controller:
-  type: effort_controllers/JointTrajectoryController
+#  type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
   joints:
     - r_thumb_joint
   gains:
-    r_thumb_joint:     {p: 25.0, i: 0.003, d: 0.02}
+    r_thumb_joint:     {p: 25.0, i: 0.0, d: 0.0}
 
 robot_interface_controllers: ['rarm', 'larm', 'waist', 'lifter', 'head']

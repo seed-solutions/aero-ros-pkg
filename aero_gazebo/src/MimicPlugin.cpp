@@ -127,6 +127,16 @@ void gazebo::mimicplugin::MimicPlugin::Load(physics::ModelPtr _parent, sdf::Elem
             }
           }
         }
+        {
+          sdf::ParamPtr attr = el->GetAttribute("velocity");
+          if (!!attr) {  attr->Get(param.velocity); }
+          else if ( el->HasElement("velocity") ) {
+            sdf::ElementPtr pt = el->GetElement("velocity");
+            if (!!pt) {
+              param.velocity = pt->Get<bool > ();
+            }
+          }
+        }
         registerMimic(source_name, target_name, offset, multiplier, param);
       } else {
         // warn

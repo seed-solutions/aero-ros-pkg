@@ -8,7 +8,7 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:macro name="gazebo_joint_reference" params="joint_name implicitspringdamper:=0.4" >
+  <xacro:macro name="gazebo_joint_reference" params="joint_name implicitspringdamper:=0" >
     <gazebo reference="${joint_name}">
       <implicitSpringDamper>${implicitspringdamper}</implicitSpringDamper>
     </gazebo>
@@ -20,12 +20,14 @@
       <joint name="${joint_name}">
         <!-- dupricated in kinetic -->
         <!--hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface-->
-        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <!--hardwareInterface>EffortJointInterface</hardwareInterface-->
+        <hardwareInterface>VelocityJointInterface</hardwareInterface>
       </joint>
       <actuator name="${joint_name}_motor">
         <!-- dupricated in kinetic -->
         <!--hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface-->
-        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <!--hardwareInterface>EffortJointInterface</hardwareInterface-->
+        <hardwareInterface>VelocityJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
