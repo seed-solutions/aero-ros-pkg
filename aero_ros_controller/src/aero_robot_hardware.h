@@ -140,6 +140,12 @@ public:
   void startWheelServo();
   void stopWheelServo();
 
+  std::string getVersion() {
+    mutex_upper_.lock();
+    std::string version = controller_upper_->get_version();
+    mutex_upper_.unlock();
+    return version;
+  }
   void handScript(uint16_t _sendnum, uint16_t _script) {
     mutex_upper_.lock();
     controller_upper_->Hand_Script(_sendnum, _script);

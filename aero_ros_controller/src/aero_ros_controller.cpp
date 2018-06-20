@@ -74,6 +74,8 @@ int main(int argc, char** argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
+  hw.getVersion();
+
   double period = hw.getPeriod();
   controller_manager::ControllerManager cm(&hw, nh);
 
