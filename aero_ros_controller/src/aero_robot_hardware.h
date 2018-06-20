@@ -58,6 +58,7 @@
 
 // AERO
 #include "aero_hardware_interface/Constants.hh"
+#include "aero_hardware_interface/CommandList.hh"
 #include "aero_hardware_interface/AeroControllers.hh"
 
 #include "aero_hardware_interface/AngleJointNames.hh"
@@ -157,6 +158,11 @@ public:
   void startUpper() {
     mutex_upper_.lock();
     upper_send_enable_ = true;
+    mutex_upper_.unlock();
+  }
+  void servo(uint16_t _sendnum) { // send servo on command
+    mutex_upper_.lock();
+    controller_upper_->set_command(aero::controller::CMD_MOTOR_SRV, _sendnum, 1);
     mutex_upper_.unlock();
   }
   double getPeriod() { return ((double)CONTROL_PERIOD_US_) / (1000 * 1000); }

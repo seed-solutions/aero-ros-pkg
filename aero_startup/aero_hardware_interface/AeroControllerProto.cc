@@ -544,6 +544,14 @@ void AeroControllerProto::set_motor_gain(
 }
 
 //////////////////////////////////////////////////
+void AeroControllerProto::set_command(
+    uint8_t _cmd, uint8_t _num, uint16_t _data)
+{
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+  seed_.send_command(_cmd, _num, _data);
+}
+
+//////////////////////////////////////////////////
 void AeroControllerProto::set_command(uint8_t _cmd,
                                       std::vector<int16_t>& _stroke_vector)
 {

@@ -6,6 +6,7 @@ int16 script
 int16 SCRIPT_GRASP=2
 int16 SCRIPT_UNGRASP=3
 int16 SCRIPT_CANCEL=4
+int16 COMMAND_SERVO=33
 ## power???
 int16 power
 ---

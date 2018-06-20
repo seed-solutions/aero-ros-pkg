@@ -189,6 +189,12 @@ namespace aero
       /// @param _stroke_vector stroke vector
      public: void set_motor_gain(std::vector<int16_t>& _stroke_vector);
 
+      /// @brief send single command to SEED controller
+      /// @param _cmd Command ID
+      /// @param _num Send ID
+      /// @param _data data
+     public: void set_command(uint8_t _cmd, uint8_t _num, uint16_t _data);
+
       /// @brief abstract of set commands
       /// @param _cmd command id
       /// @param _stroke_vector stroke vector
