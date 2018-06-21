@@ -252,6 +252,7 @@ public:
     ROS_DEBUG("Grasp Angle: %d %f %f %f", hand, larm_angle, rarm_angle, time);
     //aero_startup::AeroSendJoints srv;
     robot_interface::joint_angle_map map;
+    aero_startup::GraspControl g_srv;
     switch(hand) {
     case HandControlRequest::HAND_BOTH:
       R_GRASP();
@@ -259,9 +260,8 @@ public:
       break;
 
     case HandControlRequest::HAND_LEFT:
+      g_srv.request.position = POSITION_Left;
       if (executing_flg_left_) {
-        aero_startup::GraspControl g_srv;
-        g_srv.request.position = POSITION_Left;
         g_srv.request.script = GraspControlRequest::SCRIPT_CANCEL;
         g_srv.request.power = (100 << 8) + 30;
         ROS_DEBUG("call pos: %d, script: %d, power %d",
@@ -275,9 +275,8 @@ public:
       break;
 
     case HandControlRequest::HAND_RIGHT:
+      g_srv.request.position = POSITION_Right;
       if (executing_flg_right_) {
-        aero_startup::GraspControl g_srv;
-        g_srv.request.position = POSITION_Right;
         g_srv.request.script = GraspControlRequest::SCRIPT_CANCEL;
         g_srv.request.power = (100 << 8) + 30;
         ROS_DEBUG("call pos: %d, script: %d, power %d",
@@ -296,7 +295,6 @@ public:
     ROS_DEBUG("GraspAngle: wait_interpolation");
     hi->wait_interpolation();
     usleep(50*1000); // sleep 50ms for waiting to finish position command
-    aero_startup::GraspControl g_srv;
     g_srv.request.script = GraspControlRequest::COMMAND_SERVO; // in case step-out
     if (exist_grasp_server_) {
       g_client_.call(g_srv);
