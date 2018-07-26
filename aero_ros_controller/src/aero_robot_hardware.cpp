@@ -295,7 +295,7 @@ void AeroRobotHW::read(const ros::Time& time, const ros::Duration& period)
   }
   mutex_upper_.unlock();
   //
-  readPos(time, period, true);
+  //readPos(time, period, true);
 
   return;
 }
@@ -384,7 +384,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
   mutex_lower_.unlock();
 
   // read
-  //readPos(time, period, false);
+  readPos(time, period, false);
 }
 
 void AeroRobotHW::writeWheel(const std::vector< std::string> &_names, const std::vector<int16_t> &_vel, double _tm_sec) {

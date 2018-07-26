@@ -449,6 +449,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
   }
 
   if (cmd == CMD_MOVE_ABS_POS ||
+      cmd == CMD_MOVE_ABS_POS_RET ||
       cmd == CMD_GET_POS ||
       cmd == CMD_GET_CUR ||
       cmd == CMD_GET_TMP ||
