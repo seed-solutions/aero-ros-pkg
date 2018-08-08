@@ -273,7 +273,14 @@ void aero::interface::AeroMoveitInterface::setLookAt(const aero::Vector3 &_pos, 
       }
     }
   } else {
-    setLookAt_(_pos, kinematic_state);
+    if (_map_coordinate) {
+      aero::Vector3 pos_base = volatileTransformToBase(_pos.x(), _pos.y(), _pos.z());
+      ROS_INFO("LookAt: setLookAt no tracking: volatile: %f %f %f (base)",
+               pos_base.x(), pos_base.y(), pos_base.z());
+      setLookAt_(pos_base, kinematic_state);
+    } else {
+      setLookAt_(_pos, kinematic_state);
+    }
   }
 }
 
