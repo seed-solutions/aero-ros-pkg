@@ -26,6 +26,8 @@ class DummyScan:
         self.pub = rospy.Publisher('scan', LaserScan, queue_size = 1)
         self.tf_listener = tf.TransformListener()
 
+        self.pi2 = math.pi * 2
+        self.pih = math.pi / 2
         self.laser_height = 0.2344
         self.mapgrid_list = []
 
@@ -79,11 +81,17 @@ class DummyScan:
         laser_pos = (0, 0, 0)
         laser_theta = 0
         try:
-            laser_pos, laser_quat = self.tf_listener.lookupTransform(
+            t = rospy.Time()
+            laser_pos, null = self.tf_listener.lookupTransform(
                 '/map',
                 'wheels_base_laser_link',
-                rospy.Time())
-            laser_theta = math.acos(laser_quat[3]) * 2.0
+                t)
+            # tf orientation is screwed up, calculate from base->laser
+            base_pos, null = self.tf_listener.lookupTransform(
+                '/map',
+                'base_link',
+                t)
+            laser_theta = math.atan2(laser_pos[1] - base_pos[1], laser_pos[0] - base_pos[0])
         except (Exception):
             None
 
@@ -101,9 +109,9 @@ class DummyScan:
                 lrange = math.sqrt(lx * lx + ly * ly)
                 ltheta = math.atan2(ly, lx) - laser_theta
                 if ltheta > math.pi:
-                    ltheta = ltheta - (math.pi * 2)
+                    ltheta = ltheta - self.pi2
                 elif ltheta < -math.pi:
-                    ltheta = ltheta + (math.pi * 2)
+                    ltheta = ltheta + self.pi2
 
                 if ltheta >= self.scan.angle_min and ltheta <= self.scan.angle_max:
                     li = int((ltheta - self.scan.angle_min) / self.scan.angle_increment)
