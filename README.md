@@ -149,3 +149,12 @@ rosservice call /aero_hand_controller "{hand: $(python -c 'import aero_startup.s
 ### Writing Codes
 
 see `aero_samples` and `aero_std` documentation
+
+### Build check and test by Docker
+
+install docker https://docs.docker.com/install/linux/docker-ce/ubuntu/
+
+build docker image under aero-ros-pkg directory
+~~~
+docker build -f Dockerfile.kinetic --tag ros:aero_kinetic --build-arg RUN_TESTS=true .
+~~~
