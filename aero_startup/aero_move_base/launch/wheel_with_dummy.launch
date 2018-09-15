@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <launch>
   <!-- dummy scan -->
-  <node name="dummy_scan" pkg="aero_startup" type="dummy_scan.py" />
+  <arg name="scan_topic" default="map"/>
+  <node name="dummy_scan" pkg="aero_startup" type="dummy_scan.py">
+    <remap from="map" to="$(arg scan_topic)"/>
+  </node>
 
-  <!-- Run the map server -->
+  <!-- Run map navigation -->
   <arg name="map_file" default="$(find aero_startup)/aero_move_base/maps/blank.yaml"/>
-  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
-
-  <!--- Run AMCL -->
-  <include file="$(find aero_startup)/aero_move_base/launch/amcl.launch" />
-
-  <!--- Run Move Base -->
-  <include file="$(find aero_startup)/aero_move_base/launch/move_base.launch">
+  <arg name="costmap_file" default="$(find aero_startup)/aero_move_base/maps/blank.yaml"/>
+  <include file="$(find aero_startup)/aero_move_base/launch/static_map_navigation.launch">
     <arg name="map_file" value="$(arg map_file)" />
+    <arg name="costmap_file" value="$(arg costmap_file)"/>
   </include>
+
 </launch>
