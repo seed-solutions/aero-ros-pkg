@@ -10,9 +10,9 @@
     <param name="~ip_address" value="$(arg ~ip_address)" />
     <param name="~frame_id" value="$(arg ~frame_id)" />
 
-    <!-- +-135[deg] -->     
-    <param name="~angle_min" value="-2.35619449" />
-    <param name="~angle_max" value="2.35619449" /> 
+    <!-- +-115[deg] -->
+    <param name="~angle_min" value="-2.007128639793479" />
+    <param name="~angle_max" value="2.007128639793479" />
 
   </node>
 
