@@ -72,19 +72,19 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 
   if (base_mtx_.try_lock()) {
     double dt = (now - time_stamp_).toSec();
-    double acc_x = (_cmd_vel->linear.x - vx_) / dt;
-    double acc_y = (_cmd_vel->linear.y - vy_) / dt;
+    double acc_x = (_cmd_vel->linear.x  - vx_)  / dt;
+    double acc_y = (_cmd_vel->linear.y  - vy_)  / dt;
     double acc_z = (_cmd_vel->angular.z - vth_) / dt;
 
     ROS_DEBUG("vel_acc: %f %f %f", acc_x, acc_y, acc_z);
 #define MAX_ACC_X 3.0
 #define MAX_ACC_Y 3.0
 #define MAX_ACC_Z 3.0
-    if (acc_x > MAX_ACC_X) acc_x = MAX_ACC_X;
+    if (acc_x >   MAX_ACC_X) acc_x =   MAX_ACC_X;
     if (acc_x < - MAX_ACC_X) acc_x = - MAX_ACC_X;
-    if (acc_y > MAX_ACC_Y) acc_y = MAX_ACC_Y;
+    if (acc_y >   MAX_ACC_Y) acc_y =   MAX_ACC_Y;
     if (acc_y < - MAX_ACC_Y) acc_y = - MAX_ACC_Y;
-    if (acc_z > MAX_ACC_Z) acc_z = MAX_ACC_Z;
+    if (acc_z >   MAX_ACC_Z) acc_z =   MAX_ACC_Z;
     if (acc_z < - MAX_ACC_Z) acc_z = - MAX_ACC_Z;
 
     vx_  += acc_x * dt;
