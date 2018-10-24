@@ -11,15 +11,5 @@ roslaunch aero_moveit_config demo.launch
 ```
 roslaunch aero_startup aero_bringup.launch
 roslaunch aero_moveit_config move_group.launch
-roslaunch aero_moveit_config moveit_rviz.launch
+roslaunch aero_moveit_config moveit_rviz.launch config:=1
 ```
-
-If no interactive marker in rviz, please edit the launch file moveit_rviz.launch as below.
-```
-roscd aero_moveit_config
-```
-
-Open moveit_rviz.launch,
-<arg name="config" default="false" />
-please overwrite from default="false" to default = "true".
-
