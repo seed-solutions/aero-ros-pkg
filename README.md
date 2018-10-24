@@ -97,6 +97,10 @@ then add RobotModel
 
 See [aero_gazebo](https://github.com/seed-solutions/aero-ros-pkg/blob/master/aero_gazebo/README.md)
 
+## MoveIt
+See [aero_moveit_config]
+(https://github.com/seed-solutions/aero-ros-pkg/tree/master/aero_moveit_config/README.md)
+
 
 ## Samples
 
