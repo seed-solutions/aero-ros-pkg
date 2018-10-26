@@ -30,7 +30,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeC_lifter/collision/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -51,7 +51,7 @@
       <collision>
         <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_bone.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeC_lifter/collision/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -74,7 +74,7 @@
       <collision>
         <origin xyz="0.0 0.0 0" rpy="3.1415 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_knee.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeC_lifter/collision/lifter_knee.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -97,7 +97,7 @@
       <collision>
         <origin xyz="0 0 0.25" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_bone.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeC_lifter/collision/lifter_bone.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -119,7 +119,7 @@
       <collision>
         <origin xyz="0 0 0.05" rpy="3.1415920 0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_base.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeC_lifter/collision/lifter_base.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
@@ -140,7 +140,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://aero_description/meshes/typeC_lifter/lifter_top.dae" scale="1 1 1" />
+          <mesh filename="package://aero_description/meshes/typeC_lifter/collision/lifter_top.dae" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
