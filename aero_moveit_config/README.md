@@ -6,13 +6,22 @@ connect wifi:
 SSID:SEED-A-3ED0
 pass:n4u3gewyky5a3
 
-In each terminal,
+Please edit ~/.bashrc
+vim or emacs or gedit ~/.bashrc
+For example,
+function rosset(){
 export ROS_MASTER_URI=http://192.168.0.29:11311 
 export ROS_IP=`hostname -I` 
 export ROS_HOSTNAME=`hostname -I` 
+}
+
+
 
 and 
+rosset
 roslaunch aero_moveit_config move_group.launch
+
+rosset
 roslaunch aero_moveit_config moveit_rviz.launch config:=1
 
 ```
