@@ -30,7 +30,8 @@ source ~/ros/${ROS_DISTRO}/devel/setup.bash
 
 ### source setup.bash in ~/.bashrc
 
-Please add the following line to ~/.bashrc
+Please add the following line to ~/.bashrc  
+Please change the part of 'indigo' according to the result of `echo ${ROS_DISTRO}` (ex. `kinetic`)
 ```
 source ~/ros/indigo/devel/setup.bash
 ```
