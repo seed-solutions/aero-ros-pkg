@@ -150,6 +150,7 @@ TrajectoryClient::TrajectoryClient(ros::NodeHandle &_nh,
   ros::Duration timeout(10);
   if(!this->waitForServer(timeout)) {
     ROS_ERROR("timeout for waiting %s%s", _nh.getNamespace().c_str(), _act_name.c_str());
+    return;
   }
   if (true) { // USE spinner
     state_spinner_.reset(new ros::AsyncSpinner(1, &state_queue_));
@@ -172,9 +173,13 @@ TrajectoryClient::TrajectoryClient(ros::NodeHandle &_nh,
 
 TrajectoryClient::~TrajectoryClient()
 {
-  boost::mutex::scoped_lock lock(state_mtx_);
-  state_sub_.shutdown();
-  state_spinner_->stop();
+  if(!!state_spinner_) {
+    state_spinner_->stop();
+    {
+      boost::mutex::scoped_lock lock(state_mtx_);
+      state_sub_.shutdown();
+    }
+  }
   //ROS_WARN("~ %s", name_.c_str());
 }
 
@@ -215,6 +220,9 @@ void TrajectoryClient::send_angle_vector(const angle_vector &_av, const double _
   //goal.trajectory.points[0].accelerations.resize();
   //goal.trajectory.points[0].effort.resize();
   goal.trajectory.points[0].time_from_start = ros::Duration(_tm);
+  goal.path_tolerance.resize(0);
+  goal.goal_tolerance.resize(0);
+  goal.goal_time_tolerance = ros::Duration(goal_time_tolerance_);
   //this->sendGoal(goal);
   sending_goal_ = true;
   this->sendGoal(goal,
@@ -252,6 +260,9 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
     duration += _tm_seq[i];
     goal.trajectory.points[i].time_from_start = ros::Duration(duration);
   }
+  goal.path_tolerance.resize(0);
+  goal.goal_tolerance.resize(0);
+  goal.goal_time_tolerance = ros::Duration(goal_time_tolerance_);
   //this->sendGoal(goal);
   sending_goal_ = true;
   this->sendGoal(goal,
@@ -262,6 +273,29 @@ void TrajectoryClient::send_angle_vector_sequence(const angle_vector_sequence &_
                  //ClientBase::SimpleFeedbackCallback()
                  boost::bind(&TrajectoryClient::feedbackCb, this, _1)
                  );
+}
+
+bool TrajectoryClient::interpolatingp()
+{
+  actionlib::SimpleClientGoalState state = this->getState();
+  ROS_DEBUG("interpolatingp %s", state.toString().c_str());
+  return (state == actionlib::SimpleClientGoalState::StateEnum::ACTIVE);
+}
+
+void TrajectoryClient::stop_motion(double _stop_time)
+{
+  joint_angle_map av;
+  getReferencePositions(av);
+
+  sendAngles(av, _stop_time, ros::Time(0));
+}
+
+void TrajectoryClient::cancel_angle_vector (bool _wait)
+{
+  this->cancelAllGoals();
+  if (_wait) {
+    wait_interpolation(); // ??
+  }
 }
 
 //// callback
@@ -299,9 +333,11 @@ RobotInterface::RobotInterface(ros::NodeHandle &_nh) : local_nh_(_nh), updated_j
 
 RobotInterface::~RobotInterface()
 {
-  boost::mutex::scoped_lock lock(states_mtx_);
-  joint_states_sub_.shutdown();
   joint_states_spinner_->stop();
+  {
+    boost::mutex::scoped_lock lock(states_mtx_);
+    joint_states_sub_.shutdown();
+  }
   //ROS_WARN("~ RobotInterface ptr: %lX", (void *)this);
 }
 
@@ -485,13 +521,8 @@ bool RobotInterface::add_controller (const std::string &_key,
     if (!p->isServerConnected()) {
       return false;
     }
-
-    if(_update_joint_list) {
-      std::copy( _jnames.begin(), _jnames.end(), std::back_inserter(joint_list_) );
-    }
-    p->setName(_key);
   }
-  return this->add_controller(_key, p);
+  return this->add_controller(_key, p, _update_joint_list);
 }
 
 bool RobotInterface::add_controller(const std::string &_key,
@@ -515,48 +546,169 @@ bool RobotInterface::add_controller(const std::string &_key,
 bool RobotInterface::wait_interpolation(double _tm)
 {
   bool ret = true;
+  bool with_limit = (_tm != 0.0);
+  ros::Time tm_limit = ros::Time::now() + ros::Duration(_tm);
+  double remain_tm = _tm;
+
   for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
     ROS_DEBUG("wait (%s), state = %s ", (it->first).c_str(),
               (it->second)->getState().toString().c_str());
-    if( !((it->second)->wait_interpolation(_tm)) ) {
+    if( !((it->second)->wait_interpolation(remain_tm)) ) {
       ret = false;
+      break;
+    }
+    if (with_limit) {
+      double diff = (tm_limit - ros::Time::now()).toSec();
+      if (diff  <= 0.0 ) {
+        remain_tm = 0.000001; // very short time
+      } else {
+        remain_tm = diff;
+      }
     }
   }
+
   return ret;
 }
 
 bool RobotInterface::wait_interpolation(const std::string &_name, double _tm)
 {
-  std::vector <std::string > names;
+  std::vector<std::string > names;
   group2names_(_name, names);
   if(names.size() == 0) {
-    wait_interpolation_(_name, _tm);
-  } else {
-    wait_interpolation(names, _tm);
+    names.push_back(_name);
   }
+  return wait_interpolation(names, _tm);
 }
 
-bool RobotInterface::wait_interpolation(const std::vector < std::string> &_names, double _tm)
+bool RobotInterface::wait_interpolation(const std::vector<std::string > &_names, double _tm)
 {
   bool ret = true;
+  bool with_limit = (_tm != 0.0);
+  ros::Time tm_limit = ros::Time::now() + ros::Duration(_tm);
+  double remain_tm = _tm;
+
   for(auto it = _names.begin(); it != _names.end(); it++) {
-    if(wait_interpolation_(*it, _tm)) {
-      ret = false;
+    auto cit = controllers_.find(*it);
+    if(cit != controllers_.end()) {
+      if( !((cit->second)->wait_interpolation(remain_tm)) ) {
+        ret = false;
+        break;
+      }
+    }
+    if (with_limit) {
+      double diff = (tm_limit - ros::Time::now()).toSec();
+      if (diff  <= 0.0 ) {
+        remain_tm = 0.000001; // very short time
+      } else {
+        remain_tm = diff;
+      }
     }
   }
   return ret;
 }
 
-bool RobotInterface::wait_interpolation_(const std::string &_name, double _tm)
+bool RobotInterface::interpolatingp ()
 {
-  bool ret = true;
-  auto cit = controllers_.find(_name);
-  if(cit != controllers_.end()) {
-    if( !((cit->second)->wait_interpolation(_tm)) ) {
-      ret = false;
+  bool ret = false;
+  for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+    if ( (it->second)->interpolatingp() ) {
+      ret = true;
+      break;
     }
   }
+  if (!ret) {
+    return !wait_interpolation(0.00001);
+  }
   return ret;
+}
+bool RobotInterface::interpolatingp (const std::string &_name)
+{
+  std::vector<std::string > names;
+  group2names_(_name, names);
+  if(names.size() == 0) {
+    names.push_back(_name);
+  }
+  return interpolatingp(names);
+}
+bool RobotInterface::interpolatingp (const std::vector<std::string > &_names)
+{
+  bool ret = false;
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if(cit != controllers_.end()) {
+      if ( (cit->second)->interpolatingp() ) {
+        ret = true;
+        break;
+      }
+    }
+  }
+  if (!ret) {
+    return !wait_interpolation(_names, 0.00001);
+  }
+  return ret;
+}
+
+void RobotInterface::stop_motion(double _stop_time)
+{
+  for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+    (it->second)->stop_motion(_stop_time);
+  }
+}
+void RobotInterface::stop_motion(const std::string &_name, double _stop_time)
+{
+  std::vector<std::string > names;
+  group2names_(_name, names);
+  if(names.size() == 0) {
+    names.push_back(_name);
+  }
+  stop_motion(names, _stop_time);
+}
+void RobotInterface::stop_motion(const std::vector<std::string > &_names, double _stop_time)
+{
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if( cit != controllers_.end() ) {
+      (cit->second)->stop_motion(_stop_time);
+    }
+  }
+}
+
+void RobotInterface::cancel_angle_vector (bool _wait)
+{
+  for(auto it = controllers_.begin(); it != controllers_.end(); it++) {
+    (it->second)->cancel_angle_vector(false);
+  }
+  if (_wait) {
+    wait_interpolation();
+  }
+}
+void RobotInterface::cancel_angle_vector (const std::string &_name, bool _wait)
+{
+  std::vector<std::string > names;
+  group2names_(_name, names);
+  if(names.size() == 0) {
+    names.push_back(_name);
+  }
+  cancel_angle_vector(names, _wait);
+}
+void RobotInterface::cancel_angle_vector (const std::vector<std::string > &_names, bool _wait)
+{
+  for(auto it = _names.begin(); it != _names.end(); it++) {
+    auto cit = controllers_.find(*it);
+    if( cit != controllers_.end() ) {
+      (cit->second)->cancel_angle_vector(_wait);
+    }
+  }
+  if (_wait) {
+    wait_interpolation();
+  }
+}
+
+bool RobotInterface::add_group(const std::string &_name, const std::vector<std::string > &_names)
+{
+  // TODO: check existance of _names
+  controller_group_[_name] = _names;
+  return true;
 }
 
 bool RobotInterface::configureFromParam(const std::string &_param)

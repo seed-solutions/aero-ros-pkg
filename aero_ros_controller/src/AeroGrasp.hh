@@ -39,33 +39,36 @@ class AeroGrasp
    ROS_WARN("AeroGrasp: Grasp pos: %d, script %d, power: %d",
             _req.position, _req.script, _req.power);
 
-   ROS_WARN("AeroGrasp: setMaxSingleCurrent");
-   hw_->setMaxSingleCurrent(_req.position, _req.power);
-
-   usleep(200 * 1000); // 200ms sleep ???
-
-   ROS_WARN("AeroGrasp: handScript");
-   hw_->handScript(_req.position, _req.script);
-
    // return if cancel script
    if (_req.script == aero_startup::GraspControlRequest::SCRIPT_CANCEL) {
-     ROS_WARN("AeroGrasp: End Grasp");
+     ROS_WARN("AeroGrasp: setMaxSingleCurrent");
+     hw_->setMaxSingleCurrent(_req.position, _req.power);
+     ROS_WARN("AeroGrasp: handscript cancel");
+     hw_->handScript(_req.position, _req.script);
      // hw_->startUpper(); // not needed
      return true;
-   }
-
-   if(_req.script == aero_startup::GraspControlRequest::SCRIPT_GRASP) {
-     usleep(3000 * 1000); // wait 3 seconds, must be 3!
-   } else if(_req.script == aero_startup::GraspControlRequest::SCRIPT_UNGRASP) {
-     usleep(1000 * 1000);
+   } else if (_req.script == aero_startup::GraspControlRequest::SCRIPT_GRASP) {
+     ROS_WARN("AeroGrasp: setMaxSingleCurrent");
+     hw_->setMaxSingleCurrent(_req.position, _req.power);
+     ROS_WARN("AeroGrasp: handScript grasp");
+     hw_->handScript(_req.position, _req.script);
+     ros::Duration(2.8).sleep(); // wait 2.8 seconds, as script takes max 2.8 seconds!
+   } else if (_req.script == aero_startup::GraspControlRequest::SCRIPT_UNGRASP) {
+     ROS_WARN("AeroGrasp: handScript ungrasp");
+     hw_->handScript(_req.position, _req.script);
+     ros::Duration(2.7).sleep(); // wait 2.7 seconds, as script takes max 2.7 seconds!
+   } else if (_req.script == aero_startup::GraspControlRequest::COMMAND_SERVO) {
+     ROS_WARN("AeroGrasp: cancel step-out");
+     hw_->servo(_req.position);
+     ROS_WARN("AeroGrasp: setMaxSingleCurrent"); // just in case
+     hw_->setMaxSingleCurrent(_req.position, (100 << 8) + 30);
    }
 
    ROS_WARN("AeroGrasp: End Grasp");
-   _res.angles.resize(2);
-#if 0
-   _res.angles[0] = upper_angles[13];
-   _res.angles[1] = upper_angles[27];
-#endif
+   // !!!!!!!!!!!!!!! not supported
+   // _res.angles.resize(2);
+   // _res.angles[0] = upper_angles[13];
+   // _res.angles[1] = upper_angles[27];
    // hw_->startUpper(); // not needed
    return true;
  }

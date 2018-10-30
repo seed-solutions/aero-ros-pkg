@@ -36,8 +36,11 @@ namespace aero
       /// @brief destructor
      public: ~SEED485Controller();
 
+      /// @brief get version of SEED controller
+     public: std::string get_version();
+
       /// @brief read from SEED controller
-     public: void read(std::vector<uint8_t>& _read_data);
+     public: void read(std::vector<uint8_t>& _read_data, const size_t _length=RAW_DATA_LENGTH);
 
       /// @brief send command to SEED controller
       /// @param _cmd Command ID
@@ -98,6 +101,9 @@ namespace aero
 
       /// @brief destructor
      public: ~AeroControllerProto();
+
+      /// @brief get version of SEED controller
+     public: std::string get_version();
 
       /// @brief servo on command
      public: void servo_on();
@@ -188,6 +194,12 @@ namespace aero
       /// @brief send Motor_Gain command
       /// @param _stroke_vector stroke vector
      public: void set_motor_gain(std::vector<int16_t>& _stroke_vector);
+
+      /// @brief send single command to SEED controller
+      /// @param _cmd Command ID
+      /// @param _num Send ID
+      /// @param _data data
+     public: void set_command(uint8_t _cmd, uint8_t _num, uint16_t _data);
 
       /// @brief abstract of set commands
       /// @param _cmd command id

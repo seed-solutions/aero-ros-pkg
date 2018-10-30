@@ -286,7 +286,17 @@ void AeroRobotHW::readPos(const ros::Time& time, const ros::Duration& period, bo
 
 void AeroRobotHW::read(const ros::Time& time, const ros::Duration& period)
 {
-  readPos(time, period, true);
+  //
+  mutex_upper_.lock();
+  bool collision_status = controller_upper_->get_status();
+  if (collision_status) {
+    ROS_WARN("reset status");
+    controller_upper_->reset_status();
+  }
+  mutex_upper_.unlock();
+  //
+  //readPos(time, period, true);
+
   return;
 }
 
@@ -374,7 +384,7 @@ void AeroRobotHW::write(const ros::Time& time, const ros::Duration& period)
   mutex_lower_.unlock();
 
   // read
-  //readPos(time, period, false);
+  readPos(time, period, false);
 }
 
 void AeroRobotHW::writeWheel(const std::vector< std::string> &_names, const std::vector<int16_t> &_vel, double _tm_sec) {

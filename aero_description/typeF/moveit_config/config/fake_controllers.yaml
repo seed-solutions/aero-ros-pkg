@@ -151,17 +151,15 @@ controller_list:
       - neck_r_joint
   - name: fake_rhand_controller
     joints:
-      - r_wrist_r_joint
       - r_indexbase_joint
-      - r_indexmid_joint
       - r_indexend_joint
+      - r_indexmid_joint
       - r_thumb_joint
   - name: fake_lhand_controller
     joints:
-      - l_wrist_r_joint
       - l_indexbase_joint
-      - l_indexmid_joint
       - l_indexend_joint
+      - l_indexmid_joint
       - l_thumb_joint
   - name: fake_torso_controller
     joints:

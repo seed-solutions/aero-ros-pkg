@@ -1,0 +1,119 @@
+# common
+### ps button is reset pose (upper body only unless RB pressed)
+reset_pose_button: 16
+### start button switches to basic mode
+switch_basic_mode: 3
+### select button switches to joint mode
+switch_joint_mode: 0
+### triangle button press disables button and axes during basic mode
+external_command: 12
+
+# basic mode
+## teleop-twist
+### left stick for linear, right for angular
+axis_linear:
+  x: 1
+  y: 0
+scale_linear:
+  x: 0.4
+  y: 0.4
+axis_angular:
+  yaw: 2
+scale_angular:
+  yaw: 0.5
+### use L1 to enable teleop
+enable_button: 10
+enable_turbo_button: -1
+## other basic functions
+### use circle for right grasp, rectangle for left grasp
+grasp_button:
+  L: 15
+  R: 13
+### use L2, R2 for setting grasp angle
+grasp_angle_axis:
+  L: 8
+  R: 9
+min_grasp_angle:
+  L: -1.0
+  R: -1.0
+range_grasp_angle:
+  L: 2.0
+  R: 2.0
+### use X to open grasp
+enable_grasp_angle: 14
+### left stick for upward, right for forward
+lifter_axis:
+  x: 3
+  z: 1
+scale_lifter:
+  x: 0.005
+  z: 0.005
+### use R1 to enable lifter
+enable_lifter: 11
+
+# joint mode
+### the names do not correspond to actual joint names
+### all pitch are direction pad up/down
+### yaws are mostly direction stick
+### roll or some yaws are direction pad left/right
+## torso
+torso:
+  yawp: 7
+  yawm: 5
+  pitchp: 4
+  pitchm: 6
+  ### use X button to trigger torso
+  enable: 14
+scale_torso:
+  yaw: 0.02
+  pitch: 0.02
+## shoulder
+shoulder:
+  rollp: 7
+  rollm: 5
+  pitchp: 4
+  pitchm: 6
+  ### use left stick for yaw
+  yaw: 0
+  ### use L1, R1 to trigger upper arm
+  enable_left: 10
+  enable_right: 11
+scale_shoulder:
+  roll: 0.01
+  pitch: -0.01
+  yaw: 0.02
+## elbow
+elbow:
+  pitchp: 4
+  pitchm: 6
+  yawp: 7
+  yawm: 5
+  ### use L2, R2 to trigger forearm
+  enable_left: 8
+  enable_right: 9
+scale_elbow:
+  yaw: 0.03
+  pitch: 0.01
+## wrist
+wrist:
+  pitchp: 4
+  pitchm: 6
+  yawp: 7
+  yawm: 5
+  ### use circle, rectangle to trigger wrist
+  enable_left: 15
+  enable_right: 13
+scale_wrist:
+  yaw: 0.03
+  pitch: 0.01
+## head
+head:
+  yawp: 7
+  yawm: 5
+  pitchp: 4
+  pitchm: 6
+  ### use triangle button to trigger head
+  enable: 12
+scale_head:
+  yaw: 0.02
+  pitch: 0.01

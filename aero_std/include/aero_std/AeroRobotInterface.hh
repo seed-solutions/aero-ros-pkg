@@ -11,53 +11,6 @@ public:
 
 public:
   AeroRobotInterface(ros::NodeHandle &_nh) : robot_interface::RobotInterface(_nh) {
-#if 0
-    // rarm
-    rarm.reset(new robot_interface::TrajectoryClient(_nh,
-                                    "rarm_controller/follow_joint_trajectory",
-                                    "rarm_controller/state",
-                                    { "r_shoulder_p_joint", "r_shoulder_r_joint", "r_shoulder_y_joint",
-                                        "r_elbow_joint", "r_wrist_y_joint", "r_wrist_p_joint", "r_wrist_r_joint",
-                                        "r_hand_y_joint", // jsk
-                                        }
-                                    ));
-    this->add_controller("rarm", rarm);
-
-    // larm
-    larm.reset(new robot_interface::TrajectoryClient(_nh,
-                                    "larm_controller/follow_joint_trajectory",
-                                    "larm_controller/state",
-                                    { "l_shoulder_p_joint", "l_shoulder_r_joint", "l_shoulder_y_joint",
-                                        "l_elbow_joint", "l_wrist_y_joint", "l_wrist_p_joint", "l_wrist_r_joint",
-                                        "l_hand_y_joint", // jsk
-                                        }
-                                    ));
-    this->add_controller("larm", larm);
-
-    // torso
-    waist.reset(new robot_interface::TrajectoryClient(_nh,
-                                     "waist_controller/follow_joint_trajectory",
-                                     "waist_controller/state",
-                                     { "waist_y_joint", "waist_p_joint", "waist_r_joint"}
-                                     ));
-    this->add_controller("waist",  waist);
-
-    // lifter
-    lifter.reset(new robot_interface::TrajectoryClient(_nh,
-                                      "lifter_controller/follow_joint_trajectory",
-                                      "lifter_controller/state",
-                                      { "knee_joint", "ankle_joint" }
-                                      ));
-    this->add_controller("lifter", lifter);
-
-    // head
-    head.reset(new robot_interface::TrajectoryClient(_nh,
-                                    "head_controller/follow_joint_trajectory",
-                                    "head_controller/state",
-                                    { "neck_y_joint", "neck_p_joint", "neck_r_joint"}
-                                    ));
-    this->add_controller("head",   head);
-#endif
     //
     configureFromParam("robot_interface_controllers");
 #define ADD_CONTROLLER(limb)                    \
@@ -68,17 +21,21 @@ public:
       }                                         \
     }
 
-    ADD_CONTROLLER(larm);
     ADD_CONTROLLER(rarm);
-    ADD_CONTROLLER(head);
+    ADD_CONTROLLER(larm);
     ADD_CONTROLLER(waist);
     ADD_CONTROLLER(lifter);
+    ADD_CONTROLLER(head);
 
     // group settings
-    controller_group_["both_arms"]  = {"rarm", "larm"};
-    controller_group_["upper_body"] = {"rarm", "larm", "waist", "head"};
-    controller_group_["torso"]      = {"waist", "lifter"};
-    controller_group_["without_head"]    = {"rarm", "larm", "waist", "lifter"};
+    add_group("both_arms",   {"rarm", "larm"});
+    add_group("upper_body",  {"rarm", "larm", "waist", "head"});
+    add_group("torso",       {"waist", "lifter"});
+    add_group("without_head",{"rarm", "larm", "waist", "lifter"});
+
+    for(int i = 0; i < joint_list_.size(); i++) {
+      ROS_INFO("j%d: %s", i, joint_list_[i].c_str());
+    }
   }
 
   AeroRobotInterface(ros::NodeHandle &_nh, bool _only_head) : robot_interface::RobotInterface(_nh) {

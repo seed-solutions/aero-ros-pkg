@@ -44,4 +44,4 @@ rhand_controller:
   joints:
     - r_thumb_joint
 
-robot_interface_controllers: ['larm', 'rarm', 'head', 'waist', 'lifter']
+robot_interface_controllers: ['rarm', 'larm', 'waist', 'lifter', 'head']

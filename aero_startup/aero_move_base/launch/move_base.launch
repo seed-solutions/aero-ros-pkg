@@ -55,8 +55,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
     <rosparam
         file="$(find aero_startup)/aero_move_base/config/costmap_local.yaml"
         command="load" ns="local_costmap" />
-    <param name="local_costmap/width" value="2.5"/>
-    <param name="local_costmap/height" value="2.5"/>
+    <param name="local_costmap/width"  value="6.0"/>
+    <param name="local_costmap/height" value="6.0"/>
 
     <!-- static global costmap, static map provides size -->
     <rosparam
@@ -68,7 +68,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
         file="$(find aero_startup)/aero_move_base/config/costmap_global_laser.yaml"
         command="load" ns="global_costmap" if="$(arg no_static_map)"/>
 
-    <param name="global_costmap/width" value="10.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/width"  value="10.0" if="$(arg no_static_map)"/>
     <param name="global_costmap/height" value="10.0" if="$(arg no_static_map)"/>
 
 	  <!--

@@ -1,7 +1,7 @@
 moveit_setup_assistant_config:
   URDF:
     package: aero_description
-    relative_path: models/aero_moveit.urdf
+    relative_path: robots/aero.urdf
   SRDF:
     relative_path: config/AeroUpperRobot.srdf
   CONFIG:

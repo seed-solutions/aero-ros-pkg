@@ -1,0 +1,29 @@
+<launch>
+  <!-- test for waiting initial gazebo run -->
+  <include file="$(find aero_gazebo)/launch/aero_gazebo.launch" >
+    <arg name="GUI" value="false" />
+    <arg name="WORLD_FILE" default="$(find aero_gazebo)/world/aero_empty.world"/>
+  </include>
+
+  <test name="hztest"
+        test-name="hztest"
+        pkg="rostest" type="hztest"
+        time-limit="510.0" >
+    <param name="topic" value="/clock" />
+    <param name="hz" value="500" />
+    <param name="hzerror" value="600" />
+    <param name="test_duration" value="2" />
+    <param name="wait_time" value="500" />
+  </test>
+
+  <test name="publishtest"
+        test-name="publishtest"
+        pkg="rostest" type="publishtest">
+    <rosparam>
+      topics:
+        - name: /clock
+          timeout: 1200
+    </rosparam>
+  </test>
+
+</launch>

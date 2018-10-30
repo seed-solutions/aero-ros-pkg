@@ -51,7 +51,9 @@
     <inertial>
       <mass value="1.257" />
       <origin xyz="0 0 0.042" rpy="0 -0 0"/>
-      <inertia ixx="0.034" ixy="0" ixz="0" iyy="0.034" iyz="0" izz="0.018"/>
+      <!-- inertia ixx="0.034" ixy="0" ixz="0" iyy="0.034" iyz="0" izz="0.018"/ -->
+      <!-- just fixed for gazebo / reduce inertia-->
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.007"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="hip_sphere_link" />
@@ -60,7 +62,9 @@
     <inertial>
       <mass value="0.1" />
       <origin xyz="0 0 0" rpy="0 -0 0"/>
-      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+      <!--inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/-->
+      <!-- just fixed for gazebo / reduce inertia-->
+      <inertia ixx="0.003" ixy="0" ixz="0" iyy="0.003" iyz="0" izz="0.003"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="hip_center" />
@@ -101,8 +105,11 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.242" />
-      <origin xyz="0 0.02 0" rpy="0 -0 0"/>
-      <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/>
+      <!--origin xyz="0 0.02 0" rpy="0 -0 0"/>
+      <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/-->
+      <!-- just fixed for gazebo / increase inertia-->
+      <origin xyz="0 0.02 0.015" rpy="0 -0 0"/>
+      <inertia ixx="0.00133" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.00133"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="l_shoulder_link" />
@@ -122,7 +129,8 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.744" />
-      <origin xyz="0 0.01 0" rpy="0 -0 0"/>
+      <!--origin xyz="0 0.01 0" rpy="0 -0 0"/-->
+      <origin xyz="0 -0.01 -0.06" rpy="0 -0 0"/>
       <inertia ixx="0.000841" ixy="0" ixz="0" iyy="0.000835" iyz="0" izz="0.000304"/>
     </inertial>
   </link>
@@ -192,7 +200,8 @@
     <inertial>
       <mass value="0.132" />
       <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
-      <inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/>
+      <!--inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/-->
+      <inertia ixx="0.0007" ixy="0" ixz="0" iyy="0.0007" iyz="0" izz="0.0004"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="l_forearm_link" />
@@ -285,8 +294,10 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.242" />
-      <origin xyz="0 -0.02 0" rpy="0 -0 0"/>
-      <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/>
+      <!--origin xyz="0 -0.02 0" rpy="0 -0 0"/>
+      <inertia ixx="0.000228" ixy="0" ixz="0" iyy="0.000148" iyz="0" izz="0.000263"/-->
+      <origin xyz="0 -0.02 0.015" rpy="0 -0 0"/>
+      <inertia ixx="0.00133" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.00133"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="r_shoulder_link" />
@@ -306,7 +317,8 @@
     </collision> </xacro:unless>
     <inertial>
       <mass value="0.744" />
-      <origin xyz="0 -0.01 0" rpy="0 -0 0"/>
+      <!--origin xyz="0 -0.01 0" rpy="0 -0 0"/-->
+      <origin xyz="0 0.01 -0.06" rpy="0 -0 0"/>
       <inertia ixx="0.000841" ixy="0" ixz="0" iyy="0.000835" iyz="0" izz="0.000305"/>
     </inertial>
   </link>
@@ -376,7 +388,8 @@
     <inertial>
       <mass value="0.132" />
       <origin xyz="0.006 0 -0.0738" rpy="0 -0 0"/>
-      <inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/>
+      <!--inertia ixx="0.00276" ixy="0" ixz="0" iyy="0.00286" iyz="0" izz="0.004"/-->
+      <inertia ixx="0.0007" ixy="0" ixz="0" iyy="0.0007" iyz="0" izz="0.0004"/>
     </inertial>
   </link>
   <xacro:gazebo_link_reference link_name="r_forearm_link" />
@@ -429,7 +442,7 @@
     <origin xyz="-0.01815 0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 -0.173648"/>
     <!-- from -88 to 15 degrees-->
-    <limit lower="-1.535" upper="0.261" effort="100" velocity="0.5" />
+    <limit lower="-1.535" upper="0.261" effort="200" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="l_shoulder_p_joint" />
@@ -536,7 +549,7 @@
     <origin xyz="-0.01815 -0.1342 0.3049" rpy="0 -0 0 "/>
     <axis   xyz="0 0.984808 0.173648"/>
     <!-- from -88 to 15 degrees-->
-    <limit lower="-1.535" upper="0.261" effort="100" velocity="0.5" />
+    <limit lower="-1.535" upper="0.261" effort="200" velocity="0.5" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="r_shoulder_p_joint" />

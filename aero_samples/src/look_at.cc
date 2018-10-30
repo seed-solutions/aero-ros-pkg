@@ -16,6 +16,12 @@ int main(int argc, char **argv)
   robot->sendModelAngles(3000);
   robot->waitInterpolation();
 
+  //
+  ROS_INFO("setNeck");
+  robot->setNeck(0, 0.3, 0.5);
+  robot->sendModelAngles(2000);
+  robot->waitInterpolation();
+
   // preparation
   aero::joint_angle_map joints_rh, joints_lh;
   robot->setPoseVariables(aero::pose::reset_manip);
@@ -34,14 +40,14 @@ int main(int argc, char **argv)
   robot->setRobotStateVariables(joints_rh);// first, set robot model's joints except head's joints
   aero::Vector3 obj_rh = robot->getEEFPosition(aero::arm::rarm, aero::eef::pick);// second, prepare target position
   robot->setLookAt(obj_rh);// third, set lookAt target to robot model
-  robot->sendModelAngles(1000);// finally, send robot model's joints values to real robot. neck angles are sended with body angles
+  robot->sendModelAngles(2000);// finally, send robot model's joints values to real robot. neck angles are sended with body angles
   robot->waitInterpolation();
 
   // looks at left hand
   ROS_INFO("look at left hand");
   robot->setRobotStateVariables(joints_lh);
   robot->setLookAt(robot->getEEFPosition(aero::arm::larm, aero::eef::pick));
-  robot->sendModelAngles(1000);
+  robot->sendModelAngles(2000);
   robot->waitInterpolation();
 
   // reset neck angles

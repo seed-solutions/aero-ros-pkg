@@ -77,8 +77,16 @@ target_link_libraries(stoa_atos_test_node ${catkin_LIBRARIES})
 add_executable(fullbody_test_node tests/fullbody_test.cc)
 target_link_libraries(fullbody_test_node ${catkin_LIBRARIES})
 
-##add_executable(lifter_ik_test_node tests/lifter_ik.cc)
-##target_link_libraries(lifter_ik_test_node ${catkin_LIBRARIES})
+add_executable(lifter_ik_test_node tests/lifter_ik.cc)
+target_link_libraries(lifter_ik_test_node ${catkin_LIBRARIES})
 
 ##add_executable(upper_controller_test_node tests/upper_controller_test.cc)
 ##target_link_libraries(upper_controller_test_node ${catkin_LIBRARIES})
+
+if (CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_ik tests/test_ik.test tests/test_ik.cc)
+  target_link_libraries(test_ik ${catkin_LIBRARIES} ${GTEST_LIBRARIES} )
+
+endif() ## CATKIN_ENABLE_TESTING
