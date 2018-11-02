@@ -30,9 +30,9 @@ source ~/ros/${ROS_DISTRO}/devel/setup.bash
 
 ### source setup.bash in ~/.bashrc
 
-Please add the following line to ~/.bashrc
+Please add the following line to ~/.bashrc  
 ```
-source ~/ros/indigo/devel/setup.bash
+source ~/ros/${ROS_DISTRO}/devel/setup.bash
 ```
 
 ## Install
