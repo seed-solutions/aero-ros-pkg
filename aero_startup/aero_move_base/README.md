@@ -57,6 +57,9 @@ then
 roslaunch static_map_navigation.launch
 ```
 
+### Planner Setting
+You can choose base local planner from `TrajectoryPlannerROS`, `DWAPlannerROS`, `EBandPlannerROS`. 
+Using `EBandlannerROS` by default.
 
 ### For more information,
 
