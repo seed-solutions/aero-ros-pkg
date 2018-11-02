@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find aero_startup)/aero_bringup.launch" />
+
+  <test test-name="test_ik"
+        name="test_ik"
+        time-limit="360"
+        pkg="aero_samples" type="test_ik" >
+  </test>
+</launch>

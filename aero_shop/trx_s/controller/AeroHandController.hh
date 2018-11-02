@@ -18,17 +18,10 @@ const std::string r_grasp_fast_check_joint = "r_thumb_joint";
 #define L_GRASP_FAST_CHECK(g_srv, req) (g_srv.response.angles[0] >   req.thre_fail)
 #define R_GRASP_FAST_CHECK(g_srv, req) (g_srv.response.angles[1] < - req.thre_fail)
 
-#define L_OPEN() {                                   \
-    map["l_thumb_joint"] = -15.0 * M_PI / 180.0;     \
-  }
-#define R_OPEN() {                                   \
-    map["r_thumb_joint"] =  15.0 * M_PI / 180.0;     \
-  }
-
 #define L_GRASP() {                                             \
-    map["l_thumb_joint"]      =  larm_angle * M_PI / 180/ 4.0;  \
+    map["l_thumb_joint"]      =  larm_angle;  \
   }
 #define R_GRASP() {                                             \
-    map["r_thumb_joint"]      =  rarm_angle * M_PI / 180 / 4.0; \
+    map["r_thumb_joint"]      =  rarm_angle; \
   }
 /// end dependant

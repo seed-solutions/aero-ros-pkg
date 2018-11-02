@@ -14,14 +14,19 @@ larm:
   - l_wrist_y_joint    : larm-wrist-y
   - l_wrist_p_joint    : larm-wrist-p
   - l_wrist_r_joint    : larm-wrist-r
-torso:
-  - waist_y_joint : torso-waist-y
-  - waist_p_joint : torso-waist-p
-  - waist_r_joint : torso-waist-r
 head:
   - neck_y_joint : head-neck-y
   - neck_p_joint : head-neck-p
   - neck_r_joint : head-neck-r
+torso:
+  - waist_y_joint : torso-waist-y
+  - waist_p_joint : torso-waist-p
+  - waist_r_joint : torso-waist-r
+  - ankle_joint   : torso-lifter-ankle
+  - knee_joint    : torso-lifter-knee
+  - ankle_joint_mimic : torso-lifter-ankle-mimic
+  - knee_joint_mimic  : torso-lifter-knee-mimic
+
 ### leg
 #
 #
@@ -36,17 +41,18 @@ head-end-coords:
   translate : [0.079, 0.0, 0.1035]
   rotate    : [0.0, 1.0, 0.0, 99.9999]
 rarm-end-coords:
-  translate : [0.0, 0.0169, -0.174]
-  rotate    : [0.0, 1.0, 0.0, 90.0]
+  translate : [0.0,  0.04, -0.140]
+  rotate    : [ 0.283404137769, 0.916168532224,  0.283403096769, 95.010341341304]
 larm-end-coords:
-  translate : [0.0, -0.0169, -0.174]
-  rotate    : [0.0, 1.0, 0.0, 90.0]
-
+  translate : [0.0, -0.04, -0.140]
+  rotate    : [-0.283404137769, 0.916168532224, -0.283403096769, 95.010341341304]
 ##
 ## reset-pose
 ##
 angle-vector:
-  reset-pose : [0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+  reset-pose : [
+  -14.0, -1.5, -17.0, -135.0, 0.0, 0.0, 0.0,
+  -14.0,  1.5,  17.0, -135.0, 0.0, 0.0, 0.0,
+  0.0, 25.0, 0.0,
+  0.0, 0.0, 0.0, 30.0, -30.0, -30.0, 30.0,
+  ]

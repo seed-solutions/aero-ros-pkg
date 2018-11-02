@@ -33,6 +33,7 @@ namespace aero
     const static uint8_t CMD_GET_AD  = 0x44;
     const static uint8_t CMD_GET_DIO = 0x45;
 
+    const static uint8_t CMD_GET_VERSION = 0x51;
     const static uint8_t CMD_WATCH_MISSTEP = 0x52;
   }
 }

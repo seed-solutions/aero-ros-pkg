@@ -65,19 +65,71 @@ SEED485Controller::~SEED485Controller()
 }
 
 //////////////////////////////////////////////////
-void SEED485Controller::read(std::vector<uint8_t>& _read_data)
+std::string SEED485Controller::get_version()
 {
-  _read_data.resize(RAW_DATA_LENGTH);
+  std::vector<uint8_t> data(6);
+  data[0] = 0xFD;
+  data[1] = 0xDF;
+  data[2] = 0x02;
+  data[3] = CMD_GET_VERSION;
+  data[4] = 0x00;
+
+  // check sum
+  int32_t b_check_sum = 0;
+
+  for (size_t i = 2; i < data.size() - 1; ++i) {
+    b_check_sum += data[i];
+  }
+
+  data[data.size() - 1] =
+    ~(reinterpret_cast<uint8_t*>(&b_check_sum)[0]);
+
+  send_data(data);
+
+  std::vector<uint8_t> dat;
+  dat.resize(11);
+  read(dat, 11);
+  uint16_t header = decode_short_(&dat[0]);
+  int16_t cmd;
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&cmd);
+  bvalue[0] = dat[3];
+  bvalue[1] = 0x00;
+
+  if (header != 0xdffd || cmd != CMD_GET_VERSION) {
+    flush();
+    std::cerr << "Proto: ERROR: invalid header" << std::endl;
+    return "";
+  }
+
+  uint8_t dat1 = dat[RAW_HEADER_OFFSET];
+  uint8_t dat2 = dat[RAW_HEADER_OFFSET + 1];
+  uint8_t dat3 = dat[RAW_HEADER_OFFSET + 2];
+  uint8_t dat4 = dat[RAW_HEADER_OFFSET + 3];
+  uint8_t dat5 = dat[RAW_HEADER_OFFSET + 4];
+
+  std::string version =
+    std::to_string(dat1) + "." + std::to_string(dat2) + "."
+    + std::to_string(dat3) + "." + std::to_string(dat4) + "."
+    + std::to_string(dat5);
+  std::cout << "Version of driver is [" << version << "]" << std::endl;
+
+  return version;
+}
+
+//////////////////////////////////////////////////
+void SEED485Controller::read(std::vector<uint8_t>& _read_data, const size_t _length)
+{
+  _read_data.resize(_length);
 
   int size = 0;
   if (ser_.is_open()) {
     boost::mutex::scoped_lock lock(mtx_);
-    while(size < RAW_DATA_LENGTH) {
+    while(size < _length) {
       usleep(100); // sleep 100 us
       int size_read;
-      std::vector<uint8_t> read_buffer(RAW_DATA_LENGTH);
-      size_read = ser_.read_some(buffer(read_buffer, RAW_DATA_LENGTH));
-      if ((size + size_read) <= RAW_DATA_LENGTH) {
+      std::vector<uint8_t> read_buffer(_length);
+      size_read = ser_.read_some(buffer(read_buffer, _length));
+      if ((size + size_read) <= _length) {
         std::copy(read_buffer.begin(), read_buffer.begin()+size_read,
                   _read_data.begin() + size);
       } else {
@@ -231,6 +283,12 @@ AeroControllerProto::AeroControllerProto(const std::string& _port,
 //////////////////////////////////////////////////
 AeroControllerProto::~AeroControllerProto()
 {
+}
+
+//////////////////////////////////////////////////
+std::string AeroControllerProto::get_version()
+{
+  return seed_.get_version();
 }
 
 //////////////////////////////////////////////////
@@ -391,6 +449,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
   }
 
   if (cmd == CMD_MOVE_ABS_POS ||
+      cmd == CMD_MOVE_ABS_POS_RET ||
       cmd == CMD_GET_POS ||
       cmd == CMD_GET_CUR ||
       cmd == CMD_GET_TMP ||
@@ -541,6 +600,14 @@ void AeroControllerProto::set_motor_gain(
     std::vector<int16_t>& _stroke_vector)
 {
   set_command(CMD_MOTOR_GAIN, _stroke_vector);
+}
+
+//////////////////////////////////////////////////
+void AeroControllerProto::set_command(
+    uint8_t _cmd, uint8_t _num, uint16_t _data)
+{
+  boost::mutex::scoped_lock lock(ctrl_mtx_);
+  seed_.send_command(_cmd, _num, _data);
 }
 
 //////////////////////////////////////////////////

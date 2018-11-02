@@ -13,6 +13,10 @@ AeroMoveBase::AeroMoveBase(const ros::NodeHandle& _nh,
   nh_(_nh),
   vx_(0), vy_(0), vth_(0), x_(0), y_(0), th_(0), base_spinner_(1, &base_queue_), base_config_()
 {
+  prev_cmd_.linear.x = 0;
+  prev_cmd_.linear.y = 0;
+  prev_cmd_.angular.z = 0;
+
   base_config_.Init(ros_rate_,
                     odom_rate_,
                     safe_rate_,
@@ -60,10 +64,34 @@ AeroMoveBase::~AeroMoveBase()
 /// @brief control with cmd_vel
 void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
 {
+  ros::Time now = ros::Time::now();
+  ROS_DEBUG("cmd_vel: %f %f %f",
+            _cmd_vel->linear.x,
+            _cmd_vel->linear.y,
+            _cmd_vel->angular.z);
+
   if (base_mtx_.try_lock()) {
-    vx_  = _cmd_vel->linear.x;
-    vy_  = _cmd_vel->linear.y;
-    vth_ = _cmd_vel->angular.z;
+    double dt = (now - time_stamp_).toSec();
+    double acc_x = (_cmd_vel->linear.x - vx_) / dt;
+    double acc_y = (_cmd_vel->linear.y - vy_) / dt;
+    double acc_z = (_cmd_vel->angular.z - vth_) / dt;
+
+    ROS_DEBUG("vel_acc: %f %f %f", acc_x, acc_y, acc_z);
+#define MAX_ACC_X 3.0
+#define MAX_ACC_Y 3.0
+#define MAX_ACC_Z 3.0
+    if (acc_x > MAX_ACC_X) acc_x = MAX_ACC_X;
+    if (acc_x < - MAX_ACC_X) acc_x = - MAX_ACC_X;
+    if (acc_y > MAX_ACC_Y) acc_y = MAX_ACC_Y;
+    if (acc_y < - MAX_ACC_Y) acc_y = - MAX_ACC_Y;
+    if (acc_z > MAX_ACC_Z) acc_z = MAX_ACC_Z;
+    if (acc_z < - MAX_ACC_Z) acc_z = - MAX_ACC_Z;
+
+    vx_  += acc_x * dt;
+    vy_  += acc_y * dt;
+    vth_ += acc_z * dt;
+
+    ROS_DEBUG("act_vel: %f %f %f", vx_, vy_, vth_);
 
     //check servo state
     if ( !servo_ ) {
@@ -79,10 +107,13 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
     hw_->writeWheel(wheel_names_, int_vel, ros_rate_);
 
     //update time_stamp_
-    time_stamp_ = ros::Time::now();
+    time_stamp_ = now;
+    prev_cmd_ = *_cmd_vel;
 
-    usleep(30*1000); // 30ms
+    usleep(10*1000); // 10ms // not need
     base_mtx_.unlock();
+  } else {
+    ROS_WARN("cmd_vel comes before sending pervious message");
   }
 }
 
@@ -94,7 +125,7 @@ void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
   boost::mutex::scoped_lock lk(base_mtx_);
   if((ros::Time::now() - time_stamp_).toSec() >= safe_duration_ && servo_) {
     std::vector<int16_t> int_vel(num_of_wheels_);
-    ROS_DEBUG("Base: safety stop");
+    ROS_WARN("Base: safety stop");
     for (size_t i = 0; i < num_of_wheels_; i++) {
       int_vel[i] = 0;
     }

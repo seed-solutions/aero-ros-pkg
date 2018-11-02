@@ -8,11 +8,11 @@ services:
   - docker
 
 env:
-  - DISTR=indigo BASEIMG=osrf/ros:indigo-desktop-full
-  - DISTR=kinetic BASEIMG=ros:kinetic
+  - DISTR=indigo  BASEIMG=ros:indigo-robot
+  - DISTR=kinetic BASEIMG=ros:kinetic-robot
 
 before_script:
   - docker pull ${BASEIMG}
 
 script:
-  - docker build -f Dockerfile.${DISTR} --tag ros:aero_${DISTR} .
+  - docker build -f Dockerfile.${DISTR} --tag ros:aero_${DISTR} --build-arg RUN_TESTS=true .
