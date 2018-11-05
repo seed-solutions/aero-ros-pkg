@@ -1,2 +1,0 @@
-knee_joint
-ankle_joint

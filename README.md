@@ -67,7 +67,7 @@ In the initial stage, `aero_startup` is not ros package, it has no `CMakeLists.t
 
 ```
 roscd aero_description
-./setup.sh typeF  # including catkin build aero_startup
+./setup.sh typeFCET  # including catkin build aero_startup
 source ~/.bashrc
 ```
 
