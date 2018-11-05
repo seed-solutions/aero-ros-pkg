@@ -34,7 +34,7 @@ RUN source /opt/ros/${MY_DISTRO}/setup.bash \
 
 WORKDIR ${WORKSPACE}/src/aero-ros-pkg/aero_description
 RUN source ${WORKSPACE}/devel/setup.bash \
-    && ./setup.sh typeF
+    && ./setup.sh typeFCET
 
 WORKDIR ${WORKSPACE}
 ## build check
