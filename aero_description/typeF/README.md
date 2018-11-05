@@ -1,6 +1,6 @@
 # Aero Robot Setting
 
-## type FCDT
+## type FCET
 
 - upper
   -  typeF_upperbody
@@ -9,7 +9,7 @@
   - typeC_lifter
 
 - wheel
-  - typeD_wheel
+  - typeE_wheel
 
 - hand
   - trx_s(T)
