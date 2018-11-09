@@ -30,7 +30,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 
   <arg name="base_global_planner" default="navfn/NavfnROS"/>
   <arg name="base_local_planner"
-       default="eband_local_planner/EBandPlannerROS"/>
+       default="teb_local_planner/TebLocalPlannerROS"/>
+    
+  <!-- <arg name="base_local_planner" -->
+  <!--      default="eband_local_planner/EBandPlannerROS"/> -->
 
   <!-- <arg name="base_local_planner"
        default="dwa_local_planner/DWAPlannerROS"/> -->
@@ -77,13 +80,18 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 	  -->
 
     <!-- For recovery Mode -->
-	  <param name="/TrajectoryPlannerROS/max_rotational_vel" value="0.5"/>
+    <param name="/TrajectoryPlannerROS/max_rotational_vel" value="0.5"/>
 
     <!-- Moving Parameters -->
-    <!-- EBandPlanner -->
+    <!-- TebLocalPlanner -->
     <rosparam
-        file="$(find aero_startup)/aero_move_base/config/EBandPlanner.yaml"
+        file="$(find aero_startup)/aero_move_base/config/TebLocalPlanner.yaml"
         command="load" />
+	  
+    <!-- EBandPlanner -->
+    <!-- <rosparam -->
+    <!--     file="$(find aero_startup)/aero_move_base/config/EBandPlanner.yaml" -->
+    <!--     command="load" /> -->
 
     <!-- DWAPlanner -->
     <!-- <rosparam -->
