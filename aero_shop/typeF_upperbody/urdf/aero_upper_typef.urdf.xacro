@@ -474,8 +474,8 @@
     <child  link="l_elbow_link"/>
     <origin xyz="0.035 0 -0.1625" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <!-- from -140 to 0 degrees-->
-    <limit lower="-2.44346" upper="0" effort="100" velocity="1.0" />
+    <!-- from -171 to 0 degrees-->
+    <limit lower="-3.0" upper="0" effort="100" velocity="1.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="l_elbow_joint" />
@@ -584,8 +584,8 @@
     <child  link="r_elbow_link"/>
     <origin xyz="0.035 0 -0.1625" rpy="0 -0 0 "/>
     <axis   xyz="0 1 0"/>
-    <!-- from -140 to 0 degrees-->
-    <limit lower="-2.44346" upper="0" effort="100" velocity="1.0" />
+    <!-- from -171 to 0 degrees-->
+    <limit lower="-3.0" upper="0" effort="100" velocity="1.0" />
     <dynamics damping="0.2" friction="0" />
   </joint>
   <xacro:gazebo_transmission joint_name="r_elbow_joint" />
