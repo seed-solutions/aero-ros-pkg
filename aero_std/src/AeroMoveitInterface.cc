@@ -45,6 +45,7 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, 
   _ADD_JMG_MAP(waist);
   _ADD_JMG_MAP(torso);
   _ADD_JMG_MAP(both_arms);
+  _ADD_JMG_MAP(both_arms_with_waist)
   _ADD_JMG_MAP(upper_body);
   _ADD_JMG_MAP(whole_body);
   _ADD_JMG_MAP(head);
@@ -382,10 +383,18 @@ std::tuple<double, double, double> aero::interface::AeroMoveitInterface::solveLo
                         + pos_obj_rel.y() * pos_obj_rel.y()
                         + pos_obj_rel.z() * pos_obj_rel.z());
   double theta = acos(neck2eye / dis_obj);
-  double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
-  double pitch = 1.5708 + pitch_obj - theta;
+  // double pitch_obj = atan2(- pos_obj_rel.z(), pos_obj_rel.x());
+  // double pitch = 1.5708 + pitch_obj - theta;
+  double x = sqrt(pos_obj_rel.x() * pos_obj_rel.x()
+                  + pos_obj_rel.y() * pos_obj_rel.y());
+  double pitch_obj = atan2(pos_obj_rel.z(), x);
+  double pitch = 0.0;
+  if (pos_obj_rel.z() >= neck2eye)
+    pitch = -(pitch_obj + theta - 1.5708);
+  else
+    pitch = 1.5708 - pitch_obj - theta;
 
-  //ROS_INFO("solveLookAt: (%f %f %f) => (%f %f) ", _pos.x(), _pos.y(), _pos.z(), pitch, yaw);
+  ROS_INFO("solveLookAt: (%f %f %f) => (%f %f) ", _pos.x(), _pos.y(), _pos.z(), pitch, yaw);
 
   return std::tuple<double, double, double>(0.0, pitch, yaw);
 }
