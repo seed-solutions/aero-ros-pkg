@@ -31,19 +31,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
   <arg name="base_global_planner" default="navfn/NavfnROS"/>
   <arg name="base_local_planner"
        default="teb_local_planner/TebLocalPlannerROS"/>
+  <arg name="base_local_planner_param"
+       default="$(find aero_startup)/aero_move_base/config/TebLocalPlanner.yaml"/>
     
-  <!-- <arg name="base_local_planner" -->
-  <!--      default="eband_local_planner/EBandPlannerROS"/> -->
-
-  <!-- <arg name="base_local_planner"
-       default="dwa_local_planner/DWAPlannerROS"/> -->
-  <!-- <arg name="base_local_planner"
-       default="base_local_planner/TrajectoryPlannerROS"/> -->
-
   <node pkg="move_base" type="move_base" name="move_base"
         respawn="false" output="screen">
+    <!-- planner type -->
     <param name="base_global_planner" value="$(arg base_global_planner)"/>
     <param name="base_local_planner" value="$(arg base_local_planner)"/>
+
+    <!-- Moving Parameters -->
+    <rosparam file="$(arg base_local_planner_param)" command="load"/>
+
+    <!-- If you use keepout map, you can set map here -->
     <rosparam file="$(arg map_file)" command="load"/>
 
     <!-- observation sources located in costmap_common.yaml -->
@@ -74,29 +74,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
     <param name="global_costmap/width"  value="10.0" if="$(arg no_static_map)"/>
     <param name="global_costmap/height" value="10.0" if="$(arg no_static_map)"/>
 
-	  <!--
-	      <param name="/TrajectoryPlannerROS/max_vel_theta" value="0.4"/>
-	      <param name="/TrajectoryPlannerROS/max_vel_x" value="0.1"/>
-	  -->
-
     <!-- For recovery Mode -->
     <param name="/TrajectoryPlannerROS/max_rotational_vel" value="0.5"/>
 
-    <!-- Moving Parameters -->
-    <!-- TebLocalPlanner -->
-    <rosparam
-        file="$(find aero_startup)/aero_move_base/config/TebLocalPlanner.yaml"
-        command="load" />
-	  
-    <!-- EBandPlanner -->
-    <!-- <rosparam -->
-    <!--     file="$(find aero_startup)/aero_move_base/config/EBandPlanner.yaml" -->
-    <!--     command="load" /> -->
-
-    <!-- DWAPlanner -->
-    <!-- <rosparam -->
-    <!--     file="$(find aero_startup)/aero_move_base/config/DWAPlanner.yaml" -->
-    <!--     command="load" /> -->
 
   </node>
 
