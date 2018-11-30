@@ -18,18 +18,6 @@
   - ```joy_node```
   - ```teleop_twist_joy```
 
-### static_map_navigation.launch
-- nodes
-  - ```map_server```
-- files
-  - ```amcl.launch```
-  - ```move_base.launch```
-
-### making_map_navigation.launch
-- files
-  - ```move_base.launch```
-  - ```gmapping.launch```
-
 ## setting parameters
 
 ### amcl.launch
