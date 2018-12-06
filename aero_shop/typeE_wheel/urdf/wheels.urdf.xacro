@@ -86,7 +86,7 @@
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
-    <xacro:gazebo_link_reference link_name="wheels_front_left_mecanum" />
+    <xacro:gazebo_link_reference link_name="wheels_front_left_mecanum" mu1="0.25" mu2="0.25" />
 
     <link name="wheels_front_right_mecanum">
       <xacro:unless value="${disable_mesh}"> <visual>
@@ -108,7 +108,7 @@
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
-    <xacro:gazebo_link_reference link_name="wheels_front_left_mecanum" />
+    <xacro:gazebo_link_reference link_name="wheels_front_left_mecanum" mu1="0.25" mu2="0.25" />
 
     <link name="wheels_rear_left_mecanum">
       <xacro:unless value="${disable_mesh}"> <visual>
@@ -130,7 +130,7 @@
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
-    <xacro:gazebo_link_reference link_name="wheels_rear_left_mecanum" />
+    <xacro:gazebo_link_reference link_name="wheels_rear_left_mecanum" mu1="0.25" mu2="0.25" />
 
     <link name="wheels_rear_right_mecanum">
       <xacro:unless value="${disable_mesh}"> <visual>
@@ -152,7 +152,7 @@
         <inertia ixx="0.528" ixy="0" ixz="0" iyy="2.02" iyz="0" izz="2.35"/>
       </inertial>
     </link>
-    <xacro:gazebo_link_reference link_name="wheels_rear_right_mecanum" />
+    <xacro:gazebo_link_reference link_name="wheels_rear_right_mecanum" mu1="0.25" mu2="0.25" />
 
     <link name="wheels_base_laser_link">
       <xacro:unless value="${disable_mesh}"> <visual>

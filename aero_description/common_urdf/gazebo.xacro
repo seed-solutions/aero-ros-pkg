@@ -46,12 +46,18 @@
   <xacro:macro name="gazebo_base_controller" params="base_frame com_topic:=/cmd_vel odom_topic:=/odom odom_frame:=odom odom_rate:=20" >
     <!-- Base control -->
     <gazebo>
-      <plugin name="cmd_vel_controller" filename="libgazebo_ros_planar_move.so">
+      <!--plugin name="cmd_vel_controller" filename="libgazebo_ros_planar_force_move.so"-->
+      <plugin name="cmd_vel_controller" filename="libgazebo_ros_planar_force_move.so">
         <commandTopic>cmd_vel</commandTopic>
         <odometryTopic>odom</odometryTopic>
         <odometryFrame>odom</odometryFrame>
         <odometryRate>40.0</odometryRate>
         <robotBaseFrame>${base_frame}</robotBaseFrame>
+        <useForceFeedback>true</useForceFeedback>
+        <appliedForceLink>${base_frame}</appliedForceLink>
+        <forceGainX>24000</forceGainX>
+        <forceGainY>24000</forceGainY>
+        <forceGainRot>6000</forceGainRot>
       </plugin>
     </gazebo>
   </xacro:macro>
