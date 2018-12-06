@@ -28,12 +28,18 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
        default="$(find aero_startup)/aero_move_base/maps/map.yaml"/>
   <arg name="no_static_map" default="false"/>
 
+   <!-- global planner type -->
   <arg name="base_global_planner" default="navfn/NavfnROS"/>
+  
+  <!-- local planner option:
+       EBandPlannerROS, TrajectoryPlannerROS, DWAPlannerROS -->
   <arg name="base_local_planner"
        default="teb_local_planner/TebLocalPlannerROS"/>
+  
+ <!-- Moving Parameters -->
   <arg name="base_local_planner_param"
        default="$(find aero_startup)/aero_move_base/config/TebLocalPlanner.yaml"/>
-    
+
   <node pkg="move_base" type="move_base" name="move_base"
         respawn="false" output="screen">
     <!-- planner type -->
@@ -76,7 +82,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 
     <!-- For recovery Mode -->
     <param name="/TrajectoryPlannerROS/max_rotational_vel" value="0.5"/>
-
 
   </node>
 
