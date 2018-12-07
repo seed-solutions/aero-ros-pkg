@@ -15,10 +15,10 @@ Following files are sources of this Node;
 - AeroBaseController.cc (Auto Generated)
 - AeroMoveBase.{cc,hh}
 
-## Joystick Teleoperation
+## Move on Rviz without real robot
 
 ```
-roslaunch wheel_bringup.launch
+roslaunch aero_startup wheel_with_dummy.launch
 ```
 
 
@@ -27,36 +27,27 @@ roslaunch wheel_bringup.launch
 ### Mapping
 
 ```
-roslaunch wheel_with_making_map.launch
+roslaunch aero_startup wheel_with_making_map.launch
 ```
-
-will launch `wheel_bringup` and mapping nodes.
-
-For running mapping nodes on external PCs,
-launch `wheel_bringup.launch` on the Robot control PC first,
-then
-
-```
-roslaunch making_map_navigation.launch
-```
+After making map, you should run ```roslaunch aero_startup map_saver.launch``` to save map.
 
 
 ### Navigation
 
 ```
-roslaunch wheel_with_static_map.launch
+roslaunch aero_startup wheel_with_static_map.launch
 ```
 
-will launch `wheel_bringup` and navigation nodes.
+### Local Planner Setting
+You can choose base local planner from `TrajectoryPlannerROS`, `DWAPlannerROS`, `EBandPlannerROS`, `TebLocalPlannerROS`. (`TrajectoryPlannerROS` and `DWAPlannerROS` are not supported, now.)
+Default planner is `TebLocalPlannerROS`, described in move_base.launch.
 
-For running mapping nodes on external PCs,
-launch `wheel_bringup.launch` on the Robot control PC first,
-then
+Features are as follows:
+* [teb_local_planner/TebLocalPlannerROS](http://wiki.ros.org/teb_local_planner)  
+to avoid collision with people and when moving long distances, default settings do not allow moving sideways (this avoids the robot from moving diagonally in a straight path)
 
-```
-roslaunch static_map_navigation.launch
-```
-
+* [eband_local_planner/EEBandPlannerROS](http://wiki.ros.org/eband_local_planner)  
+to move sideways, if your robot is moving in a small area or is using the base to make small adjustments during manipulation
 
 ### For more information,
 
