@@ -18,3 +18,6 @@ target_link_libraries(ps_teleop ${catkin_LIBRARIES} ${aero_std_LIBRARIES})
 
 add_executable(ps_teleop_node src/ps_teleop_node.cc)
 target_link_libraries(ps_teleop_node ps_teleop)
+
+add_executable(xbox_one_teleop_node src/xbox_one_teleop_node.cc src/xbox_one_teleop.cc)
+target_link_libraries(xbox_one_teleop_node ${catkin_LIBRARIES})
