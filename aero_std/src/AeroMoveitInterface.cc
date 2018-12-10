@@ -45,7 +45,6 @@ aero::interface::AeroMoveitInterface::AeroMoveitInterface(ros::NodeHandle &_nh, 
   _ADD_JMG_MAP(waist);
   _ADD_JMG_MAP(torso);
   _ADD_JMG_MAP(both_arms);
-  _ADD_JMG_MAP(both_arms_with_waist)
   _ADD_JMG_MAP(upper_body);
   _ADD_JMG_MAP(whole_body);
   _ADD_JMG_MAP(head);
