@@ -71,26 +71,31 @@ void AeroMoveBase::CmdVelCallback(const geometry_msgs::TwistConstPtr& _cmd_vel)
             _cmd_vel->angular.z);
 
   if (base_mtx_.try_lock()) {
+    if (_cmd_vel->linear.x == 0.0 &&
+        _cmd_vel->linear.y == 0.0 &&
+        _cmd_vel->angular.z == 0.0) {
+      vx_ = vy_ = vth_ = 0.0;
+    } else {
     double dt = (now - time_stamp_).toSec();
-    double acc_x = (_cmd_vel->linear.x - vx_) / dt;
-    double acc_y = (_cmd_vel->linear.y - vy_) / dt;
+    double acc_x = (_cmd_vel->linear.x  - vx_)  / dt;
+    double acc_y = (_cmd_vel->linear.y  - vy_)  / dt;
     double acc_z = (_cmd_vel->angular.z - vth_) / dt;
 
     ROS_DEBUG("vel_acc: %f %f %f", acc_x, acc_y, acc_z);
 #define MAX_ACC_X 3.0
 #define MAX_ACC_Y 3.0
 #define MAX_ACC_Z 3.0
-    if (acc_x > MAX_ACC_X) acc_x = MAX_ACC_X;
+    if (acc_x >   MAX_ACC_X) acc_x =   MAX_ACC_X;
     if (acc_x < - MAX_ACC_X) acc_x = - MAX_ACC_X;
-    if (acc_y > MAX_ACC_Y) acc_y = MAX_ACC_Y;
+    if (acc_y >   MAX_ACC_Y) acc_y =   MAX_ACC_Y;
     if (acc_y < - MAX_ACC_Y) acc_y = - MAX_ACC_Y;
-    if (acc_z > MAX_ACC_Z) acc_z = MAX_ACC_Z;
+    if (acc_z >   MAX_ACC_Z) acc_z =   MAX_ACC_Z;
     if (acc_z < - MAX_ACC_Z) acc_z = - MAX_ACC_Z;
 
     vx_  += acc_x * dt;
     vy_  += acc_y * dt;
     vth_ += acc_z * dt;
-
+    }
     ROS_DEBUG("act_vel: %f %f %f", vx_, vy_, vth_);
 
     //check servo state
@@ -125,6 +130,7 @@ void AeroMoveBase::SafetyCheckCallback(const ros::TimerEvent& _event)
   boost::mutex::scoped_lock lk(base_mtx_);
   if((ros::Time::now() - time_stamp_).toSec() >= safe_duration_ && servo_) {
     std::vector<int16_t> int_vel(num_of_wheels_);
+    vx_ = vy_ = vth_ = 0.0;
     ROS_WARN("Base: safety stop");
     for (size_t i = 0; i < num_of_wheels_; i++) {
       int_vel[i] = 0;
