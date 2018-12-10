@@ -1,0 +1,109 @@
+# common
+### xbox button is reset pose (upper body only unless RB pressed)
+reset_pose_button: 12
+### menu button switches to basic mode
+switch_basic_mode: 9
+### view button switches to joint mode
+switch_joint_mode: 8
+### Y button press disables button and axes during basic mode
+external_command: 3
+
+# basic mode
+## teleop-twist
+### upper left stick for linear, lower right for angular
+axis_linear:
+  x: 1
+  y: 0
+scale_linear:
+  x: 0.4
+  y: 0.4
+axis_angular:
+  yaw: 2
+scale_angular:
+  yaw: 0.5
+### use LB to enable teleop
+enable_button: 4
+enable_turbo_button: -1
+## other basic functions
+### use B for right grasp, X for left grasp
+grasp_button:
+  L: 0
+  R: 2
+### use LT, RT for setting grasp angle
+grasp_angle_axis:
+  L: 3
+  R: 4
+min_grasp_angle:
+  L: -1.0
+  R: -1.0
+range_grasp_angle:
+  L: 2.0
+  R: 2.0
+### use A to enable grasp at specific angle
+enable_grasp_angle: 1
+### upper left stick for upward, lower right for forward
+lifter_axis:
+  x: 5
+  z: 1
+scale_lifter:
+  x: 0.005
+  z: 0.005
+### use RB to enable lifter
+enable_lifter: 5
+
+# joint mode
+### the names do not correspond to actual joint names
+### all pitch are direction pad up/down
+### yaws are mostly direction stick
+### roll or some yaws are direction pad left/right
+## torso
+torso:
+  yaw: 9
+  pitch: 10
+  ### use A button to trigger torso
+  enable: 1
+scale_torso:
+  yaw: 0.02
+  pitch: 0.02
+## shoulder
+shoulder:
+  roll: 9
+  pitch: 10
+  ### use upper left stick for yaw
+  yaw: 0
+  ### use LB, RB to trigger upper arm
+  enable_left: 4
+  enable_right: 5
+scale_shoulder:
+  roll: 0.01
+  pitch: -0.01
+  yaw: 0.02
+## elbow
+elbow:
+  pitch: 10
+  yaw: 9
+  ### use LT, RT to trigger forearm
+  enable_left: 3
+  enable_right: 4
+scale_elbow:
+  yaw: 0.03
+  pitch: 0.01
+## wrist
+wrist:
+  pitch: 10
+  yaw: 9
+  ### use X, B to trigger wrist
+  enable_left: 0
+  enable_right: 2
+scale_wrist:
+  yaw: 0.03
+  pitch: 0.01
+## head
+head:
+  yaw: 9
+  pitch: 10
+  ### use Y button to trigger torso
+  enable: 3
+scale_head:
+  yaw: 0.02
+  pitch: 0.02
