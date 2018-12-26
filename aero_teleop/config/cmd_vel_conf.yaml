@@ -2,16 +2,11 @@ subscribers:
   - name:        "Joy Teleop"
     topic:       "/teleop/cmd_vel"
     timeout:     0.1
-    priority:    2
+    priority:    1
     short_desc:  "The teleop cmd_vel"
   - name:        "Navigation stack"
     topic:       "/move_base/cmd_vel"
     timeout:     0.1
-    priority:    1
-    short_desc:  "Navigation stack controller"
-  - name:        "Base controller"
-    topic:       "/base_controller/cmd_vel"
-    timeout:     0.1
     priority:    0
-    short_desc:  "PR2 base trajetory action"
+    short_desc:  "Navigation stack controller"
 publisher:       "/cmd_vel"
