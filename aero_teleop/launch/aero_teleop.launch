@@ -11,6 +11,7 @@
   </node>
 
   <node pkg="aero_teleop" name="teleop_joy" type="ps_teleop_node" output="screen">
+    <remap from="cmd_vel" to="/teleop/cmd_vel"/>
     <rosparam command="load" file="$(arg config_filepath)" />
   </node>
 </launch>
