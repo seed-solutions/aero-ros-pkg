@@ -106,6 +106,7 @@ Similarly, plug and unplug USB in lower body (command confirmed)
 ```
 roslaunch aero_startup aero_bringup.launch
 ```
+If you want to move wheels, please refer [aero_move_base](https://github.com/seed-solutions/aero-ros-pkg/blob/master/aero_startup/aero_move_base/README.md).
 
 ### View Robot Model
 
