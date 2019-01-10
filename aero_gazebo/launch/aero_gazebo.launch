@@ -54,6 +54,7 @@
 
   <include file="$(find aero_startup)/aero_move_base/launch/static_map_navigation.launch">
     <arg name="map_file" value="$(find aero_gazebo)/map/map.yaml" />
+    <arg name="costmap_file" value="$(find aero_gazebo)/map/map.yaml" />
   </include>
 
 </launch>
