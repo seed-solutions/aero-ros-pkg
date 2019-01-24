@@ -42,6 +42,9 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 add_library(mimic_plugin src/MimicPlugin.cpp)
 install(TARGETS mimic_plugin LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
+add_library(gazebo_ros_planar_force_move src/gazebo_ros_planar_move.cpp)
+install(TARGETS gazebo_ros_planar_force_move LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
 #install(DIRECTORY launch
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 #install(DIRECTORY worlds

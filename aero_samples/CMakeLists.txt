@@ -12,8 +12,12 @@ include_directories(${catkin_INCLUDE_DIRS})
 add_definitions(-std=c++11)
 
 # check ros_distro
-if("$ENV{ROS_DISTRO}" STRGREATER "jade")
-  add_definitions(-DKINETIC)
+if("$ENV{ROS_DISTRO}" STREQUAL "melodic")
+  add_definitions(-DROS_MELODIC)
+elseif("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
+  add_definitions(-DROS_KINETIC)
+elseif("$ENV{ROS_DISTRO}" STREQUAL "indigo")
+  add_definitions(-DROS_INDIGO)
 endif()
 
 # samples

@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 sudo: required
 language:
   - generic
@@ -10,9 +10,16 @@ services:
 env:
   - DISTR=indigo  BASEIMG=ros:indigo-robot
   - DISTR=kinetic BASEIMG=ros:kinetic-robot
-
+  - DISTR=melodic BASEIMG=ros:melodic-robot
+  
 before_script:
   - docker pull ${BASEIMG}
 
 script:
   - docker build -f Dockerfile.${DISTR} --tag ros:aero_${DISTR} --build-arg RUN_TESTS=true .
+ 
+matrix:
+  allow_failures:
+    - env: DISTR=indigo  BASEIMG=ros:indigo-robot
+    - env: DISTR=melodic BASEIMG=ros:melodic-robot
+     

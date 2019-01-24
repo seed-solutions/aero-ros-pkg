@@ -144,9 +144,11 @@ void gazebo::mimicplugin::MimicPlugin::Load(physics::ModelPtr _parent, sdf::Elem
       el = el->GetNextElement("mimic");
     }
   }
-
+#if GAZEBO_MAJOR_VERSION < 8
   prev_tm = world->GetSimTime();
-
+#else
+  prev_tm = world->SimTime();
+#endif
   updateConnection =
     event::Events::ConnectWorldUpdateBegin(
       boost::bind(&gazebo::mimicplugin::MimicPlugin::Update, this));
@@ -174,7 +176,11 @@ void gazebo::mimicplugin::MimicPlugin::registerMimic(const std::string &src_join
 void gazebo::mimicplugin::MimicPlugin::Update()
 {
   //std::cerr << "up" << std::endl;
+#if GAZEBO_MAJOR_VERSION < 8
   gazebo::common::Time dt = world->GetSimTime() - prev_tm;
+#else
+  gazebo::common::Time dt = world->SimTime() - prev_tm;
+#endif
   for(auto it : mimic_joint_list) {
     it.update(dt);
   }
