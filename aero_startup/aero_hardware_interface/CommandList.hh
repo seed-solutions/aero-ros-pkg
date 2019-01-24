@@ -29,7 +29,7 @@ namespace aero
 
     const static uint8_t CMD_GET_POS = 0x41;
     const static uint8_t CMD_GET_CUR = 0x42;
-    const static uint8_t CMD_GET_TMP = 0x43;
+    const static uint8_t CMD_GET_TMP_VOLT = 0x43;
     const static uint8_t CMD_GET_AD  = 0x44;
     const static uint8_t CMD_GET_DIO = 0x45;
 
