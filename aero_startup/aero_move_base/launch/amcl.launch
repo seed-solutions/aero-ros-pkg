@@ -29,13 +29,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
   <arg name="scan_topic" default="scan" />
 
   <node pkg="amcl" type="amcl" name="amcl">
-    <remap from="map" to="costmap"/>
+    <remap from="map" to="map_localization"/>
+
     <param name="use_map_topic" value="$(arg use_map_topic)"/>
     <!-- Publish scans from best pose at a max of 10 Hz -->
     <param name="odom_model_type" value="omni-corrected"/>
     <param name="gui_publish_rate" value="10.0"/>
     <param name="laser_max_beams" value="60"/>
-    <param name="laser_max_range" value="12.0"/>
+    <param name="laser_max_range" value="10.0"/>
     <param name="min_particles" value="500"/>
     <param name="max_particles" value="2000"/>
     <param name="kld_err" value="0.05"/>

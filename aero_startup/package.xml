@@ -40,6 +40,8 @@
   <run_depend>move_base</run_depend>
   <run_depend>map_server</run_depend>
   <run_depend>eband_local_planner</run_depend>
+  <run_depend>teb_local_planner</run_depend>
+  <run_depend>urg_node</run_depend>
 
   <export/>
 </package>
