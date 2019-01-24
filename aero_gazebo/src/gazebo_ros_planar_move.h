@@ -33,10 +33,12 @@
 #include <boost/thread.hpp>
 #include <map>
 
+/// Gazebo
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <sdf/sdf.hh>
 
+/// ROS
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>

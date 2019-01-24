@@ -5,19 +5,14 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 
-#include <gazebo/math/gzmath.hh>
+/// Gazebo
 #include <gazebo/physics/physics.hh>
-#include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/transport/TransportTypes.hh>
-#include <gazebo/common/Time.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/common/Events.hh>
-#include <gazebo/common/PID.hh>
-#include <gazebo/sensors/SensorManager.hh>
-#include <gazebo/sensors/SensorTypes.hh>
-#include <gazebo/sensors/ContactSensor.hh>
-#include <gazebo/sensors/ImuSensor.hh>
-#include <gazebo/sensors/Sensor.hh>
+#include <gazebo/common/common.hh>
+#include <gazebo/sensors/sensors.hh>
+#include <gazebo/transport/transport.hh>
+#if GAZEBO_MAJOR_VERSION < 8
+#include <gazebo/math/gzmath.hh>
+#endif
 
 namespace gazebo
 {
@@ -73,8 +68,13 @@ namespace gazebo
         pid.Init(_p, _i, _d,   _imax, _imin,  _cmax, _cmin);
       }
       void update (gazebo::common::Time &dt) {
+#if GAZEBO_MAJOR_VERSION < 8
         double t_current = target_joint->GetAngle(0).Radian();
         double s_current = source_joint->GetAngle(0).Radian();
+#else
+        double t_current = target_joint->Position(0);
+        double s_current = source_joint->Position(0);
+#endif
         double t_desired = (s_current - offset) * multiplier;
 
         double result = pid.Update(t_current - t_desired, dt);

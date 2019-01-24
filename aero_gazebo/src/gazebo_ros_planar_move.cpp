@@ -247,9 +247,13 @@ namespace gazebo
 
     if ( use_force_feedback_ ) {
       // feedback velocity error to applied force
+#if GAZEBO_MAJOR_VERSION >= 8
+      ignition::math::Vector3d rlin = robot_link_->RelativeLinearVel();
+      ignition::math::Vector3d rang = robot_link_->RelativeAngularVel();
+#else
       ignition::math::Vector3d rlin = robot_link_->GetRelativeLinearVel().Ign();
       ignition::math::Vector3d rang = robot_link_->GetRelativeAngularVel().Ign();
-
+#endif
       //ROS_WARN_NAMED("planar_force_move", "vel: %f %f %f / %f %f %f",
       //               rlin.X(), rlin.Y(), rlin.Z(),
       //               rang.X(), rang.Y(), rang.Z());
