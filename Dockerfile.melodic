@@ -1,4 +1,4 @@
-FROM ros:kinetic-robot
+FROM ros:melodic-robot
 SHELL ["bash", "-c"]
 
 ENV WORKSPACE /catkin_ws
