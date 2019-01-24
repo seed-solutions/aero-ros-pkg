@@ -7,7 +7,11 @@
 
 namespace aero
 {
+#if defined(ROS_MELODIC)
+  typedef Eigen::Isometry3d    Transform;
+#else
   typedef Eigen::Affine3d      Transform;
+#endif
   typedef Eigen::Vector3d      Vector3;
   typedef Eigen::Matrix3d      Matrix3;
   typedef Eigen::Translation3d Translation;
