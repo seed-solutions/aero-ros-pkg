@@ -8,10 +8,10 @@
 
   <!-- Run map navigation -->
   <arg name="map_file" default="$(find aero_startup)/aero_move_base/maps/blank.yaml"/>
-  <arg name="costmap_file" default="$(find aero_startup)/aero_move_base/maps/blank.yaml"/>
+  <arg name="map_localization_file" default="$(find aero_startup)/aero_move_base/maps/blank.yaml"/>
   <include file="$(find aero_startup)/aero_move_base/launch/static_map_navigation.launch">
     <arg name="map_file" value="$(arg map_file)" />
-    <arg name="costmap_file" value="$(arg costmap_file)"/>
+    <arg name="map_localization_file" value="$(arg map_localization_file)"/>
   </include>
 
 </launch>
