@@ -30,15 +30,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 
    <!-- global planner type -->
   <arg name="base_global_planner" default="navfn/NavfnROS"/>
-  
+
   <!-- local planner option:
        EBandPlannerROS, TrajectoryPlannerROS, DWAPlannerROS -->
   <arg name="base_local_planner"
        default="teb_local_planner/TebLocalPlannerROS"/>
-  
- <!-- Moving Parameters -->
+  <!--arg name="base_local_planner"
+        default="eband_local_planner/EBandPlannerROS"/-->
+  <!--arg name="base_local_planner"
+        default="dwa_local_planner/DWAPlannerROS" /-->
+  <!--arg name="base_local_planner"
+        default="dwa_local_planner/TrajectorylannerROS" /-->
+
+  <!-- Moving Parameters -->
   <arg name="base_local_planner_param"
        default="$(find aero_startup)/aero_move_base/config/TebLocalPlanner.yaml"/>
+  <!--arg name="base_local_planner_param"
+       default="$(find aero_startup)/aero_move_base/config/EBandPlanner.yaml"/-->
+  <!--arg name="base_local_planner_param"
+       default="$(find aero_startup)/aero_move_base/config/DWAPlanner.yaml"/-->
+  <!--arg name="base_local_planner_param"
+       default="$(find aero_startup)/aero_move_base/config/TrajectoryPlanner.yaml"/-->
 
   <node pkg="move_base" type="move_base" name="move_base"
         respawn="false" output="screen">

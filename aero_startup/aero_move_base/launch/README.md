@@ -1,9 +1,18 @@
+## topics
+- /map
+  - map for using planning (move_base)
+  - add any obstacles which are not appeared by the laser sensor
+- /map_localization
+  - map for using localization (amcl)
+  - This should be the original map which was created by gmapping
+
 ## combined launch
 
 ### wheel_with_static_map.launch
 - files
   - ```wheel_bringup.launch```
   - ```static_map_navigation.launch```
+- File name must be set to map_file and map_localization_file
 
 ### wheel_with_making_map.launch
 - files
@@ -20,10 +29,12 @@
 
 ### static_map_navigation.launch
 - nodes
-  - ```map_server```
+  - ```map_localization_server```
+  - ```map_planning_server```
 - files
   - ```amcl.launch```
   - ```move_base.launch```
+- File name must be set to map_file and map_localization_file
 
 ### making_map_navigation.launch
 - files
