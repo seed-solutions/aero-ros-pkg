@@ -39,6 +39,7 @@
 
 #include "aero_robot_hardware.h"
 #include <urdf/model.h>
+#include "std_msgs/Float32.h"
 
 #include <thread>
 
@@ -192,6 +193,8 @@ bool AeroRobotHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)//
 
   upper_send_enable_ = true;
   // lower_send_enable_ = true;
+
+  voltage_pub_ = robot_hw_nh.advertise<std_msgs::Float32>("voltage", 1);
 
   return true;
 }
@@ -426,6 +429,16 @@ void AeroRobotHW::stopWheelServo() {
 
   mutex_lower_.lock();
   controller_lower_->wheel_only_off();
+  mutex_lower_.unlock();
+}
+
+void AeroRobotHW::readVoltage(const ros::TimerEvent& _event) {
+  ROS_DEBUG("read voltage");
+
+  mutex_lower_.lock();
+  std_msgs::Float32 voltage;
+  voltage.data = controller_lower_->get_voltage();
+  voltage_pub_.publish(voltage);
   mutex_lower_.unlock();
 }
 

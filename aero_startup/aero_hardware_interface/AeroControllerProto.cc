@@ -117,10 +117,55 @@ std::string SEED485Controller::get_version()
 }
 
 //////////////////////////////////////////////////
+float SEED485Controller::get_voltage()
+{
+  std::vector<uint8_t> data(6);
+  data[0] = 0xFD;
+  data[1] = 0xDF;
+  data[2] = 0x02;
+  data[3] = CMD_GET_TMP_VOLT;
+  data[4] = 31;
+
+  // check sum
+  int32_t b_check_sum = 0;
+
+  for (size_t i = 2; i < data.size() - 1; ++i) {
+    b_check_sum += data[i];
+  }
+
+  data[data.size() - 1] =
+    ~(reinterpret_cast<uint8_t*>(&b_check_sum)[0]);
+
+  send_data(data);
+
+  std::vector<uint8_t> dat;
+  dat.resize(8);
+  read(dat, 8);
+  uint16_t header = decode_short_(&dat[0]);
+  int16_t cmd;
+  uint8_t* bvalue = reinterpret_cast<uint8_t*>(&cmd);
+  bvalue[0] = dat[3];
+  bvalue[1] = 0x00;
+
+  if (header != 0xdffd || cmd != CMD_GET_TMP_VOLT) {
+    flush();
+    //std::cerr << "Proto: ERROR: invalid header" << std::endl;
+    return 0;
+  }
+
+  float voltage = static_cast<uint16_t>((dat[RAW_HEADER_OFFSET] << 8) + dat[RAW_HEADER_OFFSET + 1]) * 0.1;
+
+  //std::cout << "Voltage is " << voltage << " [V]" << std::endl;
+
+  return voltage;
+}
+
+//////////////////////////////////////////////////
 void SEED485Controller::read(std::vector<uint8_t>& _read_data, const size_t _length)
 {
   _read_data.resize(_length);
 
+  auto error_code = boost::system::error_code{};
   int size = 0;
   if (ser_.is_open()) {
     boost::mutex::scoped_lock lock(mtx_);
@@ -128,7 +173,7 @@ void SEED485Controller::read(std::vector<uint8_t>& _read_data, const size_t _len
       usleep(100); // sleep 100 us
       int size_read;
       std::vector<uint8_t> read_buffer(_length);
-      size_read = ser_.read_some(buffer(read_buffer, _length));
+      size_read = ser_.read_some(buffer(read_buffer, _length), error_code);
       if ((size + size_read) <= _length) {
         std::copy(read_buffer.begin(), read_buffer.begin()+size_read,
                   _read_data.begin() + size);
@@ -292,6 +337,12 @@ std::string AeroControllerProto::get_version()
 }
 
 //////////////////////////////////////////////////
+float AeroControllerProto::get_voltage()
+{
+  return seed_.get_voltage();
+}
+
+//////////////////////////////////////////////////
 void AeroControllerProto::servo_on()
 {
   servo_command(1);
@@ -425,7 +476,7 @@ void AeroControllerProto::get_current(std::vector<int16_t>& _stroke_vector)
 void AeroControllerProto::get_temperature(
     std::vector<int16_t>& _stroke_vector)
 {
-  get_command(CMD_GET_TMP, _stroke_vector);
+  get_command(CMD_GET_TMP_VOLT, _stroke_vector);
 }
 
 //////////////////////////////////////////////////
@@ -452,7 +503,7 @@ void AeroControllerProto::get_data(std::vector<int16_t>& _stroke_vector)
       cmd == CMD_MOVE_ABS_POS_RET ||
       cmd == CMD_GET_POS ||
       cmd == CMD_GET_CUR ||
-      cmd == CMD_GET_TMP ||
+      cmd == CMD_GET_TMP_VOLT ||
       cmd == CMD_GET_AD ||
       cmd == CMD_GET_DIO ||
       cmd == CMD_WATCH_MISSTEP) {

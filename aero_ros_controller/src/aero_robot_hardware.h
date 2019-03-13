@@ -139,6 +139,7 @@ public:
   void writeWheel(const std::vector< std::string> &_names, const std::vector<int16_t> &_vel, double _tm_sec);
   void startWheelServo();
   void stopWheelServo();
+  void readVoltage(const ros::TimerEvent& _event);
 
   std::string getVersion() {
     mutex_upper_.lock();
@@ -219,6 +220,8 @@ protected:
   int   CONTROL_PERIOD_US_;
   float OVERLAP_SCALE_;
   int   BASE_COMMAND_PERIOD_MS_;
+
+  ros::Publisher voltage_pub_;
 
   std::mutex mutex_lower_;
   std::mutex mutex_upper_;

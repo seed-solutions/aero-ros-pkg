@@ -76,6 +76,8 @@ int main(int argc, char** argv)
 
   hw.getVersion();
 
+  ros::Timer timer = robot_nh.createTimer(ros::Duration(10), &AeroRobotHW::readVoltage,&hw);
+
   double period = hw.getPeriod();
   controller_manager::ControllerManager cm(&hw, nh);
 
