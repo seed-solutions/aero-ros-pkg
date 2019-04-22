@@ -233,7 +233,7 @@ Teleoperate aero using ps3 controller!
 |9     |Control Right Forearm           |
 |10    |Control Left Upper Arm          |
 |11    |Control Right Upper Arm         |
-|12    |Control Right Upper Arm         |
+|12    |Control Neck                    |
 |13    |Control Right Wrist             |
 |14    |Control Torso                   |
 |15    |Control Left Wrist              |
