@@ -1,9 +1,10 @@
-FROM ros:kinetic-robot
+FROM osrf/ros:kinetic-desktop
 SHELL ["bash", "-c"]
 
 ENV WORKSPACE /catkin_ws
 
 ARG RUN_TESTS=false
+ARG AERO_TYPE=typeF
 
 # prepare catkin and all euslisp packages
 RUN apt-get -q -qq update && apt-get -q -qq install -y \
@@ -31,7 +32,7 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
 
 WORKDIR ${WORKSPACE}/src/aero-ros-pkg/aero_description
 RUN source ${WORKSPACE}/devel/setup.bash \
-    && ./setup.sh typeF
+    && ./setup.sh $AERO_TYPE
 
 WORKDIR ${WORKSPACE}
 ## build check

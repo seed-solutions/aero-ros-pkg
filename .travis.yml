@@ -9,17 +9,16 @@ services:
 
 env:
   - DISTR=indigo  BASEIMG=ros:indigo-robot
-  - DISTR=kinetic BASEIMG=ros:kinetic-robot
-  - DISTR=melodic BASEIMG=ros:melodic-robot
-  
+  - DISTR=kinetic BASEIMG=osrf/ros:kinetic-desktop
+  - DISTR=melodic BASEIMG=osrf/ros:melodic-desktop
+
 before_script:
   - docker pull ${BASEIMG}
 
 script:
   - docker build -f Dockerfile.${DISTR} --tag ros:aero_${DISTR} --build-arg RUN_TESTS=true .
- 
+
 matrix:
   allow_failures:
     - env: DISTR=indigo  BASEIMG=ros:indigo-robot
-    - env: DISTR=melodic BASEIMG=ros:melodic-robot
-     
+    - env: DISTR=melodic BASEIMG=osrf/ros:melodic-desktop
