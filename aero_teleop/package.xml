@@ -11,6 +11,8 @@
   <build_depend>roscpp</build_depend>
   <build_depend>aero_std</build_depend>
 
+  <run_depend>yocs_cmd_vel_mux</run_depend>
+
   <export>
   </export>
 </package>
