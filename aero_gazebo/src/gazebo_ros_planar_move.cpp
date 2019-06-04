@@ -176,6 +176,13 @@ namespace gazebo
       {
         gain_rot_ = sdf->GetElement("forceGainRot")->Get<double>();
       }
+
+      v_dead_zone_ = 0.0001;
+      if (sdf->HasElement ("velocityDeadZone"))
+      {
+        v_dead_zone_ = sdf->GetElement("velocityDeadZone")->Get<double>();
+      }
+
       ROS_INFO_NAMED("planar_move", "PlanarMovePlugin (ns = %s) "
                      "use force feedback to %s with (gain_x, gain_y, gain_rot) = (%f, %f, %f)",
                      robot_namespace_.c_str(),
@@ -197,6 +204,11 @@ namespace gazebo
     y_ = 0;
     rot_ = 0;
     alive_ = true;
+
+    base_cmd_vel_ = true;
+    fixed_x_ = last_odom_pose_.Pos().X();
+    fixed_y_ = last_odom_pose_.Pos().Y();
+    fixed_yaw_ = last_odom_pose_.Rot().Yaw();
 
     // Ensure that ROS has been initialized and subscribe to cmd_vel
     if (!ros::isInitialized())
@@ -239,6 +251,7 @@ namespace gazebo
   void GazeboRosPlanarForceMove::UpdateChild()
   {
     boost::mutex::scoped_lock scoped_lock(lock);
+
 #if GAZEBO_MAJOR_VERSION >= 8
     ignition::math::Pose3d pose = parent_->WorldPose();
 #else
@@ -254,13 +267,44 @@ namespace gazebo
       ignition::math::Vector3d rlin = robot_link_->GetRelativeLinearVel().Ign();
       ignition::math::Vector3d rang = robot_link_->GetRelativeAngularVel().Ign();
 #endif
+
+      double f_x, f_y, t_rot;
+      if (((x_ * x_) + (y_ * y_) + (rot_ * rot_)) <= v_dead_zone_) {
+        // Do nothing for the zero input
+        if (base_cmd_vel_) {
+          base_cmd_vel_ = false;
+          // store stopped location
+          fixed_x_ = pose.Pos().X();
+          fixed_y_ = pose.Pos().Y();
+          fixed_yaw_ = pose.Rot().Yaw();
+        }
+        f_x   = fixed_x_ - pose.Pos().X();
+        f_y   = fixed_y_ - pose.Pos().Y();
+        t_rot = fixed_yaw_ - pose.Rot().Yaw();
+        if (t_rot > M_PI) t_rot -= 2*M_PI;
+        if (t_rot < -M_PI) t_rot += 2*M_PI;
+        // convert to local direction
+        ignition::math::Vector3d wfv(f_x, f_y, 0);
+        ignition::math::Vector3d lfv = pose.Rot().RotateVectorReverse(wfv);
+        f_x = lfv.X();
+        f_y = lfv.Y();
+
+        f_x   *= (gain_x_*4);
+        f_y   *= (gain_y_*4);
+        t_rot *= (gain_rot_*4);
+
+        f_x   += (x_   - rlin.X()) * gain_x_ * 0.3;
+        f_y   += (y_   - rlin.Y()) * gain_y_ * 0.3;
+        t_rot += (rot_ - rang.Z()) * gain_rot_ * 0.3;
+      } else {
+      base_cmd_vel_ = true;
       //ROS_WARN_NAMED("planar_force_move", "vel: %f %f %f / %f %f %f",
       //               rlin.X(), rlin.Y(), rlin.Z(),
       //               rang.X(), rang.Y(), rang.Z());
-      double f_x   = (x_   - rlin.X()) * gain_x_;
-      double f_y   = (y_   - rlin.Y()) * gain_y_;
-      double t_rot = (rot_ - rang.Z()) * gain_rot_;
-
+      f_x   = (x_   - rlin.X()) * gain_x_;
+      f_y   = (y_   - rlin.Y()) * gain_y_;
+      t_rot = (rot_ - rang.Z()) * gain_rot_;
+      }
       ignition::math::Vector3d rfc(f_x, f_y, 0);
       ignition::math::Vector3d rtq(0, 0, t_rot);
       //ROS_WARN_NAMED("planar_force_move", "apply: %f %f - %f",

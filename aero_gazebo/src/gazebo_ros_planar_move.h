@@ -102,6 +102,9 @@ namespace gazebo {
       bool use_force_feedback_;
       physics::LinkPtr robot_link_;
       double gain_x_, gain_y_, gain_rot_;
+      double v_dead_zone_;
+      bool base_cmd_vel_;
+      double fixed_x_, fixed_y_, fixed_yaw_;
   };
 
 }
