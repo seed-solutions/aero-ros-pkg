@@ -6,7 +6,8 @@
   <arg name="~ip_address" default="192.168.10.53" />
   <arg name="~frame_id" default="wheels_base_laser_link" />
 
-  <node name="urg_node" pkg="urg_node" type="urg_node" >
+  <node name="urg_node" pkg="urg_node" type="urg_node"
+        respawn="true">
     <param name="~ip_address" value="$(arg ~ip_address)" />
     <param name="~frame_id" value="$(arg ~frame_id)" />
 
