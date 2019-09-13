@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="RUN_BRINGUP" default="true" />
+  <arg name="ip_address" default="192.168.0.10"/>
 
   <!--- Run bringup -->
   <include if="$(arg RUN_BRINGUP)"
-           file="$(find aero_startup)/aero_move_base/launch/wheel_bringup.launch" />
+           file="$(find aero_startup)/aero_move_base/launch/wheel_bringup.launch" >
+    <arg name="~ip_address" value="$(arg ip_address)" />
+  </include>
 
   <!--- Run making map -->
   <include file="$(find aero_startup)/aero_move_base/launch/making_map_navigation.launch" />
