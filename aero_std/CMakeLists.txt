@@ -57,7 +57,7 @@ generate_messages(
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES aero_moveit_interface object_features spot_list
+ LIBRARIES aero_moveit_interface object_features spot_list aero_motion_planning_interface
  CATKIN_DEPENDS
  geometry_msgs roscpp roslib sensor_msgs std_msgs std_srvs tf actionlib actionlib_msgs move_base_msgs
  moveit_core moveit_ros_planning moveit_ros_planning_interface aero_startup visualization_msgs aero_ros_controller
@@ -91,6 +91,12 @@ add_library(aero_moveit_interface
 )
 target_link_libraries(aero_moveit_interface ${catkin_LIBRARIES})
 add_dependencies(aero_moveit_interface ${PROJECT_NAME}_gencpp)
+
+add_library(aero_motion_planning_interface
+  src/AeroMotionPlanningInterface.cc
+)
+target_link_libraries(aero_motion_planning_interface ${catkin_LIBRARIES})
+add_dependencies(aero_motion_planning_interface ${PROJECT_NAME}_gencpp)
 
 add_library(aero_base_commander
   src/AeroBaseCommander.cc

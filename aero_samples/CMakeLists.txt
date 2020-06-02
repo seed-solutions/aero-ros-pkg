@@ -73,6 +73,12 @@ target_link_libraries(set_marker_sample_node ${catkin_LIBRARIES})
 add_executable(convert_world_sample_node src/convert_world.cc)
 target_link_libraries(convert_world_sample_node ${catkin_LIBRARIES})
 
+add_executable(planning_with_lib_sample_node src/planning_with_lib.cc)
+target_link_libraries(planning_with_lib_sample_node ${catkin_LIBRARIES})
+
+add_executable(planning_constraint_with_lib_sample_node src/planning_constraint_with_lib.cc)
+target_link_libraries(planning_constraint_with_lib_sample_node ${catkin_LIBRARIES})
+
 # tests
 
 add_executable(stoa_atos_test_node tests/stoa_atos.cc)
@@ -83,6 +89,9 @@ target_link_libraries(fullbody_test_node ${catkin_LIBRARIES})
 
 add_executable(lifter_ik_test_node tests/lifter_ik.cc)
 target_link_libraries(lifter_ik_test_node ${catkin_LIBRARIES})
+
+add_executable(planning_with_lib_test_node src/planning_with_lib_test.cc)
+target_link_libraries(planning_with_lib_test_node ${catkin_LIBRARIES})
 
 ##add_executable(upper_controller_test_node tests/upper_controller_test.cc)
 ##target_link_libraries(upper_controller_test_node ${catkin_LIBRARIES})
