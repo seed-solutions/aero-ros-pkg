@@ -32,6 +32,8 @@ joint_limits:
     max_velocity: 3.1
     has_acceleration_limits: false
     max_acceleration: 0
+    min_position: -2.0
+    max_position: 2.0
   l_indexbase_joint:
     has_velocity_limits: true
     max_velocity: 0.5
@@ -107,6 +109,8 @@ joint_limits:
     max_velocity: 3.1
     has_acceleration_limits: false
     max_acceleration: 0
+    min_position: -2.0
+    max_position: 2.0
   r_indexbase_joint:
     has_velocity_limits: true
     max_velocity: 0.5
